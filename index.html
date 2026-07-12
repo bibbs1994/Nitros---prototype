@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.1.5</title>
+<title>Nitros Prototype v0.1.6</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -55,7 +55,7 @@ input:focus,textarea:focus,select:focus{border-color:#ff8a2b}
 video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px solid var(--line)}
 .camera-wrap{display:none}.camera-wrap.active{display:block}
 .scan-overlay{position:relative}
-.scan-guide{position:absolute;left:8%;right:8%;top:38%;height:24%;border:3px solid rgba(255,138,43,.9);border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.22);pointer-events:none}
+.scan-guide{position:absolute;left:5%;right:5%;top:32%;height:36%;border:3px solid rgba(255,138,43,.95);border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.20);pointer-events:none;transition:.2s}.scan-guide.found{border-color:#39b982;box-shadow:0 0 0 9999px rgba(0,0,0,.15),0 0 22px rgba(57,185,130,.9)}
 .capture-note{font-size:13px;color:var(--muted)}
 .footer-note{font-size:12px;color:#7f8da2;text-align:center;padding:0 20px}
 .badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#0c1929;border:1px solid var(--line);color:#c7d2e2;font-size:13px}
@@ -70,7 +70,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.1.5 — Live VIN Scanner</div>
+  <div class="sub">Prototype v0.1.6 — Improved VIN Scanner</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -78,7 +78,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   <div class="card">
     <div class="eyebrow">Service Advisor Workspace</div>
     <h1>Vehicle check-in</h1>
-    <p>Use the iPhone rear camera to scan a VIN barcode, then decode the vehicle through the official NHTSA vehicle database.</p>
+    <p>Use the iPhone rear camera for continuous VIN barcode scanning, with manual entry retained as a backup.</p>
     <div class="grid two" style="margin:18px 0">
       <button class="vehicle" data-demo="DEMO1"><strong>2007 Dodge Ram 1500</strong><span>5.7L HEMI • Demo record</span></button>
       <button class="vehicle" data-demo="DEMO2"><strong>2017 Mini Cooper</strong><span>EVAP case • Demo record</span></button>
@@ -118,7 +118,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
         <button id="scanFrame" class="btn secondary small">Scan Current View</button>
         <button id="stopCamera" class="btn ghost small">Close Camera</button>
       </div>
-      <div class="capture-note" style="margin-top:8px">Hold the barcode inside the orange guide. Reduce glare and keep the phone steady.</div>
+      <div class="capture-note" style="margin-top:8px">Fill most of the orange guide with the barcode. Hold 6–12 inches away, keep it level, and reduce glare.</div>
     </div>
 
     <div class="field" style="margin-top:17px">
@@ -179,7 +179,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.1.5 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.1.6 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
 </div>
 
 <script>
@@ -193,12 +193,15 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   const video = document.getElementById("camera");
   const envText = document.getElementById("envText");
   const envDot = document.getElementById("envDot");
+  const scanGuide = document.querySelector(".scan-guide");
 
   let stream = null;
   let selectedVehicle = null;
   let zxingControls = null;
   let autoScanTimer = null;
   let autoScanBusy = false;
+  let continuousReader = null;
+  let lastScanAt = 0;
 
   const vehicles = {
     "DEMO1": {vin:"1D7HU18D17S000001",year:"2007",make:"Dodge",model:"Ram 1500",engine:"5.7L HEMI",source:"Prototype demo record"},
@@ -351,12 +354,22 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       return;
     }
     try{
-      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
+      stream=await navigator.mediaDevices.getUserMedia({
+        video:{
+          facingMode:{ideal:"environment"},
+          width:{ideal:1920},
+          height:{ideal:1080},
+          frameRate:{ideal:30,max:30}
+        },
+        audio:false
+      });
       video.srcObject=stream;
       await video.play();
       cameraWrap.classList.add("active");
       identifyStatus.className="status ok";
-      identifyStatus.textContent="Camera opened. Hold the VIN barcode inside the orange guide. The scanner will read automatically; the Scan Current View button remains available.";
+      identifyStatus.textContent="Camera opened. Hold the VIN barcode inside the orange guide. Continuous scanning is active.";
+      await applyCameraEnhancements();
+      startContinuousZXing();
       beginAutomaticScan();
     }catch(err){
       identifyStatus.className="status warn";
@@ -367,11 +380,73 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   function stopCamera(){
     if(autoScanTimer){clearInterval(autoScanTimer);autoScanTimer=null;}
     autoScanBusy=false;
+    if(continuousReader && typeof continuousReader.reset==="function"){try{continuousReader.reset();}catch(e){}}
+    continuousReader=null;
     if(zxingControls && typeof zxingControls.stop==="function"){try{zxingControls.stop();}catch(e){}}
     zxingControls=null;
     if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
     video.srcObject=null;
     cameraWrap.classList.remove("active");
+  }
+
+  async function applyCameraEnhancements(){
+    try{
+      const track=stream && stream.getVideoTracks ? stream.getVideoTracks()[0] : null;
+      if(!track || !track.getCapabilities || !track.applyConstraints) return;
+      const caps=track.getCapabilities();
+      const advanced={};
+      if(Array.isArray(caps.focusMode) && caps.focusMode.includes("continuous")) advanced.focusMode="continuous";
+      if(caps.zoom && typeof caps.zoom.min==="number"){
+        const target=Math.min(caps.zoom.max,Math.max(caps.zoom.min,1.5));
+        advanced.zoom=target;
+      }
+      if(Object.keys(advanced).length) await track.applyConstraints({advanced:[advanced]});
+    }catch(err){
+      // Camera enhancement support varies by iPhone/browser; scanning continues without it.
+    }
+  }
+
+  function acceptScannedValue(raw,source){
+    const value=extractVin(raw);
+    if(value.length!==17) return false;
+    vinInput.value=value;
+    if(scanGuide) scanGuide.classList.add("found");
+    try{navigator.vibrate && navigator.vibrate(120);}catch(e){}
+    identifyStatus.className="status ok";
+    identifyStatus.textContent=`VIN captured by ${source}. Decoding vehicle…`;
+    setTimeout(()=>{
+      stopCamera();
+      identifyVehicle();
+    },250);
+    return true;
+  }
+
+  function startContinuousZXing(){
+    if(!window.ZXingBrowser || !window.ZXingBrowser.BrowserMultiFormatReader) return;
+    try{
+      continuousReader=new window.ZXingBrowser.BrowserMultiFormatReader();
+      if(typeof continuousReader.decodeFromVideoElementContinuously==="function"){
+        zxingControls=continuousReader.decodeFromVideoElementContinuously(video,(result,error,controls)=>{
+          if(result){
+            const raw=result.getText ? result.getText() : result.text;
+            if(acceptScannedValue(raw,"continuous barcode scan")){
+              try{controls && controls.stop && controls.stop();}catch(e){}
+            }
+          }
+        });
+      }else if(typeof continuousReader.decodeFromVideoDevice==="function"){
+        continuousReader.decodeFromVideoDevice(undefined,video,(result,error,controls)=>{
+          if(result){
+            const raw=result.getText ? result.getText() : result.text;
+            if(acceptScannedValue(raw,"continuous barcode scan")){
+              try{controls && controls.stop && controls.stop();}catch(e){}
+            }
+          }
+        }).then(controls=>{zxingControls=controls;}).catch(()=>{});
+      }
+    }catch(err){
+      continuousReader=null;
+    }
   }
 
   async function scanWithBarcodeDetector(){
@@ -380,15 +455,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     const detector=new BarcodeDetector({formats:desired.length?desired:formats});
     const codes=await detector.detect(video);
     if(!codes.length) return false;
-    const value=extractVin(codes.map(c=>c.rawValue).join(" "));
-    if(value.length===17){
-      vinInput.value=value;
-      identifyStatus.className="status ok";
-      identifyStatus.textContent="VIN barcode captured. Confirm it, then tap Identify Vehicle.";
-      stopCamera();
-      return true;
-    }
-    return false;
+    return acceptScannedValue(codes.map(c=>c.rawValue).join(" "),"iPhone barcode detector");
   }
 
   async function scanWithZXing(){
@@ -396,14 +463,8 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     try{
       const reader=new window.ZXingBrowser.BrowserMultiFormatReader();
       const result=await reader.decodeOnceFromVideoElement(video);
-      const value=extractVin(result && result.getText ? result.getText() : result.text);
-      if(value.length===17){
-        vinInput.value=value;
-        identifyStatus.className="status ok";
-        identifyStatus.textContent="VIN barcode captured. Confirm it, then tap Identify Vehicle.";
-        stopCamera();
-        return true;
-      }
+      const raw=result && result.getText ? result.getText() : result.text;
+      if(acceptScannedValue(raw,"manual barcode scan")) return true;
     }catch(err){}
     return false;
   }
@@ -422,7 +483,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       }finally{
         autoScanBusy=false;
       }
-    },900);
+    },350);
   }
 
   async function scanCurrentFrame(){
@@ -477,7 +538,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       inspectionNotes:document.getElementById("inspectionNotes").value,
       walkaroundCompleted:[...document.querySelectorAll(".check")].filter(c=>c.checked).length
     };
-    localStorage.setItem("nitros_prototype_v015_last_checkin",JSON.stringify(payload));
+    localStorage.setItem("nitros_prototype_v016_last_checkin",JSON.stringify(payload));
     const s=document.getElementById("submitStatus");
     s.className="status ok";
     s.textContent="Prototype check-in saved locally on this device.";
