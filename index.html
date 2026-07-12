@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.4.0</title>
+<title>Nitros Prototype v0.4.1</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -90,7 +90,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.4.0 — Professional Inspection Report</div>
+  <div class="sub">Prototype v0.4.1 — Professional Inspection Report Hotfix</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -372,17 +372,28 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
 </section>
 
 <section id="review" class="screen">
-  <button class="back" data-go="inspection">← Back</button>
+  <button class="back" data-go="technician">← Back</button>
   <div class="card">
-    <div class="eyebrow">Review and Submit</div>
-    <h2>Check-in summary</h2>
-    <div id="summary" class="kv"></div>
-    <button id="submitCheckin" class="btn primary" style="margin-top:20px">Submit Prototype Check-In</button>
-    <div id="submitStatus" class="status">Not submitted.</div>
+    <div class="eyebrow">Professional Inspection Report</div>
+    <h2>Customer-ready inspection summary</h2>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="health-score" id="healthScore">100</div>
+      <div class="health-label">Overall vehicle health score</div>
+    </div>
+
+    <div id="summary" class="summary"></div>
+
+    <div class="report-actions">
+      <button id="submitCheckin" class="btn primary" type="button">Save Inspection Report</button>
+      <button id="printReport" class="btn secondary" type="button">Print / Save as PDF</button>
+    </div>
+
+    <div id="submitStatus" class="status"></div>
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.4.0 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.4.1 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
 </div>
 
 <script>
@@ -831,7 +842,8 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       ["Technician signature",signatureHasInk("technicianSignature")?"Captured":"Not captured"],
       ["Customer signature",signatureHasInk("customerSignature")?"Captured":"Not captured"]
     ];
-    document.getElementById("healthScore").textContent=calculateHealthScore();
+    const healthScoreEl=document.getElementById("healthScore");
+    if(healthScoreEl) healthScoreEl.textContent=calculateHealthScore();
     document.getElementById("summary").innerHTML=rows.map(([k,v])=>`<div>${k}</div><div>${escapeHtml(v)}</div>`).join("");
   }
 
@@ -905,7 +917,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
 
   setupSignaturePad("technicianSignature","clearTechnicianSignature");
   setupSignaturePad("customerSignature","clearCustomerSignature");
-  document.getElementById("printReport").addEventListener("click",()=>window.print());
+  document.getElementById("printReport")?.addEventListener("click",()=>window.print());
 
   document.getElementById("technicianPhoto").addEventListener("change",(event)=>{
     const status=document.getElementById("technicianPhotoStatus");
@@ -925,7 +937,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       identifyStatus.textContent=`VIN photo captured: ${file.name}. Automatic photo decoding is not enabled in this field-test build; use the image as a reference and enter the VIN manually.`;
     }
   });
-  document.getElementById("submitCheckin").addEventListener("click",()=>{
+  document.getElementById("submitCheckin")?.addEventListener("click",()=>{
     const required=[
       ["Customer name",document.getElementById("customerName").value.trim()],
       ["Phone number",document.getElementById("phone").value.trim()],
@@ -1020,7 +1032,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
 
     localStorage.setItem("nitros_prototype_v040_last_checkin",JSON.stringify(payload));
     s.className="status ok";
-    s.textContent=`Check-in ${payload.checkInId} saved locally on this device.`;
+    s.textContent=`Inspection report ${payload.checkInId} saved successfully on this device.`;
   });
 
   updateEnvironment();
