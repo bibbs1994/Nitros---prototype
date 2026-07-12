@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.3.0</title>
+<title>Nitros Prototype v0.4.0</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -64,13 +64,33 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   header{padding:20px 16px}.screen{padding:20px 12px}.card{padding:18px;border-radius:19px}
   h1{font-size:33px}.grid.two{grid-template-columns:1fr}.row{flex-direction:column;align-items:stretch}.kv{grid-template-columns:1fr}
 }
+
+  .priority-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .priority-card{border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,.02)}
+  .priority-card h4{margin:0 0 8px}
+  .signature-pad{width:100%;height:150px;background:#fff;border-radius:12px;border:1px solid var(--line);touch-action:none}
+  .report-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+  .health-score{font-size:42px;font-weight:800;line-height:1}
+  .health-label{font-size:13px;color:var(--muted);margin-top:6px}
+  .photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  @media(max-width:700px){.priority-grid,.photo-grid,.report-actions{grid-template-columns:1fr}}
+  @media print{
+    body{background:#fff;color:#111}
+    header,.back,.report-actions,.footer-note{display:none!important}
+    .screen{display:block!important}
+    .screen:not(#review){display:none!important}
+    .card{border:none;box-shadow:none;background:#fff;color:#111}
+    .summary{color:#111}
+    .summary>div{border-color:#ddd}
+  }
+
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.3.0 — Technician Digital Inspection</div>
+  <div class="sub">Prototype v0.4.0 — Professional Inspection Report</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -78,7 +98,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   <div class="card">
     <div class="eyebrow">Service Advisor Workspace</div>
     <h1>Vehicle check-in</h1>
-    <p>Scan the VIN, complete customer check-in, and document a structured technician inspection.</p>
+    <p>Scan the VIN, complete intake and inspection, then produce a professional customer-ready report.</p>
     <div class="grid two" style="margin:18px 0">
       <button class="vehicle" data-demo="DEMO1"><strong>2007 Dodge Ram 1500</strong><span>5.7L HEMI • Demo record</span></button>
       <button class="vehicle" data-demo="DEMO2"><strong>2017 Mini Cooper</strong><span>EVAP case • Demo record</span></button>
@@ -146,6 +166,10 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     <div class="eyebrow">Customer Check-In</div>
     <h2>Customer and vehicle details</h2>
     <div class="grid two">
+      <div class="field"><label for="roNumber">Repair Order number</label><input id="roNumber" placeholder="Auto-generated if left blank"></div>
+      <div class="field"><label for="serviceAdvisor">Service advisor</label><input id="serviceAdvisor" placeholder="Service advisor name"></div>
+    </div>
+    <div class="grid two">
       <div class="field"><label for="customerName">Customer name</label><input id="customerName" autocomplete="name" placeholder="Customer name"></div>
       <div class="field"><label for="phone">Phone number</label><input id="phone" inputmode="tel" autocomplete="tel" placeholder="Phone number"></div>
       <div class="field"><label for="email">Email</label><input id="email" inputmode="email" autocomplete="email" placeholder="Email address"></div>
@@ -207,11 +231,16 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       </select>
     </div>
 
-    <div class="field">
-      <label for="inspectionPhoto">Take check-in photo</label>
-      <input id="inspectionPhoto" type="file" accept="image/*" capture="environment">
-      <div id="photoStatus" class="status">No check-in photo selected.</div>
+    <h3>Vehicle documentation photos</h3>
+    <div class="photo-grid">
+      <div class="field"><label for="photoFront">Front</label><input id="photoFront" type="file" accept="image/*" capture="environment"></div>
+      <div class="field"><label for="photoRear">Rear</label><input id="photoRear" type="file" accept="image/*" capture="environment"></div>
+      <div class="field"><label for="photoLeft">Left side</label><input id="photoLeft" type="file" accept="image/*" capture="environment"></div>
+      <div class="field"><label for="photoRight">Right side</label><input id="photoRight" type="file" accept="image/*" capture="environment"></div>
+      <div class="field"><label for="photoOdometer">Odometer</label><input id="photoOdometer" type="file" accept="image/*" capture="environment"></div>
+      <div class="field"><label for="photoVin">VIN label</label><input id="photoVin" type="file" accept="image/*" capture="environment"></div>
     </div>
+    <div id="photoStatus" class="status">No vehicle documentation photos selected.</div>
 
     <div class="field">
       <label for="inspectionNotes">Initial condition notes</label>
@@ -306,7 +335,39 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       <textarea id="technicianRecommendation" rows="4" placeholder="Repair now, monitor, recheck interval, further diagnosis..."></textarea>
     </div>
 
+
+    <h3>Repair priorities</h3>
+    <div class="priority-grid">
+      <div class="priority-card">
+        <h4>Immediate</h4>
+        <textarea id="priorityImmediate" rows="4" placeholder="Safety or breakdown-risk repairs needed now..."></textarea>
+      </div>
+      <div class="priority-card">
+        <h4>Soon</h4>
+        <textarea id="prioritySoon" rows="4" placeholder="Repairs recommended soon..."></textarea>
+      </div>
+      <div class="priority-card">
+        <h4>Monitor</h4>
+        <textarea id="priorityMonitor" rows="4" placeholder="Items to monitor or recheck..."></textarea>
+      </div>
+    </div>
+
+    <h3>Signatures</h3>
+    <div class="grid two">
+      <div>
+        <label>Technician signature</label>
+        <canvas id="technicianSignature" class="signature-pad"></canvas>
+        <button id="clearTechnicianSignature" class="btn ghost" type="button">Clear Technician Signature</button>
+      </div>
+      <div>
+        <label>Customer signature</label>
+        <canvas id="customerSignature" class="signature-pad"></canvas>
+        <button id="clearCustomerSignature" class="btn ghost" type="button">Clear Customer Signature</button>
+      </div>
+    </div>
+
     <button class="btn primary" data-go="review">Review Complete Check-In</button>
+
   </div>
 </section>
 
@@ -321,7 +382,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.3.0 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.4.0 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
 </div>
 
 <script>
@@ -645,6 +706,92 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     }
   }
 
+
+  function countVehiclePhotos(){
+    return ["photoFront","photoRear","photoLeft","photoRight","photoOdometer","photoVin"]
+      .filter(id=>document.getElementById(id).files.length).length;
+  }
+
+  function calculateHealthScore(){
+    const statusIds=["brakesStatus","tiresStatus","steeringStatus","fluidsStatus","batteryStatus","lightsStatus"];
+    let score=100;
+    statusIds.forEach(id=>{
+      const value=document.getElementById(id).value;
+      if(value==="Monitor") score-=8;
+      if(value==="Repair Needed") score-=18;
+      if(value==="Not inspected") score-=5;
+    });
+    return Math.max(0,score);
+  }
+
+  function setupSignaturePad(canvasId,clearButtonId){
+    const canvas=document.getElementById(canvasId);
+    const clearButton=document.getElementById(clearButtonId);
+    const ctx=canvas.getContext("2d");
+    let drawing=false;
+
+    function resize(){
+      const ratio=Math.max(window.devicePixelRatio||1,1);
+      const rect=canvas.getBoundingClientRect();
+      const saved=canvas.toDataURL();
+      canvas.width=rect.width*ratio;
+      canvas.height=rect.height*ratio;
+      ctx.setTransform(ratio,0,0,ratio,0,0);
+      ctx.lineWidth=2;
+      ctx.lineCap="round";
+      ctx.strokeStyle="#111";
+      if(saved && saved!=="data:,"){
+        const img=new Image();
+        img.onload=()=>ctx.drawImage(img,0,0,rect.width,rect.height);
+        img.src=saved;
+      }
+    }
+
+    function point(event){
+      const rect=canvas.getBoundingClientRect();
+      const source=event.touches?event.touches[0]:event;
+      return {x:source.clientX-rect.left,y:source.clientY-rect.top};
+    }
+
+    function start(event){
+      event.preventDefault();
+      drawing=true;
+      const p=point(event);
+      ctx.beginPath();
+      ctx.moveTo(p.x,p.y);
+    }
+
+    function move(event){
+      if(!drawing)return;
+      event.preventDefault();
+      const p=point(event);
+      ctx.lineTo(p.x,p.y);
+      ctx.stroke();
+    }
+
+    function stop(){drawing=false;}
+
+    canvas.addEventListener("mousedown",start);
+    canvas.addEventListener("mousemove",move);
+    window.addEventListener("mouseup",stop);
+    canvas.addEventListener("touchstart",start,{passive:false});
+    canvas.addEventListener("touchmove",move,{passive:false});
+    canvas.addEventListener("touchend",stop);
+    clearButton.addEventListener("click",()=>{
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+    });
+    resize();
+    window.addEventListener("resize",resize);
+  }
+
+  function signatureHasInk(canvasId){
+    const canvas=document.getElementById(canvasId);
+    const blank=document.createElement("canvas");
+    blank.width=canvas.width;
+    blank.height=canvas.height;
+    return canvas.toDataURL()!==blank.toDataURL();
+  }
+
   function buildSummary(){
     const completed=[...document.querySelectorAll(".check")]
       .filter(c=>c.checked)
@@ -652,6 +799,8 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     const rows=[
       ["Vehicle",selectedVehicle?`${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}`:"Not selected"],
       ["VIN",selectedVehicle?selectedVehicle.vin:"Not entered"],
+      ["Repair Order",document.getElementById("roNumber").value||"Auto-generated on save"],
+      ["Service advisor",document.getElementById("serviceAdvisor").value||"Not entered"],
       ["Customer",document.getElementById("customerName").value||"Not entered"],
       ["Phone",document.getElementById("phone").value||"Not entered"],
       ["Email",document.getElementById("email").value||"Not entered"],
@@ -662,7 +811,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       ["Advisor notes",document.getElementById("advisorNotes").value||"None"],
       ["Fuel level",document.getElementById("fuelLevel").value],
       ["Walk-around",completed.length?completed.join(", "):"None completed"],
-      ["Photo",document.getElementById("inspectionPhoto").files.length?document.getElementById("inspectionPhoto").files[0].name:"Not captured"],
+      ["Primary photo",countVehiclePhotos()?`${countVehiclePhotos()} vehicle photo(s) captured`:"Not captured"],
       ["Condition notes",document.getElementById("inspectionNotes").value||"None"],
       ["Technician",document.getElementById("technicianName").value||"Not entered"],
       ["Brakes status",document.getElementById("brakesStatus").value],
@@ -674,8 +823,15 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       ["Brake pads",`LF ${document.getElementById("lfPad").value||"-"} mm • RF ${document.getElementById("rfPad").value||"-"} mm • LR ${document.getElementById("lrPad").value||"-"} mm • RR ${document.getElementById("rrPad").value||"-"} mm`],
       ["Tire tread",`LF ${document.getElementById("lfTread").value||"-"} • RF ${document.getElementById("rfTread").value||"-"} • LR ${document.getElementById("lrTread").value||"-"} • RR ${document.getElementById("rrTread").value||"-"} 32nds`],
       ["Technician findings",document.getElementById("technicianFindings").value||"None"],
-      ["Recommendation",document.getElementById("technicianRecommendation").value||"None"]
+      ["Recommendation",document.getElementById("technicianRecommendation").value||"None"],
+      ["Immediate repairs",document.getElementById("priorityImmediate").value||"None"],
+      ["Repairs needed soon",document.getElementById("prioritySoon").value||"None"],
+      ["Monitor items",document.getElementById("priorityMonitor").value||"None"],
+      ["Vehicle photos",countVehiclePhotos()+" of 6 captured"],
+      ["Technician signature",signatureHasInk("technicianSignature")?"Captured":"Not captured"],
+      ["Customer signature",signatureHasInk("customerSignature")?"Captured":"Not captured"]
     ];
+    document.getElementById("healthScore").textContent=calculateHealthScore();
     document.getElementById("summary").innerHTML=rows.map(([k,v])=>`<div>${k}</div><div>${escapeHtml(v)}</div>`).join("");
   }
 
@@ -738,12 +894,18 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   document.getElementById("startVoiceConcern").addEventListener("click",startVoiceConcern);
   document.getElementById("stopVoiceConcern").addEventListener("click",stopVoiceConcern);
 
-  document.getElementById("inspectionPhoto").addEventListener("change",(event)=>{
-    const status=document.getElementById("photoStatus");
-    const file=event.target.files&&event.target.files[0];
-    status.className=file?"status ok":"status";
-    status.textContent=file?`Check-in photo selected: ${file.name}`:"No check-in photo selected.";
+  ["photoFront","photoRear","photoLeft","photoRight","photoOdometer","photoVin"].forEach(id=>{
+    document.getElementById(id).addEventListener("change",()=>{
+      const count=countVehiclePhotos();
+      const status=document.getElementById("photoStatus");
+      status.className=count?"status ok":"status";
+      status.textContent=count?`${count} of 6 vehicle documentation photos selected.`:"No vehicle documentation photos selected.";
+    });
   });
+
+  setupSignaturePad("technicianSignature","clearTechnicianSignature");
+  setupSignaturePad("customerSignature","clearCustomerSignature");
+  document.getElementById("printReport").addEventListener("click",()=>window.print());
 
   document.getElementById("technicianPhoto").addEventListener("change",(event)=>{
     const status=document.getElementById("technicianPhotoStatus");
@@ -784,6 +946,8 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       checkInId:`NIT-${new Date().toISOString().replace(/\D/g,"").slice(0,14)}`,
       timestamp:new Date().toISOString(),
       vehicle:selectedVehicle,
+      repairOrder:document.getElementById("roNumber").value.trim()||`RO-${new Date().toISOString().replace(/\D/g,"").slice(0,14)}`,
+      serviceAdvisor:document.getElementById("serviceAdvisor").value.trim(),
       customer:{
         name:document.getElementById("customerName").value.trim(),
         phone:document.getElementById("phone").value.trim(),
@@ -799,9 +963,14 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
         label:c.dataset.label||c.parentElement.textContent.trim(),
         completed:c.checked
       })),
-      inspectionPhotoName:document.getElementById("inspectionPhoto").files.length
-        ? document.getElementById("inspectionPhoto").files[0].name
-        : "",
+      vehiclePhotos:{
+        front:document.getElementById("photoFront").files[0]?.name||"",
+        rear:document.getElementById("photoRear").files[0]?.name||"",
+        left:document.getElementById("photoLeft").files[0]?.name||"",
+        right:document.getElementById("photoRight").files[0]?.name||"",
+        odometer:document.getElementById("photoOdometer").files[0]?.name||"",
+        vinLabel:document.getElementById("photoVin").files[0]?.name||""
+      },
       inspectionNotes:document.getElementById("inspectionNotes").value.trim(),
       technicianInspection:{
         technician:document.getElementById("technicianName").value.trim(),
@@ -835,11 +1004,21 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
           ? document.getElementById("technicianPhoto").files[0].name
           : "",
         findings:document.getElementById("technicianFindings").value.trim(),
-        recommendation:document.getElementById("technicianRecommendation").value.trim()
+        recommendation:document.getElementById("technicianRecommendation").value.trim(),
+        priorities:{
+          immediate:document.getElementById("priorityImmediate").value.trim(),
+          soon:document.getElementById("prioritySoon").value.trim(),
+          monitor:document.getElementById("priorityMonitor").value.trim()
+        }
+      },
+      vehicleHealthScore:calculateHealthScore(),
+      signatures:{
+        technician:signatureHasInk("technicianSignature"),
+        customer:signatureHasInk("customerSignature")
       }
     };
 
-    localStorage.setItem("nitros_prototype_v030_last_checkin",JSON.stringify(payload));
+    localStorage.setItem("nitros_prototype_v040_last_checkin",JSON.stringify(payload));
     s.className="status ok";
     s.textContent=`Check-in ${payload.checkInId} saved locally on this device.`;
   });
