@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="description" content="Nitros Auto Repair Vehicle Check-In Prototype" />
+  <title>Nitros Vehicle Check-In</title>
+  <style>
+:root {
+  --bg: #f3f4f6;
+  --surface: #ffffff;
+  --surface-2: #f9fafb;
+  --text: #111827;
+  --muted: #6b7280;
+  --line: #d1d5db;
+  --brand: #b91c1c;
+  --brand-dark: #7f1d1d;
+  --success: #166534;
+  --warning: #92400e;
+  --shadow: 0 12px 30px rgba(17, 24, 39, 0.10);
+  --radius: 18px;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  min-height: 100%;
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top right, rgba(185, 28, 28, 0.07), transparent 30rem),
+    var(--bg);
+}
+
+button, input, select, textarea { font: inherit; }
+
+button { cursor: pointer; }
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: calc(1rem + env(safe-area-inset-top)) 1rem 1rem;
+  color: white;
+  background: linear-gradient(135deg, #111827, #1f2937);
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.22);
+}
+
+.app-header h1 {
+  margin: 0.1rem 0 0;
+  font-size: clamp(1.35rem, 5vw, 2rem);
+}
+
+.eyebrow {
+  margin: 0;
+  color: #fca5a5;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.icon-button {
+  min-width: 46px;
+  min-height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 14px;
+  color: white;
+  background: rgba(255, 255, 255, 0.09);
+  font-size: 1.4rem;
+}
+
+.app-shell {
+  width: min(100%, 980px);
+  margin: 0 auto;
+  padding: 1rem 1rem 6rem;
+}
+
+.hero {
+  margin-top: 0.5rem;
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  color: white;
+  background: linear-gradient(135deg, var(--brand-dark), var(--brand));
+  box-shadow: var(--shadow);
+}
+
+.hero h2 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.5rem, 6vw, 2.3rem);
+}
+
+.hero p {
+  margin: 0;
+  line-height: 1.55;
+  color: #fee2e2;
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.card {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.card h2, .card h3 {
+  margin-top: 0;
+}
+
+.action-card {
+  display: flex;
+  min-height: 150px;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.action-card p {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.vehicle-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.vehicle-button {
+  width: 100%;
+  padding: 1rem;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--surface);
+  box-shadow: 0 5px 14px rgba(17, 24, 39, 0.06);
+}
+
+.vehicle-button:hover,
+.vehicle-button:focus-visible {
+  border-color: var(--brand);
+  outline: none;
+}
+
+.vehicle-title {
+  display: block;
+  font-weight: 800;
+}
+
+.vehicle-meta {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.btn {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  border: 0;
+  border-radius: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.btn-primary {
+  color: white;
+  background: var(--brand);
+}
+
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  background: var(--brand-dark);
+}
+
+.btn-secondary {
+  color: var(--text);
+  background: #e5e7eb;
+}
+
+.btn-danger {
+  color: white;
+  background: #991b1b;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.btn-row .btn {
+  flex: 1 1 180px;
+}
+
+.form-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.form-section h2 {
+  margin: 0 0 0.85rem;
+  font-size: 1.15rem;
+}
+
+.form-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.form-grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+label {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+
+label span {
+  font-size: 0.88rem;
+}
+
+input, select, textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.75rem 0.8rem;
+  border: 1px solid #9ca3af;
+  border-radius: 12px;
+  color: var(--text);
+  background: white;
+}
+
+textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--brand);
+  outline: 3px solid rgba(185, 28, 28, 0.12);
+}
+
+.progress {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.45rem;
+  margin: 1rem 0;
+}
+
+.progress-step {
+  padding: 0.55rem 0.3rem;
+  border-radius: 10px;
+  color: var(--muted);
+  background: #e5e7eb;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.progress-step.active {
+  color: white;
+  background: var(--brand);
+}
+
+.review-list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.review-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.4fr) 1fr;
+  gap: 0.75rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.review-row strong {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.notice {
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  background: #fef3c7;
+  color: var(--warning);
+  line-height: 1.45;
+}
+
+.success {
+  padding: 1rem;
+  border-radius: 14px;
+  background: #dcfce7;
+  color: var(--success);
+  font-weight: 700;
+}
+
+.empty {
+  padding: 1.2rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.app-footer {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.96);
+  font-size: 0.78rem;
+  backdrop-filter: blur(10px);
+}
+
+.noscript {
+  padding: 1rem;
+  color: white;
+  background: #991b1b;
+  text-align: center;
+}
+
+@media (max-width: 680px) {
+  .grid.two,
+  .form-grid.two {
+    grid-template-columns: 1fr;
+  }
+
+  .review-row {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+}
+
+@media (min-width: 681px) {
+  .app-shell { padding-top: 1.5rem; }
+  .card, .form-section { padding: 1.25rem; }
+}
+
+</style>
+</head>
+<body>
+  <noscript>
+    <div class="noscript">JavaScript must be enabled to use this prototype.</div>
+  </noscript>
+
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Nitros Auto Repair</p>
+      <h1>Vehicle Check-In</h1>
+    </div>
+    <button id="homeButton" class="icon-button" type="button" aria-label="Return home">⌂</button>
+  </header>
+
+  <main id="app" class="app-shell" aria-live="polite"></main>
+
+  <footer class="app-footer">
+    <span>Prototype v0.1.4</span>
+    <span>Field Test Build</span>
+  </footer>
+
+  <script>
+(() => {
+  "use strict";
+
+  const app = document.getElementById("app");
+  const homeButton = document.getElementById("homeButton");
+  const STORAGE_KEY = "nitros-checkins-v014";
+
+  const sampleVehicles = [
+    { customer: "Test Customer 1", year: "2017", make: "Jeep", model: "Wrangler", plate: "TEST-01", concern: "Brake warning light and hard pedal" },
+    { customer: "Test Customer 2", year: "2012", make: "Ford", model: "Fusion SE", plate: "TEST-02", concern: "ABS and traction-control lights" },
+    { customer: "Test Customer 3", year: "2017", make: "Mini", model: "Cooper", plate: "TEST-03", concern: "Check-engine light and EVAP fault" },
+    { customer: "Test Customer 4", year: "2014", make: "Dodge", model: "Durango", plate: "TEST-04", concern: "Engine misfire and ticking noise" }
+  ];
+
+  let state = {
+    view: "home",
+    step: 1,
+    form: blankForm()
+  };
+
+  function blankForm() {
+    return {
+      customerName: "",
+      phone: "",
+      email: "",
+      year: "",
+      make: "",
+      model: "",
+      vin: "",
+      plate: "",
+      mileage: "",
+      concern: "",
+      warningLights: "",
+      appointmentType: "Diagnostic",
+      authorization: false,
+      createdAt: ""
+    };
+  }
+
+  function getCheckins() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  }
+
+  function saveCheckins(records) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  }
+
+  function escapeHtml(value = "") {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function render() {
+    if (state.view === "home") renderHome();
+    if (state.view === "checkin") renderCheckin();
+    if (state.view === "records") renderRecords();
+  }
+
+  function renderHome() {
+    const records = getCheckins();
+
+    app.innerHTML = `
+      <section class="hero">
+        <h2>Vehicle Intake & Inspection</h2>
+        <p>Start a customer check-in, open a test vehicle, or review check-ins saved on this device.</p>
+      </section>
+
+      <section class="grid two">
+        <article class="card action-card">
+          <div>
+            <h2>New Check-In</h2>
+            <p>Capture customer information, vehicle details, the primary concern, and authorization.</p>
+          </div>
+          <button class="btn btn-primary" id="startCheckin" type="button">Start Check-In</button>
+        </article>
+
+        <article class="card action-card">
+          <div>
+            <h2>Saved Records</h2>
+            <p>${records.length} check-in${records.length === 1 ? "" : "s"} saved locally on this browser.</p>
+          </div>
+          <button class="btn btn-secondary" id="openRecords" type="button">View Records</button>
+        </article>
+      </section>
+
+      <section class="card" style="margin-top:1rem">
+        <h2>Field-Test Vehicles</h2>
+        <div class="vehicle-list">
+          ${sampleVehicles.map((v, i) => `
+            <button class="vehicle-button" data-sample="${i}" type="button">
+              <span class="vehicle-title">${escapeHtml(v.year)} ${escapeHtml(v.make)} ${escapeHtml(v.model)}</span>
+              <span class="vehicle-meta">${escapeHtml(v.customer)} • ${escapeHtml(v.concern)}</span>
+            </button>
+          `).join("")}
+        </div>
+      </section>
+    `;
+
+    document.getElementById("startCheckin").addEventListener("click", () => startCheckin());
+    document.getElementById("openRecords").addEventListener("click", () => {
+      state.view = "records";
+      render();
+    });
+    app.querySelectorAll("[data-sample]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const v = sampleVehicles[Number(btn.dataset.sample)];
+        state.form = {
+          ...blankForm(),
+          customerName: v.customer,
+          year: v.year,
+          make: v.make,
+          model: v.model,
+          plate: v.plate,
+          concern: v.concern
+        };
+        state.view = "checkin";
+        state.step = 1;
+        render();
+      });
+    });
+  }
+
+  function startCheckin() {
+    state.form = blankForm();
+    state.view = "checkin";
+    state.step = 1;
+    render();
+  }
+
+  function progressMarkup() {
+    const names = ["Customer", "Vehicle", "Concern", "Review"];
+    return `<div class="progress">${names.map((n, i) =>
+      `<div class="progress-step ${state.step === i + 1 ? "active" : ""}">${i + 1}. ${n}</div>`
+    ).join("")}</div>`;
+  }
+
+  function renderCheckin() {
+    app.innerHTML = `
+      ${progressMarkup()}
+      <form id="checkinForm" novalidate>
+        ${stepMarkup()}
+      </form>
+    `;
+
+    const form = document.getElementById("checkinForm");
+    form.addEventListener("input", syncForm);
+    form.addEventListener("change", syncForm);
+
+    const back = document.getElementById("backStep");
+    if (back) back.addEventListener("click", () => {
+      if (state.step > 1) {
+        state.step -= 1;
+        render();
+      } else {
+        state.view = "home";
+        render();
+      }
+    });
+
+    const next = document.getElementById("nextStep");
+    if (next) next.addEventListener("click", () => {
+      syncForm();
+      if (!validateStep()) return;
+      state.step += 1;
+      render();
+    });
+
+    const submit = document.getElementById("saveCheckin");
+    if (submit) submit.addEventListener("click", () => {
+      syncForm();
+      if (!state.form.authorization) {
+        alert("Authorization must be confirmed before saving.");
+        return;
+      }
+      const records = getCheckins();
+      const record = {
+        ...state.form,
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        createdAt: new Date().toISOString()
+      };
+      records.unshift(record);
+      saveCheckins(records);
+      state.view = "records";
+      render();
+      setTimeout(() => {
+        const message = document.getElementById("savedMessage");
+        if (message) message.textContent = "Check-in saved successfully on this device.";
+      }, 0);
+    });
+  }
+
+  function stepMarkup() {
+    const f = state.form;
+
+    if (state.step === 1) {
+      return `
+        <section class="form-section">
+          <h2>Customer Information</h2>
+          <div class="form-grid two">
+            <label><span>Customer name *</span><input name="customerName" value="${escapeHtml(f.customerName)}" required autocomplete="name"></label>
+            <label><span>Phone number *</span><input name="phone" value="${escapeHtml(f.phone)}" required inputmode="tel" autocomplete="tel"></label>
+            <label><span>Email</span><input name="email" value="${escapeHtml(f.email)}" inputmode="email" autocomplete="email"></label>
+            <label><span>Appointment type</span>
+              <select name="appointmentType">
+                ${["Diagnostic","Repair","Maintenance","Inspection"].map(x => `<option ${f.appointmentType === x ? "selected" : ""}>${x}</option>`).join("")}
+              </select>
+            </label>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-secondary" id="backStep" type="button">Cancel</button>
+            <button class="btn btn-primary" id="nextStep" type="button">Continue</button>
+          </div>
+        </section>`;
+    }
+
+    if (state.step === 2) {
+      return `
+        <section class="form-section">
+          <h2>Vehicle Information</h2>
+          <div class="form-grid two">
+            <label><span>Year *</span><input name="year" value="${escapeHtml(f.year)}" required inputmode="numeric"></label>
+            <label><span>Make *</span><input name="make" value="${escapeHtml(f.make)}" required></label>
+            <label><span>Model *</span><input name="model" value="${escapeHtml(f.model)}" required></label>
+            <label><span>Mileage</span><input name="mileage" value="${escapeHtml(f.mileage)}" inputmode="numeric"></label>
+            <label><span>VIN</span><input name="vin" value="${escapeHtml(f.vin)}" maxlength="17" autocapitalize="characters"></label>
+            <label><span>License plate</span><input name="plate" value="${escapeHtml(f.plate)}" autocapitalize="characters"></label>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-secondary" id="backStep" type="button">Back</button>
+            <button class="btn btn-primary" id="nextStep" type="button">Continue</button>
+          </div>
+        </section>`;
+    }
+
+    if (state.step === 3) {
+      return `
+        <section class="form-section">
+          <h2>Customer Concern</h2>
+          <div class="form-grid">
+            <label><span>Describe the concern in the customer's words *</span>
+              <textarea name="concern" required>${escapeHtml(f.concern)}</textarea>
+            </label>
+            <label><span>Warning lights, noises, conditions, or recent work</span>
+              <textarea name="warningLights">${escapeHtml(f.warningLights)}</textarea>
+            </label>
+          </div>
+          <div class="notice">Prototype note: future versions will add voice capture, photos, VIN decoding, inspection workflows, and technician findings.</div>
+          <div class="btn-row">
+            <button class="btn btn-secondary" id="backStep" type="button">Back</button>
+            <button class="btn btn-primary" id="nextStep" type="button">Review</button>
+          </div>
+        </section>`;
+    }
+
+    return `
+      <section class="form-section">
+        <h2>Review Check-In</h2>
+        <div class="review-list">
+          ${reviewRow("Customer", f.customerName)}
+          ${reviewRow("Phone", f.phone)}
+          ${reviewRow("Email", f.email || "Not provided")}
+          ${reviewRow("Vehicle", `${f.year} ${f.make} ${f.model}`)}
+          ${reviewRow("VIN", f.vin || "Not provided")}
+          ${reviewRow("Plate", f.plate || "Not provided")}
+          ${reviewRow("Mileage", f.mileage || "Not provided")}
+          ${reviewRow("Service type", f.appointmentType)}
+          ${reviewRow("Primary concern", f.concern)}
+          ${reviewRow("Additional details", f.warningLights || "None")}
+        </div>
+
+        <label style="margin-top:1rem">
+          <span>
+            <input name="authorization" type="checkbox" ${f.authorization ? "checked" : ""} style="width:auto;min-height:auto;margin-right:.45rem">
+            Customer authorizes Nitros Auto Repair to receive and evaluate this vehicle.
+          </span>
+        </label>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary" id="backStep" type="button">Back</button>
+          <button class="btn btn-primary" id="saveCheckin" type="button">Save Check-In</button>
+        </div>
+      </section>`;
+  }
+
+  function reviewRow(label, value) {
+    return `<div class="review-row"><strong>${escapeHtml(label)}</strong><span>${escapeHtml(value)}</span></div>`;
+  }
+
+  function syncForm() {
+    const form = document.getElementById("checkinForm");
+    if (!form) return;
+    const data = new FormData(form);
+    for (const [key, value] of data.entries()) {
+      if (key in state.form) state.form[key] = typeof value === "string" ? value.trimStart() : value;
+    }
+    const auth = form.elements.authorization;
+    if (auth) state.form.authorization = auth.checked;
+  }
+
+  function validateStep() {
+    const requiredByStep = {
+      1: ["customerName", "phone"],
+      2: ["year", "make", "model"],
+      3: ["concern"]
+    };
+
+    const missing = (requiredByStep[state.step] || []).find(key => !String(state.form[key] || "").trim());
+    if (missing) {
+      const field = document.querySelector(`[name="${missing}"]`);
+      field?.focus();
+      alert("Please complete the required field before continuing.");
+      return false;
+    }
+    return true;
+  }
+
+  function renderRecords() {
+    const records = getCheckins();
+
+    app.innerHTML = `
+      <section class="hero">
+        <h2>Saved Check-Ins</h2>
+        <p>These test records are stored only in this browser on this device.</p>
+      </section>
+
+      <p id="savedMessage" class="success" style="margin-top:1rem"></p>
+
+      <section class="card" style="margin-top:1rem">
+        ${records.length ? records.map(record => `
+          <article class="vehicle-button" style="margin-bottom:.75rem">
+            <span class="vehicle-title">${escapeHtml(record.year)} ${escapeHtml(record.make)} ${escapeHtml(record.model)}</span>
+            <span class="vehicle-meta">${escapeHtml(record.customerName)} • ${new Date(record.createdAt).toLocaleString()}</span>
+            <span class="vehicle-meta">${escapeHtml(record.concern)}</span>
+          </article>
+        `).join("") : `<div class="empty">No saved check-ins yet.</div>`}
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="newFromRecords" type="button">New Check-In</button>
+          ${records.length ? `<button class="btn btn-secondary" id="exportRecords" type="button">Export Test Data</button>
+          <button class="btn btn-danger" id="clearRecords" type="button">Clear Test Data</button>` : ""}
+        </div>
+      </section>
+    `;
+
+    document.getElementById("newFromRecords").addEventListener("click", startCheckin);
+
+    const exportButton = document.getElementById("exportRecords");
+    if (exportButton) {
+      exportButton.addEventListener("click", () => {
+        const blob = new Blob([JSON.stringify(records, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `nitros-checkins-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    }
+
+    const clearButton = document.getElementById("clearRecords");
+    if (clearButton) {
+      clearButton.addEventListener("click", () => {
+        if (confirm("Delete all test check-ins saved in this browser?")) {
+          localStorage.removeItem(STORAGE_KEY);
+          render();
+        }
+      });
+    }
+  }
+
+  homeButton.addEventListener("click", () => {
+    state.view = "home";
+    state.step = 1;
+    render();
+  });
+
+  render();
+})();
+
+</script>
+</body>
+</html>
