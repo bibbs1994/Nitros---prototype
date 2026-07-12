@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.1.6</title>
+<title>Nitros Prototype v0.2.0</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -70,7 +70,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.1.6 — Improved VIN Scanner</div>
+  <div class="sub">Prototype v0.2.0 — Customer Check-In</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -78,7 +78,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   <div class="card">
     <div class="eyebrow">Service Advisor Workspace</div>
     <h1>Vehicle check-in</h1>
-    <p>Use the iPhone rear camera for continuous VIN barcode scanning, with manual entry retained as a backup.</p>
+    <p>Scan the VIN, identify the vehicle, and complete a production-style customer check-in.</p>
     <div class="grid two" style="margin:18px 0">
       <button class="vehicle" data-demo="DEMO1"><strong>2007 Dodge Ram 1500</strong><span>5.7L HEMI • Demo record</span></button>
       <button class="vehicle" data-demo="DEMO2"><strong>2017 Mini Cooper</strong><span>EVAP case • Demo record</span></button>
@@ -143,11 +143,40 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
 <section id="customer" class="screen">
   <button class="back" data-go="vehicle">← Back</button>
   <div class="card">
-    <div class="eyebrow">Customer Intent First</div>
-    <h2>Document the concern</h2>
-    <div class="field"><label for="customerName">Customer name</label><input id="customerName" placeholder="Customer name"></div>
-    <div class="field"><label for="concern">Customer's exact concern</label><textarea id="concern" rows="5" placeholder="Record the customer's own words before diagnosis."></textarea></div>
-    <div class="field"><label for="mileage">Current mileage</label><input id="mileage" inputmode="numeric" placeholder="Mileage"></div>
+    <div class="eyebrow">Customer Check-In</div>
+    <h2>Customer and vehicle details</h2>
+    <div class="grid two">
+      <div class="field"><label for="customerName">Customer name</label><input id="customerName" autocomplete="name" placeholder="Customer name"></div>
+      <div class="field"><label for="phone">Phone number</label><input id="phone" inputmode="tel" autocomplete="tel" placeholder="Phone number"></div>
+      <div class="field"><label for="email">Email</label><input id="email" inputmode="email" autocomplete="email" placeholder="Email address"></div>
+      <div class="field"><label for="plate">License plate</label><input id="plate" autocapitalize="characters" placeholder="Plate number"></div>
+      <div class="field"><label for="mileage">Current mileage</label><input id="mileage" inputmode="numeric" placeholder="Mileage"></div>
+      <div class="field"><label for="arrivalMethod">Arrival method</label>
+        <select id="arrivalMethod">
+          <option>Customer drove in</option>
+          <option>Tow-in</option>
+          <option>Drop-off</option>
+          <option>Waiting appointment</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="concern">Customer's exact concern</label>
+      <textarea id="concern" rows="5" placeholder="Record the customer's own words before diagnosis."></textarea>
+    </div>
+
+    <div class="grid two">
+      <button id="startVoiceConcern" class="btn secondary" type="button">🎙️ Dictate Concern</button>
+      <button id="stopVoiceConcern" class="btn ghost" type="button">Stop Dictation</button>
+    </div>
+    <div id="voiceStatus" class="status">Voice dictation is optional. Typed entry remains available.</div>
+
+    <div class="field" style="margin-top:16px">
+      <label for="advisorNotes">Service advisor notes</label>
+      <textarea id="advisorNotes" rows="4" placeholder="Keys, authorization limits, appointment details, special instructions..."></textarea>
+    </div>
+
     <button class="btn primary" data-go="inspection">Continue to Walk-Around</button>
   </div>
 </section>
@@ -158,12 +187,37 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     <div class="eyebrow">Walk-Around Inspection</div>
     <h2>Initial vehicle condition</h2>
     <div class="grid two">
-      <label><input type="checkbox" class="check"> Exterior photos captured</label>
-      <label><input type="checkbox" class="check"> Wheels and tires documented</label>
-      <label><input type="checkbox" class="check"> Warning lamps documented</label>
-      <label><input type="checkbox" class="check"> Existing damage noted</label>
+      <label><input type="checkbox" class="check" data-label="Exterior photos captured"> Exterior photos captured</label>
+      <label><input type="checkbox" class="check" data-label="Existing damage documented"> Existing damage documented</label>
+      <label><input type="checkbox" class="check" data-label="Warning lamps documented"> Warning lamps documented</label>
+      <label><input type="checkbox" class="check" data-label="Keys received"> Keys received</label>
+      <label><input type="checkbox" class="check" data-label="Wheel-lock key checked"> Wheel-lock key checked</label>
+      <label><input type="checkbox" class="check" data-label="Valuables noted"> Valuables noted</label>
     </div>
-    <div class="field" style="margin-top:18px"><label for="inspectionNotes">Initial notes</label><textarea id="inspectionNotes" rows="5" placeholder="Leaks, lights, damage, tire condition, sounds, odors..."></textarea></div>
+
+    <div class="field" style="margin-top:18px">
+      <label for="fuelLevel">Fuel level</label>
+      <select id="fuelLevel">
+        <option>Not recorded</option>
+        <option>Empty</option>
+        <option>1/4 tank</option>
+        <option>1/2 tank</option>
+        <option>3/4 tank</option>
+        <option>Full</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="inspectionPhoto">Take check-in photo</label>
+      <input id="inspectionPhoto" type="file" accept="image/*" capture="environment">
+      <div id="photoStatus" class="status">No check-in photo selected.</div>
+    </div>
+
+    <div class="field">
+      <label for="inspectionNotes">Initial condition notes</label>
+      <textarea id="inspectionNotes" rows="5" placeholder="Leaks, lights, damage, tire condition, sounds, odors..."></textarea>
+    </div>
+
     <button class="btn primary" data-go="review">Review Check-In</button>
   </div>
 </section>
@@ -179,7 +233,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.1.6 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.2.0 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
 </div>
 
 <script>
@@ -504,18 +558,93 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   }
 
   function buildSummary(){
-    const checks=[...document.querySelectorAll(".check")].filter(c=>c.checked).length;
+    const completed=[...document.querySelectorAll(".check")]
+      .filter(c=>c.checked)
+      .map(c=>c.dataset.label||c.parentElement.textContent.trim());
     const rows=[
       ["Vehicle",selectedVehicle?`${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}`:"Not selected"],
       ["VIN",selectedVehicle?selectedVehicle.vin:"Not entered"],
       ["Customer",document.getElementById("customerName").value||"Not entered"],
+      ["Phone",document.getElementById("phone").value||"Not entered"],
+      ["Email",document.getElementById("email").value||"Not entered"],
+      ["License plate",document.getElementById("plate").value||"Not entered"],
       ["Mileage",document.getElementById("mileage").value||"Not entered"],
+      ["Arrival method",document.getElementById("arrivalMethod").value],
       ["Concern",document.getElementById("concern").value||"Not entered"],
-      ["Walk-around",`${checks} of 4 items documented`],
-      ["Notes",document.getElementById("inspectionNotes").value||"None"]
+      ["Advisor notes",document.getElementById("advisorNotes").value||"None"],
+      ["Fuel level",document.getElementById("fuelLevel").value],
+      ["Walk-around",completed.length?completed.join(", "):"None completed"],
+      ["Photo",document.getElementById("inspectionPhoto").files.length?document.getElementById("inspectionPhoto").files[0].name:"Not captured"],
+      ["Condition notes",document.getElementById("inspectionNotes").value||"None"]
     ];
     document.getElementById("summary").innerHTML=rows.map(([k,v])=>`<div>${k}</div><div>${escapeHtml(v)}</div>`).join("");
   }
+
+  let speechRecognition=null;
+
+  function startVoiceConcern(){
+    const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+    const status=document.getElementById("voiceStatus");
+    const concern=document.getElementById("concern");
+
+    if(!Recognition){
+      status.className="status warn";
+      status.textContent="Browser dictation is unavailable. Use the iPhone keyboard microphone.";
+      concern.focus();
+      return;
+    }
+
+    speechRecognition=new Recognition();
+    speechRecognition.continuous=true;
+    speechRecognition.interimResults=true;
+    speechRecognition.lang="en-US";
+
+    const base=concern.value.trim();
+    let finalText="";
+
+    speechRecognition.onstart=()=>{
+      status.className="status ok";
+      status.textContent="Listening… speak the customer's concern.";
+    };
+
+    speechRecognition.onresult=(event)=>{
+      let interim="";
+      for(let i=event.resultIndex;i<event.results.length;i++){
+        const text=event.results[i][0].transcript;
+        if(event.results[i].isFinal) finalText+=text+" ";
+        else interim+=text;
+      }
+      concern.value=[base,finalText,interim].filter(Boolean).join(" ").replace(/\s+/g," ").trim();
+    };
+
+    speechRecognition.onerror=(event)=>{
+      status.className="status warn";
+      status.textContent=`Dictation stopped: ${event.error}.`;
+    };
+
+    speechRecognition.onend=()=>{
+      status.className="status";
+      status.textContent="Dictation stopped. Review the concern before continuing.";
+    };
+
+    speechRecognition.start();
+  }
+
+  function stopVoiceConcern(){
+    if(speechRecognition){
+      try{speechRecognition.stop();}catch(e){}
+    }
+  }
+
+  document.getElementById("startVoiceConcern").addEventListener("click",startVoiceConcern);
+  document.getElementById("stopVoiceConcern").addEventListener("click",stopVoiceConcern);
+
+  document.getElementById("inspectionPhoto").addEventListener("change",(event)=>{
+    const status=document.getElementById("photoStatus");
+    const file=event.target.files&&event.target.files[0];
+    status.className=file?"status ok":"status";
+    status.textContent=file?`Check-in photo selected: ${file.name}`:"No check-in photo selected.";
+  });
 
   document.getElementById("identifyVehicle").addEventListener("click",identifyVehicle);
   document.getElementById("startCamera").addEventListener("click",openCamera);
@@ -529,19 +658,50 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     }
   });
   document.getElementById("submitCheckin").addEventListener("click",()=>{
+    const required=[
+      ["Customer name",document.getElementById("customerName").value.trim()],
+      ["Phone number",document.getElementById("phone").value.trim()],
+      ["Mileage",document.getElementById("mileage").value.trim()],
+      ["Customer concern",document.getElementById("concern").value.trim()]
+    ];
+
+    const missing=required.filter(([,value])=>!value).map(([label])=>label);
+    const s=document.getElementById("submitStatus");
+
+    if(missing.length){
+      s.className="status bad";
+      s.textContent=`Complete required fields: ${missing.join(", ")}.`;
+      return;
+    }
+
     const payload={
+      checkInId:`NIT-${new Date().toISOString().replace(/\D/g,"").slice(0,14)}`,
       timestamp:new Date().toISOString(),
       vehicle:selectedVehicle,
-      customer:document.getElementById("customerName").value,
-      mileage:document.getElementById("mileage").value,
-      concern:document.getElementById("concern").value,
-      inspectionNotes:document.getElementById("inspectionNotes").value,
-      walkaroundCompleted:[...document.querySelectorAll(".check")].filter(c=>c.checked).length
+      customer:{
+        name:document.getElementById("customerName").value.trim(),
+        phone:document.getElementById("phone").value.trim(),
+        email:document.getElementById("email").value.trim()
+      },
+      plate:document.getElementById("plate").value.trim().toUpperCase(),
+      mileage:document.getElementById("mileage").value.trim(),
+      arrivalMethod:document.getElementById("arrivalMethod").value,
+      concern:document.getElementById("concern").value.trim(),
+      advisorNotes:document.getElementById("advisorNotes").value.trim(),
+      fuelLevel:document.getElementById("fuelLevel").value,
+      checks:[...document.querySelectorAll(".check")].map(c=>({
+        label:c.dataset.label||c.parentElement.textContent.trim(),
+        completed:c.checked
+      })),
+      inspectionPhotoName:document.getElementById("inspectionPhoto").files.length
+        ? document.getElementById("inspectionPhoto").files[0].name
+        : "",
+      inspectionNotes:document.getElementById("inspectionNotes").value.trim()
     };
-    localStorage.setItem("nitros_prototype_v016_last_checkin",JSON.stringify(payload));
-    const s=document.getElementById("submitStatus");
+
+    localStorage.setItem("nitros_prototype_v020_last_checkin",JSON.stringify(payload));
     s.className="status ok";
-    s.textContent="Prototype check-in saved locally on this device.";
+    s.textContent=`Check-in ${payload.checkInId} saved locally on this device.`;
   });
 
   updateEnvironment();
