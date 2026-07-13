@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.4.1</title>
+<title>Nitros Prototype v0.5.0</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -84,13 +84,27 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     .summary>div{border-color:#ddd}
   }
 
+
+  .estimate-table{width:100%;border-collapse:collapse;margin-top:12px}
+  .estimate-table th,.estimate-table td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  .estimate-table th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .estimate-table input,.estimate-table select{min-width:90px}
+  .money{text-align:right!important;white-space:nowrap}
+  .estimate-total{display:grid;grid-template-columns:1fr auto;gap:8px;max-width:420px;margin-left:auto;margin-top:16px}
+  .estimate-total .grand{font-size:20px;font-weight:800;border-top:1px solid var(--line);padding-top:12px}
+  .auth-panel{border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:18px;background:rgba(255,255,255,.02)}
+  .status-pill{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-size:12px}
+  .status-approved{background:rgba(57,185,130,.12);color:#79e2b3}
+  .status-declined{background:rgba(225,93,100,.12);color:#ff9aa0}
+  .status-pending{background:rgba(255,183,74,.12);color:#ffd089}
+  @media(max-width:760px){.estimate-table{display:block;overflow-x:auto}}
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.4.1 — Professional Inspection Report Hotfix</div>
+  <div class="sub">Prototype v0.5.0 — Estimate & Repair Authorization</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -366,13 +380,56 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       </div>
     </div>
 
-    <button class="btn primary" data-go="review">Review Complete Check-In</button>
+    <button class="btn primary" data-go="estimate">Build Repair Estimate</button>
 
   </div>
 </section>
 
-<section id="review" class="screen">
+
+<section id="estimate" class="screen">
   <button class="back" data-go="technician">← Back</button>
+  <div class="card">
+    <div class="eyebrow">Estimate & Repair Authorization</div>
+    <h2>Build customer estimate</h2>
+    <div class="grid two">
+      <div class="field"><label for="estimateNumber">Estimate number</label><input id="estimateNumber" placeholder="Auto-generated if left blank"></div>
+      <div class="field"><label for="laborRate">Labor rate ($/hr)</label><input id="laborRate" inputmode="decimal" value="125"></div>
+    </div>
+    <table class="estimate-table">
+      <thead><tr><th>Description</th><th>Priority</th><th>Labor hrs</th><th>Parts $</th><th>Line total</th><th></th></tr></thead>
+      <tbody id="estimateRows"></tbody>
+    </table>
+    <button id="addEstimateLine" class="btn secondary" type="button" style="margin-top:14px">+ Add Estimate Line</button>
+    <div class="estimate-total">
+      <div>Labor subtotal</div><div class="money" id="laborSubtotal">$0.00</div>
+      <div>Parts subtotal</div><div class="money" id="partsSubtotal">$0.00</div>
+      <div>Shop supplies</div><div class="money" id="suppliesTotal">$0.00</div>
+      <div>Tax</div><div class="money" id="taxTotal">$0.00</div>
+      <div class="grand">Estimated total</div><div class="grand money" id="grandTotal">$0.00</div>
+    </div>
+    <div class="grid two" style="margin-top:18px">
+      <div class="field"><label for="shopSuppliesPercent">Shop supplies (%)</label><input id="shopSuppliesPercent" inputmode="decimal" value="5"></div>
+      <div class="field"><label for="taxPercent">Tax on parts (%)</label><input id="taxPercent" inputmode="decimal" value="7"></div>
+    </div>
+    <div class="auth-panel">
+      <h3>Customer authorization</h3>
+      <div class="grid two">
+        <div class="field"><label for="authorizationStatus">Authorization status</label>
+          <select id="authorizationStatus"><option>Pending</option><option>Approved</option><option>Partially Approved</option><option>Declined</option></select>
+        </div>
+        <div class="field"><label for="authorizationMethod">Authorization method</label>
+          <select id="authorizationMethod"><option>Not recorded</option><option>In person</option><option>Phone</option><option>Text message</option><option>Email</option></select>
+        </div>
+      </div>
+      <div class="field"><label for="authorizationNotes">Authorization notes</label><textarea id="authorizationNotes" rows="4" placeholder="Approved work, declined work, dollar limit, customer instructions..."></textarea></div>
+      <div id="authorizationBadge" class="status-pill status-pending">Pending</div>
+    </div>
+    <button class="btn primary" data-go="review" style="margin-top:18px">Review Inspection & Estimate</button>
+  </div>
+</section>
+
+<section id="review" class="screen">
+  <button class="back" data-go="estimate">← Back</button>
   <div class="card">
     <div class="eyebrow">Professional Inspection Report</div>
     <h2>Customer-ready inspection summary</h2>
@@ -393,7 +450,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.4.1 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.5.0 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
 </div>
 
 <script>
@@ -803,6 +860,57 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     return canvas.toDataURL()!==blank.toDataURL();
   }
 
+
+  function formatMoney(value){
+    return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(value)||0);
+  }
+  function createEstimateRow(data={}){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><input class="est-desc" placeholder="Repair or service" value="${escapeHtml(data.description||"")}"></td>
+      <td><select class="est-priority"><option>Immediate</option><option>Soon</option><option>Monitor</option></select></td>
+      <td><input class="est-hours" inputmode="decimal" value="${data.hours??0}"></td>
+      <td><input class="est-parts" inputmode="decimal" value="${data.parts??0}"></td>
+      <td class="money est-total">$0.00</td>
+      <td><button class="btn ghost est-remove" type="button">Remove</button></td>`;
+    tr.querySelector(".est-priority").value=data.priority||"Immediate";
+    tr.querySelectorAll("input,select").forEach(el=>el.addEventListener("input",updateEstimateTotals));
+    tr.querySelector(".est-remove").addEventListener("click",()=>{tr.remove();updateEstimateTotals();});
+    document.getElementById("estimateRows").appendChild(tr);
+    updateEstimateTotals();
+  }
+  function calculateEstimate(){
+    const laborRate=Number(document.getElementById("laborRate").value)||0;
+    let laborSubtotal=0,partsSubtotal=0;
+    const lines=[...document.querySelectorAll("#estimateRows tr")].map(row=>{
+      const description=row.querySelector(".est-desc").value.trim();
+      const priority=row.querySelector(".est-priority").value;
+      const hours=Number(row.querySelector(".est-hours").value)||0;
+      const parts=Number(row.querySelector(".est-parts").value)||0;
+      const labor=hours*laborRate,total=labor+parts;
+      laborSubtotal+=labor;partsSubtotal+=parts;
+      row.querySelector(".est-total").textContent=formatMoney(total);
+      return {description,priority,hours,parts,labor,total};
+    });
+    const supplies=((Number(document.getElementById("shopSuppliesPercent").value)||0)/100)*laborSubtotal;
+    const tax=((Number(document.getElementById("taxPercent").value)||0)/100)*partsSubtotal;
+    return {lines,laborRate,laborSubtotal,partsSubtotal,supplies,tax,grandTotal:laborSubtotal+partsSubtotal+supplies+tax};
+  }
+  function updateEstimateTotals(){
+    const t=calculateEstimate();
+    document.getElementById("laborSubtotal").textContent=formatMoney(t.laborSubtotal);
+    document.getElementById("partsSubtotal").textContent=formatMoney(t.partsSubtotal);
+    document.getElementById("suppliesTotal").textContent=formatMoney(t.supplies);
+    document.getElementById("taxTotal").textContent=formatMoney(t.tax);
+    document.getElementById("grandTotal").textContent=formatMoney(t.grandTotal);
+  }
+  function updateAuthorizationBadge(){
+    const value=document.getElementById("authorizationStatus").value;
+    const badge=document.getElementById("authorizationBadge");
+    badge.textContent=value;
+    badge.className="status-pill "+(value==="Approved"?"status-approved":value==="Declined"?"status-declined":"status-pending");
+  }
+
   function buildSummary(){
     const completed=[...document.querySelectorAll(".check")]
       .filter(c=>c.checked)
@@ -840,7 +948,12 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       ["Monitor items",document.getElementById("priorityMonitor").value||"None"],
       ["Vehicle photos",countVehiclePhotos()+" of 6 captured"],
       ["Technician signature",signatureHasInk("technicianSignature")?"Captured":"Not captured"],
-      ["Customer signature",signatureHasInk("customerSignature")?"Captured":"Not captured"]
+      ["Customer signature",signatureHasInk("customerSignature")?"Captured":"Not captured"],
+      ["Estimate number",document.getElementById("estimateNumber").value||"Auto-generated on save"],
+      ["Estimate total",formatMoney(calculateEstimate().grandTotal)],
+      ["Authorization status",document.getElementById("authorizationStatus").value],
+      ["Authorization method",document.getElementById("authorizationMethod").value],
+      ["Authorization notes",document.getElementById("authorizationNotes").value||"None"]
     ];
     const healthScoreEl=document.getElementById("healthScore");
     if(healthScoreEl) healthScoreEl.textContent=calculateHealthScore();
@@ -937,7 +1050,13 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       identifyStatus.textContent=`VIN photo captured: ${file.name}. Automatic photo decoding is not enabled in this field-test build; use the image as a reference and enter the VIN manually.`;
     }
   });
-  document.getElementById("submitCheckin")?.addEventListener("click",()=>{
+    document.getElementById("addEstimateLine").addEventListener("click",()=>createEstimateRow());
+  ["laborRate","shopSuppliesPercent","taxPercent"].forEach(id=>document.getElementById(id).addEventListener("input",updateEstimateTotals));
+  document.getElementById("authorizationStatus").addEventListener("change",updateAuthorizationBadge);
+  createEstimateRow({description:"Inspection-recommended repair",priority:"Immediate",hours:0,parts:0});
+  updateAuthorizationBadge();
+
+document.getElementById("submitCheckin")?.addEventListener("click",()=>{
     const required=[
       ["Customer name",document.getElementById("customerName").value.trim()],
       ["Phone number",document.getElementById("phone").value.trim()],
@@ -1027,10 +1146,19 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       signatures:{
         technician:signatureHasInk("technicianSignature"),
         customer:signatureHasInk("customerSignature")
+      },
+      estimate:{
+        estimateNumber:document.getElementById("estimateNumber").value.trim()||`EST-${new Date().toISOString().replace(/\D/g,"").slice(0,14)}`,
+        ...calculateEstimate(),
+        authorization:{
+          status:document.getElementById("authorizationStatus").value,
+          method:document.getElementById("authorizationMethod").value,
+          notes:document.getElementById("authorizationNotes").value.trim()
+        }
       }
     };
 
-    localStorage.setItem("nitros_prototype_v040_last_checkin",JSON.stringify(payload));
+    localStorage.setItem("nitros_prototype_v050_last_checkin",JSON.stringify(payload));
     s.className="status ok";
     s.textContent=`Inspection report ${payload.checkInId} saved successfully on this device.`;
   });
