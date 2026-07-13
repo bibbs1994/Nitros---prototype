@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.5.0</title>
+<title>Nitros Prototype v0.5.1</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -104,7 +104,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.5.0 — Estimate & Repair Authorization</div>
+  <div class="sub">Prototype v0.5.1 — Dictation Hotfix</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -450,7 +450,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.5.0 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.5.1 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
 </div>
 
 <script>
@@ -961,63 +961,105 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   }
 
   let speechRecognition=null;
+  let speechActive=false;
+
+  function isIOSDevice(){
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+  }
+
+  function showKeyboardDictationFallback(){
+    const status=document.getElementById("voiceStatus");
+    const concern=document.getElementById("concern");
+    concern.focus();
+    concern.scrollIntoView({behavior:"smooth",block:"center"});
+    status.className="status ok";
+    status.textContent="Concern field is ready. Tap the microphone on the iPhone keyboard and begin speaking.";
+  }
 
   function startVoiceConcern(){
     const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
     const status=document.getElementById("voiceStatus");
     const concern=document.getElementById("concern");
 
-    if(!Recognition){
-      status.className="status warn";
-      status.textContent="Browser dictation is unavailable. Use the iPhone keyboard microphone.";
-      concern.focus();
+    if(isIOSDevice() || !Recognition){
+      showKeyboardDictationFallback();
       return;
     }
 
-    speechRecognition=new Recognition();
-    speechRecognition.continuous=true;
-    speechRecognition.interimResults=true;
-    speechRecognition.lang="en-US";
-
-    const base=concern.value.trim();
-    let finalText="";
-
-    speechRecognition.onstart=()=>{
-      status.className="status ok";
-      status.textContent="Listening… speak the customer's concern.";
-    };
-
-    speechRecognition.onresult=(event)=>{
-      let interim="";
-      for(let i=event.resultIndex;i<event.results.length;i++){
-        const text=event.results[i][0].transcript;
-        if(event.results[i].isFinal) finalText+=text+" ";
-        else interim+=text;
-      }
-      concern.value=[base,finalText,interim].filter(Boolean).join(" ").replace(/\s+/g," ").trim();
-    };
-
-    speechRecognition.onerror=(event)=>{
+    if(speechActive){
       status.className="status warn";
-      status.textContent=`Dictation stopped: ${event.error}.`;
-    };
+      status.textContent="Dictation is already running.";
+      return;
+    }
 
-    speechRecognition.onend=()=>{
-      status.className="status";
-      status.textContent="Dictation stopped. Review the concern before continuing.";
-    };
+    try{
+      speechRecognition=new Recognition();
+      speechRecognition.continuous=true;
+      speechRecognition.interimResults=true;
+      speechRecognition.lang="en-US";
 
-    speechRecognition.start();
-  }
+      const base=concern.value.trim();
+      let finalText="";
 
-  function stopVoiceConcern(){
-    if(speechRecognition){
-      try{speechRecognition.stop();}catch(e){}
+      speechRecognition.onstart=()=>{
+        speechActive=true;
+        status.className="status ok";
+        status.textContent="Listening… speak the customer's concern.";
+      };
+
+      speechRecognition.onresult=(event)=>{
+        let interim="";
+        for(let i=event.resultIndex;i<event.results.length;i++){
+          const text=event.results[i][0].transcript;
+          if(event.results[i].isFinal) finalText+=text+" ";
+          else interim+=text;
+        }
+        concern.value=[base,finalText,interim]
+          .filter(Boolean)
+          .join(" ")
+          .replace(/\s+/g," ")
+          .trim();
+      };
+
+      speechRecognition.onerror=(event)=>{
+        speechActive=false;
+        status.className="status warn";
+        status.textContent=`Dictation stopped: ${event.error}. You can continue with the keyboard microphone.`;
+      };
+
+      speechRecognition.onend=()=>{
+        speechActive=false;
+        status.className="status";
+        status.textContent="Dictation stopped. Review the concern before continuing.";
+      };
+
+      speechRecognition.start();
+    }catch(error){
+      speechActive=false;
+      showKeyboardDictationFallback();
     }
   }
 
-  document.getElementById("startVoiceConcern").addEventListener("click",startVoiceConcern);
-  document.getElementById("stopVoiceConcern").addEventListener("click",stopVoiceConcern);
+  function stopVoiceConcern(){
+    const status=document.getElementById("voiceStatus");
+    const concern=document.getElementById("concern");
+
+    if(speechRecognition && speechActive){
+      try{speechRecognition.stop();}catch(e){}
+      speechActive=false;
+      status.className="status";
+      status.textContent="Dictation stopped. Review the concern before continuing.";
+      return;
+    }
+
+    concern.blur();
+    status.className="status";
+    status.textContent="Dictation is off. Review the concern before continuing.";
+  }
+
+  document.getElementById("startVoiceConcern")?.addEventListener("click",startVoiceConcern);
+  document.getElementById("stopVoiceConcern")?.addEventListener("click",stopVoiceConcern);
 
   ["photoFront","photoRear","photoLeft","photoRight","photoOdometer","photoVin"].forEach(id=>{
     document.getElementById(id).addEventListener("change",()=>{
@@ -1158,7 +1200,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
       }
     };
 
-    localStorage.setItem("nitros_prototype_v050_last_checkin",JSON.stringify(payload));
+    localStorage.setItem("nitros_prototype_v051_last_checkin",JSON.stringify(payload));
     s.className="status ok";
     s.textContent=`Inspection report ${payload.checkInId} saved successfully on this device.`;
   });
