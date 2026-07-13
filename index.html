@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.6.4</title>
+<title>Nitros Prototype v0.6.5</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -137,13 +137,22 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   .history-search{display:grid;grid-template-columns:1fr auto;gap:10px}
   @media(max-width:700px){.history-head{display:block}.history-date{margin-top:5px}.history-search{grid-template-columns:1fr}}
 
+  .assistant-grid{display:grid;grid-template-columns:1fr auto;gap:10px}
+  .assistant-results{display:grid;gap:14px;margin-top:16px}
+  .assistant-card{border:1px solid var(--line);border-radius:16px;padding:16px;background:rgba(255,255,255,.025)}
+  .assistant-score{font-size:25px;font-weight:800;color:#79e2b3}
+  .assistant-reasons{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+  .assistant-section{margin-top:10px;color:var(--muted);line-height:1.5}
+  .assistant-section strong{color:var(--text)}
+  @media(max-width:700px){.assistant-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.6.4 — Customer History</div>
+  <div class="sub">Prototype v0.6.5 — AI Repair Assistant</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -162,6 +171,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     <div class="grid two" style="margin-top:12px">
       <button class="btn primary" data-go="checkin">Start Check-In</button>
       <button class="btn secondary" data-go="history">Customer History</button>
+      <button class="btn secondary" data-go="assistant">AI Repair Assistant</button>
     </div>
 
   </div>
@@ -189,6 +199,30 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     </div>
     <div id="historyStatus" class="status">Saved inspection reports on this device will appear here.</div>
     <div id="historyResults" class="history-list"></div>
+  </div>
+</section>
+
+
+<section id="assistant" class="screen">
+  <button class="back" data-go="home">← Back</button>
+  <div class="card">
+    <div class="eyebrow">Nitros Diagnostic Knowledge Search</div>
+    <h2>AI Repair Assistant</h2>
+    <p>Describe the symptom, DTC, vehicle, or failed system. The assistant compares your description with saved Nitros repair records and the built-in prototype case library.</p>
+    <div class="field">
+      <label for="assistantQuery">Symptom, DTC, or repair question</label>
+      <textarea id="assistantQuery" rows="5" placeholder="Example: Intermittent ABS light, C1082, Jeep Wrangler vacuum sensor circuit"></textarea>
+    </div>
+    <div class="assistant-grid">
+      <button id="runAssistantSearch" class="btn primary" type="button">Search Similar Repairs</button>
+      <button id="dictateAssistantQuery" class="btn secondary" type="button">🎙️ Dictate Search</button>
+    </div>
+    <div class="grid two" style="margin-top:12px">
+      <button id="useCurrentConcern" class="btn secondary small" type="button">Use Current Customer Concern</button>
+      <button id="clearAssistantSearch" class="btn ghost small" type="button">Clear Results</button>
+    </div>
+    <div id="assistantStatus" class="status">Ready to search saved repairs and prototype cases.</div>
+    <div id="assistantResults" class="assistant-results"></div>
   </div>
 </section>
 
@@ -655,7 +689,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.6.4 • Repaired iPhone VIN scan and voice dictation • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.6.5 • Repaired iPhone VIN scan and voice dictation • Local prototype storage only</div>
 </div>
 
 <script>
@@ -1519,6 +1553,123 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     Object.entries(fields).forEach(([id,value])=>{const el=document.getElementById(id);if(el&&!el.value&&value)el.value=value;});
   }
 
+
+  const PROTOTYPE_CASES=[
+    {checkInId:"CASE-JEEP-C1082",timestamp:"2026-07-01T12:00:00Z",vehicle:{year:"2017",make:"Jeep",model:"Wrangler",vin:"DEMO-JEEP-C1082"},concern:"ABS and traction-control warning lamps intermittent. DTC C1082 and C1083 stored.",technicianInspection:{findings:"Vacuum pressure sensor circuit fault. Inspected vacuum pump under radiator and verified circuit integrity.",recommendation:"Test vacuum sensor signal, power, ground, pump operation, and wiring before replacing components.",priorities:{immediate:"Diagnose warning-lamp and vacuum sensor circuit fault.",soon:"",monitor:""}},workOrder:{completionNotes:"Vacuum-system repair completed and road test verified. Warning lamps remained off."}},
+    {checkInId:"CASE-FUSION-C1165",timestamp:"2026-06-28T12:00:00Z",vehicle:{year:"2012",make:"Ford",model:"Fusion SE",vin:"DEMO-FUSION-C1165"},concern:"ABS warning lamp on with C1165 right-rear wheel-speed sensor code.",technicianInspection:{findings:"Right-rear wheel-speed signal fault confirmed through scan data and circuit inspection.",recommendation:"Repair verified wheel-speed sensor fault and inspect tone-ring and harness condition.",priorities:{immediate:"Restore ABS wheel-speed signal.",soon:"",monitor:""}},workOrder:{completionNotes:"Right-rear wheel-speed sensor repair completed. Codes cleared and road test confirmed."}},
+    {checkInId:"CASE-MINI-EVAP",timestamp:"2026-06-25T12:00:00Z",vehicle:{year:"2017",make:"MINI",model:"Cooper",vin:"DEMO-MINI-EVAP"},concern:"Check-engine light with EVAP leak symptoms.",technicianInspection:{findings:"EVAP purge valve leaking when commanded closed.",recommendation:"Replace purge valve and verify purge sealing and monitor readiness.",priorities:{immediate:"Replace leaking purge valve.",soon:"",monitor:""}},workOrder:{completionNotes:"Purge valve replaced. EVAP operation verified after repair."}},
+    {checkInId:"CASE-F250-FRONT",timestamp:"2026-06-20T12:00:00Z",vehicle:{year:"2004",make:"Ford",model:"F-250",vin:"DEMO-F250-FRONT"},concern:"Front-end looseness, steering play, bearing noise, and uneven tire movement.",technicianInspection:{findings:"Upper and lower ball joints, wheel hubs, and steering linkage required replacement.",recommendation:"Rebuild affected front suspension and steering components, torque to specification, align, and road test.",priorities:{immediate:"Correct unsafe front-end looseness.",soon:"Perform alignment after repairs.",monitor:"Recheck fasteners and tire wear."}},workOrder:{completionNotes:"Ball joints, hub bearings, and drag link replaced. Torque verification and road test completed."}}
+  ];
+
+  const ASSISTANT_STOP_WORDS=new Set("the a an and or of to in on for with is are was were be been this that it its from at by as customer vehicle car truck has have had light lights comes come intermittent problem issue concern says said please find show repair repairs similar code dtc system".split(" "));
+
+  function assistantTokens(value){
+    return [...new Set(String(value||"").toLowerCase().replace(/[^a-z0-9]+/g," ").split(/\s+/).filter(token=>token.length>1&&!ASSISTANT_STOP_WORDS.has(token)))];
+  }
+
+  function recordFieldText(record){
+    return {
+      vehicle:[record.vehicle?.year,record.vehicle?.make,record.vehicle?.model,record.vehicle?.engine].filter(Boolean).join(" "),
+      concern:record.concern||"",
+      findings:record.technicianInspection?.findings||"",
+      recommendation:record.technicianInspection?.recommendation||"",
+      priorities:Object.values(record.technicianInspection?.priorities||{}).filter(Boolean).join(" "),
+      completion:record.workOrder?.completionNotes||"",
+      notes:[record.advisorNotes,record.inspectionNotes,record.workOrder?.internalTechnicianNotes].filter(Boolean).join(" ")
+    };
+  }
+
+  function scoreRepairRecord(record,query){
+    const tokens=assistantTokens(query);
+    const fields=recordFieldText(record);
+    const weights={vehicle:3,concern:5,findings:6,recommendation:4,priorities:3,completion:5,notes:2};
+    let score=0;
+    const reasons=[];
+    for(const [name,value] of Object.entries(fields)){
+      const lower=String(value).toLowerCase();
+      const matched=tokens.filter(token=>lower.includes(token));
+      if(matched.length){
+        score+=matched.length*weights[name];
+        reasons.push(`${name}: ${matched.slice(0,4).join(", ")}`);
+      }
+    }
+    const normalizedQuery=String(query).toLowerCase().trim();
+    const fullText=Object.values(fields).join(" ").toLowerCase();
+    if(normalizedQuery.length>4&&fullText.includes(normalizedQuery)) score+=20;
+    return {record,score,reasons};
+  }
+
+  function runAssistantSearch(){
+    const query=document.getElementById("assistantQuery").value.trim();
+    const status=document.getElementById("assistantStatus");
+    const container=document.getElementById("assistantResults");
+    if(query.length<2){
+      status.className="status warn";
+      status.textContent="Describe a symptom, code, component, or repair before searching.";
+      container.innerHTML="";
+      return;
+    }
+    const records=[...loadCustomerHistory(),...PROTOTYPE_CASES];
+    const scored=records.map(record=>scoreRepairRecord(record,query)).filter(item=>item.score>0).sort((a,b)=>b.score-a.score).slice(0,8);
+    if(!scored.length){
+      status.className="status warn";
+      status.textContent="No similar repairs were found. Save more completed repair records or try broader terms.";
+      container.innerHTML='<div class="history-empty">Try a DTC, component name, symptom, make/model, or completed repair.</div>';
+      return;
+    }
+    status.className="status ok";
+    status.textContent=`${scored.length} potentially similar repair${scored.length===1?"":"s"} found. Highest-scoring records appear first.`;
+    const maxScore=Math.max(...scored.map(item=>item.score),1);
+    container.innerHTML=scored.map(({record,score,reasons})=>{
+      const vehicle=[record.vehicle?.year,record.vehicle?.make,record.vehicle?.model].filter(Boolean).join(" ")||"Vehicle not recorded";
+      const percent=Math.max(1,Math.round((score/maxScore)*100));
+      return `<div class="assistant-card">
+        <div class="history-head"><div><div class="history-title">${escapeHtml(vehicle)}</div><div class="history-meta">${escapeHtml(record.checkInId||"Saved repair")}</div></div><div class="assistant-score">${percent}% match</div></div>
+        <div class="assistant-section"><strong>Complaint:</strong> ${escapeHtml(record.concern||"None recorded")}</div>
+        <div class="assistant-section"><strong>Findings:</strong> ${escapeHtml(record.technicianInspection?.findings||"None recorded")}</div>
+        <div class="assistant-section"><strong>Recommended action:</strong> ${escapeHtml(record.technicianInspection?.recommendation||"None recorded")}</div>
+        <div class="assistant-section"><strong>Confirmed repair:</strong> ${escapeHtml(record.workOrder?.completionNotes||"None recorded")}</div>
+        <div class="assistant-reasons">${reasons.map(reason=>`<span class="badge">${escapeHtml(reason)}</span>`).join("")}</div>
+      </div>`;
+    }).join("");
+  }
+
+  let assistantRecognition=null;
+  function dictateAssistantQuery(){
+    const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+    const query=document.getElementById("assistantQuery");
+    const status=document.getElementById("assistantStatus");
+    if(!Recognition){
+      query.focus();
+      status.className="status ok";
+      status.textContent="Tap the microphone on the iPhone keyboard and describe the repair symptom.";
+      return;
+    }
+    try{
+      assistantRecognition=new Recognition();
+      assistantRecognition.lang="en-US";
+      assistantRecognition.continuous=false;
+      assistantRecognition.interimResults=true;
+      const base=query.value.trim();
+      assistantRecognition.onstart=()=>{status.className="status ok";status.textContent="Listening. Describe the symptom, DTC, or repair history to search.";};
+      assistantRecognition.onresult=event=>{
+        let finalText="",interim="";
+        for(let i=event.resultIndex;i<event.results.length;i++){
+          const text=event.results[i][0].transcript.trim();
+          if(event.results[i].isFinal) finalText+=`${text} `; else interim+=text;
+        }
+        query.value=[base,finalText,interim].filter(Boolean).join(" ").replace(/\s+/g," ").trim();
+      };
+      assistantRecognition.onerror=()=>{status.className="status warn";status.textContent="Voice search stopped. Use the iPhone keyboard microphone or type the search.";};
+      assistantRecognition.onend=()=>{if(query.value.trim()){status.className="status ok";status.textContent="Voice search captured. Tap Search Similar Repairs.";}};
+      assistantRecognition.start();
+    }catch(error){
+      query.focus();
+      status.className="status ok";
+      status.textContent="Use the iPhone keyboard microphone to dictate the repair search.";
+    }
+  }
+
   function buildSummary(){
     const completed=[...document.querySelectorAll(".check")]
       .filter(c=>c.checked)
@@ -1777,6 +1928,22 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       identifyStatus.textContent=`VIN photo saved, but no complete VIN barcode was detected. Retake the photo closer and level, or enter the VIN manually.`;
     }
   });
+
+  document.getElementById("runAssistantSearch")?.addEventListener("click",runAssistantSearch);
+  document.getElementById("assistantQuery")?.addEventListener("keydown",event=>{if(event.key==="Enter"&&(event.ctrlKey||event.metaKey)) runAssistantSearch();});
+  document.getElementById("dictateAssistantQuery")?.addEventListener("click",dictateAssistantQuery);
+  document.getElementById("useCurrentConcern")?.addEventListener("click",()=>{
+    const concern=document.getElementById("concern")?.value.trim()||"";
+    document.getElementById("assistantQuery").value=concern;
+    document.getElementById("assistantStatus").className=concern?"status ok":"status warn";
+    document.getElementById("assistantStatus").textContent=concern?"Current customer concern loaded. Tap Search Similar Repairs.":"No current customer concern has been entered yet.";
+  });
+  document.getElementById("clearAssistantSearch")?.addEventListener("click",()=>{
+    document.getElementById("assistantQuery").value="";
+    document.getElementById("assistantResults").innerHTML="";
+    document.getElementById("assistantStatus").className="status";
+    document.getElementById("assistantStatus").textContent="Search cleared.";
+  });
   document.getElementById("runHistorySearch")?.addEventListener("click",searchHistory);
   document.getElementById("historySearch")?.addEventListener("keydown",e=>{if(e.key==="Enter") searchHistory();});
   document.getElementById("showAllHistory")?.addEventListener("click",()=>{document.getElementById("historySearch").value="";searchHistory();});
@@ -1925,7 +2092,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
       }
     };
 
-    localStorage.setItem("nitros_prototype_v064_last_checkin",JSON.stringify(payload));
+    localStorage.setItem("nitros_prototype_v065_last_checkin",JSON.stringify(payload));
     saveCustomerHistoryRecord(payload);
     s.className="status ok";
     s.textContent=`Inspection report ${payload.checkInId} saved successfully and added to customer history on this device.`;
