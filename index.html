@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.6.5</title>
+<title>Nitros Prototype v0.6.6</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -146,13 +146,26 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   .assistant-section strong{color:var(--text)}
   @media(max-width:700px){.assistant-grid{grid-template-columns:1fr}}
 
+  .assistant-root-cause{margin-top:12px;padding:12px;border-left:4px solid var(--accent2);background:#0a1727;border-radius:10px;font-size:17px}
+  .assistant-root-cause strong{color:#ffb27a}
+  .assistant-meta-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+  .assistant-meta-box{border:1px solid var(--line);border-radius:12px;padding:11px;background:#0a1727}
+  .assistant-meta-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .assistant-meta-value{font-weight:800;margin-top:5px}
+  .assistant-evidence{display:none;margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#081321}
+  .assistant-evidence.open{display:block}
+  .evidence-list{display:grid;gap:8px;margin-top:9px}
+  .evidence-item{padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.035);color:var(--muted)}
+  .confidence-label{font-size:12px;color:var(--muted);text-align:right;margin-top:3px}
+  @media(max-width:700px){.assistant-meta-grid{grid-template-columns:1fr}.confidence-label{text-align:left}}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.6.5 — AI Repair Assistant</div>
+  <div class="sub">Prototype v0.6.6 — Diagnostic Evidence Assistant</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -689,7 +702,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.6.5 • Repaired iPhone VIN scan and voice dictation • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.6.6 • Repaired iPhone VIN scan and voice dictation • Local prototype storage only</div>
 </div>
 
 <script>
@@ -1555,10 +1568,10 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
 
 
   const PROTOTYPE_CASES=[
-    {checkInId:"CASE-JEEP-C1082",timestamp:"2026-07-01T12:00:00Z",vehicle:{year:"2017",make:"Jeep",model:"Wrangler",vin:"DEMO-JEEP-C1082"},concern:"ABS and traction-control warning lamps intermittent. DTC C1082 and C1083 stored.",technicianInspection:{findings:"Vacuum pressure sensor circuit fault. Inspected vacuum pump under radiator and verified circuit integrity.",recommendation:"Test vacuum sensor signal, power, ground, pump operation, and wiring before replacing components.",priorities:{immediate:"Diagnose warning-lamp and vacuum sensor circuit fault.",soon:"",monitor:""}},workOrder:{completionNotes:"Vacuum-system repair completed and road test verified. Warning lamps remained off."}},
-    {checkInId:"CASE-FUSION-C1165",timestamp:"2026-06-28T12:00:00Z",vehicle:{year:"2012",make:"Ford",model:"Fusion SE",vin:"DEMO-FUSION-C1165"},concern:"ABS warning lamp on with C1165 right-rear wheel-speed sensor code.",technicianInspection:{findings:"Right-rear wheel-speed signal fault confirmed through scan data and circuit inspection.",recommendation:"Repair verified wheel-speed sensor fault and inspect tone-ring and harness condition.",priorities:{immediate:"Restore ABS wheel-speed signal.",soon:"",monitor:""}},workOrder:{completionNotes:"Right-rear wheel-speed sensor repair completed. Codes cleared and road test confirmed."}},
-    {checkInId:"CASE-MINI-EVAP",timestamp:"2026-06-25T12:00:00Z",vehicle:{year:"2017",make:"MINI",model:"Cooper",vin:"DEMO-MINI-EVAP"},concern:"Check-engine light with EVAP leak symptoms.",technicianInspection:{findings:"EVAP purge valve leaking when commanded closed.",recommendation:"Replace purge valve and verify purge sealing and monitor readiness.",priorities:{immediate:"Replace leaking purge valve.",soon:"",monitor:""}},workOrder:{completionNotes:"Purge valve replaced. EVAP operation verified after repair."}},
-    {checkInId:"CASE-F250-FRONT",timestamp:"2026-06-20T12:00:00Z",vehicle:{year:"2004",make:"Ford",model:"F-250",vin:"DEMO-F250-FRONT"},concern:"Front-end looseness, steering play, bearing noise, and uneven tire movement.",technicianInspection:{findings:"Upper and lower ball joints, wheel hubs, and steering linkage required replacement.",recommendation:"Rebuild affected front suspension and steering components, torque to specification, align, and road test.",priorities:{immediate:"Correct unsafe front-end looseness.",soon:"Perform alignment after repairs.",monitor:"Recheck fasteners and tire wear."}},workOrder:{completionNotes:"Ball joints, hub bearings, and drag link replaced. Torque verification and road test completed."}}
+    {checkInId:"CASE-JEEP-C1082",timestamp:"2026-07-01T12:00:00Z",vehicle:{year:"2017",make:"Jeep",model:"Wrangler",vin:"DEMO-JEEP-C1082"},concern:"ABS and traction-control warning lamps intermittent. DTC C1082 and C1083 stored.",technicianInspection:{findings:"Vacuum pressure sensor circuit fault. Inspected vacuum pump under radiator and verified circuit integrity.",recommendation:"Test vacuum sensor signal, power, ground, pump operation, and wiring before replacing components.",priorities:{immediate:"Diagnose warning-lamp and vacuum sensor circuit fault.",soon:"",monitor:""}},rootCause:"Vacuum pressure sensor circuit fault near the under-radiator vacuum-pump assembly.",labor:{diagnostic:"0.8 hr",repair:"1.1 hr"},parts:["Vacuum pressure sensor / circuit repair materials"],evidence:["DTCs C1082 and C1083","Vacuum-pump component location","Power, ground, signal and wiring test sequence","Road-test verification"],workOrder:{completionNotes:"Vacuum-system repair completed and road test verified. Warning lamps remained off."}},
+    {checkInId:"CASE-FUSION-C1165",timestamp:"2026-06-28T12:00:00Z",vehicle:{year:"2012",make:"Ford",model:"Fusion SE",vin:"DEMO-FUSION-C1165"},concern:"ABS warning lamp on with C1165 right-rear wheel-speed sensor code.",technicianInspection:{findings:"Right-rear wheel-speed signal fault confirmed through scan data and circuit inspection.",recommendation:"Repair verified wheel-speed sensor fault and inspect tone-ring and harness condition.",priorities:{immediate:"Restore ABS wheel-speed signal.",soon:"",monitor:""}},rootCause:"Right-rear wheel-speed signal failure confirmed by scan data and circuit inspection.",labor:{diagnostic:"0.6 hr",repair:"0.9 hr"},parts:["Right-rear wheel-speed sensor as required"],evidence:["DTC C1165","Wheel-speed scan-data comparison","Harness and tone-ring inspection","Post-repair road test"],workOrder:{completionNotes:"Right-rear wheel-speed sensor repair completed. Codes cleared and road test confirmed."}},
+    {checkInId:"CASE-MINI-EVAP",timestamp:"2026-06-25T12:00:00Z",vehicle:{year:"2017",make:"MINI",model:"Cooper",vin:"DEMO-MINI-EVAP"},concern:"Check-engine light with EVAP leak symptoms.",technicianInspection:{findings:"EVAP purge valve leaking when commanded closed.",recommendation:"Replace purge valve and verify purge sealing and monitor readiness.",priorities:{immediate:"Replace leaking purge valve.",soon:"",monitor:""}},rootCause:"EVAP purge valve leaked when commanded closed.",labor:{diagnostic:"0.5 hr",repair:"0.7 hr"},parts:["EVAP purge valve"],evidence:["Purge-sealing test","EVAP command test","Readiness-monitor verification"],workOrder:{completionNotes:"Purge valve replaced. EVAP operation verified after repair."}},
+    {checkInId:"CASE-F250-FRONT",timestamp:"2026-06-20T12:00:00Z",vehicle:{year:"2004",make:"Ford",model:"F-250",vin:"DEMO-F250-FRONT"},concern:"Front-end looseness, steering play, bearing noise, and uneven tire movement.",technicianInspection:{findings:"Upper and lower ball joints, wheel hubs, and steering linkage required replacement.",recommendation:"Rebuild affected front suspension and steering components, torque to specification, align, and road test.",priorities:{immediate:"Correct unsafe front-end looseness.",soon:"Perform alignment after repairs.",monitor:"Recheck fasteners and tire wear."}},rootCause:"Excessive wear in upper/lower ball joints, wheel hubs and steering linkage.",labor:{diagnostic:"0.7 hr",repair:"8.5 hr"},parts:["Upper and lower ball joints","Front hub bearings","Drag link"],evidence:["Front-end play inspection","Component photographs","Torque-verification checklist","Alignment recommendation","Road-test verification"],workOrder:{completionNotes:"Ball joints, hub bearings, and drag link replaced. Torque verification and road test completed."}}
   ];
 
   const ASSISTANT_STOP_WORDS=new Set("the a an and or of to in on for with is are was were be been this that it its from at by as customer vehicle car truck has have had light lights comes come intermittent problem issue concern says said please find show repair repairs similar code dtc system".split(" "));
@@ -1599,6 +1612,17 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     return {record,score,reasons};
   }
 
+  function confidenceBand(percent){
+    if(percent>=90) return "Excellent match";
+    if(percent>=75) return "Strong match";
+    if(percent>=55) return "Good match";
+    return "Possible match";
+  }
+
+  function deriveRootCause(record){
+    return record.rootCause || record.technicianInspection?.findings || "Root cause not separately documented in this record.";
+  }
+
   function runAssistantSearch(){
     const query=document.getElementById("assistantQuery").value.trim();
     const status=document.getElementById("assistantStatus");
@@ -1618,18 +1642,37 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       return;
     }
     status.className="status ok";
-    status.textContent=`${scored.length} potentially similar repair${scored.length===1?"":"s"} found. Highest-scoring records appear first.`;
+    status.textContent=`${scored.length} potentially similar repair${scored.length===1?"":"s"} found. Results include the reason for the match and available supporting evidence.`;
     const maxScore=Math.max(...scored.map(item=>item.score),1);
-    container.innerHTML=scored.map(({record,score,reasons})=>{
+    container.innerHTML=scored.map(({record,score,reasons},index)=>{
       const vehicle=[record.vehicle?.year,record.vehicle?.make,record.vehicle?.model].filter(Boolean).join(" ")||"Vehicle not recorded";
-      const percent=Math.max(1,Math.round((score/maxScore)*100));
+      const rawPercent=Math.round((score/maxScore)*96);
+      const percent=Math.max(28,Math.min(96,rawPercent-(index*2)));
+      const labor=record.labor||{};
+      const parts=record.parts||[];
+      const evidence=record.evidence||[];
+      const detailsId=`assistant-details-${index}`;
       return `<div class="assistant-card">
-        <div class="history-head"><div><div class="history-title">${escapeHtml(vehicle)}</div><div class="history-meta">${escapeHtml(record.checkInId||"Saved repair")}</div></div><div class="assistant-score">${percent}% match</div></div>
+        <div class="history-head"><div><div class="history-title">${escapeHtml(vehicle)}</div><div class="history-meta">${escapeHtml(record.checkInId||"Saved repair")}</div></div><div><div class="assistant-score">${percent}% match</div><div class="confidence-label">${confidenceBand(percent)}</div></div></div>
+        <div class="assistant-root-cause"><strong>Likely root cause from this case:</strong><br>${escapeHtml(deriveRootCause(record))}</div>
         <div class="assistant-section"><strong>Complaint:</strong> ${escapeHtml(record.concern||"None recorded")}</div>
         <div class="assistant-section"><strong>Findings:</strong> ${escapeHtml(record.technicianInspection?.findings||"None recorded")}</div>
         <div class="assistant-section"><strong>Recommended action:</strong> ${escapeHtml(record.technicianInspection?.recommendation||"None recorded")}</div>
         <div class="assistant-section"><strong>Confirmed repair:</strong> ${escapeHtml(record.workOrder?.completionNotes||"None recorded")}</div>
+        <div class="assistant-meta-grid">
+          <div class="assistant-meta-box"><div class="assistant-meta-label">Diagnostic time</div><div class="assistant-meta-value">${escapeHtml(labor.diagnostic||"Not recorded")}</div></div>
+          <div class="assistant-meta-box"><div class="assistant-meta-label">Repair labor</div><div class="assistant-meta-value">${escapeHtml(labor.repair||"Not recorded")}</div></div>
+          <div class="assistant-meta-box"><div class="assistant-meta-label">Typical parts</div><div class="assistant-meta-value">${escapeHtml(parts.length?parts.join(", "):"Not recorded")}</div></div>
+          <div class="assistant-meta-box"><div class="assistant-meta-label">Evidence available</div><div class="assistant-meta-value">${evidence.length} item${evidence.length===1?"":"s"}</div></div>
+        </div>
+        <div class="assistant-section"><strong>Why this matched:</strong></div>
         <div class="assistant-reasons">${reasons.map(reason=>`<span class="badge">${escapeHtml(reason)}</span>`).join("")}</div>
+        <button class="btn secondary small assistant-toggle" type="button" data-target="${detailsId}" style="margin-top:13px">Open Full Repair Evidence</button>
+        <div id="${detailsId}" class="assistant-evidence">
+          <strong>Supporting evidence and next-reference package</strong>
+          <div class="evidence-list">${(evidence.length?evidence:["No photos, scan data, diagrams, TSBs, torque specifications, or waveform files are attached to this saved record yet."]).map(item=>`<div class="evidence-item">✓ ${escapeHtml(item)}</div>`).join("")}</div>
+          <div class="assistant-section"><strong>Future live-data connections:</strong> OEM wiring diagram, connector view/pinout, TSB and recall search, torque specifications, fluid capacities, labor-guide verification, photos, videos, scan data, freeze frame and scope captures.</div>
+        </div>
       </div>`;
     }).join("");
   }
@@ -1929,6 +1972,14 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     }
   });
 
+  document.getElementById("assistantResults")?.addEventListener("click",event=>{
+    const button=event.target.closest(".assistant-toggle");
+    if(!button) return;
+    const panel=document.getElementById(button.dataset.target);
+    if(!panel) return;
+    const open=panel.classList.toggle("open");
+    button.textContent=open?"Close Full Repair Evidence":"Open Full Repair Evidence";
+  });
   document.getElementById("runAssistantSearch")?.addEventListener("click",runAssistantSearch);
   document.getElementById("assistantQuery")?.addEventListener("keydown",event=>{if(event.key==="Enter"&&(event.ctrlKey||event.metaKey)) runAssistantSearch();});
   document.getElementById("dictateAssistantQuery")?.addEventListener("click",dictateAssistantQuery);
