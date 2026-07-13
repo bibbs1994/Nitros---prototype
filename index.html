@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.6.0</title>
+<title>Nitros Prototype v0.6.1</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -126,7 +126,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.6.0 — Digital Work Order</div>
+  <div class="sub">Prototype v0.6.1 — Scanner & Dictation Stability Hotfix</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -581,7 +581,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.6.0 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.6.1 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
 </div>
 
 <script>
@@ -1446,9 +1446,6 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     status.textContent="Dictation is off. Review the concern before continuing.";
   }
 
-  document.getElementById("startVoiceConcern")?.addEventListener("click",startVoiceConcern);
-  document.getElementById("stopVoiceConcern")?.addEventListener("click",stopVoiceConcern);
-
   ["photoFront","photoRear","photoLeft","photoRight","photoOdometer","photoVin"].forEach(id=>{
     document.getElementById(id).addEventListener("change",()=>{
       const count=countVehiclePhotos();
@@ -1469,15 +1466,46 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     status.textContent=file?`Technician photo selected: ${file.name}`:"No technician photo selected.";
   });
 
-  document.getElementById("identifyVehicle").addEventListener("click",identifyVehicle);
-  document.getElementById("startCamera").addEventListener("click",openCamera);
-  document.getElementById("stopCamera").addEventListener("click",stopCamera);
-  document.getElementById("scanFrame").addEventListener("click",scanCurrentFrame);
-  document.getElementById("retryVinScan")?.addEventListener("click",async()=>{
-    stopCamera();
-    await new Promise(resolve=>setTimeout(resolve,250));
-    openCamera();
-  });
+  function initializeCoreModules(){
+    const bootStatus=document.getElementById("moduleBootStatus");
+    const failures=[];
+
+    try{
+      document.getElementById("startCamera")?.addEventListener("click",openCamera);
+      document.getElementById("stopCamera")?.addEventListener("click",stopCamera);
+      document.getElementById("scanFrame")?.addEventListener("click",scanCurrentFrame);
+      document.getElementById("retryVinScan")?.addEventListener("click",async()=>{
+        stopCamera();
+        await new Promise(resolve=>setTimeout(resolve,250));
+        openCamera();
+      });
+    }catch(error){
+      failures.push("VIN scanner");
+      console.error("VIN scanner initialization failed:",error);
+    }
+
+    try{
+      document.getElementById("startVoiceConcern")?.addEventListener("click",startVoiceConcern);
+      document.getElementById("stopVoiceConcern")?.addEventListener("click",stopVoiceConcern);
+    }catch(error){
+      failures.push("dictation");
+      console.error("Dictation initialization failed:",error);
+    }
+
+    if(bootStatus){
+      if(failures.length){
+        bootStatus.className="status warn";
+        bootStatus.textContent=`Module warning: ${failures.join(" and ")} did not initialize. Refresh the page.`;
+      }else{
+        bootStatus.className="status ok";
+        bootStatus.textContent="VIN scanner and dictation modules loaded successfully.";
+      }
+    }
+  }
+
+  initializeCoreModules();
+
+  document.getElementById("identifyVehicle")?.addEventListener("click",identifyVehicle);
   document.getElementById("vinPhoto").addEventListener("change",(e)=>{
     const file=e.target.files&&e.target.files[0];
     if(file){
@@ -1485,19 +1513,23 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       identifyStatus.textContent=`VIN photo captured: ${file.name}. Automatic photo decoding is not enabled in this field-test build; use the image as a reference and enter the VIN manually.`;
     }
   });
-    document.getElementById("addEstimateLine").addEventListener("click",()=>createEstimateRow());
+    document.getElementById("addEstimateLine")?.addEventListener("click",()=>createEstimateRow());
   ["laborRate","shopSuppliesPercent","taxPercent"].forEach(id=>document.getElementById(id).addEventListener("input",updateEstimateTotals));
-  document.getElementById("authorizationStatus").addEventListener("change",updateAuthorizationBadge);
+  document.getElementById("authorizationStatus")?.addEventListener("change",updateAuthorizationBadge);
   createEstimateRow({description:"Inspection-recommended repair",priority:"Immediate",hours:0,parts:0});
   updateAuthorizationBadge();
 
-  document.getElementById("startJob").addEventListener("click",startJobClock);
-  document.getElementById("pauseJob").addEventListener("click",pauseJobClock);
-  document.getElementById("resumeJob").addEventListener("click",resumeJobClock);
-  document.getElementById("finishJob").addEventListener("click",finishJobClock);
-  document.getElementById("standardLaborHours").addEventListener("input",updateJobClockUI);
-  jobClockInterval=setInterval(updateJobClockUI,1000);
-  updateJobClockUI();
+  try{
+    document.getElementById("startJob")?.addEventListener("click",startJobClock);
+    document.getElementById("pauseJob")?.addEventListener("click",pauseJobClock);
+    document.getElementById("resumeJob")?.addEventListener("click",resumeJobClock);
+    document.getElementById("finishJob")?.addEventListener("click",finishJobClock);
+    document.getElementById("standardLaborHours")?.addEventListener("input",updateJobClockUI);
+    jobClockInterval=setInterval(updateJobClockUI,1000);
+    updateJobClockUI();
+  }catch(error){
+    console.error("Work-order clock initialization failed:",error);
+  }
 
 document.getElementById("submitCheckin")?.addEventListener("click",()=>{
     const required=[
@@ -1614,7 +1646,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
       }
     };
 
-    localStorage.setItem("nitros_prototype_v060_last_checkin",JSON.stringify(payload));
+    localStorage.setItem("nitros_prototype_v061_last_checkin",JSON.stringify(payload));
     s.className="status ok";
     s.textContent=`Inspection report ${payload.checkInId} saved successfully on this device.`;
   });
