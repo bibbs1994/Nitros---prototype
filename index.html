@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.6.3</title>
+<title>Nitros Prototype v0.6.4</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -125,13 +125,25 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     .timeline-item{grid-template-columns:80px 1fr}
   }
 
+
+  .history-list{display:grid;gap:12px;margin-top:14px}
+  .history-item{border:1px solid var(--line);border-radius:16px;padding:15px;background:rgba(255,255,255,.025)}
+  .history-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+  .history-date{font-size:12px;color:var(--muted);white-space:nowrap}
+  .history-title{font-weight:800;font-size:17px}
+  .history-meta{font-size:13px;color:var(--muted);margin-top:5px}
+  .history-flags{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+  .history-empty{padding:16px;border:1px dashed var(--line);border-radius:14px;color:var(--muted)}
+  .history-search{display:grid;grid-template-columns:1fr auto;gap:10px}
+  @media(max-width:700px){.history-head{display:block}.history-date{margin-top:5px}.history-search{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.6.3 — Smart Labor Time Assistant</div>
+  <div class="sub">Prototype v0.6.4 — Customer History</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -146,12 +158,37 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       <button class="vehicle" data-demo="DEMO3"><strong>2017 Jeep Wrangler</strong><span>Vacuum sensor case</span></button>
       <button class="vehicle" data-demo="DEMO4"><strong>2004 Ford F-250</strong><span>Front suspension case</span></button>
     </div>
-    <button class="btn primary" data-go="checkin">Start Check-In</button>
+
+    <div class="grid two" style="margin-top:12px">
+      <button class="btn primary" data-go="checkin">Start Check-In</button>
+      <button class="btn secondary" data-go="history">Customer History</button>
+    </div>
+
   </div>
   <div class="card">
     <span class="badge">Field-test rule</span>
     <h3 style="margin-top:12px">Use the hosted HTTPS link on iPhone</h3>
     <p>Local previews may display the page but still block camera permission. The live VIN test must be performed from a secure web address in Safari or Chrome.</p>
+  </div>
+</section>
+
+
+<section id="history" class="screen">
+  <button class="back" data-go="home">← Back</button>
+  <div class="card">
+    <div class="eyebrow">Customer & Vehicle History</div>
+    <h2>Find a returning customer or vehicle</h2>
+    <p>Search saved visits by VIN, customer name, phone number, email, license plate, repair order, concern, or recommendation.</p>
+    <div class="history-search">
+      <input id="historySearch" placeholder="Search VIN, name, phone, plate, concern...">
+      <button id="runHistorySearch" class="btn primary small" type="button">Search History</button>
+    </div>
+    <div class="grid two" style="margin-top:12px">
+      <button id="showAllHistory" class="btn secondary small" type="button">Show All Visits</button>
+      <button id="clearHistorySearch" class="btn ghost small" type="button">Clear Search</button>
+    </div>
+    <div id="historyStatus" class="status">Saved inspection reports on this device will appear here.</div>
+    <div id="historyResults" class="history-list"></div>
   </div>
 </section>
 
@@ -197,6 +234,12 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     <div class="eyebrow">Vehicle Identified</div>
     <h2 id="vehicleTitle">Vehicle</h2>
     <div class="kv" id="vehicleDetails"></div>
+
+    <div class="card" style="margin-top:18px;background:#0d192a">
+      <div class="eyebrow">Returning Vehicle History</div>
+      <div id="vehicleHistorySummary" class="history-empty">No saved history has been checked for this VIN yet.</div>
+      <div id="vehicleHistoryList" class="history-list"></div>
+    </div>
     <button class="btn primary" data-go="customer" style="margin-top:20px">Continue to Customer Concern</button>
   </div>
 </section>
@@ -612,7 +655,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.6.3 • Repaired iPhone VIN scan and voice dictation • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.6.4 • Repaired iPhone VIN scan and voice dictation • Local prototype storage only</div>
 </div>
 
 <script>
@@ -666,6 +709,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     screens.forEach(s => s.classList.toggle("active", s.id === id));
     window.scrollTo({top:0,behavior:"instant"});
     if(id === "review") buildSummary();
+    if(id === "history") searchHistory();
   }
 
   document.addEventListener("click",(e)=>{
@@ -772,6 +816,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       ["Source",selectedVehicle.source]
     ];
     document.getElementById("vehicleDetails").innerHTML=details.map(([k,v])=>`<div>${k}</div><div>${escapeHtml(v)}</div>`).join("");
+    renderVehicleHistory();
   }
 
   function escapeHtml(value){
@@ -1370,6 +1415,110 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     updateJobClockUI();
   }
 
+
+  const HISTORY_KEY="nitros_prototype_customer_history_v064";
+
+  function loadCustomerHistory(){
+    try{
+      const parsed=JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");
+      return Array.isArray(parsed)?parsed:[];
+    }catch(error){
+      console.error("Customer history load failed:",error);
+      return [];
+    }
+  }
+
+  function saveCustomerHistoryRecord(record){
+    const history=loadCustomerHistory();
+    const duplicateIndex=history.findIndex(item=>item.checkInId===record.checkInId);
+    if(duplicateIndex>=0) history[duplicateIndex]=record;
+    else history.unshift(record);
+    localStorage.setItem(HISTORY_KEY,JSON.stringify(history.slice(0,250)));
+  }
+
+  function historySearchText(record){
+    return [
+      record.checkInId,record.repairOrder,record.vehicle?.vin,record.vehicle?.year,record.vehicle?.make,
+      record.vehicle?.model,record.customer?.name,record.customer?.phone,record.customer?.email,
+      record.plate,record.mileage,record.concern,record.advisorNotes,
+      record.technicianInspection?.findings,record.technicianInspection?.recommendation,
+      record.technicianInspection?.priorities?.immediate,record.technicianInspection?.priorities?.soon,
+      record.technicianInspection?.priorities?.monitor,record.estimate?.authorization?.status,
+      record.workOrder?.completionNotes
+    ].filter(Boolean).join(" ").toLowerCase();
+  }
+
+  function historyFlags(record){
+    const flags=[];
+    const p=record.technicianInspection?.priorities||{};
+    if(p.immediate) flags.push("Immediate repair noted");
+    if(p.soon) flags.push("Repair needed soon");
+    if(p.monitor) flags.push("Monitor item");
+    const auth=record.estimate?.authorization?.status;
+    if(auth && auth!=="Approved") flags.push(`Authorization: ${auth}`);
+    if(record.workOrder?.repairStatus) flags.push(record.workOrder.repairStatus);
+    return flags;
+  }
+
+  function renderHistoryRecords(records,containerId,statusId){
+    const container=document.getElementById(containerId);
+    const status=statusId?document.getElementById(statusId):null;
+    if(!container) return;
+    if(!records.length){
+      container.innerHTML='<div class="history-empty">No matching saved visits were found on this device.</div>';
+      if(status){status.className="status warn";status.textContent="No matching customer or vehicle history found.";}
+      return;
+    }
+    if(status){status.className="status ok";status.textContent=`${records.length} saved visit${records.length===1?"":"s"} found.`;}
+    container.innerHTML=records.map(record=>{
+      const date=new Date(record.timestamp);
+      const vehicle=record.vehicle?`${record.vehicle.year||""} ${record.vehicle.make||""} ${record.vehicle.model||""}`.trim():"Vehicle not recorded";
+      const flags=historyFlags(record);
+      return `<div class="history-item">
+        <div class="history-head">
+          <div><div class="history-title">${escapeHtml(vehicle)}</div><div class="history-meta">${escapeHtml(record.customer?.name||"Customer not entered")} • VIN ${escapeHtml(record.vehicle?.vin||"Not entered")} • ${escapeHtml(record.mileage||"Mileage not entered")} miles</div></div>
+          <div class="history-date">${escapeHtml(isNaN(date)?"Date unavailable":date.toLocaleString())}</div>
+        </div>
+        <div class="history-meta"><strong>Concern:</strong> ${escapeHtml(record.concern||"None recorded")}</div>
+        <div class="history-meta"><strong>Findings:</strong> ${escapeHtml(record.technicianInspection?.findings||"None recorded")}</div>
+        <div class="history-meta"><strong>Recommendation:</strong> ${escapeHtml(record.technicianInspection?.recommendation||"None recorded")}</div>
+        <div class="history-meta"><strong>Completion:</strong> ${escapeHtml(record.workOrder?.completionNotes||"None recorded")}</div>
+        ${flags.length?`<div class="history-flags">${flags.map(flag=>`<span class="badge">${escapeHtml(flag)}</span>`).join("")}</div>`:""}
+      </div>`;
+    }).join("");
+  }
+
+  function searchHistory(){
+    const query=document.getElementById("historySearch").value.trim().toLowerCase();
+    const all=loadCustomerHistory();
+    const matches=query?all.filter(record=>historySearchText(record).includes(query)):all;
+    renderHistoryRecords(matches,"historyResults","historyStatus");
+  }
+
+  function renderVehicleHistory(){
+    const summary=document.getElementById("vehicleHistorySummary");
+    const list=document.getElementById("vehicleHistoryList");
+    if(!summary||!list||!selectedVehicle) return;
+    const matches=loadCustomerHistory().filter(record=>record.vehicle?.vin===selectedVehicle.vin);
+    if(!matches.length){
+      summary.className="history-empty";
+      summary.textContent="No prior saved visits were found for this VIN on this device.";
+      list.innerHTML="";
+      return;
+    }
+    const latest=matches[0];
+    const mileageValues=matches.map(r=>Number(String(r.mileage||"").replace(/[^0-9.]/g,""))).filter(Number.isFinite);
+    const latestMileage=mileageValues.length?Math.max(...mileageValues):null;
+    summary.className="status ok";
+    summary.textContent=`Returning vehicle: ${matches.length} prior visit${matches.length===1?"":"s"}${latestMileage!==null?` • latest saved mileage ${latestMileage.toLocaleString()}`:""}.`;
+    renderHistoryRecords(matches.slice(0,5),"vehicleHistoryList");
+    const fields={
+      customerName:latest.customer?.name,phone:latest.customer?.phone,email:latest.customer?.email,
+      plate:latest.plate,serviceAdvisor:latest.serviceAdvisor
+    };
+    Object.entries(fields).forEach(([id,value])=>{const el=document.getElementById(id);if(el&&!el.value&&value)el.value=value;});
+  }
+
   function buildSummary(){
     const completed=[...document.querySelectorAll(".check")]
       .filter(c=>c.checked)
@@ -1628,7 +1777,11 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       identifyStatus.textContent=`VIN photo saved, but no complete VIN barcode was detected. Retake the photo closer and level, or enter the VIN manually.`;
     }
   });
-    document.getElementById("addEstimateLine")?.addEventListener("click",()=>createEstimateRow());
+  document.getElementById("runHistorySearch")?.addEventListener("click",searchHistory);
+  document.getElementById("historySearch")?.addEventListener("keydown",e=>{if(e.key==="Enter") searchHistory();});
+  document.getElementById("showAllHistory")?.addEventListener("click",()=>{document.getElementById("historySearch").value="";searchHistory();});
+  document.getElementById("clearHistorySearch")?.addEventListener("click",()=>{document.getElementById("historySearch").value="";document.getElementById("historyResults").innerHTML="";document.getElementById("historyStatus").className="status";document.getElementById("historyStatus").textContent="Search cleared.";});
+  document.getElementById("addEstimateLine")?.addEventListener("click",()=>createEstimateRow());
   document.getElementById("searchLaborWeb")?.addEventListener("click",searchLaborInformation);
   document.getElementById("copyLaborQuery")?.addEventListener("click",copyLaborSearchQuery);
   document.getElementById("applyLaborTime")?.addEventListener("click",applyVerifiedLaborTime);
@@ -1772,9 +1925,10 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
       }
     };
 
-    localStorage.setItem("nitros_prototype_v063_last_checkin",JSON.stringify(payload));
+    localStorage.setItem("nitros_prototype_v064_last_checkin",JSON.stringify(payload));
+    saveCustomerHistoryRecord(payload);
     s.className="status ok";
-    s.textContent=`Inspection report ${payload.checkInId} saved successfully on this device.`;
+    s.textContent=`Inspection report ${payload.checkInId} saved successfully and added to customer history on this device.`;
   });
 
   updateEnvironment();
