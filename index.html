@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.6.2</title>
+<title>Nitros Prototype v0.6.3</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -98,6 +98,11 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   .status-declined{background:rgba(225,93,100,.12);color:#ff9aa0}
   .status-pending{background:rgba(255,183,74,.12);color:#ffd089}
   @media(max-width:760px){.estimate-table{display:block;overflow-x:auto}}
+  .labor-assistant{border:1px solid var(--line);border-radius:16px;padding:16px;margin:16px 0;background:rgba(255,255,255,.025)}
+  .labor-result{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end}
+  .labor-source-note{font-size:12px;color:var(--muted);margin-top:8px}
+  @media(max-width:700px){.labor-result{grid-template-columns:1fr}}
+
 
   .wo-toolbar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}
   .wo-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
@@ -126,7 +131,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.6.2 — iPhone VIN & Dictation Repair</div>
+  <div class="sub">Prototype v0.6.3 — Smart Labor Time Assistant</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -417,6 +422,32 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       <div class="field"><label for="estimateNumber">Estimate number</label><input id="estimateNumber" placeholder="Auto-generated if left blank"></div>
       <div class="field"><label for="laborRate">Labor rate ($/hr)</label><input id="laborRate" inputmode="decimal" value="125"></div>
     </div>
+
+    <div class="labor-assistant">
+      <div class="eyebrow">Smart Labor Time Assistant</div>
+      <h3>Look up and apply standard labor time</h3>
+      <p>Describe the repair, search the web using the identified vehicle, then record the verified labor-guide time and source.</p>
+      <div class="grid two">
+        <div class="field"><label for="laborOperation">Repair operation</label><input id="laborOperation" placeholder="Example: Replace front lower ball joints"></div>
+        <div class="field"><label for="laborSystem">Repair system</label>
+          <select id="laborSystem"><option>General</option><option>Engine</option><option>Transmission</option><option>Brakes</option><option>Steering & Suspension</option><option>Electrical</option><option>HVAC</option><option>Exhaust</option><option>Maintenance</option></select>
+        </div>
+      </div>
+      <div class="grid two">
+        <button id="searchLaborWeb" class="btn secondary" type="button">Search Labor Information</button>
+        <button id="copyLaborQuery" class="btn ghost" type="button">Copy Search Description</button>
+      </div>
+      <div id="laborLookupStatus" class="status">Enter a repair operation. Verify all labor times against an authorized OEM or professional labor guide.</div>
+      <div class="labor-result" style="margin-top:14px">
+        <div class="grid two">
+          <div class="field"><label for="verifiedLaborHours">Verified labor time (hours)</label><input id="verifiedLaborHours" inputmode="decimal" placeholder="Example: 2.5"></div>
+          <div class="field"><label for="laborTimeSource">Source</label><input id="laborTimeSource" placeholder="OEM manual, ALLDATA, Mitchell, Identifix..."></div>
+        </div>
+        <button id="applyLaborTime" class="btn primary" type="button">Apply to Estimate</button>
+      </div>
+      <div class="field"><label for="laborLookupNotes">Labor-time notes</label><textarea id="laborLookupNotes" rows="3" placeholder="Included operations, overlap, rust allowance, one-time-use hardware, special conditions..."></textarea></div>
+      <div class="labor-source-note">This prototype does not claim access to proprietary labor-guide databases. It records the time you verify from an authorized source.</div>
+    </div>
     <table class="estimate-table">
       <thead><tr><th>Description</th><th>Priority</th><th>Labor hrs</th><th>Parts $</th><th>Line total</th><th></th></tr></thead>
       <tbody id="estimateRows"></tbody>
@@ -581,7 +612,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.6.2 • Repaired iPhone VIN scan and voice dictation • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.6.3 • Repaired iPhone VIN scan and voice dictation • Local prototype storage only</div>
 </div>
 
 <script>
@@ -1086,6 +1117,40 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   }
 
 
+
+  function buildLaborSearchQuery(){
+    const vehicle=selectedVehicle ? `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model} ${selectedVehicle.engine||""}` : "vehicle";
+    const operation=document.getElementById("laborOperation")?.value.trim()||"repair labor time";
+    const system=document.getElementById("laborSystem")?.value||"General";
+    return `${vehicle} ${operation} ${system} standard labor time hours`;
+  }
+  function searchLaborInformation(){
+    const operation=document.getElementById("laborOperation").value.trim();
+    const status=document.getElementById("laborLookupStatus");
+    if(!operation){status.className="status bad";status.textContent="Enter the repair operation before searching.";return;}
+    const query=buildLaborSearchQuery();
+    const opened=window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`,"_blank","noopener,noreferrer");
+    status.className=opened?"status ok":"status warn";
+    status.textContent=opened?"Search opened. Verify the labor time using an authorized OEM or professional labor guide, then enter the hours and source below.":"The browser blocked the new tab. Copy the search description and paste it into Safari or Chrome.";
+  }
+  async function copyLaborSearchQuery(){
+    const status=document.getElementById("laborLookupStatus");
+    try{await navigator.clipboard.writeText(buildLaborSearchQuery());status.className="status ok";status.textContent="Labor search description copied.";}
+    catch(e){status.className="status warn";status.textContent=buildLaborSearchQuery();}
+  }
+  function applyVerifiedLaborTime(){
+    const hours=Number(document.getElementById("verifiedLaborHours").value);
+    const operation=document.getElementById("laborOperation").value.trim();
+    const source=document.getElementById("laborTimeSource").value.trim();
+    const status=document.getElementById("laborLookupStatus");
+    if(!operation || !Number.isFinite(hours) || hours<=0){status.className="status bad";status.textContent="Enter the repair operation and a valid labor time greater than zero.";return;}
+    createEstimateRow({description:operation,priority:"Immediate",hours,parts:0});
+    document.getElementById("standardLaborHours").value=hours;
+    updateEstimateTotals();updateJobClockUI();
+    status.className="status ok";
+    status.textContent=`${hours.toFixed(2)} labor hours applied to the estimate and work order${source?` from ${source}`:""}.`;
+  }
+
   function formatMoney(value){
     return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(value)||0);
   }
@@ -1343,6 +1408,9 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       ["Vehicle photos",countVehiclePhotos()+" of 6 captured"],
       ["Technician signature",signatureHasInk("technicianSignature")?"Captured":"Not captured"],
       ["Customer signature",signatureHasInk("customerSignature")?"Captured":"Not captured"],
+      ["Labor operation",document.getElementById("laborOperation").value||"Not entered"],
+      ["Verified labor time",`${Number(document.getElementById("verifiedLaborHours").value||0).toFixed(2)} h`],
+      ["Labor-time source",document.getElementById("laborTimeSource").value||"Not entered"],
       ["Estimate number",document.getElementById("estimateNumber").value||"Auto-generated on save"],
       ["Estimate total",formatMoney(calculateEstimate().grandTotal)],
       ["Authorization status",document.getElementById("authorizationStatus").value],
@@ -1561,6 +1629,10 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     }
   });
     document.getElementById("addEstimateLine")?.addEventListener("click",()=>createEstimateRow());
+  document.getElementById("searchLaborWeb")?.addEventListener("click",searchLaborInformation);
+  document.getElementById("copyLaborQuery")?.addEventListener("click",copyLaborSearchQuery);
+  document.getElementById("applyLaborTime")?.addEventListener("click",applyVerifiedLaborTime);
+
   ["laborRate","shopSuppliesPercent","taxPercent"].forEach(id=>document.getElementById(id).addEventListener("input",updateEstimateTotals));
   document.getElementById("authorizationStatus")?.addEventListener("change",updateAuthorizationBadge);
   createEstimateRow({description:"Inspection-recommended repair",priority:"Immediate",hours:0,parts:0});
@@ -1669,6 +1741,13 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
         technician:signatureHasInk("technicianSignature"),
         customer:signatureHasInk("customerSignature")
       },
+      laborLookup:{
+        operation:document.getElementById("laborOperation").value.trim(),
+        system:document.getElementById("laborSystem").value,
+        verifiedHours:Number(document.getElementById("verifiedLaborHours").value)||0,
+        source:document.getElementById("laborTimeSource").value.trim(),
+        notes:document.getElementById("laborLookupNotes").value.trim()
+      },
       estimate:{
         estimateNumber:document.getElementById("estimateNumber").value.trim()||`EST-${new Date().toISOString().replace(/\D/g,"").slice(0,14)}`,
         ...calculateEstimate(),
@@ -1693,7 +1772,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
       }
     };
 
-    localStorage.setItem("nitros_prototype_v061_last_checkin",JSON.stringify(payload));
+    localStorage.setItem("nitros_prototype_v063_last_checkin",JSON.stringify(payload));
     s.className="status ok";
     s.textContent=`Inspection report ${payload.checkInId} saved successfully on this device.`;
   });
