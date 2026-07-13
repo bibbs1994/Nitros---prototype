@@ -6,11 +6,11 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.6.1</title>
+<title>Nitros Prototype v0.6.2</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
-<script defer src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
+<script defer src="https://unpkg.com/@zxing/browser@0.2.1"></script>
 
 <style>
 :root{
@@ -126,7 +126,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.6.1 — Scanner & Dictation Stability Hotfix</div>
+  <div class="sub">Prototype v0.6.2 — iPhone VIN & Dictation Repair</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -289,7 +289,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
 
 
 <section id="technician" class="screen">
-  <button class="back" data-go="technician">← Back</button>
+  <button class="back" data-go="inspection">← Back</button>
   <div class="card">
     <div class="eyebrow">Technician Digital Inspection</div>
     <h2>Condition, measurements, and recommendations</h2>
@@ -581,7 +581,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.6.1 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.6.2 • Repaired iPhone VIN scan and voice dictation • Local prototype storage only</div>
 </div>
 
 <script>
@@ -778,10 +778,15 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       scanStartedAt=Date.now();
       if(scanGuide) scanGuide.classList.remove("found");
       await applyCameraEnhancements();
-      await ensureZXingLibrary();
+      const zxingReady=await ensureZXingLibrary();
       startContinuousZXing();
       beginAutomaticScan();
-      identifyStatus.textContent="Continuous scanning active. Fill the orange guide with the VIN barcode and reduce glare.";
+      if(!("BarcodeDetector" in window) && !zxingReady){
+        identifyStatus.className="status bad";
+        identifyStatus.textContent="The VIN scanner library could not load. Confirm the phone has internet access, refresh the page, and reopen the scanner.";
+      }else{
+        identifyStatus.textContent="Continuous scanning active. Fill the orange guide with the VIN barcode and reduce glare.";
+      }
     }catch(err){
       identifyStatus.className="status warn";
       identifyStatus.textContent="Camera permission was denied or unavailable. Check Safari site permissions and try again.";
@@ -825,8 +830,8 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     if(scannerLibraryPromise) return scannerLibraryPromise;
     scannerLibraryPromise=(async()=>{
       const sources=[
-        "https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js",
-        "https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"
+        "https://unpkg.com/@zxing/browser@0.2.1",
+        "https://cdn.jsdelivr.net/npm/@zxing/browser@0.2.1"
       ];
       for(const src of sources){
         try{
@@ -857,8 +862,11 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   }
 
   function acceptScannedValue(raw,source){
+    const now=Date.now();
+    if(now-lastScanAt<1500) return false;
     const value=extractVin(raw);
     if(value.length!==17) return false;
+    lastScanAt=now;
     vinInput.value=value;
     if(scanGuide) scanGuide.classList.add("found");
     try{navigator.vibrate && navigator.vibrate(120);}catch(e){}
@@ -872,10 +880,18 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   }
 
   function startContinuousZXing(){
-    if(!window.ZXingBrowser?.BrowserMultiFormatReader) return;
+    if(!window.ZXingBrowser?.BrowserMultiFormatReader || !stream) return;
     try{
       continuousReader=new window.ZXingBrowser.BrowserMultiFormatReader();
       zxingFrameReader=new window.ZXingBrowser.BrowserMultiFormatReader();
+      if(typeof continuousReader.decodeFromStream==="function"){
+        continuousReader.decodeFromStream(stream,video,(result,error,controls)=>{
+          zxingControls=controls||zxingControls;
+          if(!result) return;
+          const raw=result.getText ? result.getText() : result.text;
+          acceptScannedValue(raw,"continuous VIN scan");
+        }).then(controls=>{zxingControls=controls||zxingControls;}).catch(()=>{});
+      }
     }catch(err){
       continuousReader=null;
       zxingFrameReader=null;
@@ -1370,7 +1386,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     const status=document.getElementById("voiceStatus");
     const concern=document.getElementById("concern");
 
-    if(isIOSDevice() || !Recognition){
+    if(!Recognition){
       showKeyboardDictationFallback();
       return;
     }
@@ -1383,17 +1399,20 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
 
     try{
       speechRecognition=new Recognition();
-      speechRecognition.continuous=true;
+      // iPhone Safari is more reliable in single-utterance mode.
+      speechRecognition.continuous=!isIOSDevice();
       speechRecognition.interimResults=true;
+      speechRecognition.maxAlternatives=1;
       speechRecognition.lang="en-US";
 
       const base=concern.value.trim();
       let finalText="";
+      let recognitionError="";
 
       speechRecognition.onstart=()=>{
         speechActive=true;
         status.className="status ok";
-        status.textContent="Listening… speak the customer's concern.";
+        status.textContent="Listening… speak the customer's concern now.";
       };
 
       speechRecognition.onresult=(event)=>{
@@ -1412,14 +1431,27 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
 
       speechRecognition.onerror=(event)=>{
         speechActive=false;
+        recognitionError=event.error||"unknown error";
+        const messages={
+          "not-allowed":"Microphone access was blocked. Allow microphone access for this website in Safari settings, then try again.",
+          "service-not-allowed":"Speech recognition is blocked on this device or network. Use the iPhone keyboard microphone instead.",
+          "audio-capture":"No microphone was available. Check the phone microphone permission and try again.",
+          "network":"Speech recognition could not reach its service. Check the internet connection and try again.",
+          "no-speech":"No speech was heard. Tap Dictate Concern and speak immediately.",
+          "aborted":"Dictation was stopped."
+        };
         status.className="status warn";
-        status.textContent=`Dictation stopped: ${event.error}. You can continue with the keyboard microphone.`;
+        status.textContent=messages[recognitionError]||`Dictation stopped: ${recognitionError}. Use the keyboard microphone if needed.`;
       };
 
       speechRecognition.onend=()=>{
         speechActive=false;
-        status.className="status";
-        status.textContent="Dictation stopped. Review the concern before continuing.";
+        if(!recognitionError){
+          status.className=concern.value.trim()?"status ok":"status warn";
+          status.textContent=concern.value.trim()
+            ? "Dictation captured. Review the concern before continuing."
+            : "No words were captured. Tap Dictate Concern and speak immediately.";
+        }
       };
 
       speechRecognition.start();
@@ -1506,11 +1538,26 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   initializeCoreModules();
 
   document.getElementById("identifyVehicle")?.addEventListener("click",identifyVehicle);
-  document.getElementById("vinPhoto").addEventListener("change",(e)=>{
+  document.getElementById("vinPhoto").addEventListener("change",async(e)=>{
     const file=e.target.files&&e.target.files[0];
-    if(file){
-      identifyStatus.className="status ok";
-      identifyStatus.textContent=`VIN photo captured: ${file.name}. Automatic photo decoding is not enabled in this field-test build; use the image as a reference and enter the VIN manually.`;
+    if(!file) return;
+    identifyStatus.className="status";
+    identifyStatus.textContent=`Scanning VIN photo: ${file.name}…`;
+    try{
+      const ready=await ensureZXingLibrary();
+      if(!ready) throw new Error("scanner library unavailable");
+      const img=new Image();
+      const objectUrl=URL.createObjectURL(file);
+      img.src=objectUrl;
+      await img.decode();
+      const reader=new window.ZXingBrowser.BrowserMultiFormatReader();
+      const result=await reader.decodeFromImageElement(img);
+      URL.revokeObjectURL(objectUrl);
+      const raw=result && result.getText ? result.getText() : result.text;
+      if(!acceptScannedValue(raw,"VIN photo")) throw new Error("no valid VIN");
+    }catch(error){
+      identifyStatus.className="status warn";
+      identifyStatus.textContent=`VIN photo saved, but no complete VIN barcode was detected. Retake the photo closer and level, or enter the VIN manually.`;
     }
   });
     document.getElementById("addEstimateLine")?.addEventListener("click",()=>createEstimateRow());
