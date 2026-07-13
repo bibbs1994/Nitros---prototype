@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.5.2</title>
+<title>Nitros Prototype v0.6.0</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -98,13 +98,35 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   .status-declined{background:rgba(225,93,100,.12);color:#ff9aa0}
   .status-pending{background:rgba(255,183,74,.12);color:#ffd089}
   @media(max-width:760px){.estimate-table{display:block;overflow-x:auto}}
+
+  .wo-toolbar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}
+  .wo-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+  .metric-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(255,255,255,.02)}
+  .metric-value{font-size:26px;font-weight:800;line-height:1.1}
+  .metric-label{font-size:12px;color:var(--muted);margin-top:6px}
+  .timeline{display:grid;gap:10px;margin-top:14px}
+  .timeline-item{display:grid;grid-template-columns:110px 1fr;gap:12px;border-left:3px solid var(--line);padding:8px 0 8px 12px}
+  .timeline-time{font-size:12px;color:var(--muted)}
+  .timeline-event{font-weight:700}
+  .comparison-good{color:#79e2b3}
+  .comparison-warn{color:#ffd089}
+  .comparison-bad{color:#ff9aa0}
+  .clock-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid var(--line);border-radius:16px;padding:16px;background:rgba(255,255,255,.025)}
+  .clock-running{border-color:#39b982}
+  .clock-paused{border-color:#ffb74a}
+  .clock-finished{border-color:#7f8a99}
+  @media(max-width:760px){
+    .wo-toolbar,.wo-metrics{grid-template-columns:1fr 1fr}
+    .timeline-item{grid-template-columns:80px 1fr}
+  }
+
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.5.2 — Production VIN Scanner Restoration</div>
+  <div class="sub">Prototype v0.6.0 — Digital Work Order</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -424,12 +446,121 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       <div class="field"><label for="authorizationNotes">Authorization notes</label><textarea id="authorizationNotes" rows="4" placeholder="Approved work, declined work, dollar limit, customer instructions..."></textarea></div>
       <div id="authorizationBadge" class="status-pill status-pending">Pending</div>
     </div>
-    <button class="btn primary" data-go="review" style="margin-top:18px">Review Inspection & Estimate</button>
+    <button class="btn primary" data-go="workorder" style="margin-top:18px">Create Digital Work Order</button>
+  </div>
+</section>
+
+
+<section id="workorder" class="screen">
+  <button class="back" data-go="estimate">← Back</button>
+  <div class="card">
+    <div class="eyebrow">Digital Work Order</div>
+    <h2>Repair execution and labor tracking</h2>
+
+    <div class="grid two">
+      <div class="field">
+        <label for="workOrderNumber">Work Order / RO number</label>
+        <input id="workOrderNumber" placeholder="Uses RO number if left blank">
+      </div>
+      <div class="field">
+        <label for="assignedTechnician">Assigned technician</label>
+        <input id="assignedTechnician" placeholder="Technician name">
+      </div>
+      <div class="field">
+        <label for="repairStatus">Repair status</label>
+        <select id="repairStatus">
+          <option>Waiting</option>
+          <option>In Progress</option>
+          <option>Paused</option>
+          <option>Waiting on Parts</option>
+          <option>Waiting on Approval</option>
+          <option>Quality Control</option>
+          <option>Complete</option>
+          <option>Ready for Pickup</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="standardLaborHours">Standard labor time (hours)</label>
+        <input id="standardLaborHours" inputmode="decimal" placeholder="Example: 2.5">
+      </div>
+    </div>
+
+    <div id="clockBanner" class="clock-banner">
+      <div>
+        <div class="eyebrow">Job Clock</div>
+        <div id="clockStateText" style="font-size:20px;font-weight:800">Not started</div>
+      </div>
+      <div id="liveJobTime" style="font-size:32px;font-weight:800">00:00:00</div>
+    </div>
+
+    <div class="wo-toolbar">
+      <button id="startJob" class="btn primary" type="button">Start Job</button>
+      <button id="pauseJob" class="btn secondary" type="button">Pause Job</button>
+      <button id="resumeJob" class="btn secondary" type="button">Resume Job</button>
+      <button id="finishJob" class="btn ghost" type="button">Finish Job</button>
+    </div>
+
+    <div class="grid two">
+      <div class="field">
+        <label for="pauseReason">Pause reason</label>
+        <select id="pauseReason">
+          <option>Lunch</option>
+          <option>Break</option>
+          <option>Waiting on Parts</option>
+          <option>Waiting on Customer Approval</option>
+          <option>Waiting on Shop Foreman</option>
+          <option>Waiting on Special Tool</option>
+          <option>Working on Another Vehicle</option>
+          <option>Additional Diagnosis</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="pauseNote">Pause note</label>
+        <input id="pauseNote" placeholder="Optional explanation">
+      </div>
+    </div>
+
+    <div class="wo-metrics">
+      <div class="metric-card">
+        <div id="activeTimeMetric" class="metric-value">0.00 h</div>
+        <div class="metric-label">Actual working time</div>
+      </div>
+      <div class="metric-card">
+        <div id="pausedTimeMetric" class="metric-value">0.00 h</div>
+        <div class="metric-label">Paused time</div>
+      </div>
+      <div class="metric-card">
+        <div id="laborComparisonMetric" class="metric-value">—</div>
+        <div class="metric-label">Time vs. standard</div>
+      </div>
+      <div class="metric-card">
+        <div id="efficiencyMetric" class="metric-value">—</div>
+        <div class="metric-label">Efficiency</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="internalTechnicianNotes">Internal technician notes</label>
+      <textarea id="internalTechnicianNotes" rows="5" placeholder="Internal-only observations, seized hardware, previous repairs, modifications, diagnostic notes..."></textarea>
+    </div>
+
+    <div class="field">
+      <label for="completionNotes">Completion / quality-control notes</label>
+      <textarea id="completionNotes" rows="4" placeholder="Repairs completed, road test results, torque checks, final verification..."></textarea>
+    </div>
+
+    <h3>Technician Timeline</h3>
+    <div id="jobTimeline" class="timeline">
+      <div class="status">No job activity recorded yet.</div>
+    </div>
+
+    <button class="btn primary" data-go="review" style="margin-top:18px">Review Complete Work Order</button>
   </div>
 </section>
 
 <section id="review" class="screen">
-  <button class="back" data-go="estimate">← Back</button>
+  <button class="back" data-go="workorder">← Back</button>
   <div class="card">
     <div class="eyebrow">Professional Inspection Report</div>
     <h2>Customer-ready inspection summary</h2>
@@ -450,7 +581,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.5.2 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.6.0 • Live VIN scan and NHTSA decode • Local prototype storage only</div>
 </div>
 
 <script>
@@ -989,6 +1120,175 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     badge.className="status-pill "+(value==="Approved"?"status-approved":value==="Declined"?"status-declined":"status-pending");
   }
 
+
+  let jobClock={
+    state:"not_started",
+    activeStartedAt:null,
+    pauseStartedAt:null,
+    activeMs:0,
+    pausedMs:0,
+    timeline:[]
+  };
+  let jobClockInterval=null;
+
+  function formatClock(ms){
+    const total=Math.max(0,Math.floor(ms/1000));
+    const h=String(Math.floor(total/3600)).padStart(2,"0");
+    const m=String(Math.floor((total%3600)/60)).padStart(2,"0");
+    const s=String(total%60).padStart(2,"0");
+    return `${h}:${m}:${s}`;
+  }
+
+  function formatDurationHours(ms){
+    return `${(ms/3600000).toFixed(2)} h`;
+  }
+
+  function getActiveMilliseconds(){
+    let ms=jobClock.activeMs;
+    if(jobClock.state==="running" && jobClock.activeStartedAt){
+      ms+=Date.now()-jobClock.activeStartedAt;
+    }
+    return ms;
+  }
+
+  function getPausedMilliseconds(){
+    let ms=jobClock.pausedMs;
+    if(jobClock.state==="paused" && jobClock.pauseStartedAt){
+      ms+=Date.now()-jobClock.pauseStartedAt;
+    }
+    return ms;
+  }
+
+  function addTimelineEvent(type,details=""){
+    jobClock.timeline.push({
+      timestamp:new Date().toISOString(),
+      type,
+      details
+    });
+    renderTimeline();
+  }
+
+  function renderTimeline(){
+    const container=document.getElementById("jobTimeline");
+    if(!jobClock.timeline.length){
+      container.innerHTML='<div class="status">No job activity recorded yet.</div>';
+      return;
+    }
+    container.innerHTML=jobClock.timeline.map(item=>{
+      const d=new Date(item.timestamp);
+      const time=d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+      return `<div class="timeline-item">
+        <div class="timeline-time">${escapeHtml(time)}</div>
+        <div>
+          <div class="timeline-event">${escapeHtml(item.type)}</div>
+          ${item.details?`<div class="muted">${escapeHtml(item.details)}</div>`:""}
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  function getLaborComparisonText(){
+    const standard=(Number(document.getElementById("standardLaborHours").value)||0)*3600000;
+    if(!standard) return "Standard time not entered";
+    const difference=standard-getActiveMilliseconds();
+    const minutes=Math.round(Math.abs(difference)/60000);
+    if(Math.abs(difference)<60000) return "On standard time";
+    return difference>0 ? `${minutes} min under standard` : `${minutes} min over standard`;
+  }
+
+  function getEfficiencyText(){
+    const standard=(Number(document.getElementById("standardLaborHours").value)||0)*3600000;
+    const actual=getActiveMilliseconds();
+    if(!standard || !actual) return "—";
+    return `${Math.round((standard/actual)*100)}%`;
+  }
+
+  function updateJobClockUI(){
+    const active=getActiveMilliseconds();
+    const paused=getPausedMilliseconds();
+    document.getElementById("liveJobTime").textContent=formatClock(active);
+    document.getElementById("activeTimeMetric").textContent=formatDurationHours(active);
+    document.getElementById("pausedTimeMetric").textContent=formatDurationHours(paused);
+
+    const comparison=document.getElementById("laborComparisonMetric");
+    comparison.textContent=getLaborComparisonText();
+    comparison.className="metric-value";
+    if(comparison.textContent.includes("under")) comparison.classList.add("comparison-good");
+    else if(comparison.textContent.includes("over")) comparison.classList.add("comparison-bad");
+    else comparison.classList.add("comparison-warn");
+
+    document.getElementById("efficiencyMetric").textContent=getEfficiencyText();
+
+    const banner=document.getElementById("clockBanner");
+    const state=document.getElementById("clockStateText");
+    banner.className="clock-banner";
+    if(jobClock.state==="running"){
+      banner.classList.add("clock-running");
+      state.textContent="Job running";
+    }else if(jobClock.state==="paused"){
+      banner.classList.add("clock-paused");
+      state.textContent="Job paused";
+    }else if(jobClock.state==="finished"){
+      banner.classList.add("clock-finished");
+      state.textContent="Job finished";
+    }else{
+      state.textContent="Not started";
+    }
+  }
+
+  function startJobClock(){
+    if(jobClock.state!=="not_started" && jobClock.state!=="finished") return;
+    if(jobClock.state==="finished"){
+      jobClock={state:"not_started",activeStartedAt:null,pauseStartedAt:null,activeMs:0,pausedMs:0,timeline:[]};
+    }
+    jobClock.state="running";
+    jobClock.activeStartedAt=Date.now();
+    document.getElementById("repairStatus").value="In Progress";
+    addTimelineEvent("Job started",document.getElementById("assignedTechnician").value.trim()||"Technician not entered");
+    updateJobClockUI();
+  }
+
+  function pauseJobClock(){
+    if(jobClock.state!=="running") return;
+    jobClock.activeMs+=Date.now()-jobClock.activeStartedAt;
+    jobClock.activeStartedAt=null;
+    jobClock.state="paused";
+    jobClock.pauseStartedAt=Date.now();
+    const reason=document.getElementById("pauseReason").value;
+    const note=document.getElementById("pauseNote").value.trim();
+    document.getElementById("repairStatus").value=
+      reason==="Waiting on Parts" ? "Waiting on Parts" :
+      reason==="Waiting on Customer Approval" ? "Waiting on Approval" : "Paused";
+    addTimelineEvent(`Paused — ${reason}`,note);
+    updateJobClockUI();
+  }
+
+  function resumeJobClock(){
+    if(jobClock.state!=="paused") return;
+    jobClock.pausedMs+=Date.now()-jobClock.pauseStartedAt;
+    jobClock.pauseStartedAt=null;
+    jobClock.state="running";
+    jobClock.activeStartedAt=Date.now();
+    document.getElementById("repairStatus").value="In Progress";
+    addTimelineEvent("Job resumed");
+    updateJobClockUI();
+  }
+
+  function finishJobClock(){
+    if(jobClock.state==="running" && jobClock.activeStartedAt){
+      jobClock.activeMs+=Date.now()-jobClock.activeStartedAt;
+    }
+    if(jobClock.state==="paused" && jobClock.pauseStartedAt){
+      jobClock.pausedMs+=Date.now()-jobClock.pauseStartedAt;
+    }
+    jobClock.activeStartedAt=null;
+    jobClock.pauseStartedAt=null;
+    jobClock.state="finished";
+    document.getElementById("repairStatus").value="Complete";
+    addTimelineEvent("Job completed",getLaborComparisonText());
+    updateJobClockUI();
+  }
+
   function buildSummary(){
     const completed=[...document.querySelectorAll(".check")]
       .filter(c=>c.checked)
@@ -1031,7 +1331,17 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       ["Estimate total",formatMoney(calculateEstimate().grandTotal)],
       ["Authorization status",document.getElementById("authorizationStatus").value],
       ["Authorization method",document.getElementById("authorizationMethod").value],
-      ["Authorization notes",document.getElementById("authorizationNotes").value||"None"]
+      ["Authorization notes",document.getElementById("authorizationNotes").value||"None"],
+      ["Work Order",document.getElementById("workOrderNumber").value||document.getElementById("roNumber").value||"Auto-generated on save"],
+      ["Assigned technician",document.getElementById("assignedTechnician").value||document.getElementById("technicianName").value||"Not assigned"],
+      ["Repair status",document.getElementById("repairStatus").value],
+      ["Standard labor time",`${Number(document.getElementById("standardLaborHours").value||0).toFixed(2)} h`],
+      ["Actual working time",formatDurationHours(getActiveMilliseconds())],
+      ["Paused time",formatDurationHours(getPausedMilliseconds())],
+      ["Time comparison",getLaborComparisonText()],
+      ["Efficiency",getEfficiencyText()],
+      ["Internal technician notes",document.getElementById("internalTechnicianNotes").value||"None"],
+      ["Completion notes",document.getElementById("completionNotes").value||"None"]
     ];
     const healthScoreEl=document.getElementById("healthScore");
     if(healthScoreEl) healthScoreEl.textContent=calculateHealthScore();
@@ -1181,6 +1491,14 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   createEstimateRow({description:"Inspection-recommended repair",priority:"Immediate",hours:0,parts:0});
   updateAuthorizationBadge();
 
+  document.getElementById("startJob").addEventListener("click",startJobClock);
+  document.getElementById("pauseJob").addEventListener("click",pauseJobClock);
+  document.getElementById("resumeJob").addEventListener("click",resumeJobClock);
+  document.getElementById("finishJob").addEventListener("click",finishJobClock);
+  document.getElementById("standardLaborHours").addEventListener("input",updateJobClockUI);
+  jobClockInterval=setInterval(updateJobClockUI,1000);
+  updateJobClockUI();
+
 document.getElementById("submitCheckin")?.addEventListener("click",()=>{
     const required=[
       ["Customer name",document.getElementById("customerName").value.trim()],
@@ -1280,10 +1598,23 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
           method:document.getElementById("authorizationMethod").value,
           notes:document.getElementById("authorizationNotes").value.trim()
         }
+      },
+      workOrder:{
+        workOrderNumber:document.getElementById("workOrderNumber").value.trim()||document.getElementById("roNumber").value.trim()||`WO-${new Date().toISOString().replace(/\D/g,"").slice(0,14)}`,
+        assignedTechnician:document.getElementById("assignedTechnician").value.trim()||document.getElementById("technicianName").value.trim(),
+        repairStatus:document.getElementById("repairStatus").value,
+        standardLaborHours:Number(document.getElementById("standardLaborHours").value)||0,
+        activeMilliseconds:getActiveMilliseconds(),
+        pausedMilliseconds:getPausedMilliseconds(),
+        comparison:getLaborComparisonText(),
+        efficiency:getEfficiencyText(),
+        internalTechnicianNotes:document.getElementById("internalTechnicianNotes").value.trim(),
+        completionNotes:document.getElementById("completionNotes").value.trim(),
+        timeline:jobClock.timeline
       }
     };
 
-    localStorage.setItem("nitros_prototype_v052_last_checkin",JSON.stringify(payload));
+    localStorage.setItem("nitros_prototype_v060_last_checkin",JSON.stringify(payload));
     s.className="status ok";
     s.textContent=`Inspection report ${payload.checkInId} saved successfully on this device.`;
   });
