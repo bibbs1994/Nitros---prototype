@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.6.7</title>
+<title>Nitros Prototype v0.6.8</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -52,10 +52,10 @@ input:focus,textarea:focus,select:focus{border-color:#ff8a2b}
 .status.ok{border-color:#2d7d62;color:#bcebd8}.status.warn{border-color:#8c6a22;color:#f9df9d}.status.bad{border-color:#803a3f;color:#ffc3c6}
 .back{background:none;border:0;color:#ff9952;font-size:16px;padding:0;margin-bottom:15px}
 .kv{display:grid;grid-template-columns:140px 1fr;gap:9px 14px}
-video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px solid var(--line)}
+video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;background:#000;border-radius:17px;border:1px solid var(--line)}
 .camera-wrap{display:none}.camera-wrap.active{display:block}
-.scan-overlay{position:relative}
-.scan-guide{position:absolute;left:5%;right:5%;top:32%;height:36%;border:3px solid rgba(255,138,43,.95);border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.20);pointer-events:none;transition:.2s}.scan-guide.found{border-color:#39b982;box-shadow:0 0 0 9999px rgba(0,0,0,.15),0 0 22px rgba(57,185,130,.9)}
+.scan-overlay{position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:17px;background:#000}
+.scan-guide{position:absolute;left:7%;right:7%;top:36%;height:28%;border:3px solid rgba(255,138,43,.98);border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.28);pointer-events:none;transition:border-color .18s,box-shadow .18s;transform:none!important}.scan-guide::after{content:"HOLD VIN INSIDE BOX";position:absolute;left:50%;bottom:-31px;transform:translateX(-50%);white-space:nowrap;font-size:12px;font-weight:800;letter-spacing:.08em;color:#fff;text-shadow:0 1px 4px #000}.scan-guide.confirming{border-color:#f4b740;box-shadow:0 0 0 9999px rgba(0,0,0,.24),0 0 18px rgba(244,183,64,.65)}.scan-guide.found{border-color:#39b982;box-shadow:0 0 0 9999px rgba(0,0,0,.18),0 0 22px rgba(57,185,130,.9)}
 .capture-note{font-size:13px;color:var(--muted)}
 .footer-note{font-size:12px;color:#7f8da2;text-align:center;padding:0 20px}
 .badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#0c1929;border:1px solid var(--line);color:#c7d2e2;font-size:13px}
@@ -694,7 +694,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.6.7 • Repaired iPhone VIN scan and voice dictation • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.6.8 • Stabilized VIN frame and confirmed VIN capture • Local prototype storage only</div>
 </div>
 
 <script>
@@ -721,6 +721,9 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
   let scannerLibraryPromise = null;
   let scanAttempts = 0;
   let scanStartedAt = 0;
+  let pendingVin = "";
+  let pendingVinCount = 0;
+  let pendingVinAt = 0;
 
   const vehicles = {
     "DEMO1": {vin:"1D7HU18D17S000001",year:"2007",make:"Dodge",model:"Ram 1500",engine:"5.7L HEMI",source:"Prototype demo record"},
@@ -891,7 +894,8 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
       identifyStatus.textContent="Camera opened. Continuous VIN scanning is starting…";
       scanAttempts=0;
       scanStartedAt=Date.now();
-      if(scanGuide) scanGuide.classList.remove("found");
+      pendingVin=""; pendingVinCount=0; pendingVinAt=0;
+      if(scanGuide) scanGuide.classList.remove("found","confirming");
       await applyCameraEnhancements();
       const zxingReady=await ensureZXingLibrary();
       startContinuousZXing();
@@ -900,7 +904,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
         identifyStatus.className="status bad";
         identifyStatus.textContent="The VIN scanner library could not load. Confirm the phone has internet access, refresh the page, and reopen the scanner.";
       }else{
-        identifyStatus.textContent="Continuous scanning active. Fill the orange guide with the VIN barcode and reduce glare.";
+        identifyStatus.textContent="Continuous scanning active. Keep the VIN inside the fixed orange box until it turns green.";
       }
     }catch(err){
       identifyStatus.className="status warn";
@@ -916,6 +920,8 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
     zxingFrameReader=null;
     scanAttempts=0;
     scanStartedAt=0;
+    pendingVin=""; pendingVinCount=0; pendingVinAt=0;
+    if(scanGuide) scanGuide.classList.remove("found","confirming");
     if(zxingControls && typeof zxingControls.stop==="function"){try{zxingControls.stop();}catch(e){}}
     zxingControls=null;
     if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
@@ -978,19 +984,34 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
 
   function acceptScannedValue(raw,source){
     const now=Date.now();
-    if(now-lastScanAt<1500) return false;
     const value=extractVin(raw);
     if(value.length!==17) return false;
+
+    // Require two matching reads close together. This prevents a single unstable
+    // camera frame or nearby sticker from being accepted as the vehicle VIN.
+    if(value!==pendingVin || now-pendingVinAt>2500){
+      pendingVin=value;
+      pendingVinCount=1;
+      pendingVinAt=now;
+      if(scanGuide){scanGuide.classList.remove("found");scanGuide.classList.add("confirming");}
+      identifyStatus.className="status warn";
+      identifyStatus.textContent="VIN detected once. Hold the phone steady inside the fixed box for confirmation…";
+      return false;
+    }
+
+    pendingVinCount+=1;
+    pendingVinAt=now;
+    if(pendingVinCount<2 || now-lastScanAt<900) return false;
     lastScanAt=now;
     vinInput.value=value;
-    if(scanGuide) scanGuide.classList.add("found");
-    try{navigator.vibrate && navigator.vibrate(120);}catch(e){}
+    if(scanGuide){scanGuide.classList.remove("confirming");scanGuide.classList.add("found");}
+    try{navigator.vibrate && navigator.vibrate([80,50,120]);}catch(e){}
     identifyStatus.className="status ok";
-    identifyStatus.textContent=`VIN captured by ${source}. Decoding vehicle…`;
+    identifyStatus.textContent=`VIN confirmed by ${source}. Decoding vehicle…`;
     setTimeout(()=>{
       stopCamera();
       identifyVehicle();
-    },250);
+    },350);
     return true;
   }
 
@@ -1086,7 +1107,7 @@ video{width:100%;max-height:390px;background:#000;border-radius:17px;border:1px 
         const elapsed=Date.now()-scanStartedAt;
         if(elapsed>12000 && scanAttempts%8===0){
           identifyStatus.className="status warn";
-          identifyStatus.textContent="Still scanning. Move 6–12 inches away, fill the orange guide, reduce glare, or tap Retry VIN Scan.";
+          identifyStatus.textContent="Still scanning. Hold 6–12 inches away, keep the VIN inside the fixed orange box, reduce glare, or tap Retry VIN Scan.";
         }
       }finally{
         autoScanBusy=false;
