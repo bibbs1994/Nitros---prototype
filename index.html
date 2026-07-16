@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.6.8</title>
+<title>Nitros Prototype v0.6.9</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -153,7 +153,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.6.8 — VIN Scanner Stability Release</div>
+  <div class="sub">Prototype v0.6.9 — Workflow Stability Release</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -173,6 +173,13 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       <button class="btn primary" data-go="checkin">Start Check-In</button>
       <button class="btn secondary" data-go="history">Customer History</button>
       <button class="btn secondary" data-go="assistant">AI Repair Assistant</button>
+    </div>
+    <div id="draftRecoveryPanel" class="status warn hidden" style="margin-top:14px">
+      <strong>Saved work is available.</strong>
+      <div class="grid two" style="margin-top:10px">
+        <button id="resumeDraft" class="btn primary small" type="button">Resume Current Job</button>
+        <button id="discardDraft" class="btn ghost small" type="button">Discard Saved Draft</button>
+      </div>
     </div>
 
   </div>
@@ -691,10 +698,14 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     </div>
 
     <div id="submitStatus" class="status"></div>
+    <div id="postSaveActions" class="grid two hidden" style="margin-top:12px">
+      <button id="reopenLastSaved" class="btn primary" type="button">Reopen / Edit Saved Repair</button>
+      <button class="btn secondary" data-go="history" type="button">Open Customer History</button>
+    </div>
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.6.8 • Stabilized VIN frame and confirmed VIN capture • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.6.9 • Stabilized VIN frame and confirmed VIN capture • Local prototype storage only</div>
 </div>
 
 <script>
@@ -747,11 +758,81 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     }
   }
 
-  function showScreen(id){
-    screens.forEach(s => s.classList.toggle("active", s.id === id));
+  const DRAFT_KEY="nitros_prototype_v069_active_draft";
+  let currentScreenId="home";
+  let draftSaveTimer=null;
+  let lastSavedRecordId=null;
+
+  function collectDraft(){
+    const fields={};
+    document.querySelectorAll("input[id], textarea[id], select[id]").forEach(el=>{
+      if(el.type==="file" || el.type==="button" || el.type==="submit") return;
+      fields[el.id]=el.type==="checkbox" ? el.checked : el.value;
+    });
+    const checks=[...document.querySelectorAll(".check")].map(el=>el.checked);
+    const estimateLines=[...document.querySelectorAll("#estimateRows tr")].map(row=>({
+      description:row.querySelector(".est-desc")?.value||"",
+      priority:row.querySelector(".est-priority")?.value||"Immediate",
+      hours:row.querySelector(".est-hours")?.value||0,
+      parts:row.querySelector(".est-parts")?.value||0
+    }));
+    return {savedAt:new Date().toISOString(),screen:currentScreenId,selectedVehicle,editingCheckInId,fields,checks,estimateLines,jobClock};
+  }
+
+  function saveDraft(){
+    try{localStorage.setItem(DRAFT_KEY,JSON.stringify(collectDraft()));refreshDraftPanel();}
+    catch(error){console.warn("Draft autosave failed:",error);}
+  }
+
+  function scheduleDraftSave(){
+    clearTimeout(draftSaveTimer);
+    draftSaveTimer=setTimeout(saveDraft,300);
+  }
+
+  function loadDraft(){
+    try{return JSON.parse(localStorage.getItem(DRAFT_KEY)||"null");}catch(error){return null;}
+  }
+
+  function refreshDraftPanel(){
+    const panel=document.getElementById("draftRecoveryPanel");
+    if(!panel) return;
+    const draft=loadDraft();
+    panel.classList.toggle("hidden",!draft);
+  }
+
+  function restoreDraft(goToSavedScreen=true){
+    const draft=loadDraft();
+    if(!draft) return false;
+    selectedVehicle=draft.selectedVehicle||selectedVehicle;
+    editingCheckInId=draft.editingCheckInId||null;
+    Object.entries(draft.fields||{}).forEach(([id,value])=>{
+      const el=document.getElementById(id); if(!el) return;
+      if(el.type==="checkbox") el.checked=Boolean(value); else el.value=value??"";
+    });
+    [...document.querySelectorAll(".check")].forEach((el,index)=>{if(index<(draft.checks||[]).length) el.checked=Boolean(draft.checks[index]);});
+    if(Array.isArray(draft.estimateLines) && draft.estimateLines.length){
+      document.getElementById("estimateRows").innerHTML="";
+      draft.estimateLines.forEach(createEstimateRow);
+    }
+    if(draft.jobClock) jobClock={...jobClock,...draft.jobClock,activeStartedAt:null,pauseStartedAt:null};
+    if(selectedVehicle) renderVehicle();
+    updateEstimateTotals(); updateAuthorizationBadge(); updateJobClockUI(); renderTimeline();
+    if(goToSavedScreen) showScreen(draft.screen||"customer",false);
+    return true;
+  }
+
+  function showScreen(id,pushHistory=true){
+    const target=document.getElementById(id) ? id : "home";
+    currentScreenId=target;
+    screens.forEach(s => s.classList.toggle("active", s.id === target));
     window.scrollTo({top:0,behavior:"instant"});
-    if(id === "review") buildSummary();
-    if(id === "history") searchHistory();
+    if(target === "review") buildSummary();
+    if(target === "history") searchHistory();
+    if(target === "home") refreshDraftPanel();
+    if(pushHistory){
+      try{history.pushState({nitrosScreen:target},"",location.href.split("#")[0]+"#"+target);}catch(error){}
+    }
+    scheduleDraftSave();
   }
 
   document.addEventListener("click",(e)=>{
@@ -1234,6 +1315,8 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     const status=document.getElementById("laborLookupStatus");
     if(!operation){status.className="status bad";status.textContent="Enter the repair operation before searching.";return;}
     const query=buildLaborSearchQuery();
+    saveDraft();
+    sessionStorage.setItem("nitros_external_navigation_pending","1");
     const opened=window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`,"_blank","noopener,noreferrer");
     status.className=opened?"status ok":"status warn";
     status.textContent=opened?"Search opened. Verify the labor time using an authorized OEM or professional labor guide, then enter the hours and source below.":"The browser blocked the new tab. Copy the search description and paste it into Safari or Chrome.";
@@ -1570,13 +1653,22 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     setValue("brakesStatus",st.brakes); setValue("tiresStatus",st.tires); setValue("steeringStatus",st.steeringSuspension);
     setValue("fluidsStatus",st.fluidsLeaks); setValue("batteryStatus",st.batteryCharging); setValue("lightsStatus",st.lightsWipers);
     setValue("technicianFindings",record.technicianInspection?.findings); setValue("technicianRecommendation",record.technicianInspection?.recommendation);
+    const bm=record.technicianInspection?.brakeMeasurements||{};
+    setValue("lfPad",bm.lfPadMm); setValue("rfPad",bm.rfPadMm); setValue("lrPad",bm.lrPadMm); setValue("rrPad",bm.rrPadMm); setValue("frontRotor",bm.frontRotor); setValue("rearRotor",bm.rearRotor);
+    const tm=record.technicianInspection?.tireMeasurements||{};
+    setValue("lfTread",tm.lfTread32); setValue("rfTread",tm.rfTread32); setValue("lrTread",tm.lrTread32); setValue("rrTread",tm.rrTread32);
+    setValue("lfPsi",tm.lfPsi); setValue("rfPsi",tm.rfPsi); setValue("lrPsi",tm.lrPsi); setValue("rrPsi",tm.rrPsi);
     setValue("priorityImmediate",record.technicianInspection?.priorities?.immediate); setValue("prioritySoon",record.technicianInspection?.priorities?.soon); setValue("priorityMonitor",record.technicianInspection?.priorities?.monitor);
+    setValue("laborOperation",record.laborLookup?.operation); setValue("laborSystem",record.laborLookup?.system); setValue("verifiedLaborHours",record.laborLookup?.verifiedHours); setValue("laborTimeSource",record.laborLookup?.source); setValue("laborLookupNotes",record.laborLookup?.notes);
+    setValue("estimateNumber",record.estimate?.estimateNumber); setValue("laborRate",record.estimate?.laborRate); setValue("authorizationStatus",record.estimate?.authorization?.status); setValue("authorizationMethod",record.estimate?.authorization?.method); setValue("authorizationNotes",record.estimate?.authorization?.notes);
+    if(Array.isArray(record.estimate?.lines)){document.getElementById("estimateRows").innerHTML="";record.estimate.lines.forEach(createEstimateRow);}
+    [...document.querySelectorAll(".check")].forEach((el,index)=>{el.checked=Boolean(record.checks?.[index]?.completed);});
     setValue("workOrderNumber",record.workOrder?.workOrderNumber); setValue("assignedTechnician",record.workOrder?.assignedTechnician);
     setValue("repairStatus",record.workOrder?.repairStatus); setValue("standardLaborHours",record.workOrder?.standardLaborHours);
     setValue("diagnosticTimeHours",record.workOrder?.diagnosticTimeHours ?? ((record.workOrder?.activeMilliseconds||0)/3600000).toFixed(2));
     setValue("internalTechnicianNotes",record.workOrder?.internalTechnicianNotes); setValue("completionNotes",record.workOrder?.completionNotes);
     jobClock={state:"finished",activeStartedAt:null,pauseStartedAt:null,activeMs:Number(record.workOrder?.activeMilliseconds)||0,pausedMs:Number(record.workOrder?.pausedMilliseconds)||0,timeline:Array.isArray(record.workOrder?.timeline)?record.workOrder.timeline:[]};
-    updateJobClockUI(); renderTimeline(); buildSummary(); showScreen("workorder");
+    updateEstimateTotals(); updateAuthorizationBadge(); updateJobClockUI(); renderTimeline(); buildSummary(); saveDraft(); showScreen("workorder");
     const status=document.getElementById("submitStatus"); if(status){status.className="status warn";status.textContent=`Reopened ${record.checkInId}. Saving will update this record without creating a duplicate.`;}
   }
 
@@ -2167,20 +2259,31 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
     saveCustomerHistoryRecord(payload);
     s.className="status ok";
     const wasEdit=Boolean(editingCheckInId);
-    s.textContent=`Inspection report ${payload.checkInId} ${wasEdit?"updated":"saved"} successfully. Returning to Home…`;
+    lastSavedRecordId=payload.checkInId;
+    s.textContent=`Inspection report ${payload.checkInId} ${wasEdit?"updated":"saved"} successfully. It is stored in Customer History and can be reopened immediately.`;
+    document.getElementById("postSaveActions")?.classList.remove("hidden");
     editingCheckInId=null;
-    setTimeout(()=>{
-      showScreen("home");
-      const homeCard=document.querySelector("#home .card");
-      const existing=document.getElementById("homeSaveConfirmation"); if(existing) existing.remove();
-      const confirmation=document.createElement("div"); confirmation.id="homeSaveConfirmation"; confirmation.className="status ok";
-      confirmation.textContent=`Save verified: ${payload.checkInId} is stored in Customer History.`;
-      homeCard.appendChild(confirmation);
-    },1200);
+    localStorage.removeItem(DRAFT_KEY);
+    refreshDraftPanel();
   });
 
+  document.addEventListener("input",e=>{if(e.target.matches("input,textarea,select")) scheduleDraftSave();});
+  document.addEventListener("change",e=>{if(e.target.matches("input,textarea,select")) scheduleDraftSave();});
+  document.getElementById("resumeDraft")?.addEventListener("click",()=>restoreDraft(true));
+  document.getElementById("discardDraft")?.addEventListener("click",()=>{localStorage.removeItem(DRAFT_KEY);refreshDraftPanel();});
+  document.getElementById("reopenLastSaved")?.addEventListener("click",()=>{if(lastSavedRecordId) reopenCompletedRecord(lastSavedRecordId);});
+  window.addEventListener("popstate",event=>{showScreen(event.state?.nitrosScreen||"home",false);});
+  window.addEventListener("pageshow",()=>{
+    const pending=sessionStorage.getItem("nitros_external_navigation_pending");
+    if(pending){sessionStorage.removeItem("nitros_external_navigation_pending");restoreDraft(true);}
+    const active=screens.find(screen=>screen.classList.contains("active"));
+    if(!active) showScreen("home",false);
+    refreshDraftPanel();
+  });
+  try{history.replaceState({nitrosScreen:"home"},"",location.href.split("#")[0]+"#home");}catch(error){}
+  refreshDraftPanel();
   updateEnvironment();
-  window.addEventListener("pagehide",stopCamera);
+  window.addEventListener("pagehide",()=>{saveDraft();stopCamera();});
 })();
 </script>
 </body>
