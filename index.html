@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.7.2</title>
+<title>Nitros Prototype v0.7.3</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -281,9 +281,9 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="card" style="margin-top:18px;background:#0d192a">
       <div class="eyebrow">Vehicle and Engine Identification</div>
       <h3>Confirm or correct decoded information</h3>
-      <p>NHTSA does not return every trim or OEM engine code for every VIN. These fields remain editable so the repair order can still be completed accurately.</p>
+      <p>The VIN decoder may identify the vehicle and engine without supplying the retail sub-model such as LE, SE, XLE, EX, or GT-Line. The SUB-MODEL / TRIM field below is always visible and can be confirmed or entered manually.</p>
       <div class="grid two">
-        <div class="field"><label for="vehicleTrimEdit">Trim / sub-model</label><input id="vehicleTrimEdit" placeholder="LE, SE, XLE, TRD, etc."></div>
+        <div class="field"><label for="vehicleTrimEdit">SUB-MODEL / TRIM (confirm or enter)</label><input id="vehicleTrimEdit" placeholder="LE, SE, XLE, TRD, GT-Line, EX, etc."></div>
         <div class="field"><label for="vehicleSeriesEdit">Series</label><input id="vehicleSeriesEdit" placeholder="Series or grade"></div>
         <div class="field"><label for="engineSizeEdit">Engine size</label><input id="engineSizeEdit" placeholder="2.5L"></div>
         <div class="field"><label for="engineModelEdit">OEM engine model / code</label><input id="engineModelEdit" placeholder="A25A-FKS, 22R, AUD, etc."></div>
@@ -725,7 +725,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.7.2 • Dash VIN text recognition • Expanded trim and engine identification • Clean new-vehicle reset • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.7.3 • Dash VIN text recognition • Expanded trim and engine identification • Clean new-vehicle reset • Local prototype storage only</div>
 </div>
 
 <script>
@@ -778,7 +778,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     }
   }
 
-  const DRAFT_KEY="nitros_prototype_v072_active_draft";
+  const DRAFT_KEY="nitros_prototype_v073_active_draft";
   let currentScreenId="home";
   let draftSaveTimer=null;
   let lastSavedRecordId=null;
@@ -992,8 +992,15 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       const engineCylinders=result.EngineCylinders || "";
       const engineModel=result.EngineModel || "";
       const engineFamily=result.EngineManufacturer || "";
-      const trim=[result.Trim,result.Trim2].filter(Boolean).join(" / ");
-      const series=[result.Series,result.Series2].filter(Boolean).join(" / ");
+      const cleanDecodedValue=value=>String(value||"").trim();
+      const uniqueDecodedValues=values=>[...new Set(values.map(cleanDecodedValue).filter(Boolean))];
+      const trimValues=uniqueDecodedValues([result.Trim,result.Trim2]);
+      const seriesValues=uniqueDecodedValues([result.Series,result.Series2]);
+      const trim=trimValues.join(" / ");
+      const series=seriesValues.join(" / ");
+      const submodelCandidates=uniqueDecodedValues([...trimValues,...seriesValues])
+        .filter(value=>![result.Model,result.Make].map(cleanDecodedValue).includes(value));
+      const submodel=submodelCandidates.join(" / ");
       const vinEngineDesignator=vin.charAt(7)||"";
       const engineParts=[engineSize,engineModel,engineConfiguration,fuelType].filter(Boolean);
 
@@ -1003,6 +1010,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
         year:result.ModelYear || "Not returned",
         make:result.Make || "Not returned",
         model:result.Model || "Not returned",
+        submodel:submodel || "Not supplied by VIN decoder",
         trim:trim || "Not returned",
         series:series || "Not returned",
         engine:engineParts.join(" • ") || "Not returned",
@@ -1030,6 +1038,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
         year:"Decode unavailable",
         make:"Decode unavailable",
         model:"Decode unavailable",
+        submodel:"Not supplied by VIN decoder",
         trim:"Not returned",
         series:"Not returned",
         engine:"Decode unavailable",
@@ -1049,16 +1058,20 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   }
 
   function renderVehicle(){
+    const decodedSubmodel=(selectedVehicle.submodel && !selectedVehicle.submodel.startsWith("Not supplied"))
+      ? selectedVehicle.submodel
+      : ((selectedVehicle.trim && selectedVehicle.trim!=="Not returned") ? selectedVehicle.trim : "");
     document.getElementById("vehicleTitle").textContent =
       selectedVehicle.year==="Pending decode" ? "VIN captured" :
-      `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}`;
+      `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}${decodedSubmodel ? ` — ${decodedSubmodel}` : " — Sub-model not supplied"}`;
     const details=[
       ["VIN",selectedVehicle.vin],
       ["Year",selectedVehicle.year],
       ["Make",selectedVehicle.make],
       ["Model",selectedVehicle.model],
-      ["Trim / sub-model",selectedVehicle.trim||"Not returned"],
-      ["Series",selectedVehicle.series||"Not returned"],
+      ["SUB-MODEL / TRIM",selectedVehicle.submodel||selectedVehicle.trim||"Not supplied by VIN decoder"],
+      ["Trim field",selectedVehicle.trim||"Not returned"],
+      ["Series / grade field",selectedVehicle.series||"Not returned"],
       ["Engine summary",selectedVehicle.engine],
       ["Engine size",selectedVehicle.engineSize||"Not returned"],
       ["OEM engine model / code",selectedVehicle.engineModel||"Not returned"],
@@ -1072,7 +1085,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       ["Source",selectedVehicle.source]
     ];
     document.getElementById("vehicleDetails").innerHTML=details.map(([k,v])=>`<div>${k}</div><div>${escapeHtml(v)}</div>`).join("");
-    const editMap={vehicleTrimEdit:"trim",vehicleSeriesEdit:"series",engineSizeEdit:"engineSize",engineModelEdit:"engineModel",engineFamilyEdit:"engineFamily",vinEngineDesignatorEdit:"vinEngineDesignator",engineCylindersEdit:"engineCylinders",fuelTypeEdit:"fuelType"};
+    const editMap={vehicleTrimEdit:"submodel",vehicleSeriesEdit:"series",engineSizeEdit:"engineSize",engineModelEdit:"engineModel",engineFamilyEdit:"engineFamily",vinEngineDesignatorEdit:"vinEngineDesignator",engineCylindersEdit:"engineCylinders",fuelTypeEdit:"fuelType"};
     Object.entries(editMap).forEach(([id,key])=>{const el=document.getElementById(id);if(el) el.value=(selectedVehicle[key]&&selectedVehicle[key]!=="Not returned")?selectedVehicle[key]:"";});
     renderVehicleHistory();
   }
@@ -2277,8 +2290,9 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   document.getElementById("readDashVin")?.addEventListener("click",readDashVinFromCamera);
   document.getElementById("applyVehicleCorrections")?.addEventListener("click",()=>{
     if(!selectedVehicle) return;
-    const map={vehicleTrimEdit:"trim",vehicleSeriesEdit:"series",engineSizeEdit:"engineSize",engineModelEdit:"engineModel",engineFamilyEdit:"engineFamily",vinEngineDesignatorEdit:"vinEngineDesignator",engineCylindersEdit:"engineCylinders",fuelTypeEdit:"fuelType"};
+    const map={vehicleTrimEdit:"submodel",vehicleSeriesEdit:"series",engineSizeEdit:"engineSize",engineModelEdit:"engineModel",engineFamilyEdit:"engineFamily",vinEngineDesignatorEdit:"vinEngineDesignator",engineCylindersEdit:"engineCylinders",fuelTypeEdit:"fuelType"};
     Object.entries(map).forEach(([id,key])=>{const value=document.getElementById(id)?.value.trim();selectedVehicle[key]=value||"Not returned";});
+    selectedVehicle.trim=selectedVehicle.submodel;
     selectedVehicle.engine=[selectedVehicle.engineSize,selectedVehicle.engineModel,selectedVehicle.fuelType].filter(v=>v&&v!=="Not returned").join(" • ")||"Not returned";
     renderVehicle();
     const status=document.getElementById("vehicleCorrectionStatus");if(status){status.className="status ok";status.textContent="Vehicle and engine identification corrections applied.";}
