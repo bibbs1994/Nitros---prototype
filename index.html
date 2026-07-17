@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.7.0</title>
+<title>Nitros Prototype v0.7.1</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -700,13 +700,13 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div id="submitStatus" class="status"></div>
     <div id="postSaveActions" class="grid hidden" style="margin-top:12px">
       <button id="reopenLastSaved" class="btn primary" type="button">Reopen / Edit Saved Repair</button>
-      <button class="btn secondary" data-go="home" type="button">Return to Home</button>
+      <button id="returnHomeAfterSave" class="btn secondary" type="button">Return to Home / Start New Vehicle</button>
       <button class="btn secondary" data-go="history" type="button">Open Customer History</button>
     </div>
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.7.0 • VIN, navigation, signature, and save/reopen stabilization • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.7.1 • Clean new-vehicle reset after save • VIN, navigation, signature, and reopen stabilization • Local prototype storage only</div>
 </div>
 
 <script>
@@ -759,7 +759,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     }
   }
 
-  const DRAFT_KEY="nitros_prototype_v070_active_draft";
+  const DRAFT_KEY="nitros_prototype_v071_active_draft";
   let currentScreenId="home";
   let draftSaveTimer=null;
   let lastSavedRecordId=null;
@@ -820,6 +820,86 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     updateEstimateTotals(); updateAuthorizationBadge(); updateJobClockUI(); renderTimeline();
     if(goToSavedScreen) showScreen(draft.screen||"customer",false);
     return true;
+  }
+
+  function resetActiveWorkspace(){
+    stopCamera();
+    clearTimeout(draftSaveTimer);
+    localStorage.removeItem(DRAFT_KEY);
+
+    selectedVehicle=null;
+    editingCheckInId=null;
+    lastSavedRecordId=null;
+    pendingVin="";
+    pendingVinCount=0;
+    pendingVinAt=0;
+    scanAttempts=0;
+    scanStartedAt=0;
+
+    document.querySelectorAll("input[id], textarea[id], select[id]").forEach(el=>{
+      if(el.type==="file"){
+        try{el.value="";}catch(error){}
+      }else if(el.type==="checkbox" || el.type==="radio"){
+        el.checked=false;
+      }else{
+        el.value="";
+      }
+    });
+
+    document.querySelectorAll("canvas.signature-pad").forEach(canvas=>{
+      const ctx=canvas.getContext("2d");
+      if(ctx) ctx.clearRect(0,0,canvas.width,canvas.height);
+      canvas.dataset.hasInk="false";
+    });
+
+    document.querySelectorAll(".check").forEach(el=>{el.checked=false;});
+    document.getElementById("estimateRows").innerHTML="";
+    createEstimateRow();
+
+    jobClock={
+      startedAt:null,
+      activeStartedAt:null,
+      pauseStartedAt:null,
+      accumulatedActiveMs:0,
+      accumulatedPausedMs:0,
+      timeline:[]
+    };
+
+    const defaults={
+      arrivalMethod:"Driven In",
+      fuelLevel:"1/2",
+      brakesStatus:"Not Inspected",
+      tiresStatus:"Not Inspected",
+      steeringStatus:"Not Inspected",
+      fluidsStatus:"Not Inspected",
+      batteryStatus:"Not Inspected",
+      lightsStatus:"Not Inspected",
+      laborSystem:"General",
+      laborRate:"125",
+      authorizationStatus:"Pending",
+      authorizationMethod:"Not Yet Authorized",
+      repairStatus:"Not Started"
+    };
+    Object.entries(defaults).forEach(([id,value])=>{const el=document.getElementById(id);if(el) el.value=value;});
+
+    const vehicleSummary=document.getElementById("vehicleSummary");
+    if(vehicleSummary) vehicleSummary.innerHTML="";
+    const identifyStatusEl=document.getElementById("identifyStatus");
+    if(identifyStatusEl){identifyStatusEl.className="status";identifyStatusEl.textContent="";}
+    const submitStatus=document.getElementById("submitStatus");
+    if(submitStatus){submitStatus.className="status";submitStatus.textContent="";}
+    document.getElementById("postSaveActions")?.classList.add("hidden");
+
+    updateEstimateTotals();
+    updateAuthorizationBadge();
+    updateJobClockUI();
+    renderTimeline();
+    refreshDraftPanel();
+  }
+
+  function returnHomeAndStartNewVehicle(){
+    resetActiveWorkspace();
+    showScreen("home");
   }
 
   function showScreen(id,pushHistory=true){
@@ -2296,6 +2376,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
   document.getElementById("resumeDraft")?.addEventListener("click",()=>restoreDraft(true));
   document.getElementById("discardDraft")?.addEventListener("click",()=>{localStorage.removeItem(DRAFT_KEY);refreshDraftPanel();});
   document.getElementById("reopenLastSaved")?.addEventListener("click",()=>{if(lastSavedRecordId) reopenCompletedRecord(lastSavedRecordId);});
+  document.getElementById("returnHomeAfterSave")?.addEventListener("click",returnHomeAndStartNewVehicle);
   window.addEventListener("popstate",event=>{showScreen(event.state?.nitrosScreen||"home",false);});
   window.addEventListener("pageshow",()=>{
     const pending=sessionStorage.getItem("nitros_external_navigation_pending");
