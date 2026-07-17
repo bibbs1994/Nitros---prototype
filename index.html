@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.7.1</title>
+<title>Nitros Prototype v0.7.2</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -239,7 +239,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   <div class="card">
     <div class="eyebrow">Camera-First Check-In</div>
     <h2>Scan or enter the VIN</h2>
-    <p>Use the rear camera to scan the VIN barcode. Manual entry remains available as a controlled fallback.</p>
+    <p>Use the rear camera to scan a door-label barcode or read the printed VIN through the windshield. Manual entry remains available as a controlled fallback.</p>
 
     <div class="grid two">
       <button id="startCamera" class="btn primary">Open VIN Scanner</button>
@@ -255,10 +255,11 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
         <div class="scan-guide"></div>
       </div>
       <div class="grid two" style="margin-top:12px">
-        <button id="scanFrame" class="btn secondary small">Scan Current View</button>
+        <button id="scanFrame" class="btn secondary small">Scan Barcode</button>
+        <button id="readDashVin" class="btn secondary small">Read Dash VIN Text</button>
         <button id="stopCamera" class="btn ghost small">Close Camera</button>
       </div>
-      <div class="capture-note" style="margin-top:8px">Fill most of the orange guide with the barcode. Hold 6–12 inches away, keep it level, and reduce glare.</div>
+      <div class="capture-note" style="margin-top:8px">For a door label, fill the orange guide with the barcode. For a windshield VIN, center the printed 17 characters, move close enough for sharp focus, and reduce glare.</div>
     </div>
 
     <div class="field" style="margin-top:17px">
@@ -276,6 +277,24 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="eyebrow">Vehicle Identified</div>
     <h2 id="vehicleTitle">Vehicle</h2>
     <div class="kv" id="vehicleDetails"></div>
+
+    <div class="card" style="margin-top:18px;background:#0d192a">
+      <div class="eyebrow">Vehicle and Engine Identification</div>
+      <h3>Confirm or correct decoded information</h3>
+      <p>NHTSA does not return every trim or OEM engine code for every VIN. These fields remain editable so the repair order can still be completed accurately.</p>
+      <div class="grid two">
+        <div class="field"><label for="vehicleTrimEdit">Trim / sub-model</label><input id="vehicleTrimEdit" placeholder="LE, SE, XLE, TRD, etc."></div>
+        <div class="field"><label for="vehicleSeriesEdit">Series</label><input id="vehicleSeriesEdit" placeholder="Series or grade"></div>
+        <div class="field"><label for="engineSizeEdit">Engine size</label><input id="engineSizeEdit" placeholder="2.5L"></div>
+        <div class="field"><label for="engineModelEdit">OEM engine model / code</label><input id="engineModelEdit" placeholder="A25A-FKS, 22R, AUD, etc."></div>
+        <div class="field"><label for="engineFamilyEdit">Engine family</label><input id="engineFamilyEdit" placeholder="Engine family, when available"></div>
+        <div class="field"><label for="vinEngineDesignatorEdit">VIN engine designator</label><input id="vinEngineDesignatorEdit" maxlength="4" placeholder="VIN H, code, etc."></div>
+        <div class="field"><label for="engineCylindersEdit">Cylinders</label><input id="engineCylindersEdit" inputmode="numeric" placeholder="4"></div>
+        <div class="field"><label for="fuelTypeEdit">Fuel type</label><input id="fuelTypeEdit" placeholder="Gasoline, hybrid, etc."></div>
+      </div>
+      <button id="applyVehicleCorrections" class="btn secondary" type="button">Apply Vehicle Corrections</button>
+      <div id="vehicleCorrectionStatus" class="status">Decoded values can be corrected before continuing.</div>
+    </div>
 
     <div class="card" style="margin-top:18px;background:#0d192a">
       <div class="eyebrow">Returning Vehicle History</div>
@@ -706,7 +725,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.7.1 • Clean new-vehicle reset after save • VIN, navigation, signature, and reopen stabilization • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.7.2 • Dash VIN text recognition • Expanded trim and engine identification • Clean new-vehicle reset • Local prototype storage only</div>
 </div>
 
 <script>
@@ -759,7 +778,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     }
   }
 
-  const DRAFT_KEY="nitros_prototype_v071_active_draft";
+  const DRAFT_KEY="nitros_prototype_v072_active_draft";
   let currentScreenId="home";
   let draftSaveTimer=null;
   let lastSavedRecordId=null;
@@ -967,11 +986,16 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       const result=data && data.Results && data.Results[0] ? data.Results[0] : null;
       if(!result) throw new Error("No decode result");
 
-      const engineParts=[
-        result.DisplacementL ? `${result.DisplacementL}L` : "",
-        result.EngineConfiguration || "",
-        result.FuelTypePrimary || ""
-      ].filter(Boolean);
+      const engineSize=result.DisplacementL ? `${result.DisplacementL}L` : "";
+      const engineConfiguration=result.EngineConfiguration || "";
+      const fuelType=result.FuelTypePrimary || result.FuelTypeSecondary || "";
+      const engineCylinders=result.EngineCylinders || "";
+      const engineModel=result.EngineModel || "";
+      const engineFamily=result.EngineManufacturer || "";
+      const trim=[result.Trim,result.Trim2].filter(Boolean).join(" / ");
+      const series=[result.Series,result.Series2].filter(Boolean).join(" / ");
+      const vinEngineDesignator=vin.charAt(7)||"";
+      const engineParts=[engineSize,engineModel,engineConfiguration,fuelType].filter(Boolean);
 
       const errors=String(result.ErrorCode||"").split(",").map(x=>x.trim()).filter(x=>x && x!=="0");
       selectedVehicle={
@@ -979,7 +1003,15 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
         year:result.ModelYear || "Not returned",
         make:result.Make || "Not returned",
         model:result.Model || "Not returned",
-        engine:engineParts.join(" • ") || result.EngineModel || "Not returned",
+        trim:trim || "Not returned",
+        series:series || "Not returned",
+        engine:engineParts.join(" • ") || "Not returned",
+        engineSize:engineSize || "Not returned",
+        engineModel:engineModel || "Not returned",
+        engineFamily:engineFamily || "Not returned",
+        vinEngineDesignator:vinEngineDesignator || "Not returned",
+        engineCylinders:engineCylinders || "Not returned",
+        fuelType:fuelType || "Not returned",
         body:result.BodyClass || "Not returned",
         driveType:result.DriveType || "Not returned",
         plant:result.PlantCity ? [result.PlantCity,result.PlantState,result.PlantCountry].filter(Boolean).join(", ") : "Not returned",
@@ -998,7 +1030,15 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
         year:"Decode unavailable",
         make:"Decode unavailable",
         model:"Decode unavailable",
+        trim:"Not returned",
+        series:"Not returned",
         engine:"Decode unavailable",
+        engineSize:"Not returned",
+        engineModel:"Not returned",
+        engineFamily:"Not returned",
+        vinEngineDesignator:vin.charAt(7)||"Not returned",
+        engineCylinders:"Not returned",
+        fuelType:"Not returned",
         source:"VIN captured; NHTSA connection unavailable"
       };
       renderVehicle();
@@ -1017,18 +1057,86 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       ["Year",selectedVehicle.year],
       ["Make",selectedVehicle.make],
       ["Model",selectedVehicle.model],
-      ["Engine",selectedVehicle.engine],
+      ["Trim / sub-model",selectedVehicle.trim||"Not returned"],
+      ["Series",selectedVehicle.series||"Not returned"],
+      ["Engine summary",selectedVehicle.engine],
+      ["Engine size",selectedVehicle.engineSize||"Not returned"],
+      ["OEM engine model / code",selectedVehicle.engineModel||"Not returned"],
+      ["Engine family",selectedVehicle.engineFamily||"Not returned"],
+      ["VIN engine designator",selectedVehicle.vinEngineDesignator||"Not returned"],
+      ["Cylinders",selectedVehicle.engineCylinders||"Not returned"],
+      ["Fuel type",selectedVehicle.fuelType||"Not returned"],
       ["Body",selectedVehicle.body||"Not returned"],
       ["Drive type",selectedVehicle.driveType||"Not returned"],
       ["Assembly plant",selectedVehicle.plant||"Not returned"],
       ["Source",selectedVehicle.source]
     ];
     document.getElementById("vehicleDetails").innerHTML=details.map(([k,v])=>`<div>${k}</div><div>${escapeHtml(v)}</div>`).join("");
+    const editMap={vehicleTrimEdit:"trim",vehicleSeriesEdit:"series",engineSizeEdit:"engineSize",engineModelEdit:"engineModel",engineFamilyEdit:"engineFamily",vinEngineDesignatorEdit:"vinEngineDesignator",engineCylindersEdit:"engineCylinders",fuelTypeEdit:"fuelType"};
+    Object.entries(editMap).forEach(([id,key])=>{const el=document.getElementById(id);if(el) el.value=(selectedVehicle[key]&&selectedVehicle[key]!=="Not returned")?selectedVehicle[key]:"";});
     renderVehicleHistory();
   }
 
   function escapeHtml(value){
     return String(value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[ch]));
+  }
+
+  let tesseractPromise=null;
+
+  async function ensureTesseract(){
+    if(window.Tesseract?.recognize) return true;
+    if(tesseractPromise) return tesseractPromise;
+    tesseractPromise=(async()=>{
+      const sources=[
+        "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js",
+        "https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"
+      ];
+      for(const src of sources){
+        try{await loadScriptOnce(src);if(window.Tesseract?.recognize) return true;}catch(e){}
+      }
+      return false;
+    })();
+    return tesseractPromise;
+  }
+
+  function prepareVinOcrCanvas(source){
+    const sw=source.videoWidth||source.naturalWidth||source.width;
+    const sh=source.videoHeight||source.naturalHeight||source.height;
+    if(!sw||!sh) return null;
+    const cropX=Math.round(sw*0.04), cropY=Math.round(sh*0.28), cropW=Math.round(sw*0.92), cropH=Math.round(sh*0.44);
+    const canvas=document.createElement("canvas");
+    canvas.width=Math.min(2200,cropW*2);canvas.height=Math.min(700,cropH*2);
+    const ctx=canvas.getContext("2d",{willReadFrequently:true});
+    ctx.drawImage(source,cropX,cropY,cropW,cropH,0,0,canvas.width,canvas.height);
+    const image=ctx.getImageData(0,0,canvas.width,canvas.height);const d=image.data;
+    for(let i=0;i<d.length;i+=4){
+      const gray=Math.max(0,Math.min(255,(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]-105)*2.15+128));
+      const value=gray>148?255:0;d[i]=d[i+1]=d[i+2]=value;
+    }
+    ctx.putImageData(image,0,0);return canvas;
+  }
+
+  async function recognizeVinText(source,label="dash VIN"){
+    const ready=await ensureTesseract();
+    if(!ready) throw new Error("VIN text reader unavailable");
+    const canvas=prepareVinOcrCanvas(source);if(!canvas) throw new Error("image unavailable");
+    identifyStatus.className="status";identifyStatus.textContent=`Reading ${label}. Hold steady while the printed characters are analyzed…`;
+    const result=await window.Tesseract.recognize(canvas,"eng",{logger:()=>{}});
+    const raw=String(result?.data?.text||"").toUpperCase().replace(/[\s\-_.:]/g,"");
+    const candidates=raw.match(/[A-HJ-NPR-Z0-9]{17}/g)||[];
+    const vin=candidates.find(v=>v.length===17)||extractVin(raw);
+    if(vin.length!==17) throw new Error("no complete VIN text found");
+    pendingVin=vin;pendingVinCount=1;pendingVinAt=Date.now();
+    return acceptScannedValue(vin,`${label} text reader`);
+  }
+
+  async function readDashVinFromCamera(){
+    if(!stream||video.readyState<2){identifyStatus.className="status warn";identifyStatus.textContent="Open the camera and center the printed dash VIN first.";return;}
+    try{
+      pendingVin="";pendingVinCount=0;
+      const first=await recognizeVinText(video,"windshield VIN");
+      if(!first){pendingVinCount=1;pendingVinAt=Date.now();await recognizeVinText(video,"windshield VIN");}
+    }catch(error){identifyStatus.className="status warn";identifyStatus.textContent="The printed dash VIN was not clear enough to confirm. Move closer, reduce windshield glare, tap the VIN area to focus, and try again—or take a VIN photo.";}
   }
 
   async function openCamera(){
@@ -2166,6 +2274,16 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   initializeCoreModules();
 
   document.getElementById("identifyVehicle")?.addEventListener("click",identifyVehicle);
+  document.getElementById("readDashVin")?.addEventListener("click",readDashVinFromCamera);
+  document.getElementById("applyVehicleCorrections")?.addEventListener("click",()=>{
+    if(!selectedVehicle) return;
+    const map={vehicleTrimEdit:"trim",vehicleSeriesEdit:"series",engineSizeEdit:"engineSize",engineModelEdit:"engineModel",engineFamilyEdit:"engineFamily",vinEngineDesignatorEdit:"vinEngineDesignator",engineCylindersEdit:"engineCylinders",fuelTypeEdit:"fuelType"};
+    Object.entries(map).forEach(([id,key])=>{const value=document.getElementById(id)?.value.trim();selectedVehicle[key]=value||"Not returned";});
+    selectedVehicle.engine=[selectedVehicle.engineSize,selectedVehicle.engineModel,selectedVehicle.fuelType].filter(v=>v&&v!=="Not returned").join(" • ")||"Not returned";
+    renderVehicle();
+    const status=document.getElementById("vehicleCorrectionStatus");if(status){status.className="status ok";status.textContent="Vehicle and engine identification corrections applied.";}
+    scheduleDraftSave();
+  });
   document.getElementById("vinPhoto").addEventListener("change",async(e)=>{
     const file=e.target.files&&e.target.files[0];
     if(!file) return;
@@ -2184,8 +2302,18 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       const raw=result && result.getText ? result.getText() : result.text;
       if(!acceptScannedValue(raw,"VIN photo")) throw new Error("no valid VIN");
     }catch(error){
-      identifyStatus.className="status warn";
-      identifyStatus.textContent=`VIN photo saved, but no complete VIN barcode was detected. Retake the photo closer and level, or enter the VIN manually.`;
+      try{
+        const img=new Image();
+        const objectUrl=URL.createObjectURL(file);
+        img.src=objectUrl;await img.decode();
+        pendingVin="";pendingVinCount=0;
+        const first=await recognizeVinText(img,"VIN photo");
+        if(!first){pendingVinCount=1;pendingVinAt=Date.now();await recognizeVinText(img,"VIN photo");}
+        URL.revokeObjectURL(objectUrl);
+      }catch(ocrError){
+        identifyStatus.className="status warn";
+        identifyStatus.textContent=`VIN photo saved, but neither the barcode nor the complete printed VIN could be confirmed. Retake the photo closer and level, reduce glare, or enter the VIN manually.`;
+      }
     }
   });
 
