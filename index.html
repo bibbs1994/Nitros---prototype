@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.6.9</title>
+<title>Nitros Prototype v0.7.0</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -153,7 +153,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.6.9 — Workflow Stability Release</div>
+  <div class="sub">Prototype v0.7.0 — Core Stabilization Release</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -698,14 +698,15 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     </div>
 
     <div id="submitStatus" class="status"></div>
-    <div id="postSaveActions" class="grid two hidden" style="margin-top:12px">
+    <div id="postSaveActions" class="grid hidden" style="margin-top:12px">
       <button id="reopenLastSaved" class="btn primary" type="button">Reopen / Edit Saved Repair</button>
+      <button class="btn secondary" data-go="home" type="button">Return to Home</button>
       <button class="btn secondary" data-go="history" type="button">Open Customer History</button>
     </div>
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.6.9 • Stabilized VIN frame and confirmed VIN capture • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.7.0 • VIN, navigation, signature, and save/reopen stabilization • Local prototype storage only</div>
 </div>
 
 <script>
@@ -758,7 +759,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     }
   }
 
-  const DRAFT_KEY="nitros_prototype_v069_active_draft";
+  const DRAFT_KEY="nitros_prototype_v070_active_draft";
   let currentScreenId="home";
   let draftSaveTimer=null;
   let lastSavedRecordId=null;
@@ -828,6 +829,10 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     window.scrollTo({top:0,behavior:"instant"});
     if(target === "review") buildSummary();
     if(target === "history") searchHistory();
+    if(target === "technician") requestAnimationFrame(()=>{
+      signaturePadControllers.technicianSignature?.resize();
+      signaturePadControllers.customerSignature?.resize();
+    });
     if(target === "home") refreshDraftPanel();
     if(pushHistory){
       try{history.pushState({nitrosScreen:target},"",location.href.split("#")[0]+"#"+target);}catch(error){}
@@ -1054,7 +1059,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       const advanced={};
       if(Array.isArray(caps.focusMode) && caps.focusMode.includes("continuous")) advanced.focusMode="continuous";
       if(caps.zoom && typeof caps.zoom.min==="number"){
-        const target=Math.min(caps.zoom.max,Math.max(caps.zoom.min,1.5));
+        const target=Math.min(caps.zoom.max,Math.max(caps.zoom.min,1.25));
         advanced.zoom=target;
       }
       if(Object.keys(advanced).length) await track.applyConstraints({advanced:[advanced]});
@@ -1070,7 +1075,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 
     // Require two matching reads close together. This prevents a single unstable
     // camera frame or nearby sticker from being accepted as the vehicle VIN.
-    if(value!==pendingVin || now-pendingVinAt>2500){
+    if(value!==pendingVin || now-pendingVinAt>1600){
       pendingVin=value;
       pendingVinCount=1;
       pendingVinAt=now;
@@ -1082,7 +1087,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 
     pendingVinCount+=1;
     pendingVinAt=now;
-    if(pendingVinCount<2 || now-lastScanAt<900) return false;
+    if(pendingVinCount<2 || now-lastScanAt<350) return false;
     lastScanAt=now;
     vinInput.value=value;
     if(scanGuide){scanGuide.classList.remove("confirming");scanGuide.classList.add("found");}
@@ -1193,7 +1198,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       }finally{
         autoScanBusy=false;
       }
-    },500);
+    },300);
   }
 
   async function scanCurrentFrame(){
@@ -1234,41 +1239,51 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     return Math.max(0,score);
   }
 
+  const signaturePadControllers={};
+
   function setupSignaturePad(canvasId,clearButtonId){
     const canvas=document.getElementById(canvasId);
     const clearButton=document.getElementById(clearButtonId);
     const ctx=canvas.getContext("2d");
     let drawing=false;
+    let hasInk=false;
+    let savedImage="";
 
     function resize(){
-      const ratio=Math.max(window.devicePixelRatio||1,1);
       const rect=canvas.getBoundingClientRect();
-      const saved=canvas.toDataURL();
-      canvas.width=rect.width*ratio;
-      canvas.height=rect.height*ratio;
+      if(rect.width<10 || rect.height<10) return;
+      if(hasInk) savedImage=canvas.toDataURL();
+      const ratio=Math.max(window.devicePixelRatio||1,1);
+      canvas.width=Math.round(rect.width*ratio);
+      canvas.height=Math.round(rect.height*ratio);
       ctx.setTransform(ratio,0,0,ratio,0,0);
-      ctx.lineWidth=2;
+      ctx.lineWidth=2.4;
       ctx.lineCap="round";
+      ctx.lineJoin="round";
       ctx.strokeStyle="#111";
-      if(saved && saved!=="data:,"){
+      if(savedImage){
         const img=new Image();
         img.onload=()=>ctx.drawImage(img,0,0,rect.width,rect.height);
-        img.src=saved;
+        img.src=savedImage;
       }
     }
 
     function point(event){
       const rect=canvas.getBoundingClientRect();
-      const source=event.touches?event.touches[0]:event;
-      return {x:source.clientX-rect.left,y:source.clientY-rect.top};
+      return {x:event.clientX-rect.left,y:event.clientY-rect.top};
     }
 
     function start(event){
+      if(event.pointerType==="mouse" && event.button!==0) return;
       event.preventDefault();
+      canvas.setPointerCapture?.(event.pointerId);
       drawing=true;
       const p=point(event);
       ctx.beginPath();
       ctx.moveTo(p.x,p.y);
+      ctx.lineTo(p.x+.01,p.y+.01);
+      ctx.stroke();
+      hasInk=true;
     }
 
     function move(event){
@@ -1277,25 +1292,34 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       const p=point(event);
       ctx.lineTo(p.x,p.y);
       ctx.stroke();
+      hasInk=true;
     }
 
-    function stop(){drawing=false;}
+    function stop(event){
+      if(!drawing)return;
+      drawing=false;
+      try{canvas.releasePointerCapture?.(event.pointerId);}catch(e){}
+    }
 
-    canvas.addEventListener("mousedown",start);
-    canvas.addEventListener("mousemove",move);
-    window.addEventListener("mouseup",stop);
-    canvas.addEventListener("touchstart",start,{passive:false});
-    canvas.addEventListener("touchmove",move,{passive:false});
-    canvas.addEventListener("touchend",stop);
+    canvas.addEventListener("pointerdown",start,{passive:false});
+    canvas.addEventListener("pointermove",move,{passive:false});
+    canvas.addEventListener("pointerup",stop,{passive:false});
+    canvas.addEventListener("pointercancel",stop,{passive:false});
+    canvas.addEventListener("pointerleave",event=>{if(event.pointerType==="mouse") stop(event);},{passive:false});
     clearButton.addEventListener("click",()=>{
       ctx.clearRect(0,0,canvas.width,canvas.height);
+      savedImage="";
+      hasInk=false;
     });
-    resize();
-    window.addEventListener("resize",resize);
+    signaturePadControllers[canvasId]={resize,hasInk:()=>hasInk};
+    requestAnimationFrame(resize);
+    window.addEventListener("resize",()=>requestAnimationFrame(resize));
   }
 
   function signatureHasInk(canvasId){
+    if(signaturePadControllers[canvasId]) return signaturePadControllers[canvasId].hasInk();
     const canvas=document.getElementById(canvasId);
+    if(!canvas || !canvas.width || !canvas.height) return false;
     const blank=document.createElement("canvas");
     blank.width=canvas.width;
     blank.height=canvas.height;
@@ -1316,10 +1340,10 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     if(!operation){status.className="status bad";status.textContent="Enter the repair operation before searching.";return;}
     const query=buildLaborSearchQuery();
     saveDraft();
-    sessionStorage.setItem("nitros_external_navigation_pending","1");
-    const opened=window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`,"_blank","noopener,noreferrer");
-    status.className=opened?"status ok":"status warn";
-    status.textContent=opened?"Search opened. Verify the labor time using an authorized OEM or professional labor guide, then enter the hours and source below.":"The browser blocked the new tab. Copy the search description and paste it into Safari or Chrome.";
+    sessionStorage.setItem("nitros_external_navigation_pending","estimate");
+    status.className="status ok";
+    status.textContent="Opening labor search. Use the browser Back button once to return to this estimate; your repair order is saved automatically.";
+    setTimeout(()=>{window.location.assign(`https://www.google.com/search?q=${encodeURIComponent(query)}`);},150);
   }
   async function copyLaborSearchQuery(){
     const status=document.getElementById("laborLookupStatus");
@@ -1560,7 +1584,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   }
 
 
-  const HISTORY_KEY="nitros_prototype_customer_history_v064";
+  const HISTORY_KEY="nitros_prototype_customer_history_v070";
   let editingCheckInId=null;
 
   function loadCustomerHistory(){
@@ -2255,7 +2279,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
       }
     };
 
-    localStorage.setItem("nitros_prototype_v067_last_checkin",JSON.stringify(payload));
+    localStorage.setItem("nitros_prototype_v070_last_checkin",JSON.stringify(payload));
     saveCustomerHistoryRecord(payload);
     s.className="status ok";
     const wasEdit=Boolean(editingCheckInId);
@@ -2275,7 +2299,13 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
   window.addEventListener("popstate",event=>{showScreen(event.state?.nitrosScreen||"home",false);});
   window.addEventListener("pageshow",()=>{
     const pending=sessionStorage.getItem("nitros_external_navigation_pending");
-    if(pending){sessionStorage.removeItem("nitros_external_navigation_pending");restoreDraft(true);}
+    if(pending){
+      sessionStorage.removeItem("nitros_external_navigation_pending");
+      restoreDraft(false);
+      showScreen(pending==="estimate"?"estimate":(loadDraft()?.screen||"home"),false);
+      const laborStatus=document.getElementById("laborLookupStatus");
+      if(pending==="estimate" && laborStatus){laborStatus.className="status ok";laborStatus.textContent="Returned to the estimate. Repair-order data was restored.";}
+    }
     const active=screens.find(screen=>screen.classList.contains("active"));
     if(!active) showScreen("home",false);
     refreshDraftPanel();
