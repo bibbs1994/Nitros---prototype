@@ -163,7 +163,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.7.8 — Focused Registration VIN Reader</div>
+  <div class="sub">Prototype v0.7.9 — VIN Candidate Ranking Repair</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -787,7 +787,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.7.8 • Focused registration VIN reader • Strict 17-character validation • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.7.9 • VIN candidate ranking repair • Strict 17-character validation • Local prototype storage only</div>
 </div>
 
 <script>
@@ -1374,6 +1374,38 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     return valid[0]||null;
   }
 
+  const COMMON_WMI_PREFIXES=[
+    "1FA","1FB","1FC","1FD","1FM","1FT","1F6","1F7","1F8","1G1","1G2","1G3","1G4","1G6","1GC","1GT","1GY",
+    "1HG","1HM","1HT","1J4","1J8","1ME","1N4","1N6","1NX","1VW","1Y1","1ZV","2C3","2CN","2D4","2FA","2FM",
+    "2FT","2G1","2G2","2G4","2GC","2HK","2HJ","2HM","2T1","2T2","2T3","2WK","3C3","3C4","3D7","3FA","3FE",
+    "3FT","3G1","3GC","3GN","3GT","3HA","3HG","3KP","3N1","3N6","3VW","4F2","4M2","4S2","4S3","4S4","4T1",
+    "4T3","4T4","4US","5F2","5FN","5J6","5J8","5L1","5N1","5NP","5T1","5TD","5TF","5UX","5XY","JH4","JHM",
+    "JHL","JKA","JKB","JNK","JN1","JN8","JSA","JS1","JS2","JS3","JT2","JT3","JT4","JTD","JTE","JTH","JTK","JTL",
+    "KM8","KNA","KNM","KND","KNE","KNJ","KL1","KL4","SAL","SAJ","SCC","SCF","SJN","TRU","VF1","VF3","VNK","WA1",
+    "WAU","WBA","WBS","WDB","WDC","WDD","WMW","WP0","WP1","WVG","WVW","YS3","YS4","YV1","YV4","ZAM","ZAR","ZFF"
+  ];
+
+  function vinCandidateHeuristicScore(vin,raw){
+    let score=0;
+    const wmi=vin.slice(0,3);
+    if(COMMON_WMI_PREFIXES.includes(wmi)) score+=55;
+    else if(/^[1-5J-KL-MNSWYZ]/.test(vin)) score+=8;
+
+    // Registration numbers and document IDs often include printed month/year text.
+    if(/JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC/.test(raw||vin)) score-=90;
+    if(/20(?:1[0-9]|2[0-9])$/.test(raw||vin)) score-=30;
+
+    const letters=(vin.match(/[A-Z]/g)||[]).length;
+    const digits=(vin.match(/[0-9]/g)||[]).length;
+    if(letters>=3&&digits>=5) score+=8;
+    if(letters<2||digits<4) score-=25;
+
+    // A real VIN has a manufacturer WMI in positions 1-3 and a numeric/letter serial area,
+    // but long readable words are a strong sign that OCR joined nearby registration fields.
+    if(/[AEIOU]{3,}|[A-Z]{5,}/.test(vin.slice(3))) score-=15;
+    return score;
+  }
+
   function rankVinCandidates(text,candidates){
     const t=normalizeOcrText(text||"");
     const ranked=[];
@@ -1382,11 +1414,12 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       if(base.length!==17) return;
       const repaired=repairVinCandidate(base,3);
       if(!repaired) return;
-      const score=100-(repaired.edits*18)+sourceBoost;
+      const heuristic=vinCandidateHeuristicScore(repaired.vin,base);
+      const score=100-(repaired.edits*18)+sourceBoost+heuristic;
       const prior=ranked.find(x=>x.vin===repaired.vin);
       if(!prior||score>prior.score){
         if(prior) ranked.splice(ranked.indexOf(prior),1);
-        ranked.push({vin:repaired.vin,score,edits:repaired.edits,raw:base});
+        ranked.push({vin:repaired.vin,score,edits:repaired.edits,raw:base,heuristic});
       }
     };
     (candidates||[]).forEach(v=>add(v,0));
