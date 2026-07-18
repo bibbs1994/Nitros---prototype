@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.7.6</title>
+<title>Nitros Prototype v0.7.7</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -163,7 +163,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.7.6 — Registration OCR Diagnostic Release</div>
+  <div class="sub">Prototype v0.7.7 — VIN Validation Repair Release</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -787,7 +787,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.7.6 • VIN decoder diagnostics • Raw response logging • Copyable debug report • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.7.7 • VIN decoder diagnostics • Raw response logging • Copyable debug report • Local prototype storage only</div>
 </div>
 
 <script>
@@ -1009,7 +1009,9 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   });
 
   function cleanVin(value){
-    return value.toUpperCase().replace(/[^A-Z0-9]/g,"").replace(/[IOQ]/g,"");
+    // Map OCR-only I/O/Q characters rather than deleting them and shifting VIN positions.
+    return String(value||"").toUpperCase().replace(/[^A-Z0-9]/g,"")
+      .replace(/I/g,"1").replace(/[OQ]/g,"0");
   }
 
   function extractVin(raw){
@@ -1018,7 +1020,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   }
 
   let lastDecodeDebug={
-    version:"0.7.6", rawInput:"", cleanedVin:"", vinLength:0, formatValid:false, checkDigitValid:false,
+    version:"0.7.7", rawInput:"", cleanedVin:"", vinLength:0, formatValid:false, checkDigitValid:false,
     endpoint:"", httpStatus:"Not requested", elapsedMs:0, error:"", warningCodes:[], returnedFields:[], missingFields:[], rawResponse:null
   };
 
@@ -1053,7 +1055,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 
   async function identifyVehicle(){
     const code=vinInput.value.trim().toUpperCase();
-    lastDecodeDebug={version:"0.7.6",rawInput:code,cleanedVin:"",vinLength:0,formatValid:false,checkDigitValid:false,endpoint:"",httpStatus:"Not requested",elapsedMs:0,error:"",warningCodes:[],returnedFields:[],missingFields:[],rawResponse:null};
+    lastDecodeDebug={version:"0.7.7",rawInput:code,cleanedVin:"",vinLength:0,formatValid:false,checkDigitValid:false,endpoint:"",httpStatus:"Not requested",elapsedMs:0,error:"",warningCodes:[],returnedFields:[],missingFields:[],rawResponse:null};
     updateDecoderDebug();
     if(vehicles[code]){
       selectedVehicle=vehicles[code];
@@ -1272,6 +1274,71 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     return vin[8]===expected;
   }
 
+  const VIN_ALLOWED="ABCDEFGHJKLMNPRSTUVWXYZ0123456789";
+  const VIN_CONFUSIONS={
+    "0":["0","D","U"],"1":["1","T","J","L"],"2":["2","Z","S"],"3":["3","B"],
+    "4":["4","A"],"5":["5","S"],"6":["6","G"],"7":["7","T","Y"],"8":["8","B"],"9":["9","G"],
+    A:["A","4"],B:["B","8","3"],C:["C","G"],D:["D","0"],E:["E","F"],F:["F","E"],
+    G:["G","6","9","C"],H:["H","N"],J:["J","1"],K:["K","X","R"],L:["L","1"],M:["M","N"],
+    N:["N","M","H"],P:["P","R"],R:["R","P","K"],S:["S","5","2"],T:["T","1","7"],
+    U:["U","V","0"],V:["V","U","Y"],W:["W","V"],X:["X","K"],Y:["Y","V","7"],Z:["Z","2"]
+  };
+
+  function plausibleVinShape(vin){
+    return /^[A-HJ-NPR-Z0-9]{17}$/.test(vin)&&vin[0]!=="0";
+  }
+
+  function repairVinCandidate(raw,maxEdits=3){
+    const base=cleanVin(raw);
+    if(base.length!==17) return null;
+    if(vinCheckDigitValid(base)&&plausibleVinShape(base)) return {vin:base,edits:0};
+    let beam=[{text:"",edits:0}];
+    for(let i=0;i<17;i++){
+      const original=base[i];
+      let choices=(VIN_CONFUSIONS[original]||[original]).filter(ch=>VIN_ALLOWED.includes(ch));
+      if(i===8) choices=[...new Set([original,"0","1","2","3","4","5","6","7","8","9","X"])];
+      const next=[];
+      for(const state of beam){
+        for(const ch of choices){
+          const edits=state.edits+(ch===original?0:1);
+          if(edits<=maxEdits) next.push({text:state.text+ch,edits});
+        }
+      }
+      next.sort((a,b)=>a.edits-b.edits);
+      beam=next.slice(0,2500);
+    }
+    const valid=beam.filter(x=>plausibleVinShape(x.text)&&vinCheckDigitValid(x.text));
+    valid.sort((a,b)=>a.edits-b.edits);
+    return valid[0]||null;
+  }
+
+  function rankVinCandidates(text,candidates){
+    const t=normalizeOcrText(text||"");
+    const ranked=[];
+    const add=(raw,sourceBoost=0)=>{
+      const base=cleanVin(raw);
+      if(base.length!==17) return;
+      const repaired=repairVinCandidate(base,3);
+      if(!repaired) return;
+      const score=100-(repaired.edits*18)+sourceBoost;
+      const prior=ranked.find(x=>x.vin===repaired.vin);
+      if(!prior||score>prior.score){
+        if(prior) ranked.splice(ranked.indexOf(prior),1);
+        ranked.push({vin:repaired.vin,score,edits:repaired.edits,raw:base});
+      }
+    };
+    (candidates||[]).forEach(v=>add(v,0));
+    const lines=t.split(/\n+/);
+    lines.forEach((line,index)=>{
+      const context=[lines[index-1]||"",line,lines[index+1]||""].join(" ");
+      const boost=/(^|\b)VIN\b|VEHICLE IDENTIFICATION|IDENTIFICATION NO/.test(context)?35:0;
+      const compact=line.replace(/[^A-Z0-9]/g,"");
+      for(let i=0;i+17<=compact.length;i++) add(compact.slice(i,i+17),boost);
+    });
+    ranked.sort((a,b)=>b.score-a.score||a.edits-b.edits);
+    return ranked;
+  }
+
   function sensiblePlate(value){
     const v=String(value||"").replace(/[^A-Z0-9]/g,"");
     return v.length>=2&&v.length<=8&&!/^(TYPE|REGI|YEAR|MAKE|MODEL|OWNER|LICENSE)$/.test(v)?v:"";
@@ -1370,7 +1437,8 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     const best=await recognizeAllOrientations(source,label);
     const reg=parseMassRegistration(best.text);
     const candidates=collectVinCandidates(best.text);
-    let selected=candidates.find(vinCheckDigitValid)||reg.vin||candidates[0]||"";
+    const ranked=rankVinCandidates(best.text,[...candidates,reg.vin].filter(Boolean));
+    let selected=(ranked[0]&&ranked[0].vin)||"";
     selected=cleanVin(selected);
     showOcrDiagnostic({label,text:best.text,confidence:best.confidence,candidates,selected});
     if(selected.length===17&&vinCheckDigitValid(selected)){
@@ -1405,10 +1473,13 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       const canvas=rotateSourceToCanvas(video,0,true);
       const result=await window.Tesseract.recognize(canvas,"eng",{logger:()=>{}});
       const confidence=Number(result?.data?.confidence||0);
-      const reg=parseMassRegistration(result?.data?.text||"");
-      const valid=reg.isMass&&reg.vin&&vinCheckDigitValid(reg.vin)&&confidence>=45;
+      const rawText=result?.data?.text||"";
+      const reg=parseMassRegistration(rawText);
+      const ranked=rankVinCandidates(rawText,collectVinCandidates(rawText));
+      const confirmedVin=(ranked[0]&&ranked[0].vin)||"";
+      const valid=reg.isMass&&confirmedVin&&vinCheckDigitValid(confirmedVin)&&confidence>=35;
       if(valid){
-        if(registrationStableVin===reg.vin) registrationStableCount++; else {registrationStableVin=reg.vin;registrationStableCount=1;}
+        if(registrationStableVin===confirmedVin) registrationStableCount++; else {registrationStableVin=confirmedVin;registrationStableCount=1;}
         identifyStatus.className="status warn";
         identifyStatus.textContent=`Registration found. Confirming VIN (${registrationStableCount}/2)…`;
         if(scanGuide) scanGuide.classList.add("confirming");
