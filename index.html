@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.7.5</title>
+<title>Nitros Prototype v0.7.6</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -163,7 +163,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.7.5 — VIN Decoder Debug Test Release</div>
+  <div class="sub">Prototype v0.7.6 — Registration OCR Diagnostic Release</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -266,6 +266,34 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     </div>
     <div class="capture-note" style="margin-top:8px"><strong>Live Registration Scan</strong> opens the in-app camera, looks for a Massachusetts registration, and automatically captures only after a valid 17-character VIN is confirmed. Low-confidence text stays out of the form.</div>
     <div id="smartScanResult" class="status">Ready for Smart Scan.</div>
+
+    <div id="ocrDiagnostic" class="debug-panel hidden" style="margin-top:14px">
+      <div class="debug-body" style="padding-top:16px">
+        <div class="eyebrow">Registration OCR Diagnostic</div>
+        <div class="debug-grid">
+          <div>Source</div><div id="ocrSource">Not scanned</div>
+          <div>VIN candidates</div><div id="ocrCandidates">None</div>
+          <div>Selected VIN</div><div id="ocrSelectedVin">None</div>
+          <div>Character count</div><div id="ocrVinLength">0</div>
+          <div>Format validation</div><div id="ocrFormatValid">Not tested</div>
+          <div>Check-digit validation</div><div id="ocrCheckDigitValid">Not tested</div>
+          <div>OCR confidence</div><div id="ocrConfidence">0%</div>
+        </div>
+        <div class="field">
+          <label for="ocrVinEdit">Detected VIN — confirm or correct before decoding</label>
+          <input id="ocrVinEdit" maxlength="17" autocomplete="off" autocapitalize="characters" placeholder="17-character VIN">
+        </div>
+        <div class="debug-actions">
+          <button id="confirmOcrVin" class="btn primary small" type="button">Confirm and Decode</button>
+          <button id="scanAgainOcr" class="btn secondary small" type="button">Scan Again</button>
+          <button id="manualOcrVin" class="btn ghost small" type="button">Enter VIN Manually</button>
+        </div>
+        <div class="field" style="margin-top:12px">
+          <label>Raw OCR text</label>
+          <pre class="debug-code" id="ocrRawText">No OCR scan has been completed.</pre>
+        </div>
+      </div>
+    </div>
 
     <div id="cameraWrap" class="camera-wrap" style="margin-top:16px">
       <div class="scan-overlay">
@@ -759,7 +787,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.7.5 • VIN decoder diagnostics • Raw response logging • Copyable debug report • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.7.6 • VIN decoder diagnostics • Raw response logging • Copyable debug report • Local prototype storage only</div>
 </div>
 
 <script>
@@ -990,7 +1018,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   }
 
   let lastDecodeDebug={
-    version:"0.7.5", rawInput:"", cleanedVin:"", vinLength:0, formatValid:false, checkDigitValid:false,
+    version:"0.7.6", rawInput:"", cleanedVin:"", vinLength:0, formatValid:false, checkDigitValid:false,
     endpoint:"", httpStatus:"Not requested", elapsedMs:0, error:"", warningCodes:[], returnedFields:[], missingFields:[], rawResponse:null
   };
 
@@ -1025,7 +1053,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 
   async function identifyVehicle(){
     const code=vinInput.value.trim().toUpperCase();
-    lastDecodeDebug={version:"0.7.5",rawInput:code,cleanedVin:"",vinLength:0,formatValid:false,checkDigitValid:false,endpoint:"",httpStatus:"Not requested",elapsedMs:0,error:"",warningCodes:[],returnedFields:[],missingFields:[],rawResponse:null};
+    lastDecodeDebug={version:"0.7.6",rawInput:code,cleanedVin:"",vinLength:0,formatValid:false,checkDigitValid:false,endpoint:"",httpStatus:"Not requested",elapsedMs:0,error:"",warningCodes:[],returnedFields:[],missingFields:[],rawResponse:null};
     updateDecoderDebug();
     if(vehicles[code]){
       selectedVehicle=vehicles[code];
@@ -1284,35 +1312,75 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     box.innerHTML=`<strong>${data.isMass?"Massachusetts registration":"VIN source"} recognized</strong><br>VIN: ${escapeHtml(data.vin||"Not confirmed")} • Confidence: ${pct}%${data.plate?`<br>Plate: ${escapeHtml(data.plate)}`:""}${data.owner?`<br>Owner: ${escapeHtml(data.owner)}`:""}`;
   }
 
+  let pendingOcrVin="";
+
+  function collectVinCandidates(text){
+    const t=normalizeOcrText(text||"");
+    const found=[];
+    const add=v=>{v=cleanVin(v);if(v.length===17&&!found.includes(v))found.push(v);};
+    (t.match(/[A-Z0-9][A-Z0-9 \.\-]{15,28}[A-Z0-9]/g)||[]).forEach(raw=>{
+      add(raw);
+      const compact=String(raw).toUpperCase().replace(/[^A-Z0-9]/g,"");
+      for(let i=0;i+17<=compact.length;i++) add(compact.slice(i,i+17));
+    });
+    t.split(/\n+/).forEach(line=>{
+      const nearVin=/(VIN|VEHICLE IDENTIFICATION|IDENTIFICATION NO)/.test(line);
+      if(nearVin){
+        const compact=line.replace(/[^A-Z0-9]/g,"");
+        for(let i=0;i+17<=compact.length;i++) add(compact.slice(i,i+17));
+      }
+    });
+    return found;
+  }
+
+  function showOcrDiagnostic({label,text,confidence,candidates,selected}){
+    const panel=document.getElementById("ocrDiagnostic");
+    const vin=cleanVin(selected||"");
+    pendingOcrVin=vin;
+    panel?.classList.remove("hidden");
+    const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+    set("ocrSource",label||"Registration scan");
+    set("ocrCandidates",candidates?.length?candidates.join(" • "):"None found");
+    set("ocrSelectedVin",vin||"None");
+    set("ocrVinLength",String(vin.length));
+    set("ocrFormatValid",/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)?"PASS":"FAIL");
+    set("ocrCheckDigitValid",vinCheckDigitValid(vin)?"PASS":"FAIL");
+    set("ocrConfidence",`${Math.max(0,Math.min(100,Math.round(confidence||0)))}%`);
+    const edit=document.getElementById("ocrVinEdit");if(edit)edit.value=vin;
+    const raw=document.getElementById("ocrRawText");if(raw)raw.textContent=text||"No readable OCR text returned.";
+  }
+
   async function processSmartScanSource(source,label="Smart Scan") {
-    identifyStatus.className="status";identifyStatus.textContent=`${label}: checking barcode, VIN text, and registration fields…`;
+    identifyStatus.className="status";identifyStatus.textContent=`${label}: reading document. No decoder request will be made until you confirm a valid VIN.`;
+    let barcodeVin="";
     try{
       const ready=await ensureZXingLibrary();
       if(ready){
         const reader=new window.ZXingBrowser.BrowserMultiFormatReader();
         const result=await reader.decodeFromImageElement(source);
         const raw=result?.getText?result.getText():result?.text;
-        const vin=extractVinFlexible(raw)||extractVin(raw||"");
-        if(vin.length===17){
-          vinInput.value=vin;showSmartScanResult({vin,isMass:false},99);
-          identifyStatus.className="status ok";identifyStatus.textContent="High-confidence VIN barcode captured. Decoding vehicle…";
-          await identifyVehicle();return true;
+        barcodeVin=extractVinFlexible(raw)||extractVin(raw||"");
+        if(barcodeVin.length===17){
+          showOcrDiagnostic({label:`${label} — barcode`,text:raw||barcodeVin,confidence:99,candidates:[barcodeVin],selected:barcodeVin});
+          identifyStatus.className="status ok";identifyStatus.textContent="VIN barcode found. Review the 17 characters, then press Confirm and Decode.";
+          return true;
         }
       }
     }catch(e){}
     const best=await recognizeAllOrientations(source,label);
     const reg=parseMassRegistration(best.text);
-    const validVin=reg.vin&&reg.vin.length===17&&vinCheckDigitValid(reg.vin);
-    if(!reg.vin||reg.vin.length!==17) throw new Error("No complete VIN found");
-    if(label.toLowerCase().includes("registration") && !reg.isMass) throw new Error("Massachusetts registration heading not confirmed");
-    if(!validVin && label.toLowerCase().includes("registration")) throw new Error("VIN check digit not confirmed");
-    vinInput.value=reg.vin;
-    if(reg.plate&&document.getElementById("plate")) document.getElementById("plate").value=reg.plate;
-    if(reg.owner&&document.getElementById("customerName")) document.getElementById("customerName").value=reg.owner;
-    showSmartScanResult(reg,best.confidence);
-    identifyStatus.className=validVin?"status ok":"status warn";
-    identifyStatus.textContent=`${reg.isMass?"Massachusetts registration":"Printed VIN"} captured. The VIN passed format${validVin?" and check-digit":""} validation. Decoding vehicle…`;
-    await identifyVehicle();return true;
+    const candidates=collectVinCandidates(best.text);
+    let selected=candidates.find(vinCheckDigitValid)||reg.vin||candidates[0]||"";
+    selected=cleanVin(selected);
+    showOcrDiagnostic({label,text:best.text,confidence:best.confidence,candidates,selected});
+    if(selected.length===17&&vinCheckDigitValid(selected)){
+      identifyStatus.className="status ok";
+      identifyStatus.textContent="A valid 17-character VIN candidate was found. Compare it with the registration, then press Confirm and Decode.";
+    }else{
+      identifyStatus.className="status warn";
+      identifyStatus.textContent="No confirmed VIN yet. Review the raw OCR text, correct the VIN box manually, or scan again. Nothing was sent to the decoder.";
+    }
+    return selected.length===17;
   }
 
   function setScanGuideMode(mode){
@@ -2572,6 +2640,26 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   }
 
   initializeCoreModules();
+
+  document.getElementById("confirmOcrVin")?.addEventListener("click",async()=>{
+    const edit=document.getElementById("ocrVinEdit");
+    const vin=cleanVin(edit?.value||"");
+    if(edit) edit.value=vin;
+    showOcrDiagnostic({label:document.getElementById("ocrSource")?.textContent||"Confirmed OCR",text:document.getElementById("ocrRawText")?.textContent||"",confidence:parseInt(document.getElementById("ocrConfidence")?.textContent)||0,candidates:collectVinCandidates(document.getElementById("ocrRawText")?.textContent||""),selected:vin});
+    if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)){identifyStatus.className="status bad";identifyStatus.textContent="The VIN must contain exactly 17 legal VIN characters. Correct it or scan again.";return;}
+    if(!vinCheckDigitValid(vin)){identifyStatus.className="status bad";identifyStatus.textContent="The VIN check digit does not validate. Compare every character with the registration before decoding.";return;}
+    vinInput.value=vin;
+    identifyStatus.className="status ok";identifyStatus.textContent="VIN confirmed. Starting vehicle decode…";
+    await identifyVehicle();
+  });
+  document.getElementById("scanAgainOcr")?.addEventListener("click",()=>{
+    document.getElementById("ocrDiagnostic")?.classList.add("hidden");
+    document.getElementById("smartScanPhoto")?.click();
+  });
+  document.getElementById("manualOcrVin")?.addEventListener("click",()=>{
+    const edit=document.getElementById("ocrVinEdit");if(edit){edit.focus();edit.select();}
+    identifyStatus.className="status";identifyStatus.textContent="Enter the VIN exactly as printed, then press Confirm and Decode.";
+  });
 
   document.getElementById("identifyVehicle")?.addEventListener("click",identifyVehicle);
   document.getElementById("manualVinFocus")?.addEventListener("click",()=>{vinInput.focus();vinInput.scrollIntoView({behavior:"smooth",block:"center"});});
