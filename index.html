@@ -147,13 +147,23 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   .assistant-section strong{color:var(--text)}
   @media(max-width:700px){.assistant-grid{grid-template-columns:1fr}}
 
+
+  .debug-panel{margin-top:16px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.025);overflow:hidden}
+  .debug-panel summary{cursor:pointer;padding:15px 16px;font-weight:800;user-select:none}
+  .debug-body{padding:0 16px 16px}
+  .debug-grid{display:grid;grid-template-columns:minmax(140px,.55fr) 1fr;gap:8px 14px;font-size:13px;margin-bottom:12px}
+  .debug-grid>div:nth-child(odd){color:var(--muted);font-weight:700}
+  .debug-code{white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;background:#07111f;border:1px solid var(--line);border-radius:12px;padding:12px;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .debug-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  @media(max-width:700px){.debug-grid{grid-template-columns:1fr}.debug-grid>div:nth-child(odd){margin-top:5px}.debug-actions{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.7.4 — Live Smart Scan Test Release</div>
+  <div class="sub">Prototype v0.7.5 — VIN Decoder Debug Test Release</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -286,6 +296,21 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="eyebrow">Vehicle Identified</div>
     <h2 id="vehicleTitle">Vehicle</h2>
     <div class="kv" id="vehicleDetails"></div>
+    <details class="debug-panel" id="decoderDebugPanel">
+      <summary>VIN Decoder Debug Report</summary>
+      <div class="debug-body">
+        <div class="debug-grid" id="decoderDebugSummary"></div>
+        <div class="field">
+          <label>Raw decoder response</label>
+          <pre class="debug-code" id="decoderRawResponse">No decoder request has been made yet.</pre>
+        </div>
+        <div class="debug-actions">
+          <button id="copyDebugReport" class="btn secondary small" type="button">Copy Debug Report</button>
+          <button id="retryDecode" class="btn primary small" type="button">Retry VIN Decode</button>
+        </div>
+        <div id="copyDebugStatus" class="status">Open this panel after a VIN test, then copy the report into the chat.</div>
+      </div>
+    </details>
 
     <div class="card" style="margin-top:18px;background:#0d192a">
       <div class="eyebrow">Vehicle and Engine Identification</div>
@@ -734,7 +759,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.7.4 • Live registration camera • VIN check-digit validation • Low-confidence field protection • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.7.5 • VIN decoder diagnostics • Raw response logging • Copyable debug report • Local prototype storage only</div>
 </div>
 
 <script>
@@ -964,8 +989,44 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     return candidates[0] || cleanVin(raw);
   }
 
+  let lastDecodeDebug={
+    version:"0.7.5", rawInput:"", cleanedVin:"", vinLength:0, formatValid:false, checkDigitValid:false,
+    endpoint:"", httpStatus:"Not requested", elapsedMs:0, error:"", warningCodes:[], returnedFields:[], missingFields:[], rawResponse:null
+  };
+
+  function updateDecoderDebug(){
+    const summary=document.getElementById("decoderDebugSummary");
+    const raw=document.getElementById("decoderRawResponse");
+    if(!summary||!raw) return;
+    const d=lastDecodeDebug;
+    const rows=[
+      ["Build",`v${d.version}`],["Raw VIN input",d.rawInput||"—"],["Cleaned VIN",d.cleanedVin||"—"],
+      ["VIN length",String(d.vinLength)],["VIN format",d.formatValid?"PASS":"FAIL"],["Check digit",d.checkDigitValid?"PASS":"FAIL"],
+      ["HTTP status",String(d.httpStatus)],["Decode time",`${d.elapsedMs||0} ms`],["Error",d.error||"None"],
+      ["Warning codes",d.warningCodes.length?d.warningCodes.join(", "):"None"],
+      ["Returned fields",d.returnedFields.length?d.returnedFields.join(", "):"None"],
+      ["Missing fields",d.missingFields.length?d.missingFields.join(", "):"None"]
+    ];
+    summary.innerHTML=rows.map(([k,v])=>`<div>${escapeHtml(k)}</div><div>${escapeHtml(v)}</div>`).join("");
+    raw.textContent=d.rawResponse===null?"No raw response available.":JSON.stringify(d.rawResponse,null,2);
+  }
+
+  function buildDebugReport(){
+    const d=lastDecodeDebug;
+    return [
+      "Nitros VIN Decoder Debug Report",`Version: ${d.version}`,`Device: ${navigator.userAgent}`,
+      `Raw VIN: ${d.rawInput}`,`Cleaned VIN: ${d.cleanedVin}`,`VIN length: ${d.vinLength}`,
+      `Format valid: ${d.formatValid}`,`Check digit valid: ${d.checkDigitValid}`,`Endpoint: ${d.endpoint}`,
+      `HTTP status: ${d.httpStatus}`,`Decode time: ${d.elapsedMs} ms`,`Error: ${d.error||"None"}`,
+      `Warning codes: ${d.warningCodes.join(", ")||"None"}`,`Returned fields: ${d.returnedFields.join(", ")||"None"}`,
+      `Missing fields: ${d.missingFields.join(", ")||"None"}`,"Raw response:",JSON.stringify(d.rawResponse,null,2)
+    ].join("\n");
+  }
+
   async function identifyVehicle(){
     const code=vinInput.value.trim().toUpperCase();
+    lastDecodeDebug={version:"0.7.5",rawInput:code,cleanedVin:"",vinLength:0,formatValid:false,checkDigitValid:false,endpoint:"",httpStatus:"Not requested",elapsedMs:0,error:"",warningCodes:[],returnedFields:[],missingFields:[],rawResponse:null};
+    updateDecoderDebug();
     if(vehicles[code]){
       selectedVehicle=vehicles[code];
       vinInput.value=selectedVehicle.vin;
@@ -978,6 +1039,11 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 
     const vin=cleanVin(code);
     vinInput.value=vin;
+    lastDecodeDebug.cleanedVin=vin;
+    lastDecodeDebug.vinLength=vin.length;
+    lastDecodeDebug.formatValid=/^[A-HJ-NPR-Z0-9]{17}$/.test(vin);
+    lastDecodeDebug.checkDigitValid=vin.length===17 && vinCheckDigitValid(vin);
+    updateDecoderDebug();
     if(vin.length!==17){
       identifyStatus.className="status bad";
       identifyStatus.textContent="Enter or scan a complete 17-character VIN.";
@@ -989,9 +1055,15 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 
     try{
       const url=`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValuesExtended/${encodeURIComponent(vin)}?format=json`;
+      lastDecodeDebug.endpoint=url;
+      const started=performance.now();
       const response=await fetch(url,{cache:"no-store"});
-      if(!response.ok) throw new Error(`NHTSA response ${response.status}`);
+      lastDecodeDebug.elapsedMs=Math.round(performance.now()-started);
+      lastDecodeDebug.httpStatus=response.status;
       const data=await response.json();
+      lastDecodeDebug.rawResponse=data;
+      updateDecoderDebug();
+      if(!response.ok) throw new Error(`NHTSA response ${response.status}`);
       const result=data && data.Results && data.Results[0] ? data.Results[0] : null;
       if(!result) throw new Error("No decode result");
 
@@ -1007,6 +1079,11 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       const engineParts=[engineSize,engineModel,engineConfiguration,fuelType].filter(Boolean);
 
       const errors=String(result.ErrorCode||"").split(",").map(x=>x.trim()).filter(x=>x && x!=="0");
+      const mappedFields={Year:result.ModelYear,Make:result.Make,Model:result.Model,Trim:trim,Series:series,"Engine size":engineSize,"Engine model":engineModel,"Engine family":engineFamily,Cylinders:engineCylinders,"Fuel type":fuelType,Body:result.BodyClass,"Drive type":result.DriveType};
+      lastDecodeDebug.warningCodes=errors;
+      lastDecodeDebug.returnedFields=Object.entries(mappedFields).filter(([,v])=>String(v||"").trim()).map(([k])=>k);
+      lastDecodeDebug.missingFields=Object.entries(mappedFields).filter(([,v])=>!String(v||"").trim()).map(([k])=>k);
+      updateDecoderDebug();
       selectedVehicle={
         vin,
         year:result.ModelYear || "Not returned",
@@ -1034,6 +1111,8 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
         : "VIN decoded successfully through NHTSA.";
       setTimeout(()=>showScreen("vehicle"),350);
     }catch(err){
+      lastDecodeDebug.error=err && err.message ? err.message : String(err);
+      updateDecoderDebug();
       selectedVehicle={
         vin,
         year:"Decode unavailable",
@@ -1084,6 +1163,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     const editMap={vehicleTrimEdit:"trim",vehicleSeriesEdit:"series",engineSizeEdit:"engineSize",engineModelEdit:"engineModel",engineFamilyEdit:"engineFamily",vinEngineDesignatorEdit:"vinEngineDesignator",engineCylindersEdit:"engineCylinders",fuelTypeEdit:"fuelType"};
     Object.entries(editMap).forEach(([id,key])=>{const el=document.getElementById(id);if(el) el.value=(selectedVehicle[key]&&selectedVehicle[key]!=="Not returned")?selectedVehicle[key]:"";});
     renderVehicleHistory();
+    updateDecoderDebug();
   }
 
   function escapeHtml(value){
@@ -2750,6 +2830,17 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
   refreshDraftPanel();
   updateEnvironment();
   window.addEventListener("pagehide",()=>{saveDraft();stopCamera();});
+
+  document.getElementById("copyDebugReport")?.addEventListener("click",async()=>{
+    const status=document.getElementById("copyDebugStatus");
+    try{
+      await navigator.clipboard.writeText(buildDebugReport());
+      status.className="status ok";status.textContent="Debug report copied. Paste it into the chat.";
+    }catch(error){
+      status.className="status warn";status.textContent="Automatic copy was blocked. Select and copy the raw report manually.";
+    }
+  });
+  document.getElementById("retryDecode")?.addEventListener("click",()=>{showScreen("checkin");identifyVehicle();});
 })();
 </script>
 </body>
