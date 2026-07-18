@@ -252,48 +252,14 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <p>Use the rear camera to scan a door-label barcode or read the printed VIN through the windshield. Manual entry remains available as a controlled fallback.</p>
 
     <div class="grid two">
-      <button id="startSmartCamera" class="btn primary" type="button">📷 Live Registration Scan</button>
-      <button id="startCamera" class="btn secondary" type="button">Open Live VIN Scanner</button>
-      <label class="btn secondary" style="text-align:center">
-        Take Registration Photo
-        <input id="smartScanPhoto" type="file" accept="image/*" capture="environment" hidden>
-      </label>
+      <button id="startCamera" class="btn primary" type="button">Open Live VIN Scanner</button>
       <label class="btn secondary" style="text-align:center">
         Scan VIN Photo
         <input id="vinPhoto" type="file" accept="image/*" capture="environment" hidden>
       </label>
       <button id="manualVinFocus" class="btn ghost" type="button">Enter VIN Manually</button>
     </div>
-    <div class="capture-note" style="margin-top:8px"><strong>Live Registration Scan</strong> opens the in-app camera, looks for a Massachusetts registration, and automatically captures only after a valid 17-character VIN is confirmed. Low-confidence text stays out of the form.</div>
-    <div id="smartScanResult" class="status">Ready for Smart Scan.</div>
-
-    <div id="ocrDiagnostic" class="debug-panel hidden" style="margin-top:14px">
-      <div class="debug-body" style="padding-top:16px">
-        <div class="eyebrow">Registration OCR Diagnostic</div>
-        <div class="debug-grid">
-          <div>Source</div><div id="ocrSource">Not scanned</div>
-          <div>VIN candidates</div><div id="ocrCandidates">None</div>
-          <div>Selected VIN</div><div id="ocrSelectedVin">None</div>
-          <div>Character count</div><div id="ocrVinLength">0</div>
-          <div>Format validation</div><div id="ocrFormatValid">Not tested</div>
-          <div>Check-digit validation</div><div id="ocrCheckDigitValid">Not tested</div>
-          <div>OCR confidence</div><div id="ocrConfidence">0%</div>
-        </div>
-        <div class="field">
-          <label for="ocrVinEdit">Detected VIN — confirm or correct before decoding</label>
-          <input id="ocrVinEdit" maxlength="17" autocomplete="off" autocapitalize="characters" placeholder="17-character VIN">
-        </div>
-        <div class="debug-actions">
-          <button id="confirmOcrVin" class="btn primary small" type="button">Confirm and Decode</button>
-          <button id="scanAgainOcr" class="btn secondary small" type="button">Scan Again</button>
-          <button id="manualOcrVin" class="btn ghost small" type="button">Enter VIN Manually</button>
-        </div>
-        <div class="field" style="margin-top:12px">
-          <label>Raw OCR text</label>
-          <pre class="debug-code" id="ocrRawText">No OCR scan has been completed.</pre>
-        </div>
-      </div>
-    </div>
+    <div class="capture-note" style="margin-top:8px">Scan the door-label barcode or printed 17-character VIN. Manual VIN entry remains available when camera conditions are difficult.</div>
 
     <div id="cameraWrap" class="camera-wrap" style="margin-top:16px">
       <div class="scan-overlay">
@@ -306,7 +272,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
         <button id="readDashVin" class="btn secondary small">Read Dash VIN Text</button>
         <button id="stopCamera" class="btn ghost small">Close Camera</button>
       </div>
-      <div class="capture-note" style="margin-top:8px">For a registration, fill most of the frame with the document and hold steady. For a VIN, place the barcode or printed 17 characters inside the orange guide and reduce glare.</div>
+      <div class="capture-note" style="margin-top:8px">Place the VIN barcode or printed 17 characters inside the orange guide, hold steady, and reduce glare.</div>
     </div>
 
     <div class="field" style="margin-top:17px">
@@ -787,7 +753,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.7.7 • VIN decoder diagnostics • Raw response logging • Copyable debug report • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.7.7 • Stable VIN Check-In Release • Local prototype storage only</div>
 </div>
 
 <script>
@@ -2676,8 +2642,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     const failures=[];
 
     try{
-      document.getElementById("startSmartCamera")?.addEventListener("click",openRegistrationScanner);
-      document.getElementById("startCamera")?.addEventListener("click",()=>{smartScanMode="vin";openCamera();});
+      document.getElementById("startCamera")?.addEventListener("click",openCamera);
       document.getElementById("stopCamera")?.addEventListener("click",stopCamera);
       document.getElementById("scanFrame")?.addEventListener("click",scanCurrentFrame);
       document.getElementById("smartReadFrame")?.addEventListener("click",smartReadCurrentFrame);
@@ -2712,34 +2677,6 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 
   initializeCoreModules();
 
-  document.getElementById("confirmOcrVin")?.addEventListener("click",async()=>{
-    const edit=document.getElementById("ocrVinEdit");
-    const vin=cleanVin(edit?.value||"");
-    if(edit) edit.value=vin;
-    showOcrDiagnostic({label:document.getElementById("ocrSource")?.textContent||"Confirmed OCR",text:document.getElementById("ocrRawText")?.textContent||"",confidence:parseInt(document.getElementById("ocrConfidence")?.textContent)||0,candidates:collectVinCandidates(document.getElementById("ocrRawText")?.textContent||""),selected:vin});
-    if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)){identifyStatus.className="status bad";identifyStatus.textContent="The VIN must contain exactly 17 legal VIN characters. Correct it or scan again.";return;}
-    if(!vinCheckDigitValid(vin)){identifyStatus.className="status bad";identifyStatus.textContent="The VIN check digit does not validate. Compare every character with the registration before decoding.";return;}
-    vinInput.value=vin;
-    identifyStatus.className="status ok";identifyStatus.textContent="VIN confirmed. Starting vehicle decode…";
-    await identifyVehicle();
-  });
-  document.getElementById("scanAgainOcr")?.addEventListener("click",()=>{
-    document.getElementById("ocrDiagnostic")?.classList.add("hidden");
-    document.getElementById("smartScanPhoto")?.click();
-  });
-  document.getElementById("manualOcrVin")?.addEventListener("click",()=>{
-    const edit=document.getElementById("ocrVinEdit");if(edit){edit.focus();edit.select();}
-    identifyStatus.className="status";identifyStatus.textContent="Enter the VIN exactly as printed, then press Confirm and Decode.";
-  });
-
-  document.getElementById("identifyVehicle")?.addEventListener("click",identifyVehicle);
-  document.getElementById("manualVinFocus")?.addEventListener("click",()=>{vinInput.focus();vinInput.scrollIntoView({behavior:"smooth",block:"center"});});
-  document.getElementById("smartScanPhoto")?.addEventListener("change",async(e)=>{
-    const file=e.target.files&&e.target.files[0];if(!file) return;
-    try{const {img,url}=await loadImageFile(file);await processSmartScanSource(img,"Registration photo");URL.revokeObjectURL(url);}
-    catch(error){identifyStatus.className="status warn";identifyStatus.textContent="Smart Scan could not confirm the VIN. Retake the full registration or VIN label in good light, or enter the VIN manually.";}
-    finally{e.target.value="";}
-  });
   document.getElementById("readDashVin")?.addEventListener("click",readDashVinFromCamera);
   document.getElementById("applyVehicleCorrections")?.addEventListener("click",()=>{
     if(!selectedVehicle) return;
