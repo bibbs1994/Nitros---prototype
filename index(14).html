@@ -1,0 +1,2847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07111f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Nitros Prototype v0.7.5</title>
+
+<!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
+     This library requires an internet connection when the page loads. -->
+<script defer src="https://unpkg.com/@zxing/browser@0.2.1"></script>
+
+<style>
+:root{
+  --bg:#07111f;--panel:#142239;--panel2:#0d192a;--line:#2d4261;
+  --text:#f3f6fb;--muted:#a6b2c5;--accent:#e86608;--accent2:#ff8a2b;
+  --ok:#39b982;--warn:#f4b740;--bad:#e15d64;--radius:22px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+body{min-height:100vh}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.app{max-width:980px;margin:0 auto;padding-bottom:42px}
+header{padding:24px 20px 20px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#07111f,#091523);position:sticky;top:0;z-index:30}
+.brand{font-size:32px;font-weight:800}
+.sub{color:var(--muted);margin-top:6px}
+.env{margin-top:10px;display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:#0a1625;color:#cbd6e5;font-size:13px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--warn)}
+.dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)}
+.screen{display:none;padding:24px 16px}.screen.active{display:block}
+.card{background:linear-gradient(180deg,var(--panel),#122037);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:0 10px 28px rgba(0,0,0,.18);margin-bottom:20px}
+.eyebrow{color:#ff9952;font-weight:800;letter-spacing:2.6px;font-size:12px;text-transform:uppercase;margin-bottom:11px}
+h1,h2,h3{margin:0 0 11px} h1{font-size:40px;line-height:1.08} h2{font-size:29px} h3{font-size:21px}
+p{color:var(--muted);line-height:1.55}
+.grid{display:grid;gap:13px}.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.btn{width:100%;border:0;border-radius:17px;padding:16px 18px;font-weight:800;font-size:17px}
+.btn.primary{background:linear-gradient(180deg,var(--accent2),var(--accent));color:white}
+.btn.secondary{background:#0d192a;color:var(--text);border:1px solid var(--line)}
+.btn.ghost{background:transparent;color:#ff9a55;border:1px solid var(--line)}
+.btn.small{padding:11px 13px;font-size:14px;border-radius:13px}
+.vehicle{text-align:left;background:#0d192a;border:1px solid var(--line);color:var(--text);border-radius:17px;padding:16px}
+.vehicle strong{display:block;font-size:18px;margin-bottom:4px}.vehicle span{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;font-weight:700;margin:0 0 7px;color:#dce3ee}
+input,textarea,select{width:100%;background:#081321;color:var(--text);border:1px solid var(--line);border-radius:14px;padding:14px;outline:none}
+input:focus,textarea:focus,select:focus{border-color:#ff8a2b}
+.field{margin-bottom:15px}
+.row{display:flex;gap:11px;align-items:center}.row>*{flex:1}
+.status{padding:13px 14px;border-radius:14px;background:#0c1929;border:1px solid var(--line);color:var(--muted);margin-top:13px}
+.status.ok{border-color:#2d7d62;color:#bcebd8}.status.warn{border-color:#8c6a22;color:#f9df9d}.status.bad{border-color:#803a3f;color:#ffc3c6}
+.back{background:none;border:0;color:#ff9952;font-size:16px;padding:0;margin-bottom:15px}
+.kv{display:grid;grid-template-columns:140px 1fr;gap:9px 14px}
+video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;background:#000;border-radius:17px;border:1px solid var(--line)}
+.camera-wrap{display:none}.camera-wrap.active{display:block}
+.scan-overlay{position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:17px;background:#000}
+.scan-guide{position:absolute;left:7%;right:7%;top:36%;height:28%;border:3px solid rgba(255,138,43,.98);border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.28);pointer-events:none;transition:border-color .18s,box-shadow .18s;transform:none!important}.scan-guide::after{content:"HOLD VIN INSIDE BOX";position:absolute;left:50%;bottom:-31px;transform:translateX(-50%);white-space:nowrap;font-size:12px;font-weight:800;letter-spacing:.08em;color:#fff;text-shadow:0 1px 4px #000}.scan-guide.confirming{border-color:#f4b740;box-shadow:0 0 0 9999px rgba(0,0,0,.24),0 0 18px rgba(244,183,64,.65)}.scan-guide.found{border-color:#39b982;box-shadow:0 0 0 9999px rgba(0,0,0,.18),0 0 22px rgba(57,185,130,.9)}
+.capture-note{font-size:13px;color:var(--muted)}
+.footer-note{font-size:12px;color:#7f8da2;text-align:center;padding:0 20px}
+.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#0c1929;border:1px solid var(--line);color:#c7d2e2;font-size:13px}
+.hidden{display:none!important}
+@media (max-width:700px){
+  header{padding:20px 16px}.screen{padding:20px 12px}.card{padding:18px;border-radius:19px}
+  h1{font-size:33px}.grid.two{grid-template-columns:1fr}.row{flex-direction:column;align-items:stretch}.kv{grid-template-columns:1fr}
+}
+
+  .priority-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .priority-card{border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,.02)}
+  .priority-card h4{margin:0 0 8px}
+  .signature-pad{width:100%;height:150px;background:#fff;border-radius:12px;border:1px solid var(--line);touch-action:none}
+  .report-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+  .health-score{font-size:42px;font-weight:800;line-height:1}
+  .health-label{font-size:13px;color:var(--muted);margin-top:6px}
+  .photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  @media(max-width:700px){.priority-grid,.photo-grid,.report-actions{grid-template-columns:1fr}}
+  @media print{
+    body{background:#fff;color:#111}
+    header,.back,.report-actions,.footer-note{display:none!important}
+    .screen{display:block!important}
+    .screen:not(#review){display:none!important}
+    .card{border:none;box-shadow:none;background:#fff;color:#111}
+    .summary{color:#111}
+    .summary>div{border-color:#ddd}
+  }
+
+
+  .estimate-table{width:100%;border-collapse:collapse;margin-top:12px}
+  .estimate-table th,.estimate-table td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  .estimate-table th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .estimate-table input,.estimate-table select{min-width:90px}
+  .money{text-align:right!important;white-space:nowrap}
+  .estimate-total{display:grid;grid-template-columns:1fr auto;gap:8px;max-width:420px;margin-left:auto;margin-top:16px}
+  .estimate-total .grand{font-size:20px;font-weight:800;border-top:1px solid var(--line);padding-top:12px}
+  .auth-panel{border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:18px;background:rgba(255,255,255,.02)}
+  .status-pill{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-size:12px}
+  .status-approved{background:rgba(57,185,130,.12);color:#79e2b3}
+  .status-declined{background:rgba(225,93,100,.12);color:#ff9aa0}
+  .status-pending{background:rgba(255,183,74,.12);color:#ffd089}
+  @media(max-width:760px){.estimate-table{display:block;overflow-x:auto}}
+  .labor-assistant{border:1px solid var(--line);border-radius:16px;padding:16px;margin:16px 0;background:rgba(255,255,255,.025)}
+  .labor-result{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end}
+  .labor-source-note{font-size:12px;color:var(--muted);margin-top:8px}
+  @media(max-width:700px){.labor-result{grid-template-columns:1fr}}
+
+
+  .wo-toolbar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}
+  .wo-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+  .metric-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(255,255,255,.02)}
+  .metric-value{font-size:26px;font-weight:800;line-height:1.1}
+  .metric-label{font-size:12px;color:var(--muted);margin-top:6px}
+  .timeline{display:grid;gap:10px;margin-top:14px}
+  .timeline-item{display:grid;grid-template-columns:110px 1fr;gap:12px;border-left:3px solid var(--line);padding:8px 0 8px 12px}
+  .timeline-time{font-size:12px;color:var(--muted)}
+  .timeline-event{font-weight:700}
+  .comparison-good{color:#79e2b3}
+  .comparison-warn{color:#ffd089}
+  .comparison-bad{color:#ff9aa0}
+  .clock-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid var(--line);border-radius:16px;padding:16px;background:rgba(255,255,255,.025)}
+  .clock-running{border-color:#39b982}
+  .clock-paused{border-color:#ffb74a}
+  .clock-finished{border-color:#7f8a99}
+  @media(max-width:760px){
+    .wo-toolbar,.wo-metrics{grid-template-columns:1fr 1fr}
+    .timeline-item{grid-template-columns:80px 1fr}
+  }
+
+
+  .history-list{display:grid;gap:12px;margin-top:14px}
+  .history-item{border:1px solid var(--line);border-radius:16px;padding:15px;background:rgba(255,255,255,.025)}
+  .history-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+  .history-date{font-size:12px;color:var(--muted);white-space:nowrap}
+  .history-title{font-weight:800;font-size:17px}
+  .history-meta{font-size:13px;color:var(--muted);margin-top:5px}
+  .history-flags{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+  .history-empty{padding:16px;border:1px dashed var(--line);border-radius:14px;color:var(--muted)}
+  .history-search{display:grid;grid-template-columns:1fr auto;gap:10px}
+  .history-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+  @media(max-width:700px){.history-head{display:block}.history-date{margin-top:5px}.history-search{grid-template-columns:1fr}}
+
+  .assistant-grid{display:grid;grid-template-columns:1fr auto;gap:10px}
+  .assistant-results{display:grid;gap:14px;margin-top:16px}
+  .assistant-card{border:1px solid var(--line);border-radius:16px;padding:16px;background:rgba(255,255,255,.025)}
+  .assistant-score{font-size:25px;font-weight:800;color:#79e2b3}
+  .assistant-reasons{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+  .assistant-section{margin-top:10px;color:var(--muted);line-height:1.5}
+  .assistant-section strong{color:var(--text)}
+  @media(max-width:700px){.assistant-grid{grid-template-columns:1fr}}
+
+
+  .debug-panel{margin-top:16px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.025);overflow:hidden}
+  .debug-panel summary{cursor:pointer;padding:15px 16px;font-weight:800;user-select:none}
+  .debug-body{padding:0 16px 16px}
+  .debug-grid{display:grid;grid-template-columns:minmax(140px,.55fr) 1fr;gap:8px 14px;font-size:13px;margin-bottom:12px}
+  .debug-grid>div:nth-child(odd){color:var(--muted);font-weight:700}
+  .debug-code{white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;background:#07111f;border:1px solid var(--line);border-radius:12px;padding:12px;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .debug-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  @media(max-width:700px){.debug-grid{grid-template-columns:1fr}.debug-grid>div:nth-child(odd){margin-top:5px}.debug-actions{grid-template-columns:1fr}}
+
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand">Nitros</div>
+  <div class="sub">Prototype v0.7.5 — VIN Decoder Debug Test Release</div>
+  <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
+</header>
+
+<section id="home" class="screen active">
+  <div class="card">
+    <div class="eyebrow">Service Advisor Workspace</div>
+    <h1>Vehicle check-in</h1>
+    <p>Scan the VIN, complete intake and inspection, then produce a professional customer-ready report.</p>
+    <div class="grid two" style="margin:18px 0">
+      <button class="vehicle" data-demo="DEMO1"><strong>2007 Dodge Ram 1500</strong><span>5.7L HEMI • Demo record</span></button>
+      <button class="vehicle" data-demo="DEMO2"><strong>2017 Mini Cooper</strong><span>EVAP case • Demo record</span></button>
+      <button class="vehicle" data-demo="DEMO3"><strong>2017 Jeep Wrangler</strong><span>Vacuum sensor case</span></button>
+      <button class="vehicle" data-demo="DEMO4"><strong>2004 Ford F-250</strong><span>Front suspension case</span></button>
+    </div>
+
+    <div class="grid two" style="margin-top:12px">
+      <button class="btn primary" data-go="checkin">Start Check-In</button>
+      <button class="btn secondary" data-go="history">Customer History</button>
+      <button class="btn secondary" data-go="assistant">AI Repair Assistant</button>
+    </div>
+    <div id="draftRecoveryPanel" class="status warn hidden" style="margin-top:14px">
+      <strong>Saved work is available.</strong>
+      <div class="grid two" style="margin-top:10px">
+        <button id="resumeDraft" class="btn primary small" type="button">Resume Current Job</button>
+        <button id="discardDraft" class="btn ghost small" type="button">Discard Saved Draft</button>
+      </div>
+    </div>
+
+  </div>
+  <div class="card">
+    <span class="badge">Field-test rule</span>
+    <h3 style="margin-top:12px">Use the hosted HTTPS link on iPhone</h3>
+    <p>Local previews may display the page but still block camera permission. The live VIN test must be performed from a secure web address in Safari or Chrome.</p>
+  </div>
+</section>
+
+
+<section id="history" class="screen">
+  <button class="back" data-go="home">← Back</button>
+  <div class="card">
+    <div class="eyebrow">Customer & Vehicle History</div>
+    <h2>Find a returning customer or vehicle</h2>
+    <p>Search saved visits by VIN, customer name, phone number, email, license plate, repair order, concern, or recommendation.</p>
+    <div class="history-search">
+      <input id="historySearch" placeholder="Search VIN, name, phone, plate, concern...">
+      <button id="runHistorySearch" class="btn primary small" type="button">Search History</button>
+    </div>
+    <div class="grid two" style="margin-top:12px">
+      <button id="showAllHistory" class="btn secondary small" type="button">Show All Visits</button>
+      <button id="clearHistorySearch" class="btn ghost small" type="button">Clear Search</button>
+    </div>
+    <div id="historyStatus" class="status">Saved inspection reports on this device will appear here.</div>
+    <div id="historyResults" class="history-list"></div>
+  </div>
+</section>
+
+
+<section id="assistant" class="screen">
+  <button class="back" data-go="home">← Back</button>
+  <div class="card">
+    <div class="eyebrow">Nitros Diagnostic Knowledge Search</div>
+    <h2>AI Repair Assistant</h2>
+    <p>Describe the symptom, DTC, vehicle, or failed system. The assistant compares your description with saved Nitros repair records and the built-in prototype case library.</p>
+    <div class="field">
+      <label for="assistantQuery">Symptom, DTC, or repair question</label>
+      <textarea id="assistantQuery" rows="5" placeholder="Example: Intermittent ABS light, C1082, Jeep Wrangler vacuum sensor circuit"></textarea>
+    </div>
+    <div class="assistant-grid">
+      <button id="runAssistantSearch" class="btn primary" type="button">Search Similar Repairs</button>
+      <button id="dictateAssistantQuery" class="btn secondary" type="button">🎙️ Dictate Search</button>
+    </div>
+    <div class="grid two" style="margin-top:12px">
+      <button id="useCurrentConcern" class="btn secondary small" type="button">Use Current Customer Concern</button>
+      <button id="clearAssistantSearch" class="btn ghost small" type="button">Clear Results</button>
+    </div>
+    <div id="assistantStatus" class="status">Ready to search saved repairs and prototype cases.</div>
+    <div id="assistantResults" class="assistant-results"></div>
+  </div>
+</section>
+
+<section id="checkin" class="screen">
+  <button class="back" data-go="home">← Back</button>
+  <div class="card">
+    <div class="eyebrow">Camera-First Check-In</div>
+    <h2>Scan or enter the VIN</h2>
+    <p>Use the rear camera to scan a door-label barcode or read the printed VIN through the windshield. Manual entry remains available as a controlled fallback.</p>
+
+    <div class="grid two">
+      <button id="startSmartCamera" class="btn primary" type="button">📷 Live Registration Scan</button>
+      <button id="startCamera" class="btn secondary" type="button">Open Live VIN Scanner</button>
+      <label class="btn secondary" style="text-align:center">
+        Take Registration Photo
+        <input id="smartScanPhoto" type="file" accept="image/*" capture="environment" hidden>
+      </label>
+      <label class="btn secondary" style="text-align:center">
+        Scan VIN Photo
+        <input id="vinPhoto" type="file" accept="image/*" capture="environment" hidden>
+      </label>
+      <button id="manualVinFocus" class="btn ghost" type="button">Enter VIN Manually</button>
+    </div>
+    <div class="capture-note" style="margin-top:8px"><strong>Live Registration Scan</strong> opens the in-app camera, looks for a Massachusetts registration, and automatically captures only after a valid 17-character VIN is confirmed. Low-confidence text stays out of the form.</div>
+    <div id="smartScanResult" class="status">Ready for Smart Scan.</div>
+
+    <div id="cameraWrap" class="camera-wrap" style="margin-top:16px">
+      <div class="scan-overlay">
+        <video id="camera" autoplay playsinline muted></video>
+        <div class="scan-guide"></div>
+      </div>
+      <div class="grid two" style="margin-top:12px">
+        <button id="smartReadFrame" class="btn primary small">Smart Read Current View</button>
+        <button id="scanFrame" class="btn secondary small">Scan Barcode</button>
+        <button id="readDashVin" class="btn secondary small">Read Dash VIN Text</button>
+        <button id="stopCamera" class="btn ghost small">Close Camera</button>
+      </div>
+      <div class="capture-note" style="margin-top:8px">For a registration, fill most of the frame with the document and hold steady. For a VIN, place the barcode or printed 17 characters inside the orange guide and reduce glare.</div>
+    </div>
+
+    <div class="field" style="margin-top:17px">
+      <label for="vinInput">VIN or demo code</label>
+      <input id="vinInput" maxlength="17" autocomplete="off" autocapitalize="characters" placeholder="17-character VIN, or DEMO1–DEMO4">
+    </div>
+    <button id="identifyVehicle" class="btn primary">Identify Vehicle</button>
+    <div id="identifyStatus" class="status">Ready for camera scan or manual VIN entry.</div>
+  </div>
+</section>
+
+<section id="vehicle" class="screen">
+  <button class="back" data-go="checkin">← Back</button>
+  <div class="card">
+    <div class="eyebrow">Vehicle Identified</div>
+    <h2 id="vehicleTitle">Vehicle</h2>
+    <div class="kv" id="vehicleDetails"></div>
+    <details class="debug-panel" id="decoderDebugPanel">
+      <summary>VIN Decoder Debug Report</summary>
+      <div class="debug-body">
+        <div class="debug-grid" id="decoderDebugSummary"></div>
+        <div class="field">
+          <label>Raw decoder response</label>
+          <pre class="debug-code" id="decoderRawResponse">No decoder request has been made yet.</pre>
+        </div>
+        <div class="debug-actions">
+          <button id="copyDebugReport" class="btn secondary small" type="button">Copy Debug Report</button>
+          <button id="retryDecode" class="btn primary small" type="button">Retry VIN Decode</button>
+        </div>
+        <div id="copyDebugStatus" class="status">Open this panel after a VIN test, then copy the report into the chat.</div>
+      </div>
+    </details>
+
+    <div class="card" style="margin-top:18px;background:#0d192a">
+      <div class="eyebrow">Vehicle and Engine Identification</div>
+      <h3>Confirm or correct decoded information</h3>
+      <p>NHTSA does not return every trim or OEM engine code for every VIN. These fields remain editable so the repair order can still be completed accurately.</p>
+      <div class="grid two">
+        <div class="field"><label for="vehicleTrimEdit">Trim / sub-model</label><input id="vehicleTrimEdit" placeholder="LE, SE, XLE, TRD, etc."></div>
+        <div class="field"><label for="vehicleSeriesEdit">Series</label><input id="vehicleSeriesEdit" placeholder="Series or grade"></div>
+        <div class="field"><label for="engineSizeEdit">Engine size</label><input id="engineSizeEdit" placeholder="2.5L"></div>
+        <div class="field"><label for="engineModelEdit">OEM engine model / code</label><input id="engineModelEdit" placeholder="A25A-FKS, 22R, AUD, etc."></div>
+        <div class="field"><label for="engineFamilyEdit">Engine family</label><input id="engineFamilyEdit" placeholder="Engine family, when available"></div>
+        <div class="field"><label for="vinEngineDesignatorEdit">VIN engine designator</label><input id="vinEngineDesignatorEdit" maxlength="4" placeholder="VIN H, code, etc."></div>
+        <div class="field"><label for="engineCylindersEdit">Cylinders</label><input id="engineCylindersEdit" inputmode="numeric" placeholder="4"></div>
+        <div class="field"><label for="fuelTypeEdit">Fuel type</label><input id="fuelTypeEdit" placeholder="Gasoline, hybrid, etc."></div>
+      </div>
+      <button id="applyVehicleCorrections" class="btn secondary" type="button">Apply Vehicle Corrections</button>
+      <div id="vehicleCorrectionStatus" class="status">Decoded values can be corrected before continuing.</div>
+    </div>
+
+    <div class="card" style="margin-top:18px;background:#0d192a">
+      <div class="eyebrow">Returning Vehicle History</div>
+      <div id="vehicleHistorySummary" class="history-empty">No saved history has been checked for this VIN yet.</div>
+      <div id="vehicleHistoryList" class="history-list"></div>
+    </div>
+    <button class="btn primary" data-go="customer" style="margin-top:20px">Continue to Customer Concern</button>
+  </div>
+</section>
+
+<section id="customer" class="screen">
+  <button class="back" data-go="vehicle">← Back</button>
+  <div class="card">
+    <div class="eyebrow">Customer Check-In</div>
+    <h2>Customer and vehicle details</h2>
+    <div class="grid two">
+      <div class="field"><label for="roNumber">Repair Order number</label><input id="roNumber" placeholder="Auto-generated if left blank"></div>
+      <div class="field"><label for="serviceAdvisor">Service advisor</label><input id="serviceAdvisor" placeholder="Service advisor name"></div>
+    </div>
+    <div class="grid two">
+      <div class="field"><label for="customerName">Customer name</label><input id="customerName" autocomplete="name" placeholder="Customer name"></div>
+      <div class="field"><label for="phone">Phone number</label><input id="phone" inputmode="tel" autocomplete="tel" placeholder="Phone number"></div>
+      <div class="field"><label for="email">Email</label><input id="email" inputmode="email" autocomplete="email" placeholder="Email address"></div>
+      <div class="field"><label for="plate">License plate</label><input id="plate" autocapitalize="characters" placeholder="Plate number"></div>
+      <div class="field"><label for="mileage">Current mileage</label><input id="mileage" inputmode="numeric" placeholder="Mileage"></div>
+      <div class="field"><label for="arrivalMethod">Arrival method</label>
+        <select id="arrivalMethod">
+          <option>Customer drove in</option>
+          <option>Tow-in</option>
+          <option>Drop-off</option>
+          <option>Waiting appointment</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="concern">Customer's exact concern</label>
+      <textarea id="concern" rows="5" placeholder="Record the customer's own words before diagnosis."></textarea>
+    </div>
+
+    <div class="grid two">
+      <button id="startVoiceConcern" class="btn secondary" type="button">🎙️ Dictate Concern</button>
+      <button id="stopVoiceConcern" class="btn ghost" type="button">Stop Dictation</button>
+    </div>
+    <div id="voiceStatus" class="status">Voice dictation is optional. Typed entry remains available.</div>
+
+    <div class="field" style="margin-top:16px">
+      <label for="advisorNotes">Service advisor notes</label>
+      <textarea id="advisorNotes" rows="4" placeholder="Keys, authorization limits, appointment details, special instructions..."></textarea>
+    </div>
+
+    <button class="btn primary" data-go="inspection">Continue to Walk-Around</button>
+  </div>
+</section>
+
+<section id="inspection" class="screen">
+  <button class="back" data-go="customer">← Back</button>
+  <div class="card">
+    <div class="eyebrow">Walk-Around Inspection</div>
+    <h2>Initial vehicle condition</h2>
+    <div class="grid two">
+      <label><input type="checkbox" class="check" data-label="Exterior photos captured"> Exterior photos captured</label>
+      <label><input type="checkbox" class="check" data-label="Existing damage documented"> Existing damage documented</label>
+      <label><input type="checkbox" class="check" data-label="Warning lamps documented"> Warning lamps documented</label>
+      <label><input type="checkbox" class="check" data-label="Keys received"> Keys received</label>
+      <label><input type="checkbox" class="check" data-label="Wheel-lock key checked"> Wheel-lock key checked</label>
+      <label><input type="checkbox" class="check" data-label="Valuables noted"> Valuables noted</label>
+    </div>
+
+    <div class="field" style="margin-top:18px">
+      <label for="fuelLevel">Fuel level</label>
+      <select id="fuelLevel">
+        <option>Not recorded</option>
+        <option>Empty</option>
+        <option>1/4 tank</option>
+        <option>1/2 tank</option>
+        <option>3/4 tank</option>
+        <option>Full</option>
+      </select>
+    </div>
+
+    <h3>Vehicle documentation photos</h3>
+    <div class="photo-grid">
+      <div class="field"><label for="photoFront">Front</label><input id="photoFront" type="file" accept="image/*" capture="environment"></div>
+      <div class="field"><label for="photoRear">Rear</label><input id="photoRear" type="file" accept="image/*" capture="environment"></div>
+      <div class="field"><label for="photoLeft">Left side</label><input id="photoLeft" type="file" accept="image/*" capture="environment"></div>
+      <div class="field"><label for="photoRight">Right side</label><input id="photoRight" type="file" accept="image/*" capture="environment"></div>
+      <div class="field"><label for="photoOdometer">Odometer</label><input id="photoOdometer" type="file" accept="image/*" capture="environment"></div>
+      <div class="field"><label for="photoVin">VIN label</label><input id="photoVin" type="file" accept="image/*" capture="environment"></div>
+    </div>
+    <div id="photoStatus" class="status">No vehicle documentation photos selected.</div>
+
+    <div class="field">
+      <label for="inspectionNotes">Initial condition notes</label>
+      <textarea id="inspectionNotes" rows="5" placeholder="Leaks, lights, damage, tire condition, sounds, odors..."></textarea>
+    </div>
+
+    <button class="btn primary" data-go="technician">Continue to Technician Inspection</button>
+  </div>
+</section>
+
+
+<section id="technician" class="screen">
+  <button class="back" data-go="inspection">← Back</button>
+  <div class="card">
+    <div class="eyebrow">Technician Digital Inspection</div>
+    <h2>Condition, measurements, and recommendations</h2>
+
+    <div class="field">
+      <label for="technicianName">Technician name</label>
+      <input id="technicianName" placeholder="Technician performing inspection">
+    </div>
+
+    <h3>Inspection status</h3>
+    <div class="grid two">
+      <div class="field"><label for="brakesStatus">Brakes</label>
+        <select id="brakesStatus" class="inspection-status">
+          <option>Not inspected</option><option>Pass</option><option>Monitor</option><option>Repair Needed</option>
+        </select>
+      </div>
+      <div class="field"><label for="tiresStatus">Tires</label>
+        <select id="tiresStatus" class="inspection-status">
+          <option>Not inspected</option><option>Pass</option><option>Monitor</option><option>Repair Needed</option>
+        </select>
+      </div>
+      <div class="field"><label for="steeringStatus">Steering and suspension</label>
+        <select id="steeringStatus" class="inspection-status">
+          <option>Not inspected</option><option>Pass</option><option>Monitor</option><option>Repair Needed</option>
+        </select>
+      </div>
+      <div class="field"><label for="fluidsStatus">Fluids and leaks</label>
+        <select id="fluidsStatus" class="inspection-status">
+          <option>Not inspected</option><option>Pass</option><option>Monitor</option><option>Repair Needed</option>
+        </select>
+      </div>
+      <div class="field"><label for="batteryStatus">Battery and charging</label>
+        <select id="batteryStatus" class="inspection-status">
+          <option>Not inspected</option><option>Pass</option><option>Monitor</option><option>Repair Needed</option>
+        </select>
+      </div>
+      <div class="field"><label for="lightsStatus">Lights, wipers, and visibility</label>
+        <select id="lightsStatus" class="inspection-status">
+          <option>Not inspected</option><option>Pass</option><option>Monitor</option><option>Repair Needed</option>
+        </select>
+      </div>
+    </div>
+
+    <h3>Brake measurements</h3>
+    <div class="grid two">
+      <div class="field"><label for="lfPad">Left-front pad (mm)</label><input id="lfPad" inputmode="decimal" placeholder="mm"></div>
+      <div class="field"><label for="rfPad">Right-front pad (mm)</label><input id="rfPad" inputmode="decimal" placeholder="mm"></div>
+      <div class="field"><label for="lrPad">Left-rear pad (mm)</label><input id="lrPad" inputmode="decimal" placeholder="mm"></div>
+      <div class="field"><label for="rrPad">Right-rear pad (mm)</label><input id="rrPad" inputmode="decimal" placeholder="mm"></div>
+      <div class="field"><label for="frontRotor">Front rotor condition</label><input id="frontRotor" placeholder="Good, scored, below spec..."></div>
+      <div class="field"><label for="rearRotor">Rear rotor condition</label><input id="rearRotor" placeholder="Good, scored, below spec..."></div>
+    </div>
+
+    <h3>Tire measurements</h3>
+    <div class="grid two">
+      <div class="field"><label for="lfTread">LF tread (32nds)</label><input id="lfTread" inputmode="decimal" placeholder="32nds"></div>
+      <div class="field"><label for="rfTread">RF tread (32nds)</label><input id="rfTread" inputmode="decimal" placeholder="32nds"></div>
+      <div class="field"><label for="lrTread">LR tread (32nds)</label><input id="lrTread" inputmode="decimal" placeholder="32nds"></div>
+      <div class="field"><label for="rrTread">RR tread (32nds)</label><input id="rrTread" inputmode="decimal" placeholder="32nds"></div>
+      <div class="field"><label for="lfPsi">LF pressure (PSI)</label><input id="lfPsi" inputmode="decimal" placeholder="PSI"></div>
+      <div class="field"><label for="rfPsi">RF pressure (PSI)</label><input id="rfPsi" inputmode="decimal" placeholder="PSI"></div>
+      <div class="field"><label for="lrPsi">LR pressure (PSI)</label><input id="lrPsi" inputmode="decimal" placeholder="PSI"></div>
+      <div class="field"><label for="rrPsi">RR pressure (PSI)</label><input id="rrPsi" inputmode="decimal" placeholder="PSI"></div>
+    </div>
+
+    <div class="field">
+      <label for="technicianPhoto">Photograph defect or measurement</label>
+      <input id="technicianPhoto" type="file" accept="image/*" capture="environment">
+      <div id="technicianPhotoStatus" class="status">No technician photo selected.</div>
+    </div>
+
+    <div class="field">
+      <label for="technicianFindings">Technician findings</label>
+      <textarea id="technicianFindings" rows="5" placeholder="What was inspected, what was found, and supporting measurements..."></textarea>
+    </div>
+
+    <div class="field">
+      <label for="technicianRecommendation">Recommended action</label>
+      <textarea id="technicianRecommendation" rows="4" placeholder="Repair now, monitor, recheck interval, further diagnosis..."></textarea>
+    </div>
+
+
+    <h3>Repair priorities</h3>
+    <div class="priority-grid">
+      <div class="priority-card">
+        <h4>Immediate</h4>
+        <textarea id="priorityImmediate" rows="4" placeholder="Safety or breakdown-risk repairs needed now..."></textarea>
+      </div>
+      <div class="priority-card">
+        <h4>Soon</h4>
+        <textarea id="prioritySoon" rows="4" placeholder="Repairs recommended soon..."></textarea>
+      </div>
+      <div class="priority-card">
+        <h4>Monitor</h4>
+        <textarea id="priorityMonitor" rows="4" placeholder="Items to monitor or recheck..."></textarea>
+      </div>
+    </div>
+
+    <h3>Signatures</h3>
+    <div class="grid two">
+      <div>
+        <label>Technician signature</label>
+        <canvas id="technicianSignature" class="signature-pad"></canvas>
+        <button id="clearTechnicianSignature" class="btn ghost" type="button">Clear Technician Signature</button>
+      </div>
+      <div>
+        <label>Customer signature</label>
+        <canvas id="customerSignature" class="signature-pad"></canvas>
+        <button id="clearCustomerSignature" class="btn ghost" type="button">Clear Customer Signature</button>
+      </div>
+    </div>
+
+    <button class="btn primary" data-go="estimate">Build Repair Estimate</button>
+
+  </div>
+</section>
+
+
+<section id="estimate" class="screen">
+  <button class="back" data-go="technician">← Back</button>
+  <div class="card">
+    <div class="eyebrow">Estimate & Repair Authorization</div>
+    <h2>Build customer estimate</h2>
+    <div class="grid two">
+      <div class="field"><label for="estimateNumber">Estimate number</label><input id="estimateNumber" placeholder="Auto-generated if left blank"></div>
+      <div class="field"><label for="laborRate">Labor rate ($/hr)</label><input id="laborRate" inputmode="decimal" value="125"></div>
+    </div>
+
+    <div class="labor-assistant">
+      <div class="eyebrow">Smart Labor Time Assistant</div>
+      <h3>Look up and apply standard labor time</h3>
+      <p>Describe the repair, search the web using the identified vehicle, then record the verified labor-guide time and source.</p>
+      <div class="grid two">
+        <div class="field"><label for="laborOperation">Repair operation</label><input id="laborOperation" placeholder="Example: Replace front lower ball joints"></div>
+        <div class="field"><label for="laborSystem">Repair system</label>
+          <select id="laborSystem"><option>General</option><option>Engine</option><option>Transmission</option><option>Brakes</option><option>Steering & Suspension</option><option>Electrical</option><option>HVAC</option><option>Exhaust</option><option>Maintenance</option></select>
+        </div>
+      </div>
+      <div class="grid two">
+        <button id="searchLaborWeb" class="btn secondary" type="button">Search Labor Information</button>
+        <button id="copyLaborQuery" class="btn ghost" type="button">Copy Search Description</button>
+      </div>
+      <div id="laborLookupStatus" class="status">Enter a repair operation. Verify all labor times against an authorized OEM or professional labor guide.</div>
+      <div class="labor-result" style="margin-top:14px">
+        <div class="grid two">
+          <div class="field"><label for="verifiedLaborHours">Verified labor time (hours)</label><input id="verifiedLaborHours" inputmode="decimal" placeholder="Example: 2.5"></div>
+          <div class="field"><label for="laborTimeSource">Source</label><input id="laborTimeSource" placeholder="OEM manual, ALLDATA, Mitchell, Identifix..."></div>
+        </div>
+        <button id="applyLaborTime" class="btn primary" type="button">Apply to Estimate</button>
+      </div>
+      <div class="field"><label for="laborLookupNotes">Labor-time notes</label><textarea id="laborLookupNotes" rows="3" placeholder="Included operations, overlap, rust allowance, one-time-use hardware, special conditions..."></textarea></div>
+      <div class="labor-source-note">This prototype does not claim access to proprietary labor-guide databases. It records the time you verify from an authorized source.</div>
+    </div>
+    <table class="estimate-table">
+      <thead><tr><th>Description</th><th>Priority</th><th>Labor hrs</th><th>Parts $</th><th>Line total</th><th></th></tr></thead>
+      <tbody id="estimateRows"></tbody>
+    </table>
+    <button id="addEstimateLine" class="btn secondary" type="button" style="margin-top:14px">+ Add Estimate Line</button>
+    <div class="estimate-total">
+      <div>Labor subtotal</div><div class="money" id="laborSubtotal">$0.00</div>
+      <div>Parts subtotal</div><div class="money" id="partsSubtotal">$0.00</div>
+      <div>Shop supplies</div><div class="money" id="suppliesTotal">$0.00</div>
+      <div>Tax</div><div class="money" id="taxTotal">$0.00</div>
+      <div class="grand">Estimated total</div><div class="grand money" id="grandTotal">$0.00</div>
+    </div>
+    <div class="grid two" style="margin-top:18px">
+      <div class="field"><label for="shopSuppliesPercent">Shop supplies (%)</label><input id="shopSuppliesPercent" inputmode="decimal" value="5"></div>
+      <div class="field"><label for="taxPercent">Tax on parts (%)</label><input id="taxPercent" inputmode="decimal" value="7"></div>
+    </div>
+    <div class="auth-panel">
+      <h3>Customer authorization</h3>
+      <div class="grid two">
+        <div class="field"><label for="authorizationStatus">Authorization status</label>
+          <select id="authorizationStatus"><option>Pending</option><option>Approved</option><option>Partially Approved</option><option>Declined</option></select>
+        </div>
+        <div class="field"><label for="authorizationMethod">Authorization method</label>
+          <select id="authorizationMethod"><option>Not recorded</option><option>In person</option><option>Phone</option><option>Text message</option><option>Email</option></select>
+        </div>
+      </div>
+      <div class="field"><label for="authorizationNotes">Authorization notes</label><textarea id="authorizationNotes" rows="4" placeholder="Approved work, declined work, dollar limit, customer instructions..."></textarea></div>
+      <div id="authorizationBadge" class="status-pill status-pending">Pending</div>
+    </div>
+    <button class="btn primary" data-go="workorder" style="margin-top:18px">Create Digital Work Order</button>
+  </div>
+</section>
+
+
+<section id="workorder" class="screen">
+  <button class="back" data-go="estimate">← Back</button>
+  <div class="card">
+    <div class="eyebrow">Digital Work Order</div>
+    <h2>Repair execution and labor tracking</h2>
+
+    <div class="grid two">
+      <div class="field">
+        <label for="workOrderNumber">Work Order / RO number</label>
+        <input id="workOrderNumber" placeholder="Uses RO number if left blank">
+      </div>
+      <div class="field">
+        <label for="assignedTechnician">Assigned technician</label>
+        <input id="assignedTechnician" placeholder="Technician name">
+      </div>
+      <div class="field">
+        <label for="repairStatus">Repair status</label>
+        <select id="repairStatus">
+          <option>Waiting</option>
+          <option>In Progress</option>
+          <option>Paused</option>
+          <option>Waiting on Parts</option>
+          <option>Waiting on Approval</option>
+          <option>Quality Control</option>
+          <option>Complete</option>
+          <option>Ready for Pickup</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="standardLaborHours">Standard labor time (hours)</label>
+        <input id="standardLaborHours" inputmode="decimal" placeholder="Example: 2.5">
+      </div>
+      <div class="field">
+        <label for="diagnosticTimeHours">Diagnostic time (hours)</label>
+        <input id="diagnosticTimeHours" inputmode="decimal" placeholder="Auto-recorded from job clock; editable if needed">
+      </div>
+    </div>
+
+    <div id="clockBanner" class="clock-banner">
+      <div>
+        <div class="eyebrow">Job Clock</div>
+        <div id="clockStateText" style="font-size:20px;font-weight:800">Not started</div>
+      </div>
+      <div id="liveJobTime" style="font-size:32px;font-weight:800">00:00:00</div>
+    </div>
+
+    <div class="wo-toolbar">
+      <button id="startJob" class="btn primary" type="button">Start Job</button>
+      <button id="pauseJob" class="btn secondary" type="button">Pause Job</button>
+      <button id="resumeJob" class="btn secondary" type="button">Resume Job</button>
+      <button id="finishJob" class="btn ghost" type="button">Finish Job</button>
+    </div>
+
+    <div class="grid two">
+      <div class="field">
+        <label for="pauseReason">Pause reason</label>
+        <select id="pauseReason">
+          <option>Lunch</option>
+          <option>Break</option>
+          <option>Waiting on Parts</option>
+          <option>Waiting on Customer Approval</option>
+          <option>Waiting on Shop Foreman</option>
+          <option>Waiting on Special Tool</option>
+          <option>Working on Another Vehicle</option>
+          <option>Additional Diagnosis</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="pauseNote">Pause note</label>
+        <input id="pauseNote" placeholder="Optional explanation">
+      </div>
+    </div>
+
+    <div class="wo-metrics">
+      <div class="metric-card">
+        <div id="activeTimeMetric" class="metric-value">0.00 h</div>
+        <div class="metric-label">Actual working time</div>
+      </div>
+      <div class="metric-card">
+        <div id="pausedTimeMetric" class="metric-value">0.00 h</div>
+        <div class="metric-label">Paused time</div>
+      </div>
+      <div class="metric-card">
+        <div id="laborComparisonMetric" class="metric-value">—</div>
+        <div class="metric-label">Time vs. standard</div>
+      </div>
+      <div class="metric-card">
+        <div id="efficiencyMetric" class="metric-value">—</div>
+        <div class="metric-label">Efficiency</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="internalTechnicianNotes">Internal technician notes</label>
+      <textarea id="internalTechnicianNotes" rows="5" placeholder="Internal-only observations, seized hardware, previous repairs, modifications, diagnostic notes..."></textarea>
+    </div>
+
+    <div class="field">
+      <label for="completionNotes">Completion / quality-control notes</label>
+      <textarea id="completionNotes" rows="4" placeholder="Repairs completed, road test results, torque checks, final verification..."></textarea>
+    </div>
+
+    <h3>Technician Timeline</h3>
+    <div id="jobTimeline" class="timeline">
+      <div class="status">No job activity recorded yet.</div>
+    </div>
+
+    <button class="btn primary" data-go="review" style="margin-top:18px">Review Complete Work Order</button>
+  </div>
+</section>
+
+<section id="review" class="screen">
+  <button class="back" data-go="workorder">← Back</button>
+  <div class="card">
+    <div class="eyebrow">Professional Inspection Report</div>
+    <h2>Customer-ready inspection summary</h2>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="health-score" id="healthScore">100</div>
+      <div class="health-label">Overall vehicle health score</div>
+    </div>
+
+    <div id="summary" class="summary"></div>
+
+    <div class="report-actions">
+      <button id="submitCheckin" class="btn primary" type="button">Save Inspection Report</button>
+      <button id="printReport" class="btn secondary" type="button">Print / Save as PDF</button>
+    </div>
+
+    <div id="submitStatus" class="status"></div>
+    <div id="postSaveActions" class="grid hidden" style="margin-top:12px">
+      <button id="reopenLastSaved" class="btn primary" type="button">Reopen / Edit Saved Repair</button>
+      <button id="returnHomeAfterSave" class="btn secondary" type="button">Return to Home / Start New Vehicle</button>
+      <button class="btn secondary" data-go="history" type="button">Open Customer History</button>
+    </div>
+  </div>
+</section>
+
+<div class="footer-note">Nitros Prototype v0.7.5 • VIN decoder diagnostics • Raw response logging • Copyable debug report • Local prototype storage only</div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const screens = [...document.querySelectorAll(".screen")];
+  const vinInput = document.getElementById("vinInput");
+  const identifyStatus = document.getElementById("identifyStatus");
+  const cameraWrap = document.getElementById("cameraWrap");
+  const video = document.getElementById("camera");
+  const envText = document.getElementById("envText");
+  const envDot = document.getElementById("envDot");
+  const scanGuide = document.querySelector(".scan-guide");
+
+  let stream = null;
+  let selectedVehicle = null;
+  let zxingControls = null;
+  let autoScanTimer = null;
+  let autoScanBusy = false;
+  let continuousReader = null;
+  let lastScanAt = 0;
+  let zxingFrameReader = null;
+  let scannerLibraryPromise = null;
+  let scanAttempts = 0;
+  let scanStartedAt = 0;
+  let pendingVin = "";
+  let pendingVinCount = 0;
+  let pendingVinAt = 0;
+
+  const vehicles = {
+    "DEMO1": {vin:"1D7HU18D17S000001",year:"2007",make:"Dodge",model:"Ram 1500",engine:"5.7L HEMI",source:"Prototype demo record"},
+    "DEMO2": {vin:"WMWXP7C50H2A00002",year:"2017",make:"MINI",model:"Cooper",engine:"1.5L Turbo",source:"Prototype demo record"},
+    "DEMO3": {vin:"1C4AJWAG0HL000003",year:"2017",make:"Jeep",model:"Wrangler",engine:"3.6L",source:"Prototype demo record"},
+    "DEMO4": {vin:"1FTNX21P84E000004",year:"2004",make:"Ford",model:"F-250",engine:"6.0L Diesel",source:"Prototype demo record"}
+  };
+
+  function updateEnvironment(){
+    const secure = window.isSecureContext;
+    const hasMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    if(secure && hasMedia){
+      envText.textContent = "Secure camera environment detected";
+      envDot.className = "dot ok";
+    }else if(!secure){
+      envText.textContent = "Not HTTPS — camera may be blocked";
+      envDot.className = "dot bad";
+    }else{
+      envText.textContent = "Camera API unavailable in this preview";
+      envDot.className = "dot bad";
+    }
+  }
+
+  const DRAFT_KEY="nitros_prototype_v073_active_draft";
+  let currentScreenId="home";
+  let draftSaveTimer=null;
+  let lastSavedRecordId=null;
+
+  function collectDraft(){
+    const fields={};
+    document.querySelectorAll("input[id], textarea[id], select[id]").forEach(el=>{
+      if(el.type==="file" || el.type==="button" || el.type==="submit") return;
+      fields[el.id]=el.type==="checkbox" ? el.checked : el.value;
+    });
+    const checks=[...document.querySelectorAll(".check")].map(el=>el.checked);
+    const estimateLines=[...document.querySelectorAll("#estimateRows tr")].map(row=>({
+      description:row.querySelector(".est-desc")?.value||"",
+      priority:row.querySelector(".est-priority")?.value||"Immediate",
+      hours:row.querySelector(".est-hours")?.value||0,
+      parts:row.querySelector(".est-parts")?.value||0
+    }));
+    return {savedAt:new Date().toISOString(),screen:currentScreenId,selectedVehicle,editingCheckInId,fields,checks,estimateLines,jobClock};
+  }
+
+  function saveDraft(){
+    try{localStorage.setItem(DRAFT_KEY,JSON.stringify(collectDraft()));refreshDraftPanel();}
+    catch(error){console.warn("Draft autosave failed:",error);}
+  }
+
+  function scheduleDraftSave(){
+    clearTimeout(draftSaveTimer);
+    draftSaveTimer=setTimeout(saveDraft,300);
+  }
+
+  function loadDraft(){
+    try{return JSON.parse(localStorage.getItem(DRAFT_KEY)||"null");}catch(error){return null;}
+  }
+
+  function refreshDraftPanel(){
+    const panel=document.getElementById("draftRecoveryPanel");
+    if(!panel) return;
+    const draft=loadDraft();
+    panel.classList.toggle("hidden",!draft);
+  }
+
+  function restoreDraft(goToSavedScreen=true){
+    const draft=loadDraft();
+    if(!draft) return false;
+    selectedVehicle=draft.selectedVehicle||selectedVehicle;
+    editingCheckInId=draft.editingCheckInId||null;
+    Object.entries(draft.fields||{}).forEach(([id,value])=>{
+      const el=document.getElementById(id); if(!el) return;
+      if(el.type==="checkbox") el.checked=Boolean(value); else el.value=value??"";
+    });
+    [...document.querySelectorAll(".check")].forEach((el,index)=>{if(index<(draft.checks||[]).length) el.checked=Boolean(draft.checks[index]);});
+    if(Array.isArray(draft.estimateLines) && draft.estimateLines.length){
+      document.getElementById("estimateRows").innerHTML="";
+      draft.estimateLines.forEach(createEstimateRow);
+    }
+    if(draft.jobClock) jobClock={...jobClock,...draft.jobClock,activeStartedAt:null,pauseStartedAt:null};
+    if(selectedVehicle) renderVehicle();
+    updateEstimateTotals(); updateAuthorizationBadge(); updateJobClockUI(); renderTimeline();
+    if(goToSavedScreen) showScreen(draft.screen||"customer",false);
+    return true;
+  }
+
+  function resetActiveWorkspace(){
+    stopCamera();
+    clearTimeout(draftSaveTimer);
+    localStorage.removeItem(DRAFT_KEY);
+
+    selectedVehicle=null;
+    editingCheckInId=null;
+    lastSavedRecordId=null;
+    pendingVin="";
+    pendingVinCount=0;
+    pendingVinAt=0;
+    scanAttempts=0;
+    scanStartedAt=0;
+
+    document.querySelectorAll("input[id], textarea[id], select[id]").forEach(el=>{
+      if(el.type==="file"){
+        try{el.value="";}catch(error){}
+      }else if(el.type==="checkbox" || el.type==="radio"){
+        el.checked=false;
+      }else{
+        el.value="";
+      }
+    });
+
+    document.querySelectorAll("canvas.signature-pad").forEach(canvas=>{
+      const ctx=canvas.getContext("2d");
+      if(ctx) ctx.clearRect(0,0,canvas.width,canvas.height);
+      canvas.dataset.hasInk="false";
+    });
+
+    document.querySelectorAll(".check").forEach(el=>{el.checked=false;});
+    document.getElementById("estimateRows").innerHTML="";
+    createEstimateRow();
+
+    jobClock={
+      startedAt:null,
+      activeStartedAt:null,
+      pauseStartedAt:null,
+      accumulatedActiveMs:0,
+      accumulatedPausedMs:0,
+      timeline:[]
+    };
+
+    const defaults={
+      arrivalMethod:"Driven In",
+      fuelLevel:"1/2",
+      brakesStatus:"Not Inspected",
+      tiresStatus:"Not Inspected",
+      steeringStatus:"Not Inspected",
+      fluidsStatus:"Not Inspected",
+      batteryStatus:"Not Inspected",
+      lightsStatus:"Not Inspected",
+      laborSystem:"General",
+      laborRate:"125",
+      authorizationStatus:"Pending",
+      authorizationMethod:"Not Yet Authorized",
+      repairStatus:"Not Started"
+    };
+    Object.entries(defaults).forEach(([id,value])=>{const el=document.getElementById(id);if(el) el.value=value;});
+
+    const vehicleSummary=document.getElementById("vehicleSummary");
+    if(vehicleSummary) vehicleSummary.innerHTML="";
+    const identifyStatusEl=document.getElementById("identifyStatus");
+    if(identifyStatusEl){identifyStatusEl.className="status";identifyStatusEl.textContent="";}
+    const submitStatus=document.getElementById("submitStatus");
+    if(submitStatus){submitStatus.className="status";submitStatus.textContent="";}
+    document.getElementById("postSaveActions")?.classList.add("hidden");
+
+    updateEstimateTotals();
+    updateAuthorizationBadge();
+    updateJobClockUI();
+    renderTimeline();
+    refreshDraftPanel();
+  }
+
+  function returnHomeAndStartNewVehicle(){
+    resetActiveWorkspace();
+    showScreen("home");
+  }
+
+  function showScreen(id,pushHistory=true){
+    const target=document.getElementById(id) ? id : "home";
+    currentScreenId=target;
+    screens.forEach(s => s.classList.toggle("active", s.id === target));
+    window.scrollTo({top:0,behavior:"instant"});
+    if(target === "review") buildSummary();
+    if(target === "history") searchHistory();
+    if(target === "technician") requestAnimationFrame(()=>{
+      signaturePadControllers.technicianSignature?.resize();
+      signaturePadControllers.customerSignature?.resize();
+    });
+    if(target === "home") refreshDraftPanel();
+    if(pushHistory){
+      try{history.pushState({nitrosScreen:target},"",location.href.split("#")[0]+"#"+target);}catch(error){}
+    }
+    scheduleDraftSave();
+  }
+
+  document.addEventListener("click",(e)=>{
+    const go=e.target.closest("[data-go]");
+    if(go){showScreen(go.dataset.go);return;}
+    const demo=e.target.closest("[data-demo]");
+    if(demo){vinInput.value=demo.dataset.demo;showScreen("checkin");identifyVehicle();}
+  });
+
+  function cleanVin(value){
+    return value.toUpperCase().replace(/[^A-Z0-9]/g,"").replace(/[IOQ]/g,"");
+  }
+
+  function extractVin(raw){
+    const candidates = String(raw||"").toUpperCase().match(/[A-HJ-NPR-Z0-9]{17}/g) || [];
+    return candidates[0] || cleanVin(raw);
+  }
+
+  let lastDecodeDebug={
+    version:"0.7.5", rawInput:"", cleanedVin:"", vinLength:0, formatValid:false, checkDigitValid:false,
+    endpoint:"", httpStatus:"Not requested", elapsedMs:0, error:"", warningCodes:[], returnedFields:[], missingFields:[], rawResponse:null
+  };
+
+  function updateDecoderDebug(){
+    const summary=document.getElementById("decoderDebugSummary");
+    const raw=document.getElementById("decoderRawResponse");
+    if(!summary||!raw) return;
+    const d=lastDecodeDebug;
+    const rows=[
+      ["Build",`v${d.version}`],["Raw VIN input",d.rawInput||"—"],["Cleaned VIN",d.cleanedVin||"—"],
+      ["VIN length",String(d.vinLength)],["VIN format",d.formatValid?"PASS":"FAIL"],["Check digit",d.checkDigitValid?"PASS":"FAIL"],
+      ["HTTP status",String(d.httpStatus)],["Decode time",`${d.elapsedMs||0} ms`],["Error",d.error||"None"],
+      ["Warning codes",d.warningCodes.length?d.warningCodes.join(", "):"None"],
+      ["Returned fields",d.returnedFields.length?d.returnedFields.join(", "):"None"],
+      ["Missing fields",d.missingFields.length?d.missingFields.join(", "):"None"]
+    ];
+    summary.innerHTML=rows.map(([k,v])=>`<div>${escapeHtml(k)}</div><div>${escapeHtml(v)}</div>`).join("");
+    raw.textContent=d.rawResponse===null?"No raw response available.":JSON.stringify(d.rawResponse,null,2);
+  }
+
+  function buildDebugReport(){
+    const d=lastDecodeDebug;
+    return [
+      "Nitros VIN Decoder Debug Report",`Version: ${d.version}`,`Device: ${navigator.userAgent}`,
+      `Raw VIN: ${d.rawInput}`,`Cleaned VIN: ${d.cleanedVin}`,`VIN length: ${d.vinLength}`,
+      `Format valid: ${d.formatValid}`,`Check digit valid: ${d.checkDigitValid}`,`Endpoint: ${d.endpoint}`,
+      `HTTP status: ${d.httpStatus}`,`Decode time: ${d.elapsedMs} ms`,`Error: ${d.error||"None"}`,
+      `Warning codes: ${d.warningCodes.join(", ")||"None"}`,`Returned fields: ${d.returnedFields.join(", ")||"None"}`,
+      `Missing fields: ${d.missingFields.join(", ")||"None"}`,"Raw response:",JSON.stringify(d.rawResponse,null,2)
+    ].join("\n");
+  }
+
+  async function identifyVehicle(){
+    const code=vinInput.value.trim().toUpperCase();
+    lastDecodeDebug={version:"0.7.5",rawInput:code,cleanedVin:"",vinLength:0,formatValid:false,checkDigitValid:false,endpoint:"",httpStatus:"Not requested",elapsedMs:0,error:"",warningCodes:[],returnedFields:[],missingFields:[],rawResponse:null};
+    updateDecoderDebug();
+    if(vehicles[code]){
+      selectedVehicle=vehicles[code];
+      vinInput.value=selectedVehicle.vin;
+      renderVehicle();
+      identifyStatus.className="status ok";
+      identifyStatus.textContent="Demo vehicle identified.";
+      setTimeout(()=>showScreen("vehicle"),200);
+      return;
+    }
+
+    const vin=cleanVin(code);
+    vinInput.value=vin;
+    lastDecodeDebug.cleanedVin=vin;
+    lastDecodeDebug.vinLength=vin.length;
+    lastDecodeDebug.formatValid=/^[A-HJ-NPR-Z0-9]{17}$/.test(vin);
+    lastDecodeDebug.checkDigitValid=vin.length===17 && vinCheckDigitValid(vin);
+    updateDecoderDebug();
+    if(vin.length!==17){
+      identifyStatus.className="status bad";
+      identifyStatus.textContent="Enter or scan a complete 17-character VIN.";
+      return;
+    }
+
+    identifyStatus.className="status";
+    identifyStatus.textContent="VIN captured. Contacting NHTSA to decode the vehicle…";
+
+    try{
+      const url=`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValuesExtended/${encodeURIComponent(vin)}?format=json`;
+      lastDecodeDebug.endpoint=url;
+      const started=performance.now();
+      const response=await fetch(url,{cache:"no-store"});
+      lastDecodeDebug.elapsedMs=Math.round(performance.now()-started);
+      lastDecodeDebug.httpStatus=response.status;
+      const data=await response.json();
+      lastDecodeDebug.rawResponse=data;
+      updateDecoderDebug();
+      if(!response.ok) throw new Error(`NHTSA response ${response.status}`);
+      const result=data && data.Results && data.Results[0] ? data.Results[0] : null;
+      if(!result) throw new Error("No decode result");
+
+      const engineSize=result.DisplacementL ? `${result.DisplacementL}L` : "";
+      const engineConfiguration=result.EngineConfiguration || "";
+      const fuelType=result.FuelTypePrimary || result.FuelTypeSecondary || "";
+      const engineCylinders=result.EngineCylinders || "";
+      const engineModel=result.EngineModel || "";
+      const engineFamily=result.EngineManufacturer || "";
+      const trim=[result.Trim,result.Trim2].filter(Boolean).join(" / ");
+      const series=[result.Series,result.Series2].filter(Boolean).join(" / ");
+      const vinEngineDesignator=vin.charAt(7)||"";
+      const engineParts=[engineSize,engineModel,engineConfiguration,fuelType].filter(Boolean);
+
+      const errors=String(result.ErrorCode||"").split(",").map(x=>x.trim()).filter(x=>x && x!=="0");
+      const mappedFields={Year:result.ModelYear,Make:result.Make,Model:result.Model,Trim:trim,Series:series,"Engine size":engineSize,"Engine model":engineModel,"Engine family":engineFamily,Cylinders:engineCylinders,"Fuel type":fuelType,Body:result.BodyClass,"Drive type":result.DriveType};
+      lastDecodeDebug.warningCodes=errors;
+      lastDecodeDebug.returnedFields=Object.entries(mappedFields).filter(([,v])=>String(v||"").trim()).map(([k])=>k);
+      lastDecodeDebug.missingFields=Object.entries(mappedFields).filter(([,v])=>!String(v||"").trim()).map(([k])=>k);
+      updateDecoderDebug();
+      selectedVehicle={
+        vin,
+        year:result.ModelYear || "Not returned",
+        make:result.Make || "Not returned",
+        model:result.Model || "Not returned",
+        trim:trim || "Not returned",
+        series:series || "Not returned",
+        engine:engineParts.join(" • ") || "Not returned",
+        engineSize:engineSize || "Not returned",
+        engineModel:engineModel || "Not returned",
+        engineFamily:engineFamily || "Not returned",
+        vinEngineDesignator:vinEngineDesignator || "Not returned",
+        engineCylinders:engineCylinders || "Not returned",
+        fuelType:fuelType || "Not returned",
+        body:result.BodyClass || "Not returned",
+        driveType:result.DriveType || "Not returned",
+        plant:result.PlantCity ? [result.PlantCity,result.PlantState,result.PlantCountry].filter(Boolean).join(", ") : "Not returned",
+        source:errors.length ? "NHTSA vPIC decode — review decode warnings" : "NHTSA vPIC live decode"
+      };
+
+      renderVehicle();
+      identifyStatus.className=errors.length ? "status warn" : "status ok";
+      identifyStatus.textContent=errors.length
+        ? `VIN decoded with NHTSA warning code(s): ${errors.join(", ")}. Confirm vehicle information.`
+        : "VIN decoded successfully through NHTSA.";
+      setTimeout(()=>showScreen("vehicle"),350);
+    }catch(err){
+      lastDecodeDebug.error=err && err.message ? err.message : String(err);
+      updateDecoderDebug();
+      selectedVehicle={
+        vin,
+        year:"Decode unavailable",
+        make:"Decode unavailable",
+        model:"Decode unavailable",
+        trim:"Not returned",
+        series:"Not returned",
+        engine:"Decode unavailable",
+        engineSize:"Not returned",
+        engineModel:"Not returned",
+        engineFamily:"Not returned",
+        vinEngineDesignator:vin.charAt(7)||"Not returned",
+        engineCylinders:"Not returned",
+        fuelType:"Not returned",
+        source:"VIN captured; NHTSA connection unavailable"
+      };
+      renderVehicle();
+      identifyStatus.className="status warn";
+      identifyStatus.textContent="The VIN was captured, but online decoding could not be completed. Check the internet connection and try again.";
+      setTimeout(()=>showScreen("vehicle"),500);
+    }
+  }
+
+  function renderVehicle(){
+    document.getElementById("vehicleTitle").textContent =
+      selectedVehicle.year==="Pending decode" ? "VIN captured" :
+      `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}`;
+    const details=[
+      ["VIN",selectedVehicle.vin],
+      ["Year",selectedVehicle.year],
+      ["Make",selectedVehicle.make],
+      ["Model",selectedVehicle.model],
+      ["Trim / sub-model",selectedVehicle.trim||"Not returned"],
+      ["Series",selectedVehicle.series||"Not returned"],
+      ["Engine summary",selectedVehicle.engine],
+      ["Engine size",selectedVehicle.engineSize||"Not returned"],
+      ["OEM engine model / code",selectedVehicle.engineModel||"Not returned"],
+      ["Engine family",selectedVehicle.engineFamily||"Not returned"],
+      ["VIN engine designator",selectedVehicle.vinEngineDesignator||"Not returned"],
+      ["Cylinders",selectedVehicle.engineCylinders||"Not returned"],
+      ["Fuel type",selectedVehicle.fuelType||"Not returned"],
+      ["Body",selectedVehicle.body||"Not returned"],
+      ["Drive type",selectedVehicle.driveType||"Not returned"],
+      ["Assembly plant",selectedVehicle.plant||"Not returned"],
+      ["Source",selectedVehicle.source]
+    ];
+    document.getElementById("vehicleDetails").innerHTML=details.map(([k,v])=>`<div>${k}</div><div>${escapeHtml(v)}</div>`).join("");
+    const editMap={vehicleTrimEdit:"trim",vehicleSeriesEdit:"series",engineSizeEdit:"engineSize",engineModelEdit:"engineModel",engineFamilyEdit:"engineFamily",vinEngineDesignatorEdit:"vinEngineDesignator",engineCylindersEdit:"engineCylinders",fuelTypeEdit:"fuelType"};
+    Object.entries(editMap).forEach(([id,key])=>{const el=document.getElementById(id);if(el) el.value=(selectedVehicle[key]&&selectedVehicle[key]!=="Not returned")?selectedVehicle[key]:"";});
+    renderVehicleHistory();
+    updateDecoderDebug();
+  }
+
+  function escapeHtml(value){
+    return String(value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[ch]));
+  }
+
+  let tesseractPromise=null;
+  let smartScanMode="vin";
+  let registrationScanTimer=null;
+  let registrationScanBusy=false;
+  let registrationStableVin="";
+  let registrationStableCount=0;
+
+
+  function loadImageFile(file){
+    return new Promise((resolve,reject)=>{
+      const img=new Image();
+      const url=URL.createObjectURL(file);
+      img.onload=()=>resolve({img,url});
+      img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("image unavailable"));};
+      img.src=url;
+    });
+  }
+
+  function normalizeOcrText(text){
+    return String(text||"").toUpperCase().replace(/[|]/g,"I");
+  }
+
+  function extractVinFlexible(text){
+    const compact=normalizeOcrText(text).replace(/[^A-Z0-9]/g,"");
+    const direct=compact.match(/[A-HJ-NPR-Z0-9]{17}/g)||[];
+    if(direct.length) return direct[0];
+    const swaps={I:"1",O:"0",Q:"0"};
+    const corrected=[...compact].map(c=>swaps[c]||c).join("");
+    const candidates=corrected.match(/[A-HJ-NPR-Z0-9]{17}/g)||[];
+    return candidates[0]||"";
+  }
+
+  function rotateSourceToCanvas(source,degrees=0,fullDocument=false){
+    const sw=source.videoWidth||source.naturalWidth||source.width;
+    const sh=source.videoHeight||source.naturalHeight||source.height;
+    if(!sw||!sh) return null;
+    const rad=degrees*Math.PI/180;
+    const swap=degrees%180!==0;
+    const maxSide=fullDocument?2200:2000;
+    const scale=Math.min(2,maxSide/Math.max(sw,sh));
+    const w=Math.max(1,Math.round(sw*scale)),h=Math.max(1,Math.round(sh*scale));
+    const canvas=document.createElement("canvas");
+    canvas.width=swap?h:w;canvas.height=swap?w:h;
+    const ctx=canvas.getContext("2d",{willReadFrequently:true});
+    ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(rad);
+    ctx.drawImage(source,-w/2,-h/2,w,h);
+    return canvas;
+  }
+
+  async function recognizeAllOrientations(source,label="document"){
+    const ready=await ensureTesseract();
+    if(!ready) throw new Error("text reader unavailable");
+    const results=[];
+    for(const deg of [0,90,270,180]){
+      const canvas=rotateSourceToCanvas(source,deg,true);
+      const result=await window.Tesseract.recognize(canvas,"eng",{logger:()=>{}});
+      const text=normalizeOcrText(result?.data?.text||"");
+      results.push({deg,text,confidence:Number(result?.data?.confidence||0)});
+      if(extractVinFlexible(text)) break;
+    }
+    return results.sort((a,b)=>(extractVinFlexible(b.text)?1:0)-(extractVinFlexible(a.text)?1:0)||b.confidence-a.confidence)[0];
+  }
+
+  function vinCheckDigitValid(vin){
+    vin=String(vin||"").toUpperCase();
+    if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) return false;
+    const map={A:1,B:2,C:3,D:4,E:5,F:6,G:7,H:8,J:1,K:2,L:3,M:4,N:5,P:7,R:9,S:2,T:3,U:4,V:5,W:6,X:7,Y:8,Z:9};
+    const weights=[8,7,6,5,4,3,2,10,0,9,8,7,6,5,4,3,2];
+    let sum=0;
+    for(let i=0;i<17;i++) sum+=(/[0-9]/.test(vin[i])?Number(vin[i]):map[vin[i]])*weights[i];
+    const expected=sum%11===10?"X":String(sum%11);
+    return vin[8]===expected;
+  }
+
+  function sensiblePlate(value){
+    const v=String(value||"").replace(/[^A-Z0-9]/g,"");
+    return v.length>=2&&v.length<=8&&!/^(TYPE|REGI|YEAR|MAKE|MODEL|OWNER|LICENSE)$/.test(v)?v:"";
+  }
+
+  function sensibleOwner(value){
+    const v=String(value||"").replace(/[^A-Z ,.'-]/g," ").replace(/\s+/g," ").trim();
+    if(v.length<4||v.length>55||/REGISTRATION|MASSACHUSETTS|LICENSE|VEHICLE|YEAR|MAKE|MODEL/.test(v)) return "";
+    return v;
+  }
+
+  function parseMassRegistration(text){
+    const t=normalizeOcrText(text).replace(/[\t\r]+/g," ");
+    const lines=t.split(/\n+/).map(v=>v.replace(/\s+/g," ").trim()).filter(Boolean);
+    const isMass=/MASSACHUSETTS|REGISTRY OF MOTOR VEHICLES|MASSDOT|COMMONWEALTH OF MASSACHUSETTS/.test(t);
+    const vinCandidates=(t.match(/[A-HJ-NPR-Z0-9](?:[ A-HJ-NPR-Z0-9-]{15,25})[A-HJ-NPR-Z0-9]/g)||[])
+      .map(extractVinFlexible).filter(v=>v.length===17);
+    const vin=vinCandidates.find(vinCheckDigitValid)||vinCandidates[0]||extractVinFlexible(t);
+    let plate="";
+    for(const line of lines){
+      const m=line.match(/(?:PLATE|REG(?:ISTRATION)?(?: NO| NUMBER)?|LICENSE PLATE)\s*[:.#-]?\s*([A-Z0-9 -]{2,10})/);
+      if(m){plate=sensiblePlate(m[1]);if(plate) break;}
+    }
+    let owner="";
+    for(let i=0;i<lines.length;i++){
+      const m=lines[i].match(/(?:REGISTERED OWNER|OWNER|NAME)\s*[:.#-]?\s*(.*)$/);
+      if(m){owner=sensibleOwner(m[1]||lines[i+1]||"");if(owner) break;}
+    }
+    return {isMass,vin,plate,owner};
+  }
+
+  function showSmartScanResult(data,confidence){
+    const box=document.getElementById("smartScanResult");
+    if(!box) return;
+    const pct=Math.max(0,Math.min(100,Math.round(confidence||0)));
+    const level=pct>=85?"ok":pct>=60?"warn":"bad";
+    box.className=`status ${level}`;
+    box.innerHTML=`<strong>${data.isMass?"Massachusetts registration":"VIN source"} recognized</strong><br>VIN: ${escapeHtml(data.vin||"Not confirmed")} • Confidence: ${pct}%${data.plate?`<br>Plate: ${escapeHtml(data.plate)}`:""}${data.owner?`<br>Owner: ${escapeHtml(data.owner)}`:""}`;
+  }
+
+  async function processSmartScanSource(source,label="Smart Scan") {
+    identifyStatus.className="status";identifyStatus.textContent=`${label}: checking barcode, VIN text, and registration fields…`;
+    try{
+      const ready=await ensureZXingLibrary();
+      if(ready){
+        const reader=new window.ZXingBrowser.BrowserMultiFormatReader();
+        const result=await reader.decodeFromImageElement(source);
+        const raw=result?.getText?result.getText():result?.text;
+        const vin=extractVinFlexible(raw)||extractVin(raw||"");
+        if(vin.length===17){
+          vinInput.value=vin;showSmartScanResult({vin,isMass:false},99);
+          identifyStatus.className="status ok";identifyStatus.textContent="High-confidence VIN barcode captured. Decoding vehicle…";
+          await identifyVehicle();return true;
+        }
+      }
+    }catch(e){}
+    const best=await recognizeAllOrientations(source,label);
+    const reg=parseMassRegistration(best.text);
+    const validVin=reg.vin&&reg.vin.length===17&&vinCheckDigitValid(reg.vin);
+    if(!reg.vin||reg.vin.length!==17) throw new Error("No complete VIN found");
+    if(label.toLowerCase().includes("registration") && !reg.isMass) throw new Error("Massachusetts registration heading not confirmed");
+    if(!validVin && label.toLowerCase().includes("registration")) throw new Error("VIN check digit not confirmed");
+    vinInput.value=reg.vin;
+    if(reg.plate&&document.getElementById("plate")) document.getElementById("plate").value=reg.plate;
+    if(reg.owner&&document.getElementById("customerName")) document.getElementById("customerName").value=reg.owner;
+    showSmartScanResult(reg,best.confidence);
+    identifyStatus.className=validVin?"status ok":"status warn";
+    identifyStatus.textContent=`${reg.isMass?"Massachusetts registration":"Printed VIN"} captured. The VIN passed format${validVin?" and check-digit":""} validation. Decoding vehicle…`;
+    await identifyVehicle();return true;
+  }
+
+  function setScanGuideMode(mode){
+    smartScanMode=mode;
+    if(!scanGuide) return;
+    scanGuide.style.top=mode==="registration"?"8%":"36%";
+    scanGuide.style.height=mode==="registration"?"72%":"28%";
+    scanGuide.style.left=mode==="registration"?"5%":"7%";
+    scanGuide.style.right=mode==="registration"?"5%":"7%";
+    scanGuide.dataset.mode=mode;
+  }
+
+  function stopRegistrationAutoScan(){
+    if(registrationScanTimer){clearInterval(registrationScanTimer);registrationScanTimer=null;}
+    registrationScanBusy=false;registrationStableVin="";registrationStableCount=0;
+  }
+
+  async function registrationAutoScanTick(){
+    if(registrationScanBusy||!stream||video.readyState<2) return;
+    registrationScanBusy=true;
+    try{
+      const canvas=rotateSourceToCanvas(video,0,true);
+      const result=await window.Tesseract.recognize(canvas,"eng",{logger:()=>{}});
+      const confidence=Number(result?.data?.confidence||0);
+      const reg=parseMassRegistration(result?.data?.text||"");
+      const valid=reg.isMass&&reg.vin&&vinCheckDigitValid(reg.vin)&&confidence>=45;
+      if(valid){
+        if(registrationStableVin===reg.vin) registrationStableCount++; else {registrationStableVin=reg.vin;registrationStableCount=1;}
+        identifyStatus.className="status warn";
+        identifyStatus.textContent=`Registration found. Confirming VIN (${registrationStableCount}/2)…`;
+        if(scanGuide) scanGuide.classList.add("confirming");
+        if(registrationStableCount>=2){
+          stopRegistrationAutoScan();
+          if(scanGuide){scanGuide.classList.remove("confirming");scanGuide.classList.add("found");}
+          await processSmartScanSource(video,"Live registration scan");
+        }
+      }else{
+        registrationStableVin="";registrationStableCount=0;
+        identifyStatus.className="status";
+        identifyStatus.textContent="Looking for the Massachusetts heading and a valid 17-character VIN. Fill the frame and hold steady.";
+      }
+    }catch(e){
+      identifyStatus.className="status warn";
+      identifyStatus.textContent="Still looking. Move closer, flatten the registration, and avoid glare.";
+    }finally{registrationScanBusy=false;}
+  }
+
+  async function openRegistrationScanner(){
+    stopCamera();
+    setScanGuideMode("registration");
+    await openCamera();
+    if(!stream) return;
+    const ready=await ensureTesseract();
+    if(!ready){identifyStatus.className="status bad";identifyStatus.textContent="The document reader could not load. Check the internet connection and refresh.";return;}
+    identifyStatus.className="status";
+    identifyStatus.textContent="Live registration scan active. Fill the orange box with the entire registration and hold steady.";
+    registrationScanTimer=setInterval(registrationAutoScanTick,2800);
+    registrationAutoScanTick();
+  }
+
+  async function smartReadCurrentFrame(){
+    if(!stream||video.readyState<2){identifyStatus.className="status warn";identifyStatus.textContent="Open the live scanner and center the VIN or registration first.";return;}
+    try{await processSmartScanSource(video,"Smart Scan camera");}
+    catch(e){identifyStatus.className="status warn";identifyStatus.textContent="Smart Scan could not confirm a complete VIN. Move closer, rotate the document upright, reduce glare, or use manual entry.";}
+  }
+
+  async function ensureTesseract(){
+    if(window.Tesseract?.recognize) return true;
+    if(tesseractPromise) return tesseractPromise;
+    tesseractPromise=(async()=>{
+      const sources=[
+        "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js",
+        "https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"
+      ];
+      for(const src of sources){
+        try{await loadScriptOnce(src);if(window.Tesseract?.recognize) return true;}catch(e){}
+      }
+      return false;
+    })();
+    return tesseractPromise;
+  }
+
+  function prepareVinOcrCanvas(source){
+    const sw=source.videoWidth||source.naturalWidth||source.width;
+    const sh=source.videoHeight||source.naturalHeight||source.height;
+    if(!sw||!sh) return null;
+    const cropX=Math.round(sw*0.04), cropY=Math.round(sh*0.28), cropW=Math.round(sw*0.92), cropH=Math.round(sh*0.44);
+    const canvas=document.createElement("canvas");
+    canvas.width=Math.min(2200,cropW*2);canvas.height=Math.min(700,cropH*2);
+    const ctx=canvas.getContext("2d",{willReadFrequently:true});
+    ctx.drawImage(source,cropX,cropY,cropW,cropH,0,0,canvas.width,canvas.height);
+    const image=ctx.getImageData(0,0,canvas.width,canvas.height);const d=image.data;
+    for(let i=0;i<d.length;i+=4){
+      const gray=Math.max(0,Math.min(255,(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]-105)*2.15+128));
+      const value=gray>148?255:0;d[i]=d[i+1]=d[i+2]=value;
+    }
+    ctx.putImageData(image,0,0);return canvas;
+  }
+
+  async function recognizeVinText(source,label="dash VIN"){
+    const ready=await ensureTesseract();
+    if(!ready) throw new Error("VIN text reader unavailable");
+    const canvas=prepareVinOcrCanvas(source);if(!canvas) throw new Error("image unavailable");
+    identifyStatus.className="status";identifyStatus.textContent=`Reading ${label}. Hold steady while the printed characters are analyzed…`;
+    const result=await window.Tesseract.recognize(canvas,"eng",{logger:()=>{}});
+    const raw=String(result?.data?.text||"").toUpperCase().replace(/[\s\-_.:]/g,"");
+    const candidates=raw.match(/[A-HJ-NPR-Z0-9]{17}/g)||[];
+    const vin=candidates.find(v=>v.length===17)||extractVin(raw);
+    if(vin.length!==17) throw new Error("no complete VIN text found");
+    pendingVin=vin;pendingVinCount=1;pendingVinAt=Date.now();
+    return acceptScannedValue(vin,`${label} text reader`);
+  }
+
+  async function readDashVinFromCamera(){
+    if(!stream||video.readyState<2){identifyStatus.className="status warn";identifyStatus.textContent="Open the camera and center the printed dash VIN first.";return;}
+    try{
+      pendingVin="";pendingVinCount=0;
+      const first=await recognizeVinText(video,"windshield VIN");
+      if(!first){pendingVinCount=1;pendingVinAt=Date.now();await recognizeVinText(video,"windshield VIN");}
+    }catch(error){identifyStatus.className="status warn";identifyStatus.textContent="The printed dash VIN was not clear enough to confirm. Move closer, reduce windshield glare, tap the VIN area to focus, and try again—or take a VIN photo.";}
+  }
+
+  async function openCamera(){
+    identifyStatus.className="status";
+    if(smartScanMode!=="registration") setScanGuideMode("vin");
+    if(!window.isSecureContext){
+      identifyStatus.className="status bad";
+      identifyStatus.textContent="Camera scanning requires HTTPS. Open the deployed secure link in Safari or Chrome.";
+      return;
+    }
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      identifyStatus.className="status bad";
+      identifyStatus.textContent="This browser preview does not expose camera access.";
+      return;
+    }
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({
+        video:{
+          facingMode:{ideal:"environment"},
+          width:{ideal:1920},
+          height:{ideal:1080},
+          frameRate:{ideal:30,max:30}
+        },
+        audio:false
+      });
+      video.srcObject=stream;
+      await video.play();
+      cameraWrap.classList.add("active");
+      identifyStatus.className="status ok";
+      identifyStatus.textContent="Camera opened. Continuous VIN scanning is starting…";
+      scanAttempts=0;
+      scanStartedAt=Date.now();
+      pendingVin=""; pendingVinCount=0; pendingVinAt=0;
+      if(scanGuide) scanGuide.classList.remove("found","confirming");
+      await applyCameraEnhancements();
+      const zxingReady=await ensureZXingLibrary();
+      startContinuousZXing();
+      beginAutomaticScan();
+      if(!("BarcodeDetector" in window) && !zxingReady){
+        identifyStatus.className="status bad";
+        identifyStatus.textContent="The VIN scanner library could not load. Confirm the phone has internet access, refresh the page, and reopen the scanner.";
+      }else{
+        identifyStatus.textContent="Continuous scanning active. Keep the VIN inside the fixed orange box until it turns green.";
+      }
+    }catch(err){
+      identifyStatus.className="status warn";
+      identifyStatus.textContent="Camera permission was denied or unavailable. Check Safari site permissions and try again.";
+    }
+  }
+
+  function stopCamera(){
+    stopRegistrationAutoScan();
+    if(autoScanTimer){clearInterval(autoScanTimer);autoScanTimer=null;}
+    autoScanBusy=false;
+    if(continuousReader && typeof continuousReader.reset==="function"){try{continuousReader.reset();}catch(e){}}
+    continuousReader=null;
+    zxingFrameReader=null;
+    scanAttempts=0;
+    scanStartedAt=0;
+    pendingVin=""; pendingVinCount=0; pendingVinAt=0;
+    if(scanGuide) scanGuide.classList.remove("found","confirming");
+    if(zxingControls && typeof zxingControls.stop==="function"){try{zxingControls.stop();}catch(e){}}
+    zxingControls=null;
+    if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+    video.srcObject=null;
+    cameraWrap.classList.remove("active");
+  }
+
+  function loadScriptOnce(src){
+    return new Promise((resolve,reject)=>{
+      const existing=[...document.scripts].find(s=>s.src===src);
+      if(existing){
+        if(window.ZXingBrowser) resolve();
+        else existing.addEventListener("load",resolve,{once:true});
+        return;
+      }
+      const script=document.createElement("script");
+      script.src=src;
+      script.async=true;
+      script.onload=resolve;
+      script.onerror=reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  async function ensureZXingLibrary(){
+    if(window.ZXingBrowser?.BrowserMultiFormatReader) return true;
+    if(scannerLibraryPromise) return scannerLibraryPromise;
+    scannerLibraryPromise=(async()=>{
+      const sources=[
+        "https://unpkg.com/@zxing/browser@0.2.1",
+        "https://cdn.jsdelivr.net/npm/@zxing/browser@0.2.1"
+      ];
+      for(const src of sources){
+        try{
+          await loadScriptOnce(src);
+          if(window.ZXingBrowser?.BrowserMultiFormatReader) return true;
+        }catch(e){}
+      }
+      return false;
+    })();
+    return scannerLibraryPromise;
+  }
+
+  async function applyCameraEnhancements(){
+    try{
+      const track=stream && stream.getVideoTracks ? stream.getVideoTracks()[0] : null;
+      if(!track || !track.getCapabilities || !track.applyConstraints) return;
+      const caps=track.getCapabilities();
+      const advanced={};
+      if(Array.isArray(caps.focusMode) && caps.focusMode.includes("continuous")) advanced.focusMode="continuous";
+      if(caps.zoom && typeof caps.zoom.min==="number"){
+        const target=Math.min(caps.zoom.max,Math.max(caps.zoom.min,1.25));
+        advanced.zoom=target;
+      }
+      if(Object.keys(advanced).length) await track.applyConstraints({advanced:[advanced]});
+    }catch(err){
+      // Camera enhancement support varies by iPhone/browser; scanning continues without it.
+    }
+  }
+
+  function acceptScannedValue(raw,source){
+    const now=Date.now();
+    const value=extractVin(raw);
+    if(value.length!==17) return false;
+
+    // Require two matching reads close together. This prevents a single unstable
+    // camera frame or nearby sticker from being accepted as the vehicle VIN.
+    if(value!==pendingVin || now-pendingVinAt>1600){
+      pendingVin=value;
+      pendingVinCount=1;
+      pendingVinAt=now;
+      if(scanGuide){scanGuide.classList.remove("found");scanGuide.classList.add("confirming");}
+      identifyStatus.className="status warn";
+      identifyStatus.textContent="VIN detected once. Hold the phone steady inside the fixed box for confirmation…";
+      return false;
+    }
+
+    pendingVinCount+=1;
+    pendingVinAt=now;
+    if(pendingVinCount<2 || now-lastScanAt<350) return false;
+    lastScanAt=now;
+    vinInput.value=value;
+    if(scanGuide){scanGuide.classList.remove("confirming");scanGuide.classList.add("found");}
+    try{navigator.vibrate && navigator.vibrate([80,50,120]);}catch(e){}
+    identifyStatus.className="status ok";
+    identifyStatus.textContent=`VIN confirmed by ${source}. Decoding vehicle…`;
+    setTimeout(()=>{
+      stopCamera();
+      identifyVehicle();
+    },350);
+    return true;
+  }
+
+  function startContinuousZXing(){
+    if(!window.ZXingBrowser?.BrowserMultiFormatReader || !stream) return;
+    try{
+      continuousReader=new window.ZXingBrowser.BrowserMultiFormatReader();
+      zxingFrameReader=new window.ZXingBrowser.BrowserMultiFormatReader();
+      if(typeof continuousReader.decodeFromStream==="function"){
+        continuousReader.decodeFromStream(stream,video,(result,error,controls)=>{
+          zxingControls=controls||zxingControls;
+          if(!result) return;
+          const raw=result.getText ? result.getText() : result.text;
+          acceptScannedValue(raw,"continuous VIN scan");
+        }).then(controls=>{zxingControls=controls||zxingControls;}).catch(()=>{});
+      }
+    }catch(err){
+      continuousReader=null;
+      zxingFrameReader=null;
+    }
+  }
+
+  function captureVideoFrame(){
+    if(!video.videoWidth || !video.videoHeight) return null;
+    const canvas=document.createElement("canvas");
+    canvas.width=video.videoWidth;
+    canvas.height=video.videoHeight;
+    const ctx=canvas.getContext("2d",{willReadFrequently:true});
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    return canvas;
+  }
+
+  async function scanFrameWithZXing(){
+    if(!zxingFrameReader || !video.videoWidth) return false;
+    const canvas=captureVideoFrame();
+    if(!canvas) return false;
+    try{
+      let result=null;
+      if(typeof zxingFrameReader.decodeFromCanvas==="function"){
+        result=await zxingFrameReader.decodeFromCanvas(canvas);
+      }else if(typeof zxingFrameReader.decodeFromImageElement==="function"){
+        const img=new Image();
+        img.src=canvas.toDataURL("image/jpeg",0.92);
+        await img.decode();
+        result=await zxingFrameReader.decodeFromImageElement(img);
+      }
+      if(!result) return false;
+      const raw=result.getText ? result.getText() : result.text;
+      return acceptScannedValue(raw,"continuous VIN scan");
+    }catch(err){
+      return false;
+    }
+  }
+
+  async function scanWithBarcodeDetector(){
+    const formats=await BarcodeDetector.getSupportedFormats();
+    const desired=["code_39","code_128","data_matrix","qr_code"].filter(f=>formats.includes(f));
+    const detector=new BarcodeDetector({formats:desired.length?desired:formats});
+    const codes=await detector.detect(video);
+    if(!codes.length) return false;
+    return acceptScannedValue(codes.map(c=>c.rawValue).join(" "),"iPhone barcode detector");
+  }
+
+  async function scanWithZXing(){
+    if(!window.ZXingBrowser || !window.ZXingBrowser.BrowserMultiFormatReader) return false;
+    try{
+      const reader=new window.ZXingBrowser.BrowserMultiFormatReader();
+      const result=await reader.decodeOnceFromVideoElement(video);
+      const raw=result && result.getText ? result.getText() : result.text;
+      if(acceptScannedValue(raw,"manual barcode scan")) return true;
+    }catch(err){}
+    return false;
+  }
+
+  function beginAutomaticScan(){
+    if(autoScanTimer) clearInterval(autoScanTimer);
+    autoScanTimer=setInterval(async()=>{
+      if(autoScanBusy || !stream || video.readyState<2) return;
+      autoScanBusy=true;
+      scanAttempts++;
+      try{
+        let found=false;
+        if("BarcodeDetector" in window){
+          try{found=await scanWithBarcodeDetector();}catch(e){}
+        }
+        if(!found) found=await scanFrameWithZXing();
+        if(found){
+          clearInterval(autoScanTimer);
+          autoScanTimer=null;
+          return;
+        }
+
+        const elapsed=Date.now()-scanStartedAt;
+        if(elapsed>12000 && scanAttempts%8===0){
+          identifyStatus.className="status warn";
+          identifyStatus.textContent="Still scanning. Hold 6–12 inches away, keep the VIN inside the fixed orange box, reduce glare, or tap Retry VIN Scan.";
+        }
+      }finally{
+        autoScanBusy=false;
+      }
+    },300);
+  }
+
+  async function scanCurrentFrame(){
+    identifyStatus.className="status";
+    identifyStatus.textContent="Scanning current camera view…";
+    try{
+      let found=false;
+      if("BarcodeDetector" in window){
+        try{found=await scanWithBarcodeDetector();}catch(e){}
+      }
+      if(!found) found=await scanFrameWithZXing();
+      if(!found) found=await scanWithZXing();
+      if(!found){
+        identifyStatus.className="status warn";
+        identifyStatus.textContent="No valid 17-character VIN was detected. Move closer, reduce glare, and try again.";
+      }
+    }catch(err){
+      identifyStatus.className="status bad";
+      identifyStatus.textContent="The barcode could not be read. Use a VIN photo or manual entry.";
+    }
+  }
+
+
+  function countVehiclePhotos(){
+    return ["photoFront","photoRear","photoLeft","photoRight","photoOdometer","photoVin"]
+      .filter(id=>document.getElementById(id).files.length).length;
+  }
+
+  function calculateHealthScore(){
+    const statusIds=["brakesStatus","tiresStatus","steeringStatus","fluidsStatus","batteryStatus","lightsStatus"];
+    let score=100;
+    statusIds.forEach(id=>{
+      const value=document.getElementById(id).value;
+      if(value==="Monitor") score-=8;
+      if(value==="Repair Needed") score-=18;
+      if(value==="Not inspected") score-=5;
+    });
+    return Math.max(0,score);
+  }
+
+  const signaturePadControllers={};
+
+  function setupSignaturePad(canvasId,clearButtonId){
+    const canvas=document.getElementById(canvasId);
+    const clearButton=document.getElementById(clearButtonId);
+    const ctx=canvas.getContext("2d");
+    let drawing=false;
+    let hasInk=false;
+    let savedImage="";
+
+    function resize(){
+      const rect=canvas.getBoundingClientRect();
+      if(rect.width<10 || rect.height<10) return;
+      if(hasInk) savedImage=canvas.toDataURL();
+      const ratio=Math.max(window.devicePixelRatio||1,1);
+      canvas.width=Math.round(rect.width*ratio);
+      canvas.height=Math.round(rect.height*ratio);
+      ctx.setTransform(ratio,0,0,ratio,0,0);
+      ctx.lineWidth=2.4;
+      ctx.lineCap="round";
+      ctx.lineJoin="round";
+      ctx.strokeStyle="#111";
+      if(savedImage){
+        const img=new Image();
+        img.onload=()=>ctx.drawImage(img,0,0,rect.width,rect.height);
+        img.src=savedImage;
+      }
+    }
+
+    function point(event){
+      const rect=canvas.getBoundingClientRect();
+      return {x:event.clientX-rect.left,y:event.clientY-rect.top};
+    }
+
+    function start(event){
+      if(event.pointerType==="mouse" && event.button!==0) return;
+      event.preventDefault();
+      canvas.setPointerCapture?.(event.pointerId);
+      drawing=true;
+      const p=point(event);
+      ctx.beginPath();
+      ctx.moveTo(p.x,p.y);
+      ctx.lineTo(p.x+.01,p.y+.01);
+      ctx.stroke();
+      hasInk=true;
+    }
+
+    function move(event){
+      if(!drawing)return;
+      event.preventDefault();
+      const p=point(event);
+      ctx.lineTo(p.x,p.y);
+      ctx.stroke();
+      hasInk=true;
+    }
+
+    function stop(event){
+      if(!drawing)return;
+      drawing=false;
+      try{canvas.releasePointerCapture?.(event.pointerId);}catch(e){}
+    }
+
+    canvas.addEventListener("pointerdown",start,{passive:false});
+    canvas.addEventListener("pointermove",move,{passive:false});
+    canvas.addEventListener("pointerup",stop,{passive:false});
+    canvas.addEventListener("pointercancel",stop,{passive:false});
+    canvas.addEventListener("pointerleave",event=>{if(event.pointerType==="mouse") stop(event);},{passive:false});
+    clearButton.addEventListener("click",()=>{
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      savedImage="";
+      hasInk=false;
+    });
+    signaturePadControllers[canvasId]={resize,hasInk:()=>hasInk};
+    requestAnimationFrame(resize);
+    window.addEventListener("resize",()=>requestAnimationFrame(resize));
+  }
+
+  function signatureHasInk(canvasId){
+    if(signaturePadControllers[canvasId]) return signaturePadControllers[canvasId].hasInk();
+    const canvas=document.getElementById(canvasId);
+    if(!canvas || !canvas.width || !canvas.height) return false;
+    const blank=document.createElement("canvas");
+    blank.width=canvas.width;
+    blank.height=canvas.height;
+    return canvas.toDataURL()!==blank.toDataURL();
+  }
+
+
+
+  function buildLaborSearchQuery(){
+    const vehicle=selectedVehicle ? `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model} ${selectedVehicle.engine||""}` : "vehicle";
+    const operation=document.getElementById("laborOperation")?.value.trim()||"repair labor time";
+    const system=document.getElementById("laborSystem")?.value||"General";
+    return `${vehicle} ${operation} ${system} standard labor time hours`;
+  }
+  function searchLaborInformation(){
+    const operation=document.getElementById("laborOperation").value.trim();
+    const status=document.getElementById("laborLookupStatus");
+    if(!operation){status.className="status bad";status.textContent="Enter the repair operation before searching.";return;}
+    const query=buildLaborSearchQuery();
+    saveDraft();
+    sessionStorage.setItem("nitros_external_navigation_pending","estimate");
+    status.className="status ok";
+    status.textContent="Opening labor search. Use the browser Back button once to return to this estimate; your repair order is saved automatically.";
+    setTimeout(()=>{window.location.assign(`https://www.google.com/search?q=${encodeURIComponent(query)}`);},150);
+  }
+  async function copyLaborSearchQuery(){
+    const status=document.getElementById("laborLookupStatus");
+    try{await navigator.clipboard.writeText(buildLaborSearchQuery());status.className="status ok";status.textContent="Labor search description copied.";}
+    catch(e){status.className="status warn";status.textContent=buildLaborSearchQuery();}
+  }
+  function applyVerifiedLaborTime(){
+    const hours=Number(document.getElementById("verifiedLaborHours").value);
+    const operation=document.getElementById("laborOperation").value.trim();
+    const source=document.getElementById("laborTimeSource").value.trim();
+    const status=document.getElementById("laborLookupStatus");
+    if(!operation || !Number.isFinite(hours) || hours<=0){status.className="status bad";status.textContent="Enter the repair operation and a valid labor time greater than zero.";return;}
+    createEstimateRow({description:operation,priority:"Immediate",hours,parts:0});
+    document.getElementById("standardLaborHours").value=hours;
+    updateEstimateTotals();updateJobClockUI();
+    status.className="status ok";
+    status.textContent=`${hours.toFixed(2)} labor hours applied to the estimate and work order${source?` from ${source}`:""}.`;
+  }
+
+  function formatMoney(value){
+    return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(value)||0);
+  }
+  function createEstimateRow(data={}){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><input class="est-desc" placeholder="Repair or service" value="${escapeHtml(data.description||"")}"></td>
+      <td><select class="est-priority"><option>Immediate</option><option>Soon</option><option>Monitor</option></select></td>
+      <td><input class="est-hours" inputmode="decimal" value="${data.hours??0}"></td>
+      <td><input class="est-parts" inputmode="decimal" value="${data.parts??0}"></td>
+      <td class="money est-total">$0.00</td>
+      <td><button class="btn ghost est-remove" type="button">Remove</button></td>`;
+    tr.querySelector(".est-priority").value=data.priority||"Immediate";
+    tr.querySelectorAll("input,select").forEach(el=>el.addEventListener("input",updateEstimateTotals));
+    tr.querySelector(".est-remove").addEventListener("click",()=>{tr.remove();updateEstimateTotals();});
+    document.getElementById("estimateRows").appendChild(tr);
+    updateEstimateTotals();
+  }
+  function calculateEstimate(){
+    const laborRate=Number(document.getElementById("laborRate").value)||0;
+    let laborSubtotal=0,partsSubtotal=0;
+    const lines=[...document.querySelectorAll("#estimateRows tr")].map(row=>{
+      const description=row.querySelector(".est-desc").value.trim();
+      const priority=row.querySelector(".est-priority").value;
+      const hours=Number(row.querySelector(".est-hours").value)||0;
+      const parts=Number(row.querySelector(".est-parts").value)||0;
+      const labor=hours*laborRate,total=labor+parts;
+      laborSubtotal+=labor;partsSubtotal+=parts;
+      row.querySelector(".est-total").textContent=formatMoney(total);
+      return {description,priority,hours,parts,labor,total};
+    });
+    const supplies=((Number(document.getElementById("shopSuppliesPercent").value)||0)/100)*laborSubtotal;
+    const tax=((Number(document.getElementById("taxPercent").value)||0)/100)*partsSubtotal;
+    return {lines,laborRate,laborSubtotal,partsSubtotal,supplies,tax,grandTotal:laborSubtotal+partsSubtotal+supplies+tax};
+  }
+  function updateEstimateTotals(){
+    const t=calculateEstimate();
+    document.getElementById("laborSubtotal").textContent=formatMoney(t.laborSubtotal);
+    document.getElementById("partsSubtotal").textContent=formatMoney(t.partsSubtotal);
+    document.getElementById("suppliesTotal").textContent=formatMoney(t.supplies);
+    document.getElementById("taxTotal").textContent=formatMoney(t.tax);
+    document.getElementById("grandTotal").textContent=formatMoney(t.grandTotal);
+  }
+  function updateAuthorizationBadge(){
+    const value=document.getElementById("authorizationStatus").value;
+    const badge=document.getElementById("authorizationBadge");
+    badge.textContent=value;
+    badge.className="status-pill "+(value==="Approved"?"status-approved":value==="Declined"?"status-declined":"status-pending");
+  }
+
+
+  let jobClock={
+    state:"not_started",
+    activeStartedAt:null,
+    pauseStartedAt:null,
+    activeMs:0,
+    pausedMs:0,
+    timeline:[]
+  };
+  let jobClockInterval=null;
+
+  function formatClock(ms){
+    const total=Math.max(0,Math.floor(ms/1000));
+    const h=String(Math.floor(total/3600)).padStart(2,"0");
+    const m=String(Math.floor((total%3600)/60)).padStart(2,"0");
+    const s=String(total%60).padStart(2,"0");
+    return `${h}:${m}:${s}`;
+  }
+
+  function formatDurationHours(ms){
+    return `${(ms/3600000).toFixed(2)} h`;
+  }
+
+  function getActiveMilliseconds(){
+    let ms=jobClock.activeMs;
+    if(jobClock.state==="running" && jobClock.activeStartedAt){
+      ms+=Date.now()-jobClock.activeStartedAt;
+    }
+    return ms;
+  }
+
+  function getPausedMilliseconds(){
+    let ms=jobClock.pausedMs;
+    if(jobClock.state==="paused" && jobClock.pauseStartedAt){
+      ms+=Date.now()-jobClock.pauseStartedAt;
+    }
+    return ms;
+  }
+
+  function addTimelineEvent(type,details=""){
+    jobClock.timeline.push({
+      timestamp:new Date().toISOString(),
+      type,
+      details
+    });
+    renderTimeline();
+  }
+
+  function renderTimeline(){
+    const container=document.getElementById("jobTimeline");
+    if(!jobClock.timeline.length){
+      container.innerHTML='<div class="status">No job activity recorded yet.</div>';
+      return;
+    }
+    container.innerHTML=jobClock.timeline.map(item=>{
+      const d=new Date(item.timestamp);
+      const time=d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+      return `<div class="timeline-item">
+        <div class="timeline-time">${escapeHtml(time)}</div>
+        <div>
+          <div class="timeline-event">${escapeHtml(item.type)}</div>
+          ${item.details?`<div class="muted">${escapeHtml(item.details)}</div>`:""}
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  function getLaborComparisonText(){
+    const standard=(Number(document.getElementById("standardLaborHours").value)||0)*3600000;
+    if(!standard) return "Standard time not entered";
+    const difference=standard-getActiveMilliseconds();
+    const minutes=Math.round(Math.abs(difference)/60000);
+    if(Math.abs(difference)<60000) return "On standard time";
+    return difference>0 ? `${minutes} min under standard` : `${minutes} min over standard`;
+  }
+
+  function getEfficiencyText(){
+    const standard=(Number(document.getElementById("standardLaborHours").value)||0)*3600000;
+    const actual=getActiveMilliseconds();
+    if(!standard || !actual) return "—";
+    return `${Math.round((standard/actual)*100)}%`;
+  }
+
+  function updateJobClockUI(){
+    const active=getActiveMilliseconds();
+    const paused=getPausedMilliseconds();
+    document.getElementById("liveJobTime").textContent=formatClock(active);
+    const diag=document.getElementById("diagnosticTimeHours"); if(diag && document.activeElement!==diag) diag.value=(active/3600000).toFixed(2);
+    document.getElementById("activeTimeMetric").textContent=formatDurationHours(active);
+    document.getElementById("pausedTimeMetric").textContent=formatDurationHours(paused);
+
+    const comparison=document.getElementById("laborComparisonMetric");
+    comparison.textContent=getLaborComparisonText();
+    comparison.className="metric-value";
+    if(comparison.textContent.includes("under")) comparison.classList.add("comparison-good");
+    else if(comparison.textContent.includes("over")) comparison.classList.add("comparison-bad");
+    else comparison.classList.add("comparison-warn");
+
+    document.getElementById("efficiencyMetric").textContent=getEfficiencyText();
+
+    const banner=document.getElementById("clockBanner");
+    const state=document.getElementById("clockStateText");
+    banner.className="clock-banner";
+    if(jobClock.state==="running"){
+      banner.classList.add("clock-running");
+      state.textContent="Job running";
+    }else if(jobClock.state==="paused"){
+      banner.classList.add("clock-paused");
+      state.textContent="Job paused";
+    }else if(jobClock.state==="finished"){
+      banner.classList.add("clock-finished");
+      state.textContent="Job finished";
+    }else{
+      state.textContent="Not started";
+    }
+  }
+
+  function startJobClock(){
+    if(jobClock.state!=="not_started" && jobClock.state!=="finished") return;
+    if(jobClock.state==="finished"){
+      jobClock={state:"not_started",activeStartedAt:null,pauseStartedAt:null,activeMs:0,pausedMs:0,timeline:[]};
+    }
+    jobClock.state="running";
+    jobClock.activeStartedAt=Date.now();
+    document.getElementById("repairStatus").value="In Progress";
+    addTimelineEvent("Job started",document.getElementById("assignedTechnician").value.trim()||"Technician not entered");
+    updateJobClockUI();
+  }
+
+  function pauseJobClock(){
+    if(jobClock.state!=="running") return;
+    jobClock.activeMs+=Date.now()-jobClock.activeStartedAt;
+    jobClock.activeStartedAt=null;
+    jobClock.state="paused";
+    jobClock.pauseStartedAt=Date.now();
+    const reason=document.getElementById("pauseReason").value;
+    const note=document.getElementById("pauseNote").value.trim();
+    document.getElementById("repairStatus").value=
+      reason==="Waiting on Parts" ? "Waiting on Parts" :
+      reason==="Waiting on Customer Approval" ? "Waiting on Approval" : "Paused";
+    addTimelineEvent(`Paused — ${reason}`,note);
+    updateJobClockUI();
+  }
+
+  function resumeJobClock(){
+    if(jobClock.state!=="paused") return;
+    jobClock.pausedMs+=Date.now()-jobClock.pauseStartedAt;
+    jobClock.pauseStartedAt=null;
+    jobClock.state="running";
+    jobClock.activeStartedAt=Date.now();
+    document.getElementById("repairStatus").value="In Progress";
+    addTimelineEvent("Job resumed");
+    updateJobClockUI();
+  }
+
+  function finishJobClock(){
+    if(jobClock.state==="running" && jobClock.activeStartedAt){
+      jobClock.activeMs+=Date.now()-jobClock.activeStartedAt;
+    }
+    if(jobClock.state==="paused" && jobClock.pauseStartedAt){
+      jobClock.pausedMs+=Date.now()-jobClock.pauseStartedAt;
+    }
+    jobClock.activeStartedAt=null;
+    jobClock.pauseStartedAt=null;
+    jobClock.state="finished";
+    document.getElementById("repairStatus").value="Complete";
+    addTimelineEvent("Job completed",getLaborComparisonText());
+    updateJobClockUI();
+  }
+
+
+  const HISTORY_KEY="nitros_prototype_customer_history_v070";
+  let editingCheckInId=null;
+
+  function loadCustomerHistory(){
+    try{
+      const parsed=JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");
+      return Array.isArray(parsed)?parsed:[];
+    }catch(error){
+      console.error("Customer history load failed:",error);
+      return [];
+    }
+  }
+
+  function saveCustomerHistoryRecord(record){
+    const history=loadCustomerHistory();
+    const duplicateIndex=history.findIndex(item=>item.checkInId===record.checkInId);
+    if(duplicateIndex>=0) history[duplicateIndex]=record;
+    else history.unshift(record);
+    localStorage.setItem(HISTORY_KEY,JSON.stringify(history.slice(0,250)));
+  }
+
+  function historySearchText(record){
+    return [
+      record.checkInId,record.repairOrder,record.vehicle?.vin,record.vehicle?.year,record.vehicle?.make,
+      record.vehicle?.model,record.customer?.name,record.customer?.phone,record.customer?.email,
+      record.plate,record.mileage,record.concern,record.advisorNotes,
+      record.technicianInspection?.findings,record.technicianInspection?.recommendation,
+      record.technicianInspection?.priorities?.immediate,record.technicianInspection?.priorities?.soon,
+      record.technicianInspection?.priorities?.monitor,record.estimate?.authorization?.status,
+      record.workOrder?.completionNotes
+    ].filter(Boolean).join(" ").toLowerCase();
+  }
+
+  function historyFlags(record){
+    const flags=[];
+    const p=record.technicianInspection?.priorities||{};
+    if(p.immediate) flags.push("Immediate repair noted");
+    if(p.soon) flags.push("Repair needed soon");
+    if(p.monitor) flags.push("Monitor item");
+    const auth=record.estimate?.authorization?.status;
+    if(auth && auth!=="Approved") flags.push(`Authorization: ${auth}`);
+    if(record.workOrder?.repairStatus) flags.push(record.workOrder.repairStatus);
+    return flags;
+  }
+
+  function renderHistoryRecords(records,containerId,statusId){
+    const container=document.getElementById(containerId);
+    const status=statusId?document.getElementById(statusId):null;
+    if(!container) return;
+    if(!records.length){
+      container.innerHTML='<div class="history-empty">No matching saved visits were found on this device.</div>';
+      if(status){status.className="status warn";status.textContent="No matching customer or vehicle history found.";}
+      return;
+    }
+    if(status){status.className="status ok";status.textContent=`${records.length} saved visit${records.length===1?"":"s"} found.`;}
+    container.innerHTML=records.map(record=>{
+      const date=new Date(record.timestamp);
+      const vehicle=record.vehicle?`${record.vehicle.year||""} ${record.vehicle.make||""} ${record.vehicle.model||""}`.trim():"Vehicle not recorded";
+      const flags=historyFlags(record);
+      return `<div class="history-item">
+        <div class="history-head">
+          <div><div class="history-title">${escapeHtml(vehicle)}</div><div class="history-meta">${escapeHtml(record.customer?.name||"Customer not entered")} • VIN ${escapeHtml(record.vehicle?.vin||"Not entered")} • ${escapeHtml(record.mileage||"Mileage not entered")} miles</div></div>
+          <div class="history-date">${escapeHtml(isNaN(date)?"Date unavailable":date.toLocaleString())}</div>
+        </div>
+        <div class="history-meta"><strong>Concern:</strong> ${escapeHtml(record.concern||"None recorded")}</div>
+        <div class="history-meta"><strong>Findings:</strong> ${escapeHtml(record.technicianInspection?.findings||"None recorded")}</div>
+        <div class="history-meta"><strong>Recommendation:</strong> ${escapeHtml(record.technicianInspection?.recommendation||"None recorded")}</div>
+        <div class="history-meta"><strong>Diagnostic time:</strong> ${Number(record.workOrder?.diagnosticTimeHours ?? ((record.workOrder?.activeMilliseconds||0)/3600000)).toFixed(2)} h</div>
+        <div class="history-meta"><strong>Completion:</strong> ${escapeHtml(record.workOrder?.completionNotes||"None recorded")}</div>
+        ${flags.length?`<div class="history-flags">${flags.map(flag=>`<span class="badge">${escapeHtml(flag)}</span>`).join("")}</div>`:""}
+        <div class="history-actions"><button class="btn secondary small reopen-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">Reopen Completed Repair</button><button class="btn ghost small print-history-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">View Report</button></div>
+      </div>`;
+    }).join("");
+  }
+
+  function setValue(id,value){
+    const el=document.getElementById(id); if(el && value!==undefined && value!==null) el.value=value;
+  }
+
+  function reopenCompletedRecord(recordId){
+    const record=loadCustomerHistory().find(item=>item.checkInId===recordId);
+    if(!record){ alert("That saved repair record could not be found on this device."); return; }
+    editingCheckInId=record.checkInId;
+    selectedVehicle=record.vehicle||selectedVehicle;
+    setValue("roNumber",record.repairOrder); setValue("serviceAdvisor",record.serviceAdvisor);
+    setValue("customerName",record.customer?.name); setValue("phone",record.customer?.phone); setValue("email",record.customer?.email);
+    setValue("plate",record.plate); setValue("mileage",record.mileage); setValue("arrivalMethod",record.arrivalMethod);
+    setValue("concern",record.concern); setValue("advisorNotes",record.advisorNotes); setValue("fuelLevel",record.fuelLevel);
+    setValue("inspectionNotes",record.inspectionNotes); setValue("technicianName",record.technicianInspection?.technician);
+    const st=record.technicianInspection?.status||{};
+    setValue("brakesStatus",st.brakes); setValue("tiresStatus",st.tires); setValue("steeringStatus",st.steeringSuspension);
+    setValue("fluidsStatus",st.fluidsLeaks); setValue("batteryStatus",st.batteryCharging); setValue("lightsStatus",st.lightsWipers);
+    setValue("technicianFindings",record.technicianInspection?.findings); setValue("technicianRecommendation",record.technicianInspection?.recommendation);
+    const bm=record.technicianInspection?.brakeMeasurements||{};
+    setValue("lfPad",bm.lfPadMm); setValue("rfPad",bm.rfPadMm); setValue("lrPad",bm.lrPadMm); setValue("rrPad",bm.rrPadMm); setValue("frontRotor",bm.frontRotor); setValue("rearRotor",bm.rearRotor);
+    const tm=record.technicianInspection?.tireMeasurements||{};
+    setValue("lfTread",tm.lfTread32); setValue("rfTread",tm.rfTread32); setValue("lrTread",tm.lrTread32); setValue("rrTread",tm.rrTread32);
+    setValue("lfPsi",tm.lfPsi); setValue("rfPsi",tm.rfPsi); setValue("lrPsi",tm.lrPsi); setValue("rrPsi",tm.rrPsi);
+    setValue("priorityImmediate",record.technicianInspection?.priorities?.immediate); setValue("prioritySoon",record.technicianInspection?.priorities?.soon); setValue("priorityMonitor",record.technicianInspection?.priorities?.monitor);
+    setValue("laborOperation",record.laborLookup?.operation); setValue("laborSystem",record.laborLookup?.system); setValue("verifiedLaborHours",record.laborLookup?.verifiedHours); setValue("laborTimeSource",record.laborLookup?.source); setValue("laborLookupNotes",record.laborLookup?.notes);
+    setValue("estimateNumber",record.estimate?.estimateNumber); setValue("laborRate",record.estimate?.laborRate); setValue("authorizationStatus",record.estimate?.authorization?.status); setValue("authorizationMethod",record.estimate?.authorization?.method); setValue("authorizationNotes",record.estimate?.authorization?.notes);
+    if(Array.isArray(record.estimate?.lines)){document.getElementById("estimateRows").innerHTML="";record.estimate.lines.forEach(createEstimateRow);}
+    [...document.querySelectorAll(".check")].forEach((el,index)=>{el.checked=Boolean(record.checks?.[index]?.completed);});
+    setValue("workOrderNumber",record.workOrder?.workOrderNumber); setValue("assignedTechnician",record.workOrder?.assignedTechnician);
+    setValue("repairStatus",record.workOrder?.repairStatus); setValue("standardLaborHours",record.workOrder?.standardLaborHours);
+    setValue("diagnosticTimeHours",record.workOrder?.diagnosticTimeHours ?? ((record.workOrder?.activeMilliseconds||0)/3600000).toFixed(2));
+    setValue("internalTechnicianNotes",record.workOrder?.internalTechnicianNotes); setValue("completionNotes",record.workOrder?.completionNotes);
+    jobClock={state:"finished",activeStartedAt:null,pauseStartedAt:null,activeMs:Number(record.workOrder?.activeMilliseconds)||0,pausedMs:Number(record.workOrder?.pausedMilliseconds)||0,timeline:Array.isArray(record.workOrder?.timeline)?record.workOrder.timeline:[]};
+    updateEstimateTotals(); updateAuthorizationBadge(); updateJobClockUI(); renderTimeline(); buildSummary(); saveDraft(); showScreen("workorder");
+    const status=document.getElementById("submitStatus"); if(status){status.className="status warn";status.textContent=`Reopened ${record.checkInId}. Saving will update this record without creating a duplicate.`;}
+  }
+
+  function viewHistoryRecord(recordId){
+    const record=loadCustomerHistory().find(item=>item.checkInId===recordId);
+    if(!record) return;
+    reopenCompletedRecord(recordId); showScreen("review");
+  }
+
+  function searchHistory(){
+    const query=document.getElementById("historySearch").value.trim().toLowerCase();
+    const all=loadCustomerHistory();
+    const matches=query?all.filter(record=>historySearchText(record).includes(query)):all;
+    renderHistoryRecords(matches,"historyResults","historyStatus");
+  }
+
+  function renderVehicleHistory(){
+    const summary=document.getElementById("vehicleHistorySummary");
+    const list=document.getElementById("vehicleHistoryList");
+    if(!summary||!list||!selectedVehicle) return;
+    const matches=loadCustomerHistory().filter(record=>record.vehicle?.vin===selectedVehicle.vin);
+    if(!matches.length){
+      summary.className="history-empty";
+      summary.textContent="No prior saved visits were found for this VIN on this device.";
+      list.innerHTML="";
+      return;
+    }
+    const latest=matches[0];
+    const mileageValues=matches.map(r=>Number(String(r.mileage||"").replace(/[^0-9.]/g,""))).filter(Number.isFinite);
+    const latestMileage=mileageValues.length?Math.max(...mileageValues):null;
+    summary.className="status ok";
+    summary.textContent=`Returning vehicle: ${matches.length} prior visit${matches.length===1?"":"s"}${latestMileage!==null?` • latest saved mileage ${latestMileage.toLocaleString()}`:""}.`;
+    renderHistoryRecords(matches.slice(0,5),"vehicleHistoryList");
+    const fields={
+      customerName:latest.customer?.name,phone:latest.customer?.phone,email:latest.customer?.email,
+      plate:latest.plate,serviceAdvisor:latest.serviceAdvisor
+    };
+    Object.entries(fields).forEach(([id,value])=>{const el=document.getElementById(id);if(el&&!el.value&&value)el.value=value;});
+  }
+
+
+  const PROTOTYPE_CASES=[
+    {checkInId:"CASE-JEEP-C1082",timestamp:"2026-07-01T12:00:00Z",vehicle:{year:"2017",make:"Jeep",model:"Wrangler",vin:"DEMO-JEEP-C1082"},concern:"ABS and traction-control warning lamps intermittent. DTC C1082 and C1083 stored.",technicianInspection:{findings:"Vacuum pressure sensor circuit fault. Inspected vacuum pump under radiator and verified circuit integrity.",recommendation:"Test vacuum sensor signal, power, ground, pump operation, and wiring before replacing components.",priorities:{immediate:"Diagnose warning-lamp and vacuum sensor circuit fault.",soon:"",monitor:""}},workOrder:{completionNotes:"Vacuum-system repair completed and road test verified. Warning lamps remained off."}},
+    {checkInId:"CASE-FUSION-C1165",timestamp:"2026-06-28T12:00:00Z",vehicle:{year:"2012",make:"Ford",model:"Fusion SE",vin:"DEMO-FUSION-C1165"},concern:"ABS warning lamp on with C1165 right-rear wheel-speed sensor code.",technicianInspection:{findings:"Right-rear wheel-speed signal fault confirmed through scan data and circuit inspection.",recommendation:"Repair verified wheel-speed sensor fault and inspect tone-ring and harness condition.",priorities:{immediate:"Restore ABS wheel-speed signal.",soon:"",monitor:""}},workOrder:{completionNotes:"Right-rear wheel-speed sensor repair completed. Codes cleared and road test confirmed."}},
+    {checkInId:"CASE-MINI-EVAP",timestamp:"2026-06-25T12:00:00Z",vehicle:{year:"2017",make:"MINI",model:"Cooper",vin:"DEMO-MINI-EVAP"},concern:"Check-engine light with EVAP leak symptoms.",technicianInspection:{findings:"EVAP purge valve leaking when commanded closed.",recommendation:"Replace purge valve and verify purge sealing and monitor readiness.",priorities:{immediate:"Replace leaking purge valve.",soon:"",monitor:""}},workOrder:{completionNotes:"Purge valve replaced. EVAP operation verified after repair."}},
+    {checkInId:"CASE-F250-FRONT",timestamp:"2026-06-20T12:00:00Z",vehicle:{year:"2004",make:"Ford",model:"F-250",vin:"DEMO-F250-FRONT"},concern:"Front-end looseness, steering play, bearing noise, and uneven tire movement.",technicianInspection:{findings:"Upper and lower ball joints, wheel hubs, and steering linkage required replacement.",recommendation:"Rebuild affected front suspension and steering components, torque to specification, align, and road test.",priorities:{immediate:"Correct unsafe front-end looseness.",soon:"Perform alignment after repairs.",monitor:"Recheck fasteners and tire wear."}},workOrder:{completionNotes:"Ball joints, hub bearings, and drag link replaced. Torque verification and road test completed."}}
+  ];
+
+  const ASSISTANT_STOP_WORDS=new Set("the a an and or of to in on for with is are was were be been this that it its from at by as customer vehicle car truck has have had light lights comes come intermittent problem issue concern says said please find show repair repairs similar code dtc system".split(" "));
+
+  function assistantTokens(value){
+    return [...new Set(String(value||"").toLowerCase().replace(/[^a-z0-9]+/g," ").split(/\s+/).filter(token=>token.length>1&&!ASSISTANT_STOP_WORDS.has(token)))];
+  }
+
+  function recordFieldText(record){
+    return {
+      vehicle:[record.vehicle?.year,record.vehicle?.make,record.vehicle?.model,record.vehicle?.engine].filter(Boolean).join(" "),
+      concern:record.concern||"",
+      findings:record.technicianInspection?.findings||"",
+      recommendation:record.technicianInspection?.recommendation||"",
+      priorities:Object.values(record.technicianInspection?.priorities||{}).filter(Boolean).join(" "),
+      completion:record.workOrder?.completionNotes||"",
+      notes:[record.advisorNotes,record.inspectionNotes,record.workOrder?.internalTechnicianNotes].filter(Boolean).join(" ")
+    };
+  }
+
+  function scoreRepairRecord(record,query){
+    const tokens=assistantTokens(query);
+    const fields=recordFieldText(record);
+    const weights={vehicle:3,concern:5,findings:6,recommendation:4,priorities:3,completion:5,notes:2};
+    let score=0;
+    const reasons=[];
+    for(const [name,value] of Object.entries(fields)){
+      const lower=String(value).toLowerCase();
+      const matched=tokens.filter(token=>lower.includes(token));
+      if(matched.length){
+        score+=matched.length*weights[name];
+        reasons.push(`${name}: ${matched.slice(0,4).join(", ")}`);
+      }
+    }
+    const normalizedQuery=String(query).toLowerCase().trim();
+    const fullText=Object.values(fields).join(" ").toLowerCase();
+    if(normalizedQuery.length>4&&fullText.includes(normalizedQuery)) score+=20;
+    return {record,score,reasons};
+  }
+
+  function runAssistantSearch(){
+    const query=document.getElementById("assistantQuery").value.trim();
+    const status=document.getElementById("assistantStatus");
+    const container=document.getElementById("assistantResults");
+    if(query.length<2){
+      status.className="status warn";
+      status.textContent="Describe a symptom, code, component, or repair before searching.";
+      container.innerHTML="";
+      return;
+    }
+    const records=[...loadCustomerHistory(),...PROTOTYPE_CASES];
+    const scored=records.map(record=>scoreRepairRecord(record,query)).filter(item=>item.score>0).sort((a,b)=>b.score-a.score).slice(0,8);
+    if(!scored.length){
+      status.className="status warn";
+      status.textContent="No similar repairs were found. Save more completed repair records or try broader terms.";
+      container.innerHTML='<div class="history-empty">Try a DTC, component name, symptom, make/model, or completed repair.</div>';
+      return;
+    }
+    status.className="status ok";
+    status.textContent=`${scored.length} potentially similar repair${scored.length===1?"":"s"} found. Highest-scoring records appear first.`;
+    const maxScore=Math.max(...scored.map(item=>item.score),1);
+    container.innerHTML=scored.map(({record,score,reasons})=>{
+      const vehicle=[record.vehicle?.year,record.vehicle?.make,record.vehicle?.model].filter(Boolean).join(" ")||"Vehicle not recorded";
+      const percent=Math.max(1,Math.round((score/maxScore)*100));
+      return `<div class="assistant-card">
+        <div class="history-head"><div><div class="history-title">${escapeHtml(vehicle)}</div><div class="history-meta">${escapeHtml(record.checkInId||"Saved repair")}</div></div><div class="assistant-score">${percent}% match</div></div>
+        <div class="assistant-section"><strong>Complaint:</strong> ${escapeHtml(record.concern||"None recorded")}</div>
+        <div class="assistant-section"><strong>Findings:</strong> ${escapeHtml(record.technicianInspection?.findings||"None recorded")}</div>
+        <div class="assistant-section"><strong>Recommended action:</strong> ${escapeHtml(record.technicianInspection?.recommendation||"None recorded")}</div>
+        <div class="assistant-section"><strong>Confirmed repair:</strong> ${escapeHtml(record.workOrder?.completionNotes||"None recorded")}</div>
+        <div class="assistant-reasons">${reasons.map(reason=>`<span class="badge">${escapeHtml(reason)}</span>`).join("")}</div>
+      </div>`;
+    }).join("");
+  }
+
+  let assistantRecognition=null;
+  function dictateAssistantQuery(){
+    const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+    const query=document.getElementById("assistantQuery");
+    const status=document.getElementById("assistantStatus");
+    if(!Recognition){
+      query.focus();
+      status.className="status ok";
+      status.textContent="Tap the microphone on the iPhone keyboard and describe the repair symptom.";
+      return;
+    }
+    try{
+      assistantRecognition=new Recognition();
+      assistantRecognition.lang="en-US";
+      assistantRecognition.continuous=false;
+      assistantRecognition.interimResults=true;
+      const base=query.value.trim();
+      assistantRecognition.onstart=()=>{status.className="status ok";status.textContent="Listening. Describe the symptom, DTC, or repair history to search.";};
+      assistantRecognition.onresult=event=>{
+        let finalText="",interim="";
+        for(let i=event.resultIndex;i<event.results.length;i++){
+          const text=event.results[i][0].transcript.trim();
+          if(event.results[i].isFinal) finalText+=`${text} `; else interim+=text;
+        }
+        query.value=[base,finalText,interim].filter(Boolean).join(" ").replace(/\s+/g," ").trim();
+      };
+      assistantRecognition.onerror=()=>{status.className="status warn";status.textContent="Voice search stopped. Use the iPhone keyboard microphone or type the search.";};
+      assistantRecognition.onend=()=>{if(query.value.trim()){status.className="status ok";status.textContent="Voice search captured. Tap Search Similar Repairs.";}};
+      assistantRecognition.start();
+    }catch(error){
+      query.focus();
+      status.className="status ok";
+      status.textContent="Use the iPhone keyboard microphone to dictate the repair search.";
+    }
+  }
+
+  function buildSummary(){
+    const completed=[...document.querySelectorAll(".check")]
+      .filter(c=>c.checked)
+      .map(c=>c.dataset.label||c.parentElement.textContent.trim());
+    const rows=[
+      ["Vehicle",selectedVehicle?`${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}`:"Not selected"],
+      ["VIN",selectedVehicle?selectedVehicle.vin:"Not entered"],
+      ["Repair Order",document.getElementById("roNumber").value||"Auto-generated on save"],
+      ["Service advisor",document.getElementById("serviceAdvisor").value||"Not entered"],
+      ["Customer",document.getElementById("customerName").value||"Not entered"],
+      ["Phone",document.getElementById("phone").value||"Not entered"],
+      ["Email",document.getElementById("email").value||"Not entered"],
+      ["License plate",document.getElementById("plate").value||"Not entered"],
+      ["Mileage",document.getElementById("mileage").value||"Not entered"],
+      ["Arrival method",document.getElementById("arrivalMethod").value],
+      ["Concern",document.getElementById("concern").value||"Not entered"],
+      ["Advisor notes",document.getElementById("advisorNotes").value||"None"],
+      ["Fuel level",document.getElementById("fuelLevel").value],
+      ["Walk-around",completed.length?completed.join(", "):"None completed"],
+      ["Primary photo",countVehiclePhotos()?`${countVehiclePhotos()} vehicle photo(s) captured`:"Not captured"],
+      ["Condition notes",document.getElementById("inspectionNotes").value||"None"],
+      ["Technician",document.getElementById("technicianName").value||"Not entered"],
+      ["Brakes status",document.getElementById("brakesStatus").value],
+      ["Tires status",document.getElementById("tiresStatus").value],
+      ["Steering/suspension",document.getElementById("steeringStatus").value],
+      ["Fluids/leaks",document.getElementById("fluidsStatus").value],
+      ["Battery/charging",document.getElementById("batteryStatus").value],
+      ["Lights/wipers",document.getElementById("lightsStatus").value],
+      ["Brake pads",`LF ${document.getElementById("lfPad").value||"-"} mm • RF ${document.getElementById("rfPad").value||"-"} mm • LR ${document.getElementById("lrPad").value||"-"} mm • RR ${document.getElementById("rrPad").value||"-"} mm`],
+      ["Tire tread",`LF ${document.getElementById("lfTread").value||"-"} • RF ${document.getElementById("rfTread").value||"-"} • LR ${document.getElementById("lrTread").value||"-"} • RR ${document.getElementById("rrTread").value||"-"} 32nds`],
+      ["Technician findings",document.getElementById("technicianFindings").value||"None"],
+      ["Recommendation",document.getElementById("technicianRecommendation").value||"None"],
+      ["Immediate repairs",document.getElementById("priorityImmediate").value||"None"],
+      ["Repairs needed soon",document.getElementById("prioritySoon").value||"None"],
+      ["Monitor items",document.getElementById("priorityMonitor").value||"None"],
+      ["Vehicle photos",countVehiclePhotos()+" of 6 captured"],
+      ["Technician signature",signatureHasInk("technicianSignature")?"Captured":"Not captured"],
+      ["Customer signature",signatureHasInk("customerSignature")?"Captured":"Not captured"],
+      ["Labor operation",document.getElementById("laborOperation").value||"Not entered"],
+      ["Verified labor time",`${Number(document.getElementById("verifiedLaborHours").value||0).toFixed(2)} h`],
+      ["Labor-time source",document.getElementById("laborTimeSource").value||"Not entered"],
+      ["Estimate number",document.getElementById("estimateNumber").value||"Auto-generated on save"],
+      ["Estimate total",formatMoney(calculateEstimate().grandTotal)],
+      ["Authorization status",document.getElementById("authorizationStatus").value],
+      ["Authorization method",document.getElementById("authorizationMethod").value],
+      ["Authorization notes",document.getElementById("authorizationNotes").value||"None"],
+      ["Work Order",document.getElementById("workOrderNumber").value||document.getElementById("roNumber").value||"Auto-generated on save"],
+      ["Assigned technician",document.getElementById("assignedTechnician").value||document.getElementById("technicianName").value||"Not assigned"],
+      ["Repair status",document.getElementById("repairStatus").value],
+      ["Standard labor time",`${Number(document.getElementById("standardLaborHours").value||0).toFixed(2)} h`],
+      ["Actual working time",formatDurationHours(getActiveMilliseconds())],
+      ["Paused time",formatDurationHours(getPausedMilliseconds())],
+      ["Time comparison",getLaborComparisonText()],
+      ["Efficiency",getEfficiencyText()],
+      ["Internal technician notes",document.getElementById("internalTechnicianNotes").value||"None"],
+      ["Completion notes",document.getElementById("completionNotes").value||"None"]
+    ];
+    const healthScoreEl=document.getElementById("healthScore");
+    if(healthScoreEl) healthScoreEl.textContent=calculateHealthScore();
+    document.getElementById("summary").innerHTML=rows.map(([k,v])=>`<div>${k}</div><div>${escapeHtml(v)}</div>`).join("");
+  }
+
+  let speechRecognition=null;
+  let speechActive=false;
+
+  function isIOSDevice(){
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+  }
+
+  function showKeyboardDictationFallback(){
+    const status=document.getElementById("voiceStatus");
+    const concern=document.getElementById("concern");
+    concern.focus();
+    concern.scrollIntoView({behavior:"smooth",block:"center"});
+    status.className="status ok";
+    status.textContent="Concern field is ready. Tap the microphone on the iPhone keyboard and begin speaking.";
+  }
+
+  function startVoiceConcern(){
+    const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+    const status=document.getElementById("voiceStatus");
+    const concern=document.getElementById("concern");
+
+    if(!Recognition){
+      showKeyboardDictationFallback();
+      return;
+    }
+
+    if(speechActive){
+      status.className="status warn";
+      status.textContent="Dictation is already running.";
+      return;
+    }
+
+    try{
+      speechRecognition=new Recognition();
+      // iPhone Safari is more reliable in single-utterance mode.
+      speechRecognition.continuous=!isIOSDevice();
+      speechRecognition.interimResults=true;
+      speechRecognition.maxAlternatives=1;
+      speechRecognition.lang="en-US";
+
+      const base=concern.value.trim();
+      let finalText="";
+      let recognitionError="";
+
+      speechRecognition.onstart=()=>{
+        speechActive=true;
+        status.className="status ok";
+        status.textContent="Listening… speak the customer's concern now.";
+      };
+
+      speechRecognition.onresult=(event)=>{
+        let interim="";
+        for(let i=event.resultIndex;i<event.results.length;i++){
+          const text=event.results[i][0].transcript;
+          if(event.results[i].isFinal) finalText+=text+" ";
+          else interim+=text;
+        }
+        concern.value=[base,finalText,interim]
+          .filter(Boolean)
+          .join(" ")
+          .replace(/\s+/g," ")
+          .trim();
+      };
+
+      speechRecognition.onerror=(event)=>{
+        speechActive=false;
+        recognitionError=event.error||"unknown error";
+        const messages={
+          "not-allowed":"Microphone access was blocked. Allow microphone access for this website in Safari settings, then try again.",
+          "service-not-allowed":"Speech recognition is blocked on this device or network. Use the iPhone keyboard microphone instead.",
+          "audio-capture":"No microphone was available. Check the phone microphone permission and try again.",
+          "network":"Speech recognition could not reach its service. Check the internet connection and try again.",
+          "no-speech":"No speech was heard. Tap Dictate Concern and speak immediately.",
+          "aborted":"Dictation was stopped."
+        };
+        status.className="status warn";
+        status.textContent=messages[recognitionError]||`Dictation stopped: ${recognitionError}. Use the keyboard microphone if needed.`;
+      };
+
+      speechRecognition.onend=()=>{
+        speechActive=false;
+        if(!recognitionError){
+          status.className=concern.value.trim()?"status ok":"status warn";
+          status.textContent=concern.value.trim()
+            ? "Dictation captured. Review the concern before continuing."
+            : "No words were captured. Tap Dictate Concern and speak immediately.";
+        }
+      };
+
+      speechRecognition.start();
+    }catch(error){
+      speechActive=false;
+      showKeyboardDictationFallback();
+    }
+  }
+
+  function stopVoiceConcern(){
+    const status=document.getElementById("voiceStatus");
+    const concern=document.getElementById("concern");
+
+    if(speechRecognition && speechActive){
+      try{speechRecognition.stop();}catch(e){}
+      speechActive=false;
+      status.className="status";
+      status.textContent="Dictation stopped. Review the concern before continuing.";
+      return;
+    }
+
+    concern.blur();
+    status.className="status";
+    status.textContent="Dictation is off. Review the concern before continuing.";
+  }
+
+  ["photoFront","photoRear","photoLeft","photoRight","photoOdometer","photoVin"].forEach(id=>{
+    document.getElementById(id).addEventListener("change",()=>{
+      const count=countVehiclePhotos();
+      const status=document.getElementById("photoStatus");
+      status.className=count?"status ok":"status";
+      status.textContent=count?`${count} of 6 vehicle documentation photos selected.`:"No vehicle documentation photos selected.";
+    });
+  });
+
+  setupSignaturePad("technicianSignature","clearTechnicianSignature");
+  setupSignaturePad("customerSignature","clearCustomerSignature");
+  document.getElementById("printReport")?.addEventListener("click",()=>window.print());
+
+  document.getElementById("technicianPhoto").addEventListener("change",(event)=>{
+    const status=document.getElementById("technicianPhotoStatus");
+    const file=event.target.files&&event.target.files[0];
+    status.className=file?"status ok":"status";
+    status.textContent=file?`Technician photo selected: ${file.name}`:"No technician photo selected.";
+  });
+
+  function initializeCoreModules(){
+    const bootStatus=document.getElementById("moduleBootStatus");
+    const failures=[];
+
+    try{
+      document.getElementById("startSmartCamera")?.addEventListener("click",openRegistrationScanner);
+      document.getElementById("startCamera")?.addEventListener("click",()=>{smartScanMode="vin";openCamera();});
+      document.getElementById("stopCamera")?.addEventListener("click",stopCamera);
+      document.getElementById("scanFrame")?.addEventListener("click",scanCurrentFrame);
+      document.getElementById("smartReadFrame")?.addEventListener("click",smartReadCurrentFrame);
+      document.getElementById("retryVinScan")?.addEventListener("click",async()=>{
+        stopCamera();
+        await new Promise(resolve=>setTimeout(resolve,250));
+        openCamera();
+      });
+    }catch(error){
+      failures.push("VIN scanner");
+      console.error("VIN scanner initialization failed:",error);
+    }
+
+    try{
+      document.getElementById("startVoiceConcern")?.addEventListener("click",startVoiceConcern);
+      document.getElementById("stopVoiceConcern")?.addEventListener("click",stopVoiceConcern);
+    }catch(error){
+      failures.push("dictation");
+      console.error("Dictation initialization failed:",error);
+    }
+
+    if(bootStatus){
+      if(failures.length){
+        bootStatus.className="status warn";
+        bootStatus.textContent=`Module warning: ${failures.join(" and ")} did not initialize. Refresh the page.`;
+      }else{
+        bootStatus.className="status ok";
+        bootStatus.textContent="VIN scanner and dictation modules loaded successfully.";
+      }
+    }
+  }
+
+  initializeCoreModules();
+
+  document.getElementById("identifyVehicle")?.addEventListener("click",identifyVehicle);
+  document.getElementById("manualVinFocus")?.addEventListener("click",()=>{vinInput.focus();vinInput.scrollIntoView({behavior:"smooth",block:"center"});});
+  document.getElementById("smartScanPhoto")?.addEventListener("change",async(e)=>{
+    const file=e.target.files&&e.target.files[0];if(!file) return;
+    try{const {img,url}=await loadImageFile(file);await processSmartScanSource(img,"Registration photo");URL.revokeObjectURL(url);}
+    catch(error){identifyStatus.className="status warn";identifyStatus.textContent="Smart Scan could not confirm the VIN. Retake the full registration or VIN label in good light, or enter the VIN manually.";}
+    finally{e.target.value="";}
+  });
+  document.getElementById("readDashVin")?.addEventListener("click",readDashVinFromCamera);
+  document.getElementById("applyVehicleCorrections")?.addEventListener("click",()=>{
+    if(!selectedVehicle) return;
+    const map={vehicleTrimEdit:"trim",vehicleSeriesEdit:"series",engineSizeEdit:"engineSize",engineModelEdit:"engineModel",engineFamilyEdit:"engineFamily",vinEngineDesignatorEdit:"vinEngineDesignator",engineCylindersEdit:"engineCylinders",fuelTypeEdit:"fuelType"};
+    Object.entries(map).forEach(([id,key])=>{const value=document.getElementById(id)?.value.trim();selectedVehicle[key]=value||"Not returned";});
+    selectedVehicle.engine=[selectedVehicle.engineSize,selectedVehicle.engineModel,selectedVehicle.fuelType].filter(v=>v&&v!=="Not returned").join(" • ")||"Not returned";
+    renderVehicle();
+    const status=document.getElementById("vehicleCorrectionStatus");if(status){status.className="status ok";status.textContent="Vehicle and engine identification corrections applied.";}
+    scheduleDraftSave();
+  });
+  document.getElementById("vinPhoto").addEventListener("change",async(e)=>{
+    const file=e.target.files&&e.target.files[0];
+    if(!file) return;
+    identifyStatus.className="status";
+    identifyStatus.textContent=`Scanning VIN photo: ${file.name}…`;
+    try{
+      const ready=await ensureZXingLibrary();
+      if(!ready) throw new Error("scanner library unavailable");
+      const img=new Image();
+      const objectUrl=URL.createObjectURL(file);
+      img.src=objectUrl;
+      await img.decode();
+      const reader=new window.ZXingBrowser.BrowserMultiFormatReader();
+      const result=await reader.decodeFromImageElement(img);
+      URL.revokeObjectURL(objectUrl);
+      const raw=result && result.getText ? result.getText() : result.text;
+      if(!acceptScannedValue(raw,"VIN photo")) throw new Error("no valid VIN");
+    }catch(error){
+      try{
+        const img=new Image();
+        const objectUrl=URL.createObjectURL(file);
+        img.src=objectUrl;await img.decode();
+        pendingVin="";pendingVinCount=0;
+        const first=await recognizeVinText(img,"VIN photo");
+        if(!first){pendingVinCount=1;pendingVinAt=Date.now();await recognizeVinText(img,"VIN photo");}
+        URL.revokeObjectURL(objectUrl);
+      }catch(ocrError){
+        identifyStatus.className="status warn";
+        identifyStatus.textContent=`VIN photo saved, but neither the barcode nor the complete printed VIN could be confirmed. Retake the photo closer and level, reduce glare, or enter the VIN manually.`;
+      }
+    }
+  });
+
+  document.getElementById("runAssistantSearch")?.addEventListener("click",runAssistantSearch);
+  document.getElementById("assistantQuery")?.addEventListener("keydown",event=>{if(event.key==="Enter"&&(event.ctrlKey||event.metaKey)) runAssistantSearch();});
+  document.getElementById("dictateAssistantQuery")?.addEventListener("click",dictateAssistantQuery);
+  document.getElementById("useCurrentConcern")?.addEventListener("click",()=>{
+    const concern=document.getElementById("concern")?.value.trim()||"";
+    document.getElementById("assistantQuery").value=concern;
+    document.getElementById("assistantStatus").className=concern?"status ok":"status warn";
+    document.getElementById("assistantStatus").textContent=concern?"Current customer concern loaded. Tap Search Similar Repairs.":"No current customer concern has been entered yet.";
+  });
+  document.getElementById("clearAssistantSearch")?.addEventListener("click",()=>{
+    document.getElementById("assistantQuery").value="";
+    document.getElementById("assistantResults").innerHTML="";
+    document.getElementById("assistantStatus").className="status";
+    document.getElementById("assistantStatus").textContent="Search cleared.";
+  });
+  document.getElementById("runHistorySearch")?.addEventListener("click",searchHistory);
+  document.getElementById("historySearch")?.addEventListener("keydown",e=>{if(e.key==="Enter") searchHistory();});
+  document.getElementById("showAllHistory")?.addEventListener("click",()=>{document.getElementById("historySearch").value="";searchHistory();});
+  document.getElementById("clearHistorySearch")?.addEventListener("click",()=>{document.getElementById("historySearch").value="";document.getElementById("historyResults").innerHTML="";document.getElementById("historyStatus").className="status";document.getElementById("historyStatus").textContent="Search cleared.";});
+  document.getElementById("addEstimateLine")?.addEventListener("click",()=>createEstimateRow());
+  document.getElementById("searchLaborWeb")?.addEventListener("click",searchLaborInformation);
+  document.getElementById("copyLaborQuery")?.addEventListener("click",copyLaborSearchQuery);
+  document.getElementById("applyLaborTime")?.addEventListener("click",applyVerifiedLaborTime);
+
+  ["laborRate","shopSuppliesPercent","taxPercent"].forEach(id=>document.getElementById(id).addEventListener("input",updateEstimateTotals));
+  document.getElementById("authorizationStatus")?.addEventListener("change",updateAuthorizationBadge);
+  createEstimateRow({description:"Inspection-recommended repair",priority:"Immediate",hours:0,parts:0});
+  updateAuthorizationBadge();
+
+  try{
+    document.getElementById("startJob")?.addEventListener("click",startJobClock);
+    document.getElementById("pauseJob")?.addEventListener("click",pauseJobClock);
+    document.getElementById("resumeJob")?.addEventListener("click",resumeJobClock);
+    document.getElementById("finishJob")?.addEventListener("click",finishJobClock);
+    document.getElementById("standardLaborHours")?.addEventListener("input",updateJobClockUI);
+    jobClockInterval=setInterval(updateJobClockUI,1000);
+    updateJobClockUI();
+  }catch(error){
+    console.error("Work-order clock initialization failed:",error);
+  }
+
+document.addEventListener("click",e=>{
+    const reopen=e.target.closest(".reopen-record"); if(reopen){reopenCompletedRecord(reopen.dataset.recordId);return;}
+    const view=e.target.closest(".print-history-record"); if(view){viewHistoryRecord(view.dataset.recordId);return;}
+  });
+
+document.getElementById("submitCheckin")?.addEventListener("click",()=>{
+    const required=[
+      ["Customer name",document.getElementById("customerName").value.trim()],
+      ["Phone number",document.getElementById("phone").value.trim()],
+      ["Mileage",document.getElementById("mileage").value.trim()],
+      ["Customer concern",document.getElementById("concern").value.trim()]
+    ];
+
+    const missing=required.filter(([,value])=>!value).map(([label])=>label);
+    const s=document.getElementById("submitStatus");
+
+    if(missing.length){
+      s.className="status bad";
+      s.textContent=`Complete required fields: ${missing.join(", ")}.`;
+      return;
+    }
+
+    const payload={
+      checkInId:editingCheckInId||`NIT-${new Date().toISOString().replace(/\D/g,"").slice(0,14)}`,
+      timestamp:new Date().toISOString(),
+      updatedAt:new Date().toISOString(),
+      vehicle:selectedVehicle,
+      repairOrder:document.getElementById("roNumber").value.trim()||`RO-${new Date().toISOString().replace(/\D/g,"").slice(0,14)}`,
+      serviceAdvisor:document.getElementById("serviceAdvisor").value.trim(),
+      customer:{
+        name:document.getElementById("customerName").value.trim(),
+        phone:document.getElementById("phone").value.trim(),
+        email:document.getElementById("email").value.trim()
+      },
+      plate:document.getElementById("plate").value.trim().toUpperCase(),
+      mileage:document.getElementById("mileage").value.trim(),
+      arrivalMethod:document.getElementById("arrivalMethod").value,
+      concern:document.getElementById("concern").value.trim(),
+      advisorNotes:document.getElementById("advisorNotes").value.trim(),
+      fuelLevel:document.getElementById("fuelLevel").value,
+      checks:[...document.querySelectorAll(".check")].map(c=>({
+        label:c.dataset.label||c.parentElement.textContent.trim(),
+        completed:c.checked
+      })),
+      vehiclePhotos:{
+        front:document.getElementById("photoFront").files[0]?.name||"",
+        rear:document.getElementById("photoRear").files[0]?.name||"",
+        left:document.getElementById("photoLeft").files[0]?.name||"",
+        right:document.getElementById("photoRight").files[0]?.name||"",
+        odometer:document.getElementById("photoOdometer").files[0]?.name||"",
+        vinLabel:document.getElementById("photoVin").files[0]?.name||""
+      },
+      inspectionNotes:document.getElementById("inspectionNotes").value.trim(),
+      technicianInspection:{
+        technician:document.getElementById("technicianName").value.trim(),
+        status:{
+          brakes:document.getElementById("brakesStatus").value,
+          tires:document.getElementById("tiresStatus").value,
+          steeringSuspension:document.getElementById("steeringStatus").value,
+          fluidsLeaks:document.getElementById("fluidsStatus").value,
+          batteryCharging:document.getElementById("batteryStatus").value,
+          lightsWipers:document.getElementById("lightsStatus").value
+        },
+        brakeMeasurements:{
+          lfPadMm:document.getElementById("lfPad").value.trim(),
+          rfPadMm:document.getElementById("rfPad").value.trim(),
+          lrPadMm:document.getElementById("lrPad").value.trim(),
+          rrPadMm:document.getElementById("rrPad").value.trim(),
+          frontRotor:document.getElementById("frontRotor").value.trim(),
+          rearRotor:document.getElementById("rearRotor").value.trim()
+        },
+        tireMeasurements:{
+          lfTread32:document.getElementById("lfTread").value.trim(),
+          rfTread32:document.getElementById("rfTread").value.trim(),
+          lrTread32:document.getElementById("lrTread").value.trim(),
+          rrTread32:document.getElementById("rrTread").value.trim(),
+          lfPsi:document.getElementById("lfPsi").value.trim(),
+          rfPsi:document.getElementById("rfPsi").value.trim(),
+          lrPsi:document.getElementById("lrPsi").value.trim(),
+          rrPsi:document.getElementById("rrPsi").value.trim()
+        },
+        photoName:document.getElementById("technicianPhoto").files.length
+          ? document.getElementById("technicianPhoto").files[0].name
+          : "",
+        findings:document.getElementById("technicianFindings").value.trim(),
+        recommendation:document.getElementById("technicianRecommendation").value.trim(),
+        priorities:{
+          immediate:document.getElementById("priorityImmediate").value.trim(),
+          soon:document.getElementById("prioritySoon").value.trim(),
+          monitor:document.getElementById("priorityMonitor").value.trim()
+        }
+      },
+      vehicleHealthScore:calculateHealthScore(),
+      signatures:{
+        technician:signatureHasInk("technicianSignature"),
+        customer:signatureHasInk("customerSignature")
+      },
+      laborLookup:{
+        operation:document.getElementById("laborOperation").value.trim(),
+        system:document.getElementById("laborSystem").value,
+        verifiedHours:Number(document.getElementById("verifiedLaborHours").value)||0,
+        source:document.getElementById("laborTimeSource").value.trim(),
+        notes:document.getElementById("laborLookupNotes").value.trim()
+      },
+      estimate:{
+        estimateNumber:document.getElementById("estimateNumber").value.trim()||`EST-${new Date().toISOString().replace(/\D/g,"").slice(0,14)}`,
+        ...calculateEstimate(),
+        authorization:{
+          status:document.getElementById("authorizationStatus").value,
+          method:document.getElementById("authorizationMethod").value,
+          notes:document.getElementById("authorizationNotes").value.trim()
+        }
+      },
+      workOrder:{
+        workOrderNumber:document.getElementById("workOrderNumber").value.trim()||document.getElementById("roNumber").value.trim()||`WO-${new Date().toISOString().replace(/\D/g,"").slice(0,14)}`,
+        assignedTechnician:document.getElementById("assignedTechnician").value.trim()||document.getElementById("technicianName").value.trim(),
+        repairStatus:document.getElementById("repairStatus").value,
+        standardLaborHours:Number(document.getElementById("standardLaborHours").value)||0,
+        activeMilliseconds:getActiveMilliseconds(),
+        diagnosticTimeHours:Number(document.getElementById("diagnosticTimeHours").value)||Number((getActiveMilliseconds()/3600000).toFixed(2)),
+        pausedMilliseconds:getPausedMilliseconds(),
+        comparison:getLaborComparisonText(),
+        efficiency:getEfficiencyText(),
+        internalTechnicianNotes:document.getElementById("internalTechnicianNotes").value.trim(),
+        completionNotes:document.getElementById("completionNotes").value.trim(),
+        timeline:jobClock.timeline
+      }
+    };
+
+    localStorage.setItem("nitros_prototype_v070_last_checkin",JSON.stringify(payload));
+    saveCustomerHistoryRecord(payload);
+    s.className="status ok";
+    const wasEdit=Boolean(editingCheckInId);
+    lastSavedRecordId=payload.checkInId;
+    s.textContent=`Inspection report ${payload.checkInId} ${wasEdit?"updated":"saved"} successfully. It is stored in Customer History and can be reopened immediately.`;
+    document.getElementById("postSaveActions")?.classList.remove("hidden");
+    editingCheckInId=null;
+    localStorage.removeItem(DRAFT_KEY);
+    refreshDraftPanel();
+  });
+
+  document.addEventListener("input",e=>{if(e.target.matches("input,textarea,select")) scheduleDraftSave();});
+  document.addEventListener("change",e=>{if(e.target.matches("input,textarea,select")) scheduleDraftSave();});
+  document.getElementById("resumeDraft")?.addEventListener("click",()=>restoreDraft(true));
+  document.getElementById("discardDraft")?.addEventListener("click",()=>{localStorage.removeItem(DRAFT_KEY);refreshDraftPanel();});
+  document.getElementById("reopenLastSaved")?.addEventListener("click",()=>{if(lastSavedRecordId) reopenCompletedRecord(lastSavedRecordId);});
+  document.getElementById("returnHomeAfterSave")?.addEventListener("click",returnHomeAndStartNewVehicle);
+  window.addEventListener("popstate",event=>{showScreen(event.state?.nitrosScreen||"home",false);});
+  window.addEventListener("pageshow",()=>{
+    const pending=sessionStorage.getItem("nitros_external_navigation_pending");
+    if(pending){
+      sessionStorage.removeItem("nitros_external_navigation_pending");
+      restoreDraft(false);
+      showScreen(pending==="estimate"?"estimate":(loadDraft()?.screen||"home"),false);
+      const laborStatus=document.getElementById("laborLookupStatus");
+      if(pending==="estimate" && laborStatus){laborStatus.className="status ok";laborStatus.textContent="Returned to the estimate. Repair-order data was restored.";}
+    }
+    const active=screens.find(screen=>screen.classList.contains("active"));
+    if(!active) showScreen("home",false);
+    refreshDraftPanel();
+  });
+  try{history.replaceState({nitrosScreen:"home"},"",location.href.split("#")[0]+"#home");}catch(error){}
+  refreshDraftPanel();
+  updateEnvironment();
+  window.addEventListener("pagehide",()=>{saveDraft();stopCamera();});
+
+  document.getElementById("copyDebugReport")?.addEventListener("click",async()=>{
+    const status=document.getElementById("copyDebugStatus");
+    try{
+      await navigator.clipboard.writeText(buildDebugReport());
+      status.className="status ok";status.textContent="Debug report copied. Paste it into the chat.";
+    }catch(error){
+      status.className="status warn";status.textContent="Automatic copy was blocked. Select and copy the raw report manually.";
+    }
+  });
+  document.getElementById("retryDecode")?.addEventListener("click",()=>{showScreen("checkin");identifyVehicle();});
+})();
+</script>
+</body>
+</html>
