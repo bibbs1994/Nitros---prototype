@@ -163,7 +163,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.7.10 — Registration Capture Trigger Repair</div>
+  <div class="sub">Prototype v0.7.7 — VIN Validation Repair Release</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -787,7 +787,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.7.10 • Registration capture trigger repair • Strict 17-character validation • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.7.7 • VIN decoder diagnostics • Raw response logging • Copyable debug report • Local prototype storage only</div>
 </div>
 
 <script>
@@ -1263,68 +1263,6 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     return results.sort((a,b)=>(extractVinFlexible(b.text)?1:0)-(extractVinFlexible(a.text)?1:0)||b.confidence-a.confidence)[0];
   }
 
-
-  function cropCanvasBand(sourceCanvas,topRatio,heightRatio){
-    const y=Math.max(0,Math.round(sourceCanvas.height*topRatio));
-    const h=Math.max(1,Math.min(sourceCanvas.height-y,Math.round(sourceCanvas.height*heightRatio)));
-    const out=document.createElement("canvas");
-    out.width=sourceCanvas.width;out.height=h;
-    const ctx=out.getContext("2d",{willReadFrequently:true});
-    ctx.drawImage(sourceCanvas,0,y,sourceCanvas.width,h,0,0,out.width,out.height);
-    return out;
-  }
-
-  function strictVinCandidates(text){
-    const t=normalizeOcrText(text||"");
-    const found=[];
-    const add=raw=>{
-      const compact=String(raw||"").toUpperCase().replace(/[^A-Z0-9]/g,"").replace(/[IOQ]/g,c=>({I:"1",O:"0",Q:"0"}[c]));
-      if(compact.length!==17||!/^[A-HJ-NPR-Z0-9]{17}$/.test(compact)) return;
-      if(!found.includes(compact)) found.push(compact);
-    };
-    (t.match(/[A-HJ-NPR-Z0-9]{17}/g)||[]).forEach(add);
-    const lines=t.split(/\n+/);
-    lines.forEach((line,i)=>{
-      const context=[lines[i-1]||"",line,lines[i+1]||""].join(" ");
-      if(!/(^|\b)VIN\b|VEHICLE IDENTIFICATION|IDENTIFICATION(?: NUMBER| NO)/.test(context)) return;
-      const tokens=line.match(/[A-Z0-9][A-Z0-9 .-]{15,24}[A-Z0-9]/g)||[];
-      tokens.forEach(add);
-      const compact=line.replace(/[^A-Z0-9]/g,"");
-      for(let j=0;j+17<=compact.length;j++) add(compact.slice(j,j+17));
-    });
-    return found;
-  }
-
-  async function recognizeVinFocusedRegions(source,label="registration"){
-    const ready=await ensureTesseract();
-    if(!ready) throw new Error("text reader unavailable");
-    const base=rotateSourceToCanvas(source,0,true);
-    if(!base) throw new Error("image unavailable");
-    const regions=[
-      {name:"upper-middle",canvas:cropCanvasBand(base,.22,.24)},
-      {name:"middle",canvas:cropCanvasBand(base,.36,.24)},
-      {name:"lower-middle",canvas:cropCanvasBand(base,.50,.24)},
-      {name:"lower",canvas:cropCanvasBand(base,.64,.22)}
-    ];
-    let best={text:"",confidence:0,candidates:[],region:"none"};
-    for(const region of regions){
-      const result=await window.Tesseract.recognize(region.canvas,"eng",{
-        logger:()=>{},
-        tessedit_char_whitelist:"ABCDEFGHJKLMNPRSTUVWXYZ0123456789VIN- ",
-        preserve_interword_spaces:"1"
-      });
-      const text=normalizeOcrText(result?.data?.text||"");
-      const candidates=strictVinCandidates(text);
-      const confidence=Number(result?.data?.confidence||0);
-      const valid=candidates.find(vinCheckDigitValid);
-      if(valid) return {text,confidence,candidates:[valid,...candidates.filter(v=>v!==valid)].slice(0,8),selected:valid,region:region.name};
-      if(candidates.length>best.candidates.length || (candidates.length===best.candidates.length&&confidence>best.confidence)){
-        best={text,confidence,candidates:candidates.slice(0,8),selected:candidates[0]||"",region:region.name};
-      }
-    }
-    return best;
-  }
-
   function vinCheckDigitValid(vin){
     vin=String(vin||"").toUpperCase();
     if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) return false;
@@ -1374,24 +1312,6 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     return valid[0]||null;
   }
 
-  const COMMON_REGISTRATION_WMIS=new Set([
-    "1FT","1FA","1FM","1FD","1GC","1G1","1G4","1G6","1GN","1GT","1C3","1C4","1C6","1D7",
-    "2FT","2G1","2G4","2GC","2HK","2HJ","2T1","2T2","2T3","3FA","3FT","3G1","3GC","3GN","3GT",
-    "3HA","3HG","3N1","3VW","4S2","4S3","4S4","4T1","4T3","5FN","5J6","5J8","5N1","5NP","5T1",
-    "5TD","5TF","5UX","5XY","JH4","JHM","JHL","JNK","JN1","JN8","JT2","JT3","JT4","JTD","JTE",
-    "JTH","KM8","KNA","KND","KL1","KL4","SAL","SAJ","TRU","WA1","WAU","WBA","WDB","WDC","WMW",
-    "WP0","WP1","WVG","WVW","YV1","YV4","ZAM","ZAR"
-  ]);
-
-  function registrationVinLikelihood(vin,raw){
-    let score=0;
-    if(COMMON_REGISTRATION_WMIS.has(vin.slice(0,3))) score+=90;
-    else if(/^[1-5J-KL-MNSWYZ]/.test(vin)) score+=12;
-    if(/JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC/.test(raw||"")) score-=120;
-    if(/20(?:1[0-9]|2[0-9])$/.test(raw||"")) score-=35;
-    return score;
-  }
-
   function rankVinCandidates(text,candidates){
     const t=normalizeOcrText(text||"");
     const ranked=[];
@@ -1400,8 +1320,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       if(base.length!==17) return;
       const repaired=repairVinCandidate(base,3);
       if(!repaired) return;
-      const likelihood=registrationVinLikelihood(repaired.vin,base);
-      const score=100-(repaired.edits*22)+sourceBoost+likelihood;
+      const score=100-(repaired.edits*18)+sourceBoost;
       const prior=ranked.find(x=>x.vin===repaired.vin);
       if(!prior||score>prior.score){
         if(prior) ranked.splice(ranked.indexOf(prior),1);
@@ -1412,7 +1331,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     const lines=t.split(/\n+/);
     lines.forEach((line,index)=>{
       const context=[lines[index-1]||"",line,lines[index+1]||""].join(" ");
-      const boost=/(^|\b)VIN\b|VEHICLE IDENTIFICATION|IDENTIFICATION NO/.test(context)?45:0;
+      const boost=/(^|\b)VIN\b|VEHICLE IDENTIFICATION|IDENTIFICATION NO/.test(context)?35:0;
       const compact=line.replace(/[^A-Z0-9]/g,"");
       for(let i=0;i+17<=compact.length;i++) add(compact.slice(i,i+17),boost);
     });
@@ -1463,7 +1382,22 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   let pendingOcrVin="";
 
   function collectVinCandidates(text){
-    return strictVinCandidates(text).slice(0,12);
+    const t=normalizeOcrText(text||"");
+    const found=[];
+    const add=v=>{v=cleanVin(v);if(v.length===17&&!found.includes(v))found.push(v);};
+    (t.match(/[A-Z0-9][A-Z0-9 \.\-]{15,28}[A-Z0-9]/g)||[]).forEach(raw=>{
+      add(raw);
+      const compact=String(raw).toUpperCase().replace(/[^A-Z0-9]/g,"");
+      for(let i=0;i+17<=compact.length;i++) add(compact.slice(i,i+17));
+    });
+    t.split(/\n+/).forEach(line=>{
+      const nearVin=/(VIN|VEHICLE IDENTIFICATION|IDENTIFICATION NO)/.test(line);
+      if(nearVin){
+        const compact=line.replace(/[^A-Z0-9]/g,"");
+        for(let i=0;i+17<=compact.length;i++) add(compact.slice(i,i+17));
+      }
+    });
+    return found;
   }
 
   function showOcrDiagnostic({label,text,confidence,candidates,selected}){
@@ -1473,7 +1407,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     panel?.classList.remove("hidden");
     const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
     set("ocrSource",label||"Registration scan");
-    set("ocrCandidates",candidates?.length?candidates.slice(0,8).join(" • "):"None found");
+    set("ocrCandidates",candidates?.length?candidates.join(" • "):"None found");
     set("ocrSelectedVin",vin||"None");
     set("ocrVinLength",String(vin.length));
     set("ocrFormatValid",/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)?"PASS":"FAIL");
@@ -1500,18 +1434,13 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
         }
       }
     }catch(e){}
-    let focused=await recognizeVinFocusedRegions(source,label);
-    let best=focused;
-    let candidates=focused.candidates||[];
-    let selected=cleanVin(focused.selected||"");
-    if(!selected||!vinCheckDigitValid(selected)){
-      best=await recognizeAllOrientations(source,label);
-      const reg=parseMassRegistration(best.text);
-      candidates=collectVinCandidates(best.text);
-      const ranked=rankVinCandidates(best.text,[...candidates,reg.vin].filter(Boolean));
-      selected=cleanVin((ranked[0]&&ranked[0].vin)||"");
-    }
-    showOcrDiagnostic({label:`${label}${focused.region?` — ${focused.region} VIN zone`:""}`,text:best.text,confidence:best.confidence,candidates,selected});
+    const best=await recognizeAllOrientations(source,label);
+    const reg=parseMassRegistration(best.text);
+    const candidates=collectVinCandidates(best.text);
+    const ranked=rankVinCandidates(best.text,[...candidates,reg.vin].filter(Boolean));
+    let selected=(ranked[0]&&ranked[0].vin)||"";
+    selected=cleanVin(selected);
+    showOcrDiagnostic({label,text:best.text,confidence:best.confidence,candidates,selected});
     if(selected.length===17&&vinCheckDigitValid(selected)){
       identifyStatus.className="status ok";
       identifyStatus.textContent="A valid 17-character VIN candidate was found. Compare it with the registration, then press Confirm and Decode.";
@@ -1548,8 +1477,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       const reg=parseMassRegistration(rawText);
       const ranked=rankVinCandidates(rawText,collectVinCandidates(rawText));
       const confirmedVin=(ranked[0]&&ranked[0].vin)||"";
-      const plausibleVin=/^[A-HJ-NPR-Z0-9]{17}$/.test(confirmedVin)&&COMMON_REGISTRATION_WMIS.has(confirmedVin.slice(0,3));
-      const valid=reg.isMass&&plausibleVin&&confidence>=35;
+      const valid=reg.isMass&&confirmedVin&&vinCheckDigitValid(confirmedVin)&&confidence>=35;
       if(valid){
         if(registrationStableVin===confirmedVin) registrationStableCount++; else {registrationStableVin=confirmedVin;registrationStableCount=1;}
         identifyStatus.className="status warn";
