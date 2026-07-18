@@ -153,7 +153,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.7.0 — Core Stabilization Release</div>
+  <div class="sub">Prototype v0.7.4 — Live Smart Scan Test Release</div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
@@ -242,37 +242,20 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <p>Use the rear camera to scan a door-label barcode or read the printed VIN through the windshield. Manual entry remains available as a controlled fallback.</p>
 
     <div class="grid two">
-      <label class="btn primary" style="text-align:center">
-        📄 Scan Registration
-        <input id="registrationPhoto" type="file" accept="image/*" capture="environment" hidden>
-      </label>
+      <button id="startSmartCamera" class="btn primary" type="button">📷 Live Registration Scan</button>
+      <button id="startCamera" class="btn secondary" type="button">Open Live VIN Scanner</button>
       <label class="btn secondary" style="text-align:center">
-        🚗 Scan VIN / Door Tag
+        Take Registration Photo
         <input id="smartScanPhoto" type="file" accept="image/*" capture="environment" hidden>
       </label>
-      <button id="startCamera" class="btn secondary">Open Live Scanner</button>
+      <label class="btn secondary" style="text-align:center">
+        Scan VIN Photo
+        <input id="vinPhoto" type="file" accept="image/*" capture="environment" hidden>
+      </label>
       <button id="manualVinFocus" class="btn ghost" type="button">Enter VIN Manually</button>
     </div>
-    <div class="capture-note" style="margin-top:8px"><strong>Registration Scan:</strong> photograph the entire front of the Massachusetts registration, square to the camera, with all four corners visible and minimal glare.</div>
-    <div id="smartScanResult" class="status">Choose Registration or VIN scan.</div>
-
-    <div id="registrationReview" class="card hidden" style="margin-top:14px;background:#0d192a">
-      <div class="eyebrow">Registration Scan Review</div>
-      <h3>Verify before importing</h3>
-      <div class="grid two">
-        <div class="field"><label for="regReviewVin">VIN</label><input id="regReviewVin" maxlength="17" autocapitalize="characters"></div>
-        <div class="field"><label for="regReviewPlate">License plate</label><input id="regReviewPlate" autocapitalize="characters"></div>
-        <div class="field"><label for="regReviewOwner">Registered owner</label><input id="regReviewOwner"></div>
-        <div class="field"><label for="regReviewYear">Vehicle year</label><input id="regReviewYear" inputmode="numeric"></div>
-        <div class="field"><label for="regReviewMake">Make</label><input id="regReviewMake"></div>
-        <div class="field"><label for="regReviewModel">Model</label><input id="regReviewModel"></div>
-      </div>
-      <div class="grid two">
-        <button id="applyRegistrationScan" class="btn primary" type="button">Import Registration</button>
-        <button id="cancelRegistrationScan" class="btn ghost" type="button">Retake / Cancel</button>
-      </div>
-      <div id="registrationReviewStatus" class="status">Correct any highlighted information before importing.</div>
-    </div>
+    <div class="capture-note" style="margin-top:8px"><strong>Live Registration Scan</strong> opens the in-app camera, looks for a Massachusetts registration, and automatically captures only after a valid 17-character VIN is confirmed. Low-confidence text stays out of the form.</div>
+    <div id="smartScanResult" class="status">Ready for Smart Scan.</div>
 
     <div id="cameraWrap" class="camera-wrap" style="margin-top:16px">
       <div class="scan-overlay">
@@ -285,7 +268,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
         <button id="readDashVin" class="btn secondary small">Read Dash VIN Text</button>
         <button id="stopCamera" class="btn ghost small">Close Camera</button>
       </div>
-      <div class="capture-note" style="margin-top:8px">For a door label, fill the orange guide with the barcode. For a windshield VIN, center the printed 17 characters, move close enough for sharp focus, and reduce glare.</div>
+      <div class="capture-note" style="margin-top:8px">For a registration, fill most of the frame with the document and hold steady. For a VIN, place the barcode or printed 17 characters inside the orange guide and reduce glare.</div>
     </div>
 
     <div class="field" style="margin-top:17px">
@@ -751,7 +734,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.7.4 • Smart Scan foundation • Massachusetts registration recognition • Multi-orientation VIN OCR • Local prototype storage only</div>
+<div class="footer-note">Nitros Prototype v0.7.4 • Live registration camera • VIN check-digit validation • Low-confidence field protection • Local prototype storage only</div>
 </div>
 
 <script>
@@ -804,7 +787,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     }
   }
 
-  const DRAFT_KEY="nitros_prototype_v074_active_draft";
+  const DRAFT_KEY="nitros_prototype_v073_active_draft";
   let currentScreenId="home";
   let draftSaveTimer=null;
   let lastSavedRecordId=null;
@@ -1108,6 +1091,11 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   }
 
   let tesseractPromise=null;
+  let smartScanMode="vin";
+  let registrationScanTimer=null;
+  let registrationScanBusy=false;
+  let registrationStableVin="";
+  let registrationStableCount=0;
 
 
   function loadImageFile(file){
@@ -1165,59 +1153,46 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     return results.sort((a,b)=>(extractVinFlexible(b.text)?1:0)-(extractVinFlexible(a.text)?1:0)||b.confidence-a.confidence)[0];
   }
 
+  function vinCheckDigitValid(vin){
+    vin=String(vin||"").toUpperCase();
+    if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) return false;
+    const map={A:1,B:2,C:3,D:4,E:5,F:6,G:7,H:8,J:1,K:2,L:3,M:4,N:5,P:7,R:9,S:2,T:3,U:4,V:5,W:6,X:7,Y:8,Z:9};
+    const weights=[8,7,6,5,4,3,2,10,0,9,8,7,6,5,4,3,2];
+    let sum=0;
+    for(let i=0;i<17;i++) sum+=(/[0-9]/.test(vin[i])?Number(vin[i]):map[vin[i]])*weights[i];
+    const expected=sum%11===10?"X":String(sum%11);
+    return vin[8]===expected;
+  }
+
+  function sensiblePlate(value){
+    const v=String(value||"").replace(/[^A-Z0-9]/g,"");
+    return v.length>=2&&v.length<=8&&!/^(TYPE|REGI|YEAR|MAKE|MODEL|OWNER|LICENSE)$/.test(v)?v:"";
+  }
+
+  function sensibleOwner(value){
+    const v=String(value||"").replace(/[^A-Z ,.'-]/g," ").replace(/\s+/g," ").trim();
+    if(v.length<4||v.length>55||/REGISTRATION|MASSACHUSETTS|LICENSE|VEHICLE|YEAR|MAKE|MODEL/.test(v)) return "";
+    return v;
+  }
+
   function parseMassRegistration(text){
-    const t=normalizeOcrText(text);
+    const t=normalizeOcrText(text).replace(/[\t\r]+/g," ");
     const lines=t.split(/\n+/).map(v=>v.replace(/\s+/g," ").trim()).filter(Boolean);
-    const vin=extractVinFlexible(t);
-    const valueAfter=(labels,max=40)=>{
-      for(const line of lines){
-        const re=new RegExp(`(?:${labels})\\s*(?:NO|NUMBER|#)?\\s*[:.-]?\\s*([A-Z0-9][A-Z0-9 .&'/-]{1,${max}})`,`i`);
-        const m=line.match(re); if(m) return m[1].trim();
-      }
-      return "";
-    };
-    let plate=valueAfter('PLATE|REGISTRATION(?: NO)?',10).replace(/[^A-Z0-9]/g,"");
-    if(!plate){
-      const p=t.match(/\b(?:PAN|PAS|CON|COM|TRN)?\s*([A-Z0-9]{2,8})\b/);
-      plate=p?.[1]||"";
+    const isMass=/MASSACHUSETTS|REGISTRY OF MOTOR VEHICLES|MASSDOT|COMMONWEALTH OF MASSACHUSETTS/.test(t);
+    const vinCandidates=(t.match(/[A-HJ-NPR-Z0-9](?:[ A-HJ-NPR-Z0-9-]{15,25})[A-HJ-NPR-Z0-9]/g)||[])
+      .map(extractVinFlexible).filter(v=>v.length===17);
+    const vin=vinCandidates.find(vinCheckDigitValid)||vinCandidates[0]||extractVinFlexible(t);
+    let plate="";
+    for(const line of lines){
+      const m=line.match(/(?:PLATE|REG(?:ISTRATION)?(?: NO| NUMBER)?|LICENSE PLATE)\s*[:.#-]?\s*([A-Z0-9 -]{2,10})/);
+      if(m){plate=sensiblePlate(m[1]);if(plate) break;}
     }
-    let owner=valueAfter('OWNER|NAME|REGISTRANT',45);
-    owner=owner.replace(/\b(?:ADDRESS|DOB|LICENSE).*$/,'').trim();
-    let year=valueAfter('YEAR|YR',4).match(/(?:19|20)\d{2}/)?.[0]||"";
-    let make=valueAfter('MAKE',18).split(/\s{2,}| MODEL /)[0].trim();
-    let model=valueAfter('MODEL',24).split(/\s{2,}| BODY /)[0].trim();
-    if(!year){
-      const ym=t.match(/\b(19\d{2}|20\d{2})\s+([A-Z]{2,15})\s+([A-Z0-9][A-Z0-9 -]{1,20})/);
-      if(ym){year=ym[1];make=make||ym[2];model=model||ym[3].trim();}
+    let owner="";
+    for(let i=0;i<lines.length;i++){
+      const m=lines[i].match(/(?:REGISTERED OWNER|OWNER|NAME)\s*[:.#-]?\s*(.*)$/);
+      if(m){owner=sensibleOwner(m[1]||lines[i+1]||"");if(owner) break;}
     }
-    const isMass=/MASSACHUSETTS|REGISTRY OF MOTOR VEHICLES|MASSDOT|COMMONWEALTH/.test(t);
-    return {isMass,vin,plate,year,make,model,owner,rawText:t};
-  }
-
-  let pendingRegistrationScan=null;
-
-  function showRegistrationReview(reg,confidence){
-    pendingRegistrationScan=reg;
-    const panel=document.getElementById('registrationReview');
-    panel?.classList.remove('hidden');
-    const set=(id,val)=>{const el=document.getElementById(id);if(el){el.value=val||'';el.style.borderColor=val?'':'#ffb74a';}};
-    set('regReviewVin',reg.vin); set('regReviewPlate',reg.plate); set('regReviewOwner',reg.owner);
-    set('regReviewYear',reg.year); set('regReviewMake',reg.make); set('regReviewModel',reg.model);
-    const st=document.getElementById('registrationReviewStatus');
-    if(st){st.className=reg.vin?'status ok':'status warn';st.textContent=reg.vin?'Registration read complete. Verify every field, then import.':'Registration text was read, but the VIN needs correction before import.';}
-    panel?.scrollIntoView({behavior:'smooth',block:'center'});
-    showSmartScanResult(reg,confidence);
-  }
-
-  async function processRegistrationSource(source,label='Registration Scan'){
-    identifyStatus.className='status'; identifyStatus.textContent=`${label}: reading the complete document…`;
-    const best=await recognizeAllOrientations(source,label);
-    const reg=parseMassRegistration(best.text);
-    if(!reg.isMass && !reg.vin) throw new Error('Registration not recognized');
-    showRegistrationReview(reg,best.confidence);
-    identifyStatus.className=reg.vin?'status ok':'status warn';
-    identifyStatus.textContent=reg.vin?'Registration captured. Review the fields below before importing.':'Registration captured, but the VIN must be corrected before importing.';
-    return true;
+    return {isMass,vin,plate,owner};
   }
 
   function showSmartScanResult(data,confidence){
@@ -1247,14 +1222,75 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     }catch(e){}
     const best=await recognizeAllOrientations(source,label);
     const reg=parseMassRegistration(best.text);
-    if(!reg.vin) throw new Error("No complete VIN found");
+    const validVin=reg.vin&&reg.vin.length===17&&vinCheckDigitValid(reg.vin);
+    if(!reg.vin||reg.vin.length!==17) throw new Error("No complete VIN found");
+    if(label.toLowerCase().includes("registration") && !reg.isMass) throw new Error("Massachusetts registration heading not confirmed");
+    if(!validVin && label.toLowerCase().includes("registration")) throw new Error("VIN check digit not confirmed");
     vinInput.value=reg.vin;
     if(reg.plate&&document.getElementById("plate")) document.getElementById("plate").value=reg.plate;
     if(reg.owner&&document.getElementById("customerName")) document.getElementById("customerName").value=reg.owner;
     showSmartScanResult(reg,best.confidence);
-    identifyStatus.className=best.confidence>=60?"status ok":"status warn";
-    identifyStatus.textContent=`${reg.isMass?"Massachusetts registration":"Printed VIN"} captured. Verify the 17 characters while vehicle details are decoded.`;
+    identifyStatus.className=validVin?"status ok":"status warn";
+    identifyStatus.textContent=`${reg.isMass?"Massachusetts registration":"Printed VIN"} captured. The VIN passed format${validVin?" and check-digit":""} validation. Decoding vehicle…`;
     await identifyVehicle();return true;
+  }
+
+  function setScanGuideMode(mode){
+    smartScanMode=mode;
+    if(!scanGuide) return;
+    scanGuide.style.top=mode==="registration"?"8%":"36%";
+    scanGuide.style.height=mode==="registration"?"72%":"28%";
+    scanGuide.style.left=mode==="registration"?"5%":"7%";
+    scanGuide.style.right=mode==="registration"?"5%":"7%";
+    scanGuide.dataset.mode=mode;
+  }
+
+  function stopRegistrationAutoScan(){
+    if(registrationScanTimer){clearInterval(registrationScanTimer);registrationScanTimer=null;}
+    registrationScanBusy=false;registrationStableVin="";registrationStableCount=0;
+  }
+
+  async function registrationAutoScanTick(){
+    if(registrationScanBusy||!stream||video.readyState<2) return;
+    registrationScanBusy=true;
+    try{
+      const canvas=rotateSourceToCanvas(video,0,true);
+      const result=await window.Tesseract.recognize(canvas,"eng",{logger:()=>{}});
+      const confidence=Number(result?.data?.confidence||0);
+      const reg=parseMassRegistration(result?.data?.text||"");
+      const valid=reg.isMass&&reg.vin&&vinCheckDigitValid(reg.vin)&&confidence>=45;
+      if(valid){
+        if(registrationStableVin===reg.vin) registrationStableCount++; else {registrationStableVin=reg.vin;registrationStableCount=1;}
+        identifyStatus.className="status warn";
+        identifyStatus.textContent=`Registration found. Confirming VIN (${registrationStableCount}/2)…`;
+        if(scanGuide) scanGuide.classList.add("confirming");
+        if(registrationStableCount>=2){
+          stopRegistrationAutoScan();
+          if(scanGuide){scanGuide.classList.remove("confirming");scanGuide.classList.add("found");}
+          await processSmartScanSource(video,"Live registration scan");
+        }
+      }else{
+        registrationStableVin="";registrationStableCount=0;
+        identifyStatus.className="status";
+        identifyStatus.textContent="Looking for the Massachusetts heading and a valid 17-character VIN. Fill the frame and hold steady.";
+      }
+    }catch(e){
+      identifyStatus.className="status warn";
+      identifyStatus.textContent="Still looking. Move closer, flatten the registration, and avoid glare.";
+    }finally{registrationScanBusy=false;}
+  }
+
+  async function openRegistrationScanner(){
+    stopCamera();
+    setScanGuideMode("registration");
+    await openCamera();
+    if(!stream) return;
+    const ready=await ensureTesseract();
+    if(!ready){identifyStatus.className="status bad";identifyStatus.textContent="The document reader could not load. Check the internet connection and refresh.";return;}
+    identifyStatus.className="status";
+    identifyStatus.textContent="Live registration scan active. Fill the orange box with the entire registration and hold steady.";
+    registrationScanTimer=setInterval(registrationAutoScanTick,2800);
+    registrationAutoScanTick();
   }
 
   async function smartReadCurrentFrame(){
@@ -1321,6 +1357,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 
   async function openCamera(){
     identifyStatus.className="status";
+    if(smartScanMode!=="registration") setScanGuideMode("vin");
     if(!window.isSecureContext){
       identifyStatus.className="status bad";
       identifyStatus.textContent="Camera scanning requires HTTPS. Open the deployed secure link in Safari or Chrome.";
@@ -1367,6 +1404,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   }
 
   function stopCamera(){
+    stopRegistrationAutoScan();
     if(autoScanTimer){clearInterval(autoScanTimer);autoScanTimer=null;}
     autoScanBusy=false;
     if(continuousReader && typeof continuousReader.reset==="function"){try{continuousReader.reset();}catch(e){}}
@@ -2419,7 +2457,8 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     const failures=[];
 
     try{
-      document.getElementById("startCamera")?.addEventListener("click",openCamera);
+      document.getElementById("startSmartCamera")?.addEventListener("click",openRegistrationScanner);
+      document.getElementById("startCamera")?.addEventListener("click",()=>{smartScanMode="vin";openCamera();});
       document.getElementById("stopCamera")?.addEventListener("click",stopCamera);
       document.getElementById("scanFrame")?.addEventListener("click",scanCurrentFrame);
       document.getElementById("smartReadFrame")?.addEventListener("click",smartReadCurrentFrame);
@@ -2456,33 +2495,9 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 
   document.getElementById("identifyVehicle")?.addEventListener("click",identifyVehicle);
   document.getElementById("manualVinFocus")?.addEventListener("click",()=>{vinInput.focus();vinInput.scrollIntoView({behavior:"smooth",block:"center"});});
-  document.getElementById("registrationPhoto")?.addEventListener("change",async(e)=>{
-    const file=e.target.files&&e.target.files[0]; if(!file) return;
-    const box=document.getElementById('smartScanResult'); if(box){box.className='status';box.textContent='Registration image captured. Reading text now…';}
-    try{const {img,url}=await loadImageFile(file);await processRegistrationSource(img,'Massachusetts registration');URL.revokeObjectURL(url);}
-    catch(error){identifyStatus.className='status warn';identifyStatus.textContent='Registration could not be confirmed. Retake the full document square to the camera with all four corners visible and less glare.';}
-    finally{e.target.value='';}
-  });
-  document.getElementById('applyRegistrationScan')?.addEventListener('click',async()=>{
-    const vin=(document.getElementById('regReviewVin')?.value||'').toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g,'');
-    const plate=(document.getElementById('regReviewPlate')?.value||'').toUpperCase().trim();
-    const owner=(document.getElementById('regReviewOwner')?.value||'').trim();
-    if(vin.length!==17){const st=document.getElementById('registrationReviewStatus');st.className='status warn';st.textContent='A complete 17-character VIN is required before importing.';return;}
-    vinInput.value=vin;
-    const plateEl=document.getElementById('plate'); if(plateEl) plateEl.value=plate;
-    const ownerEl=document.getElementById('customerName'); if(ownerEl) ownerEl.value=owner;
-    document.getElementById('registrationReview')?.classList.add('hidden');
-    identifyStatus.className='status ok';identifyStatus.textContent='Registration imported. Decoding vehicle information…';
-    scheduleDraftSave(); await identifyVehicle();
-  });
-  document.getElementById('cancelRegistrationScan')?.addEventListener('click',()=>{
-    pendingRegistrationScan=null;document.getElementById('registrationReview')?.classList.add('hidden');
-    const box=document.getElementById('smartScanResult');if(box){box.className='status';box.textContent='Ready to retake the registration.';}
-  });
-
   document.getElementById("smartScanPhoto")?.addEventListener("change",async(e)=>{
     const file=e.target.files&&e.target.files[0];if(!file) return;
-    try{const {img,url}=await loadImageFile(file);await processSmartScanSource(img,"Smart Scan photo");URL.revokeObjectURL(url);}
+    try{const {img,url}=await loadImageFile(file);await processSmartScanSource(img,"Registration photo");URL.revokeObjectURL(url);}
     catch(error){identifyStatus.className="status warn";identifyStatus.textContent="Smart Scan could not confirm the VIN. Retake the full registration or VIN label in good light, or enter the VIN manually.";}
     finally{e.target.value="";}
   });
