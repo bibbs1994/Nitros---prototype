@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Prototype v0.7.7</title>
+<title>Nitros Mobile Technician Portal v8.0</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -164,11 +163,50 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Prototype v0.7.7 — VIN Validation Repair Release</div>
+  <div class="sub">Mobile Technician Portal v8.0.1 — Sign-In Fix</div>
+  <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
 
-<section id="home" class="screen active">
+<section id="login" class="screen active">
+  <div class="card">
+    <div class="eyebrow">Nitros Automotive</div>
+    <h1>Technician sign-in</h1>
+    <p>Sign in once on this device. Your technician name will automatically carry into inspections and work orders.</p>
+    <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
+    <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
+    <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
+    <div id="portalLoginStatus" class="status">Version 8.0.1 stores the field-test profile only on this device.</div>
+  </div>
+  <div class="card">
+    <span class="badge">Recovery protected</span>
+    <h3 style="margin-top:12px">Built from verified Version 7.7</h3>
+    <p>VIN scanning, registration scanning, manual VIN entry, inspection, estimates, work orders, timers, signatures, reports, and local history remain intact.</p>
+  </div>
+</section>
+
+<section id="jobs" class="screen">
+  <button class="back" data-go="home">← Back</button>
+  <div class="card">
+    <div class="eyebrow">Technician Portal</div>
+    <h2>Assigned jobs</h2>
+    <p>This field-test queue is stored on this device. Live office-to-phone cloud synchronization will be connected after this workflow is approved.</p>
+    <div id="assignedJobsList" class="history-list"></div>
+    <div id="assignedJobsEmpty" class="history-empty">No assigned jobs on this device yet.</div>
+  </div>
+  <div class="card">
+    <h3>Add a test assignment</h3>
+    <div class="grid two">
+      <div class="field"><label for="jobCustomer">Customer / account</label><input id="jobCustomer" placeholder="Customer name or used-car lot"></div>
+      <div class="field"><label for="jobRo">Repair order</label><input id="jobRo" placeholder="RO number"></div>
+      <div class="field"><label for="jobVehicle">Vehicle</label><input id="jobVehicle" placeholder="Year make model"></div>
+      <div class="field"><label for="jobConcern">Concern / assigned work</label><input id="jobConcern" placeholder="Customer concern or service"></div>
+    </div>
+    <button id="addAssignedJob" class="btn secondary" type="button">Add to Assigned Jobs</button>
+  </div>
+</section>
+
+<section id="home" class="screen">
   <div class="card">
     <div class="eyebrow">Service Advisor Workspace</div>
     <h1>Vehicle check-in</h1>
@@ -181,9 +219,11 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     </div>
 
     <div class="grid two" style="margin-top:12px">
-      <button class="btn primary" data-go="checkin">Start Check-In</button>
+      <button class="btn primary" data-go="jobs">Assigned Jobs</button>
+      <button class="btn secondary" data-go="checkin">New Walk-In / Check-In</button>
       <button class="btn secondary" data-go="history">Customer History</button>
       <button class="btn secondary" data-go="assistant">AI Repair Assistant</button>
+      <button id="portalSignOut" class="btn ghost" type="button">Sign Out</button>
     </div>
     <div id="draftRecoveryPanel" class="status warn hidden" style="margin-top:14px">
       <strong>Saved work is available.</strong>
@@ -788,7 +828,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </section>
 
-<div class="footer-note">Nitros Prototype v0.7.7 • VIN decoder diagnostics • Raw response logging • Copyable debug report • Local prototype storage only</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.0 • Field Test Build • Verified v7.7 scanning foundation • Local device storage</div>
 </div>
 
 <script>
@@ -3002,6 +3042,80 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
   });
   document.getElementById("retryDecode")?.addEventListener("click",()=>{showScreen("checkin");identifyVehicle();});
 })();
+
+
+  // Version 8.0 technician portal field-test layer.
+  const PORTAL_PROFILE_KEY="nitros_portal_v8_profile";
+  const PORTAL_JOBS_KEY="nitros_portal_v8_assigned_jobs";
+  function portalRead(key,fallback){try{return JSON.parse(localStorage.getItem(key)||"null")??fallback}catch(e){return fallback}}
+  function portalWrite(key,value){localStorage.setItem(key,JSON.stringify(value))}
+  function portalProfile(){return portalRead(PORTAL_PROFILE_KEY,null)}
+  function portalShowScreen(id){
+    document.querySelectorAll(".screen").forEach(screen=>screen.classList.toggle("active",screen.id===id));
+    window.scrollTo({top:0,behavior:"auto"});
+  }
+  function applyPortalProfile(profile){
+    const header=document.getElementById("techHeader"), text=document.getElementById("techHeaderText");
+    if(profile?.name){
+      header?.classList.remove("hidden"); if(text) text.textContent=`Signed in: ${profile.name}`;
+      const tech=document.getElementById("technicianName"), assigned=document.getElementById("assignedTechnician");
+      if(tech && !tech.value) tech.value=profile.name;
+      if(assigned && !assigned.value) assigned.value=profile.name;
+    } else header?.classList.add("hidden");
+  }
+  function portalEscape(v){return String(v??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]))}
+  function renderAssignedJobs(){
+    const list=document.getElementById("assignedJobsList"), empty=document.getElementById("assignedJobsEmpty");
+    if(!list||!empty)return; const jobs=portalRead(PORTAL_JOBS_KEY,[]); list.innerHTML=""; empty.classList.toggle("hidden",jobs.length>0);
+    jobs.forEach((job,index)=>{
+      const item=document.createElement("div"); item.className="history-item";
+      item.innerHTML=`<div class="history-head"><div><div class="history-title">${portalEscape(job.vehicle||"Vehicle not entered")}</div><div class="history-meta">${portalEscape(job.customer||"Customer not entered")} • ${portalEscape(job.ro||"RO pending")}</div></div><div class="history-date">${portalEscape(job.status||"Assigned")}</div></div><div class="history-meta" style="margin-top:10px"><strong>Concern:</strong> ${portalEscape(job.concern||"Not entered")}</div><div class="history-actions"><button class="btn primary small" data-start-assigned="${index}">Open Job</button><button class="btn ghost small" data-remove-assigned="${index}">Remove</button></div>`;
+      list.appendChild(item);
+    });
+  }
+  function startAssignedJob(index){
+    const jobs=portalRead(PORTAL_JOBS_KEY,[]), job=jobs[index]; if(!job)return;
+    if(document.getElementById("customerName")) document.getElementById("customerName").value=job.customer||"";
+    if(document.getElementById("roNumber")) document.getElementById("roNumber").value=job.ro||"";
+    if(document.getElementById("concern")) document.getElementById("concern").value=job.concern||"";
+    const profile=portalProfile(); applyPortalProfile(profile);
+    job.status="Opened"; job.openedAt=new Date().toISOString(); jobs[index]=job; portalWrite(PORTAL_JOBS_KEY,jobs);
+    portalShowScreen("checkin");
+    const st=document.getElementById("identifyStatus"); if(st){st.className="status ok";st.textContent=`Assigned job opened: ${job.vehicle||"vehicle pending VIN scan"}. Scan or enter the VIN to continue.`}
+  }
+  document.getElementById("portalSignIn")?.addEventListener("click",()=>{
+    const name=document.getElementById("portalTechName").value.trim(), pin=document.getElementById("portalPin").value.trim(), status=document.getElementById("portalLoginStatus");
+    if(!name){status.className="status warn";status.textContent="Enter the technician name before signing in.";return}
+    if(pin && !/^\d{4}$/.test(pin)){status.className="status warn";status.textContent="Use a 4-digit PIN or leave it blank for this field test.";return}
+    try{
+      const profile={name,pinSet:Boolean(pin),signedInAt:new Date().toISOString()};
+      portalWrite(PORTAL_PROFILE_KEY,profile);
+      applyPortalProfile(profile);
+      status.className="status ok";
+      status.textContent=`Signed in as ${name}.`;
+      portalShowScreen("home");
+    }catch(error){
+      console.error("Portal sign-in failed:",error);
+      status.className="status bad";
+      status.textContent="Sign-in could not be saved on this browser. Close and reopen the file, then try again.";
+    }
+  });
+  document.getElementById("portalSignOut")?.addEventListener("click",()=>{localStorage.removeItem(PORTAL_PROFILE_KEY);applyPortalProfile(null);portalShowScreen("login")});
+  document.getElementById("addAssignedJob")?.addEventListener("click",()=>{
+    const job={customer:document.getElementById("jobCustomer").value.trim(),ro:document.getElementById("jobRo").value.trim(),vehicle:document.getElementById("jobVehicle").value.trim(),concern:document.getElementById("jobConcern").value.trim(),status:"Assigned",createdAt:new Date().toISOString()};
+    if(!job.vehicle && !job.concern){alert("Enter at least the vehicle or assigned work.");return}
+    const jobs=portalRead(PORTAL_JOBS_KEY,[]); jobs.unshift(job); portalWrite(PORTAL_JOBS_KEY,jobs); ["jobCustomer","jobRo","jobVehicle","jobConcern"].forEach(id=>document.getElementById(id).value=""); renderAssignedJobs();
+  });
+  document.getElementById("assignedJobsList")?.addEventListener("click",e=>{
+    const start=e.target.closest("[data-start-assigned]"), remove=e.target.closest("[data-remove-assigned]");
+    if(start) startAssignedJob(Number(start.dataset.startAssigned));
+    if(remove){const jobs=portalRead(PORTAL_JOBS_KEY,[]);jobs.splice(Number(remove.dataset.removeAssigned),1);portalWrite(PORTAL_JOBS_KEY,jobs);renderAssignedJobs()}
+  });
+  document.querySelectorAll('[data-go="jobs"]').forEach(b=>b.addEventListener("click",renderAssignedJobs));
+  window.addEventListener("DOMContentLoaded",()=>{
+    const profile=portalProfile(); applyPortalProfile(profile); renderAssignedJobs();
+    if(profile?.name) portalShowScreen("home"); else portalShowScreen("login");
+  });
 </script>
 </body>
 </html>
