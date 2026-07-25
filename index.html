@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.0.5</title>
+<title>Nitros Mobile Technician Portal v8.0.6</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -187,7 +187,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.0.5 — Save Status</div>
+  <div class="sub">Mobile Technician Portal v8.0.6 — Road-Test Verification</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -201,7 +201,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.0.5 stores the field-test profile and active repair-order draft on this device.</div>
+    <div id="portalLoginStatus" class="status">Version 8.0.6 stores the field-test profile, active repair-order draft, and road-test verification record on this device.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -814,7 +814,43 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 
     <div class="field">
       <label for="completionNotes">Completion / quality-control notes</label>
-      <textarea id="completionNotes" rows="4" placeholder="Repairs completed, road test results, torque checks, final verification..."></textarea>
+      <textarea id="completionNotes" rows="4" placeholder="Repairs completed, torque checks, final verification..."></textarea>
+    </div>
+
+    <div class="card" style="margin-top:18px;background:#0d192a" id="roadTestVerificationCard">
+      <div class="eyebrow">Road-Test Verification</div>
+      <h3>Document the final verification drive</h3>
+      <p>Record whether a road test was required. When completed, document the final odometer or select the controlled odometer-inoperative exception.</p>
+      <div class="grid two">
+        <div class="field"><label for="roadTestStatus">Road-test status <strong>(required)</strong></label>
+          <select id="roadTestStatus">
+            <option value="">Select road-test status</option>
+            <option>Required — Completed</option>
+            <option>Required — Not Completed</option>
+            <option>Not Required</option>
+            <option>Unsafe / Unable to Road Test</option>
+          </select>
+        </div>
+        <div class="field"><label for="roadTestTechnician">Road-test technician</label><input id="roadTestTechnician" placeholder="Defaults to assigned technician"></div>
+        <div class="field"><label for="roadTestStartMileage">Starting mileage</label><input id="roadTestStartMileage" inputmode="numeric" placeholder="Defaults to check-in mileage"></div>
+        <div class="field"><label for="roadTestEndMileage">Final mileage</label><input id="roadTestEndMileage" inputmode="numeric" placeholder="Ending odometer reading"></div>
+      </div>
+      <div class="field">
+        <label><input id="odometerInoperative" type="checkbox"> Odometer Inoperative</label>
+        <div class="capture-note">Use this exception only when the vehicle odometer cannot display or record mileage.</div>
+      </div>
+      <div class="field hidden" id="odometerExceptionWrap">
+        <label for="odometerExceptionNotes">Odometer exception explanation</label>
+        <textarea id="odometerExceptionNotes" rows="3" placeholder="Optional explanation, observed condition, or supporting details..."></textarea>
+      </div>
+      <div class="field" id="finalOdometerPhotoWrap">
+        <label for="photoFinalOdometer">Final odometer photo after road test</label>
+        <input id="photoFinalOdometer" type="file" accept="image/*" capture="environment">
+      </div>
+      <div class="field"><label for="roadTestNotes">Road-test results / verification notes</label><textarea id="roadTestNotes" rows="4" placeholder="Operating conditions, symptom verification, post-repair result, warning lamps, handling, noises..."></textarea></div>
+      <button id="captureRoadTestLocation" class="btn secondary" type="button">Capture Verification Location</button>
+      <div id="roadTestLocationStatus" class="status">Location not captured. GPS metadata is optional and stored only when permission is granted.</div>
+      <div id="roadTestStatusMessage" class="status">Select the road-test status to determine the required evidence.</div>
     </div>
 
     <h3>Technician Timeline</h3>
@@ -872,7 +908,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.0.5 • Save Status Build • Completion Wizard preserved • Local device storage</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.0.6 • Save Status Build • Completion Wizard preserved • Local device storage</div>
 </div>
 
 <script>
@@ -1141,6 +1177,17 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       {label:"Fluids and leaks status",section:"Technician Inspection",screen:"technician",target:"fluidsStatus",complete:()=>inspectionStatusComplete("fluidsStatus")},
       {label:"Battery and charging status",section:"Technician Inspection",screen:"technician",target:"batteryStatus",complete:()=>inspectionStatusComplete("batteryStatus")},
       {label:"Lights, wipers, and visibility status",section:"Technician Inspection",screen:"technician",target:"lightsStatus",complete:()=>inspectionStatusComplete("lightsStatus")},
+      {label:"Road-test status",section:"Road-Test Verification",screen:"workorder",target:"roadTestStatus",complete:()=>!!document.getElementById("roadTestStatus")?.value},
+      {label:"Final road-test evidence",section:"Road-Test Verification",screen:"workorder",target:"roadTestEndMileage",complete:()=>{
+        const status=document.getElementById("roadTestStatus")?.value||"";
+        if(status!=="Required — Completed") return true;
+        if(document.getElementById("odometerInoperative")?.checked) return true;
+        return !!document.getElementById("roadTestEndMileage")?.value.trim() && !!document.getElementById("photoFinalOdometer")?.files?.length;
+      }},
+      {label:"Road-test results / verification notes",section:"Road-Test Verification",screen:"workorder",target:"roadTestNotes",complete:()=>{
+        const status=document.getElementById("roadTestStatus")?.value||"";
+        return status!=="Required — Completed" || !!document.getElementById("roadTestNotes")?.value.trim();
+      }},
       {label:"Technician signature",section:"Technician Inspection",screen:"technician",target:"technicianSignature",complete:()=>signatureHasInk("technicianSignature")},
       {label:"Customer signature",section:"Technician Inspection",screen:"technician",target:"customerSignature",complete:()=>signatureHasInk("customerSignature")}
     ];
@@ -1157,7 +1204,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     center.classList.remove("hidden");
     const all=validationRequirements();
     const missing=all.filter(item=>!item.complete());
-    const sections=["Customer Information","Walk-Around Inspection","Technician Inspection"];
+    const sections=["Customer Information","Walk-Around Inspection","Technician Inspection","Road-Test Verification"];
     summary.innerHTML=sections.map(section=>{
       const sectionItems=all.filter(item=>item.section===section);
       const remaining=sectionItems.filter(item=>!item.complete()).length;
@@ -2800,7 +2847,12 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       ["Time comparison",getLaborComparisonText()],
       ["Efficiency",getEfficiencyText()],
       ["Internal technician notes",document.getElementById("internalTechnicianNotes").value||"None"],
-      ["Completion notes",document.getElementById("completionNotes").value||"None"]
+      ["Completion notes",document.getElementById("completionNotes").value||"None"],
+      ["Road-test status",document.getElementById("roadTestStatus").value||"Not recorded"],
+      ["Road-test technician",document.getElementById("roadTestTechnician").value||document.getElementById("assignedTechnician").value||document.getElementById("technicianName").value||"Not recorded"],
+      ["Road-test mileage",document.getElementById("odometerInoperative").checked?"Odometer Inoperative":`${document.getElementById("roadTestStartMileage").value||document.getElementById("mileage").value||"-"} to ${document.getElementById("roadTestEndMileage").value||"-"}`],
+      ["Final odometer photo",document.getElementById("photoFinalOdometer").files?.length?"Captured":(document.getElementById("odometerInoperative").checked?"Waived — Odometer Inoperative":"Not captured")],
+      ["Road-test verification notes",document.getElementById("roadTestNotes").value||"None"]
     ];
     const healthScoreEl=document.getElementById("healthScore");
     if(healthScoreEl) healthScoreEl.textContent=calculateHealthScore();
@@ -3102,6 +3154,55 @@ document.addEventListener("click",e=>{
     const view=e.target.closest(".print-history-record"); if(view){viewHistoryRecord(view.dataset.recordId);return;}
   });
 
+let roadTestLocation=null;
+  function captureRoadTestLocation(){
+    const status=document.getElementById("roadTestLocationStatus");
+    if(!navigator.geolocation){
+      if(status){status.className="status warn";status.textContent="GPS location is not supported by this browser.";}
+      return;
+    }
+    if(status){status.className="status";status.textContent="Requesting verification location…";}
+    navigator.geolocation.getCurrentPosition(position=>{
+      roadTestLocation={
+        latitude:Number(position.coords.latitude.toFixed(6)),
+        longitude:Number(position.coords.longitude.toFixed(6)),
+        accuracyMeters:Math.round(position.coords.accuracy||0),
+        capturedAt:new Date(position.timestamp||Date.now()).toISOString()
+      };
+      if(status){status.className="status ok";status.textContent=`Verification location captured (accuracy approximately ${roadTestLocation.accuracyMeters} m).`;}
+      scheduleDraftSave();
+    },error=>{
+      if(status){status.className="status warn";status.textContent=error.code===1?"Location permission was not granted. The repair order can still be completed without GPS metadata.":"Verification location could not be captured. The repair order can still be completed.";}
+    },{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
+  }
+  document.getElementById("captureRoadTestLocation")?.addEventListener("click",captureRoadTestLocation);
+
+  function updateRoadTestVerificationUI(){
+    const status=document.getElementById("roadTestStatus")?.value||"";
+    const inoperative=Boolean(document.getElementById("odometerInoperative")?.checked);
+    const completed=status==="Required — Completed";
+    document.getElementById("odometerExceptionWrap")?.classList.toggle("hidden",!inoperative);
+    document.getElementById("finalOdometerPhotoWrap")?.classList.toggle("hidden",!completed||inoperative);
+    const endMileage=document.getElementById("roadTestEndMileage");
+    if(endMileage){endMileage.disabled=inoperative||!completed;}
+    const photo=document.getElementById("photoFinalOdometer");
+    if(photo){photo.disabled=inoperative||!completed;}
+    const message=document.getElementById("roadTestStatusMessage");
+    if(message){
+      if(!status){message.className="status";message.textContent="Select the road-test status to determine the required evidence.";}
+      else if(completed&&inoperative){message.className="status warn";message.textContent="Odometer Inoperative exception selected. Final mileage and photo are waived; the exception is recorded in the audit trail.";}
+      else if(completed){message.className="status warn";message.textContent="Final mileage, final odometer photo, and road-test verification notes are required.";}
+      else{message.className="status ok";message.textContent="Road-test disposition recorded. Add supporting notes whenever the vehicle could not be road tested.";}
+    }
+    scheduleDraftSave();
+    if(currentScreenId==="review") renderValidationCenter();
+  }
+  document.getElementById("roadTestStatus")?.addEventListener("change",updateRoadTestVerificationUI);
+  document.getElementById("odometerInoperative")?.addEventListener("change",updateRoadTestVerificationUI);
+  document.getElementById("roadTestTechnician")?.addEventListener("focus",e=>{if(!e.target.value)e.target.value=document.getElementById("assignedTechnician")?.value||document.getElementById("technicianName")?.value||portalProfile()?.name||"";});
+  document.getElementById("roadTestStartMileage")?.addEventListener("focus",e=>{if(!e.target.value)e.target.value=document.getElementById("mileage")?.value||"";});
+  updateRoadTestVerificationUI();
+
 document.getElementById("validationList")?.addEventListener("click",e=>{
     const button=e.target.closest("[data-validation-target]");
     if(!button) return;
@@ -3233,6 +3334,20 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
         efficiency:getEfficiencyText(),
         internalTechnicianNotes:document.getElementById("internalTechnicianNotes").value.trim(),
         completionNotes:document.getElementById("completionNotes").value.trim(),
+        roadTestVerification:{
+          status:document.getElementById("roadTestStatus").value,
+          technician:document.getElementById("roadTestTechnician").value.trim()||document.getElementById("assignedTechnician").value.trim()||document.getElementById("technicianName").value.trim(),
+          startMileage:document.getElementById("roadTestStartMileage").value.trim()||document.getElementById("mileage").value.trim(),
+          endMileage:document.getElementById("roadTestEndMileage").value.trim(),
+          odometerInoperative:document.getElementById("odometerInoperative").checked,
+          odometerExceptionNotes:document.getElementById("odometerExceptionNotes").value.trim(),
+          finalOdometerPhoto:document.getElementById("photoFinalOdometer").files[0]?.name||"",
+          notes:document.getElementById("roadTestNotes").value.trim(),
+          verifiedAt:new Date().toISOString(),
+          technicianIdentity:portalProfile()?.name||document.getElementById("technicianName").value.trim(),
+          deviceIdentity:navigator.userAgent,
+          location:roadTestLocation
+        },
         timeline:jobClock.timeline
       }
     };
