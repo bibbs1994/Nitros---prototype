@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.1.2</title>
+<title>Nitros Mobile Technician Portal v8.1.3</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -227,7 +227,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   .timeline-empty{padding:20px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
   @media(max-width:700px){.timeline-toolbar{grid-template-columns:1fr}.timeline-summary{grid-template-columns:1fr 1fr}.complete-timeline-entry{grid-template-columns:72px 1fr}.complete-timeline-entry img{width:72px;height:72px}}
 
-  /* v8.1.2 Technician Productivity Dashboard */
+  /* v8.1.3 Technician Productivity Dashboard */
   .productivity-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
   .productivity-card{background:#081321;border:1px solid var(--line);border-radius:16px;padding:14px;text-align:center}
   .productivity-card strong{display:block;font-size:25px;margin-bottom:4px}.productivity-card span{font-size:12px;color:var(--muted)}
@@ -259,7 +259,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.1.2 — Technician Productivity Dashboard</div>
+  <div class="sub">Mobile Technician Portal v8.1.3 — Repair Order Command Center</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -1109,7 +1109,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.1.2 • Technician Productivity Dashboard • Complete Evidence Timeline preserved • Local device storage</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.1.3 • Repair Order Command Center • Complete Evidence Timeline preserved • Local device storage</div>
 </div>
 
 <script>
@@ -3757,7 +3757,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   });
 
 
-  // v8.1.2 Smart Evidence System — independent layer using the approved photo evidence database.
+  // v8.1.3 Smart Evidence System — independent layer using the approved photo evidence database.
   (()=>{
     const DB_NAME="nitros_photo_evidence_v1", STORE="photos", ACTIVE="active-draft";
     const allowedScreens=new Set(["technician","estimate","workorder","review"]);
@@ -3793,7 +3793,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;document.getElementById("dictateEvidenceNotes")?.addEventListener("click",()=>{if(!SR){alert("Voice dictation is not available in this browser.");return}rec=new SR();rec.lang="en-US";rec.interimResults=false;rec.onresult=e=>{const t=e.results[0][0].transcript,n=document.getElementById("evidenceNotes");n.value=(n.value?`${n.value} `:"")+t};rec.start()});
   })();
 
-  // v8.1.2 Complete Evidence Timeline — chronological view of every active repair-order image.
+  // v8.1.3 Complete Evidence Timeline — chronological view of every active repair-order image.
   (()=>{
     const DB_NAME="nitros_photo_evidence_v1", STORE="photos", ACTIVE="active-draft";
     const modal=document.getElementById("completeTimelineModal"), listBox=document.getElementById("completeTimelineList"), status=document.getElementById("completeTimelineStatus");
@@ -3815,7 +3815,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   })();
 
 
-  // v8.1.2 Technician Productivity Dashboard and Quick Actions.
+  // v8.1.3 Technician Productivity Dashboard and Quick Actions.
   (()=>{
     const FLOW=["Assigned","Diagnosing","Waiting on Approval","Waiting on Parts","Repairing","Road Test","Quality Check","Complete"];
     const DRAFT_KEY="nitros_prototype_v073_active_draft", HISTORY_KEY="nitros_prototype_customer_history_v070", JOBS_KEY="nitros_portal_v8_assigned_jobs";
