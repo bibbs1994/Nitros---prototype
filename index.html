@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.0</title>
+<title>Nitros Mobile Technician Portal v8.0.2</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -163,7 +163,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.0.1 — Sign-In Fix</div>
+  <div class="sub">Mobile Technician Portal v8.0.2 — Four-Corner Walk-Around & MA Tax</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
@@ -176,7 +176,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.0.1 stores the field-test profile only on this device.</div>
+    <div id="portalLoginStatus" class="status">Version 8.0.2 stores the field-test profile only on this device.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -481,14 +481,14 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 
     <h3>Vehicle documentation photos</h3>
     <div class="photo-grid">
-      <div class="field"><label for="photoFront">Front</label><input id="photoFront" type="file" accept="image/*" capture="environment"></div>
-      <div class="field"><label for="photoRear">Rear</label><input id="photoRear" type="file" accept="image/*" capture="environment"></div>
-      <div class="field"><label for="photoLeft">Left side</label><input id="photoLeft" type="file" accept="image/*" capture="environment"></div>
-      <div class="field"><label for="photoRight">Right side</label><input id="photoRight" type="file" accept="image/*" capture="environment"></div>
+      <div class="field"><label for="photoFrontLeft">Front-left corner <strong>(required)</strong></label><input id="photoFrontLeft" type="file" accept="image/*" capture="environment" required></div>
+      <div class="field"><label for="photoFrontRight">Front-right corner <strong>(required)</strong></label><input id="photoFrontRight" type="file" accept="image/*" capture="environment" required></div>
+      <div class="field"><label for="photoRearLeft">Rear-left corner <strong>(required)</strong></label><input id="photoRearLeft" type="file" accept="image/*" capture="environment" required></div>
+      <div class="field"><label for="photoRearRight">Rear-right corner <strong>(required)</strong></label><input id="photoRearRight" type="file" accept="image/*" capture="environment" required></div>
       <div class="field"><label for="photoOdometer">Odometer</label><input id="photoOdometer" type="file" accept="image/*" capture="environment"></div>
       <div class="field"><label for="photoVin">VIN label</label><input id="photoVin" type="file" accept="image/*" capture="environment"></div>
     </div>
-    <div id="photoStatus" class="status">No vehicle documentation photos selected.</div>
+    <div id="photoStatus" class="status warn">Four corner photos are required before continuing.</div>
 
     <div class="field">
       <label for="inspectionNotes">Initial condition notes</label>
@@ -669,7 +669,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     </div>
     <div class="grid two" style="margin-top:18px">
       <div class="field"><label for="shopSuppliesPercent">Shop supplies (%)</label><input id="shopSuppliesPercent" inputmode="decimal" value="5"></div>
-      <div class="field"><label for="taxPercent">Tax on parts (%)</label><input id="taxPercent" inputmode="decimal" value="7"></div>
+      <div class="field"><label for="taxPercent">Massachusetts sales tax on taxable parts (%)</label><input id="taxPercent" inputmode="decimal" value="6.25"></div>
     </div>
     <div class="auth-panel">
       <h3>Customer authorization</h3>
@@ -828,7 +828,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </section>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.0 • Field Test Build • Verified v7.7 scanning foundation • Local device storage</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.0.2 • Field Test Build • Verified v7.7 scanning foundation • Local device storage</div>
 </div>
 
 <script>
@@ -1042,9 +1042,36 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     scheduleDraftSave();
   }
 
+  function validateRequiredCornerPhotos(){
+    const requiredCorners=[
+      ["Front-left", "photoFrontLeft"],
+      ["Front-right", "photoFrontRight"],
+      ["Rear-left", "photoRearLeft"],
+      ["Rear-right", "photoRearRight"]
+    ];
+    const missing=requiredCorners.filter(([,id])=>!document.getElementById(id)?.files?.length);
+    const status=document.getElementById("photoStatus");
+    if(missing.length){
+      status.className="status bad";
+      status.textContent=`Required walk-around photos missing: ${missing.map(([label])=>label).join(", ")}.`;
+      document.getElementById(missing[0][1])?.scrollIntoView({behavior:"smooth",block:"center"});
+      return false;
+    }
+    status.className="status ok";
+    status.textContent=`All four required corner photos captured. ${countVehiclePhotos()} of 6 total documentation photos selected.`;
+    return true;
+  }
+
   document.addEventListener("click",(e)=>{
     const go=e.target.closest("[data-go]");
-    if(go){showScreen(go.dataset.go);return;}
+    if(go){
+      if(go.dataset.go==="technician" && currentScreenId==="inspection" && !validateRequiredCornerPhotos()){
+        e.preventDefault();
+        return;
+      }
+      showScreen(go.dataset.go);
+      return;
+    }
     const demo=e.target.closest("[data-demo]");
     if(demo){vinInput.value=demo.dataset.demo;showScreen("checkin");identifyVehicle();}
   });
@@ -1889,7 +1916,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 
 
   function countVehiclePhotos(){
-    return ["photoFront","photoRear","photoLeft","photoRight","photoOdometer","photoVin"]
+    return ["photoFrontLeft","photoFrontRight","photoRearLeft","photoRearRight","photoOdometer","photoVin"]
       .filter(id=>document.getElementById(id).files.length).length;
   }
 
@@ -2692,12 +2719,15 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     status.textContent="Dictation is off. Review the concern before continuing.";
   }
 
-  ["photoFront","photoRear","photoLeft","photoRight","photoOdometer","photoVin"].forEach(id=>{
+  ["photoFrontLeft","photoFrontRight","photoRearLeft","photoRearRight","photoOdometer","photoVin"].forEach(id=>{
     document.getElementById(id).addEventListener("change",()=>{
       const count=countVehiclePhotos();
       const status=document.getElementById("photoStatus");
-      status.className=count?"status ok":"status";
-      status.textContent=count?`${count} of 6 vehicle documentation photos selected.`:"No vehicle documentation photos selected.";
+      const cornerCount=["photoFrontLeft","photoFrontRight","photoRearLeft","photoRearRight"].filter(photoId=>document.getElementById(photoId).files.length).length;
+      status.className=cornerCount===4?"status ok":"status warn";
+      status.textContent=cornerCount===4
+        ?`All four required corner photos captured. ${count} of 6 total documentation photos selected.`
+        :`${cornerCount} of 4 required corner photos captured. ${count} of 6 total documentation photos selected.`;
     });
   });
 
@@ -2881,6 +2911,13 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
     const missing=required.filter(([,value])=>!value).map(([label])=>label);
     const s=document.getElementById("submitStatus");
 
+    if(!validateRequiredCornerPhotos()){
+      s.className="status bad";
+      s.textContent="Save blocked: capture all four required walk-around corner photos.";
+      showScreen("inspection");
+      return;
+    }
+
     if(missing.length){
       s.className="status bad";
       s.textContent=`Complete required fields: ${missing.join(", ")}.`;
@@ -2910,10 +2947,10 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
         completed:c.checked
       })),
       vehiclePhotos:{
-        front:document.getElementById("photoFront").files[0]?.name||"",
-        rear:document.getElementById("photoRear").files[0]?.name||"",
-        left:document.getElementById("photoLeft").files[0]?.name||"",
-        right:document.getElementById("photoRight").files[0]?.name||"",
+        frontLeft:document.getElementById("photoFrontLeft").files[0]?.name||"",
+        frontRight:document.getElementById("photoFrontRight").files[0]?.name||"",
+        rearLeft:document.getElementById("photoRearLeft").files[0]?.name||"",
+        rearRight:document.getElementById("photoRearRight").files[0]?.name||"",
         odometer:document.getElementById("photoOdometer").files[0]?.name||"",
         vinLabel:document.getElementById("photoVin").files[0]?.name||""
       },
