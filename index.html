@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.0.7</title>
+<title>Nitros Mobile Technician Portal v8.0.8</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -197,13 +197,30 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   .photo-fullscreen button{position:absolute;top:14px;right:14px;width:auto}
   @media(max-width:700px){.evidence-grid{grid-template-columns:1fr}.evidence-card img{height:230px}.photo-modal{padding:8px}.photo-modal-card{padding:13px}.photo-modal-head{display:block}.photo-modal-head button{margin-top:10px}}
 
+
+  .floating-evidence-btn{position:fixed;right:18px;bottom:18px;z-index:90;width:auto;min-width:142px;border-radius:999px;box-shadow:0 12px 30px rgba(0,0,0,.45);display:none}
+  .floating-evidence-btn.visible{display:block}
+  .smart-evidence-modal{position:fixed;inset:0;z-index:160;background:rgba(0,0,0,.86);padding:12px;overflow:auto}
+  .smart-evidence-card{width:min(920px,100%);margin:0 auto;background:#0d192a;border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 18px 55px rgba(0,0,0,.55)}
+  .smart-evidence-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+  .annotation-wrap{position:relative;background:#050a11;border:1px solid var(--line);border-radius:16px;overflow:hidden;min-height:260px;display:flex;align-items:center;justify-content:center}
+  .annotation-wrap img{display:block;max-width:100%;max-height:58vh;object-fit:contain}
+  .annotation-wrap canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+  .annotation-tools{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0}
+  .evidence-timeline{display:grid;gap:10px;margin-top:12px}
+  .evidence-timeline-item{border-left:3px solid var(--accent);padding:10px 12px;background:#081321;border-radius:0 12px 12px 0}
+  .evidence-timeline-item strong{display:block;margin-bottom:4px}
+  .evidence-timeline-item small{color:var(--muted)}
+  .severity-unsafe{border-color:#e15d64!important}.severity-safety{border-color:#f4b740!important}
+  @media(max-width:700px){.floating-evidence-btn{right:12px;bottom:12px;min-width:126px}.annotation-tools{grid-template-columns:1fr 1fr}.smart-evidence-head{display:block}.smart-evidence-head button{margin-top:10px}}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.0.7 — Photo Evidence Manager</div>
+  <div class="sub">Mobile Technician Portal v8.0.8 — Smart Evidence System</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -217,7 +234,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.0.7 stores repair-order drafts and photographic evidence on this device.</div>
+    <div id="portalLoginStatus" class="status">Version 8.0.8 stores repair-order drafts, photographic evidence, annotations, and evidence timelines on this device.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -932,6 +949,39 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
+
+<button id="floatingEvidenceButton" class="btn primary floating-evidence-btn" type="button">📷 Add Evidence</button>
+<div id="smartEvidenceModal" class="smart-evidence-modal hidden" role="dialog" aria-modal="true" aria-labelledby="smartEvidenceTitle">
+  <div class="smart-evidence-card">
+    <div class="smart-evidence-head">
+      <div><div class="eyebrow">Smart Evidence System</div><h2 id="smartEvidenceTitle">Document additional damage or findings</h2><p>Capture evidence from the technician inspection through final review without leaving the current screen.</p></div>
+      <button id="closeSmartEvidence" class="btn ghost small" type="button">Close</button>
+    </div>
+    <div class="grid two">
+      <div class="field"><label for="evidenceTitle">Evidence title</label><input id="evidenceTitle" placeholder="Example: Left frame rail corrosion"></div>
+      <div class="field"><label for="evidenceCategory">Category</label><select id="evidenceCategory"><option>Frame Damage</option><option>Rust / Corrosion</option><option>Collision Damage</option><option>Fluid Leak</option><option>Suspension</option><option>Brake System</option><option>Exhaust</option><option>Electrical</option><option>Tire</option><option>Engine</option><option>Transmission</option><option>Customer Concern</option><option>Previous Improper Repair</option><option>Other</option></select></div>
+      <div class="field"><label for="evidenceSeverity">Severity</label><select id="evidenceSeverity"><option>Information Only</option><option>Monitor</option><option>Repair Recommended</option><option>Safety Concern</option><option>Vehicle Unsafe to Operate</option></select></div>
+      <div class="field"><label for="evidenceRepairLine">Attach to repair line (optional)</label><input id="evidenceRepairLine" placeholder="Example: Replace left lower control arm"></div>
+    </div>
+    <div class="field"><label for="evidencePhotoInput">Take or select evidence photo</label><input id="evidencePhotoInput" type="file" accept="image/*" capture="environment"></div>
+    <div id="evidencePhotoStatus" class="status">Select a photo to begin annotation.</div>
+    <div id="annotationSection" class="hidden">
+      <div class="annotation-wrap" id="annotationWrap"><img id="evidencePreview" alt="Evidence preview"><canvas id="annotationCanvas"></canvas></div>
+      <div class="annotation-tools">
+        <button class="btn secondary small annotation-mode" data-mode="freehand" type="button">✏️ Draw</button>
+        <button class="btn secondary small annotation-mode" data-mode="arrow" type="button">➜ Arrow</button>
+        <button class="btn secondary small annotation-mode" data-mode="circle" type="button">◯ Circle</button>
+        <button class="btn secondary small annotation-mode" data-mode="rectangle" type="button">▭ Box</button>
+        <button id="clearAnnotations" class="btn ghost small" type="button">Clear Marks</button>
+      </div>
+    </div>
+    <div class="field"><label for="evidenceNotes">Technician notes</label><textarea id="evidenceNotes" rows="4" placeholder="Describe the condition, location, measurement, risk, and recommended action."></textarea></div>
+    <div class="grid two"><button id="dictateEvidenceNotes" class="btn secondary" type="button">🎙️ Dictate Notes</button><button id="saveSmartEvidence" class="btn primary" type="button">Save Evidence</button></div>
+    <div id="smartEvidenceSaveStatus" class="status">Evidence will be stored with this active repair order and copied into vehicle history when the repair is finalized.</div>
+    <div class="card" style="margin-top:18px;background:#081321"><div class="eyebrow">Evidence Timeline</div><div id="activeEvidenceTimeline" class="evidence-timeline"></div></div>
+  </div>
+</div>
+
 <div id="photoEvidenceModal" class="photo-modal hidden" role="dialog" aria-modal="true" aria-labelledby="photoModalTitle">
   <div class="photo-modal-card">
     <div class="photo-modal-head"><div><div class="eyebrow">Photo Evidence Manager</div><h2 id="photoModalTitle">Repair-order photos</h2></div><button id="closePhotoEvidenceModal" class="btn ghost small" type="button">Close</button></div>
@@ -940,7 +990,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.0.7 • Photo Evidence Manager • Road-Test Verification preserved • Local device storage</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.0.8 • Smart Evidence System • Road-Test Verification preserved • Local device storage</div>
 </div>
 
 <script>
@@ -3586,6 +3636,43 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     const profile=portalProfile(); applyPortalProfile(profile); renderAssignedJobs();
     if(profile?.name) portalShowScreen("home"); else portalShowScreen("login");
   });
+
+
+  // v8.0.8 Smart Evidence System — independent layer using the approved photo evidence database.
+  (()=>{
+    const DB_NAME="nitros_photo_evidence_v1", STORE="photos", ACTIVE="active-draft";
+    const allowedScreens=new Set(["technician","estimate","workorder","review"]);
+    const btn=document.getElementById("floatingEvidenceButton"), modal=document.getElementById("smartEvidenceModal");
+    const input=document.getElementById("evidencePhotoInput"), preview=document.getElementById("evidencePreview"), canvas=document.getElementById("annotationCanvas"), wrap=document.getElementById("annotationWrap");
+    let originalBlob=null, drawing=false, startX=0,startY=0,mode="freehand",snapshot=null;
+    const ctx=canvas?.getContext("2d");
+    function openDb(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB_NAME,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE,{keyPath:"key"})};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+    async function put(entry){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(entry);tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
+    async function list(recordId){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,"readonly"),r=tx.objectStore(STORE).getAll();r.onsuccess=()=>resolve((r.result||[]).filter(x=>x.recordId===recordId&&String(x.fieldId||"").startsWith("additionalEvidence_")));r.onerror=()=>reject(r.error);tx.oncomplete=()=>db.close()})}
+    async function compress(file){const b=await createImageBitmap(file),max=1600,scale=Math.min(1,max/Math.max(b.width,b.height)),c=document.createElement("canvas");c.width=Math.round(b.width*scale);c.height=Math.round(b.height*scale);c.getContext("2d").drawImage(b,0,0,c.width,c.height);b.close?.();return await new Promise(res=>c.toBlob(x=>res(x||file),"image/jpeg",.84))}
+    function currentScreen(){return document.querySelector(".screen.active")?.id||"home"}
+    function updateButton(){btn?.classList.toggle("visible",allowedScreens.has(currentScreen()))}
+    const observer=new MutationObserver(updateButton);document.querySelectorAll(".screen").forEach(s=>observer.observe(s,{attributes:true,attributeFilter:["class"]}));updateButton();
+    function identity(){const profile=(()=>{try{return JSON.parse(localStorage.getItem("nitros_portal_v8_profile")||"null")}catch(e){return null}})();return {technician:profile?.name||document.getElementById("technicianName")?.value.trim()||document.getElementById("assignedTechnician")?.value.trim()||"Not entered",vin:document.getElementById("vinInput")?.value.trim().toUpperCase()||"Not entered",repairOrder:document.getElementById("roNumber")?.value.trim()||document.getElementById("workOrderNumber")?.value.trim()||"Pending",deviceIdentity:navigator.userAgent}}
+    function openModal(){modal.classList.remove("hidden");renderTimeline();document.getElementById("evidenceTitle").focus()}
+    function closeModal(){modal.classList.add("hidden")}
+    btn?.addEventListener("click",openModal);document.getElementById("closeSmartEvidence")?.addEventListener("click",closeModal);
+    function fitCanvas(){if(!preview.naturalWidth)return;const r=wrap.getBoundingClientRect();canvas.width=Math.max(1,Math.round(r.width));canvas.height=Math.max(1,Math.round(r.height));ctx.lineWidth=4;ctx.lineCap="round";ctx.strokeStyle="#ff3b30"}
+    input?.addEventListener("change",async()=>{const file=input.files?.[0];if(!file)return;originalBlob=await compress(file);preview.src=URL.createObjectURL(originalBlob);preview.onload=()=>{document.getElementById("annotationSection").classList.remove("hidden");requestAnimationFrame(fitCanvas)};const st=document.getElementById("evidencePhotoStatus");st.className="status ok";st.textContent="Photo loaded. Add optional markings, then save."});
+    window.addEventListener("resize",()=>{if(!document.getElementById("annotationSection")?.classList.contains("hidden"))fitCanvas()});
+    document.querySelectorAll(".annotation-mode").forEach(b=>b.addEventListener("click",()=>{mode=b.dataset.mode;document.querySelectorAll(".annotation-mode").forEach(x=>x.classList.toggle("primary",x===b))}));
+    document.getElementById("clearAnnotations")?.addEventListener("click",()=>ctx.clearRect(0,0,canvas.width,canvas.height));
+    function pos(e){const r=canvas.getBoundingClientRect(),p=e.touches?.[0]||e;return {x:(p.clientX-r.left)*canvas.width/r.width,y:(p.clientY-r.top)*canvas.height/r.height}}
+    function down(e){e.preventDefault();const p=pos(e);drawing=true;startX=p.x;startY=p.y;snapshot=ctx.getImageData(0,0,canvas.width,canvas.height);if(mode==="freehand"){ctx.beginPath();ctx.moveTo(p.x,p.y)}}
+    function move(e){if(!drawing)return;e.preventDefault();const p=pos(e);if(mode==="freehand"){ctx.lineTo(p.x,p.y);ctx.stroke();return}ctx.putImageData(snapshot,0,0);ctx.beginPath();if(mode==="circle"){const rx=Math.abs(p.x-startX)/2,ry=Math.abs(p.y-startY)/2;ctx.ellipse((p.x+startX)/2,(p.y+startY)/2,rx,ry,0,0,Math.PI*2)}else if(mode==="rectangle")ctx.rect(startX,startY,p.x-startX,p.y-startY);else{ctx.moveTo(startX,startY);ctx.lineTo(p.x,p.y);const a=Math.atan2(p.y-startY,p.x-startX),h=18;ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-h*Math.cos(a-Math.PI/6),p.y-h*Math.sin(a-Math.PI/6));ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-h*Math.cos(a+Math.PI/6),p.y-h*Math.sin(a+Math.PI/6))}ctx.stroke()}
+    function up(e){if(!drawing)return;move(e);drawing=false}
+    ["pointerdown"].forEach(n=>canvas?.addEventListener(n,down));["pointermove"].forEach(n=>canvas?.addEventListener(n,move));["pointerup","pointercancel","pointerleave"].forEach(n=>canvas?.addEventListener(n,up));
+    function annotatedBlob(){return new Promise(resolve=>{const c=document.createElement("canvas"),img=preview;c.width=img.naturalWidth;c.height=img.naturalHeight;const x=c.getContext("2d");x.drawImage(img,0,0,c.width,c.height);x.drawImage(canvas,0,0,c.width,c.height);c.toBlob(b=>resolve(b),"image/jpeg",.86)})}
+    async function renderTimeline(){const box=document.getElementById("activeEvidenceTimeline"),items=await list(ACTIVE);items.sort((a,b)=>String(a.capturedAt).localeCompare(String(b.capturedAt)));box.innerHTML=items.length?items.map(i=>`<div class="evidence-timeline-item ${i.severity==="Vehicle Unsafe to Operate"?"severity-unsafe":i.severity==="Safety Concern"?"severity-safety":""}"><strong>${escapeText(i.title||i.label)}</strong><small>${escapeText(new Date(i.capturedAt).toLocaleString())} • ${escapeText(i.category||"Other")} • ${escapeText(i.severity||"Information Only")}<br>${escapeText(i.notes||"No notes")}${i.repairLine?`<br>Repair line: ${escapeText(i.repairLine)}`:""}</small></div>`).join(""):'<div class="status">No additional evidence has been recorded yet.</div>'}
+    function escapeText(v){return String(v??"").replace(/[&<>\"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+    document.getElementById("saveSmartEvidence")?.addEventListener("click",async()=>{const status=document.getElementById("smartEvidenceSaveStatus"),title=document.getElementById("evidenceTitle").value.trim(),notes=document.getElementById("evidenceNotes").value.trim();if(!originalBlob){status.className="status warn";status.textContent="Take or select an evidence photo before saving.";return}if(!title){status.className="status warn";status.textContent="Enter a short evidence title before saving.";return}try{status.className="status";status.textContent="Saving original and annotated evidence on this device…";const id=`additionalEvidence_${Date.now()}`,capturedAt=new Date().toISOString(),meta={recordId:ACTIVE,capturedAt,title,category:document.getElementById("evidenceCategory").value,severity:document.getElementById("evidenceSeverity").value,repairLine:document.getElementById("evidenceRepairLine").value.trim(),notes,sourceScreen:currentScreen(),...identity()};await put({...meta,key:`${ACTIVE}:${id}_original`,fieldId:`${id}_original`,label:`${title} — Original`,blob:originalBlob,mimeType:originalBlob.type||"image/jpeg",evidenceType:"additional-original"});const ann=await annotatedBlob();await put({...meta,key:`${ACTIVE}:${id}_annotated`,fieldId:`${id}_annotated`,label:`${title} — Annotated`,blob:ann,mimeType:"image/jpeg",evidenceType:"additional-annotated"});status.className="status ok";status.textContent="Evidence saved and added to the repair-order timeline.";["evidenceTitle","evidenceRepairLine","evidenceNotes"].forEach(id=>document.getElementById(id).value="");input.value="";originalBlob=null;document.getElementById("annotationSection").classList.add("hidden");ctx.clearRect(0,0,canvas.width,canvas.height);await renderTimeline()}catch(err){console.error(err);status.className="status bad";status.textContent="Evidence could not be saved. Check browser storage and try again."}});
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;document.getElementById("dictateEvidenceNotes")?.addEventListener("click",()=>{if(!SR){alert("Voice dictation is not available in this browser.");return}rec=new SR();rec.lang="en-US";rec.interimResults=false;rec.onresult=e=>{const t=e.results[0][0].transcript,n=document.getElementById("evidenceNotes");n.value=(n.value?`${n.value} `:"")+t};rec.start()});
+  })();
 </script>
 </body>
 </html>
