@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.0.3</title>
+<title>Nitros Mobile Technician Portal v8.0.4</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -178,7 +178,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.0.3 — Validation Navigator</div>
+  <div class="sub">Mobile Technician Portal v8.0.4 — Completion Wizard</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
 </header>
@@ -812,12 +812,12 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       <div class="status">No job activity recorded yet.</div>
     </div>
 
-    <button class="btn primary" data-go="review" style="margin-top:18px">Review Complete Work Order</button>
+    <button class="btn primary" data-go="review" style="margin-top:18px">Start Completion Wizard</button>
   </div>
 </section>
 
 <section id="review" class="screen">
-  <button class="back" data-go="workorder">← Back</button>
+  <button id="reviewBackButton" class="back" data-go="workorder">← Back</button>
   <div class="card">
     <div class="eyebrow">Professional Inspection Report</div>
     <h2>Customer-ready inspection summary</h2>
@@ -830,12 +830,13 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div id="summary" class="summary"></div>
 
     <div id="validationCenter" class="validation-center hidden">
-      <div class="eyebrow">Completion Validation Center</div>
-      <h3>Required items needing attention</h3>
-      <p>Tap any missing item to open its section, scroll directly to the field, and highlight it.</p>
+      <div class="eyebrow">Completion Wizard</div>
+      <h3>Complete every required item before final save</h3>
+      <p>The wizard will keep the repair order open until every required item is completed. Tap any missing item to go directly to it.</p>
+      <div id="wizardProgress" class="status warn">Checking required items…</div>
       <div id="validationSectionSummary" class="validation-summary"></div>
       <div id="validationList" class="validation-list"></div>
-      <div id="validationCompleteMessage" class="status ok hidden">All required items are complete. The inspection is ready to save.</div>
+      <div id="validationCompleteMessage" class="status ok hidden">Completion Wizard passed. All required items are complete and the inspection is ready to save.</div>
     </div>
 
     <div class="report-actions">
@@ -861,7 +862,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.0.3 • Field Test Build • Verified v7.7 scanning foundation • Local device storage</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.0.4 • Completion Wizard Build • Verified v8.0.3 foundation • Local device storage</div>
 </div>
 
 <script>
@@ -1062,7 +1063,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     currentScreenId=target;
     screens.forEach(s => s.classList.toggle("active", s.id === target));
     window.scrollTo({top:0,behavior:"instant"});
-    if(target === "review") buildSummary();
+    if(target === "review"){ buildSummary(); requestAnimationFrame(renderValidationCenter); }
     if(target === "history") searchHistory();
     if(target === "technician") requestAnimationFrame(()=>{
       signaturePadControllers.technicianSignature?.resize();
@@ -1125,6 +1126,28 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     list.innerHTML=missing.map(item=>`<button class="validation-item" type="button" data-validation-target="${item.target}"><span><strong>❌ ${escapeHtml(item.label)}</strong><small>${escapeHtml(item.section)}</small></span><span>Open →</span></button>`).join("");
     completeMessage.classList.toggle("hidden",missing.length!==0);
     if(!missing.length) list.innerHTML="";
+
+    const progress=document.getElementById("wizardProgress");
+    const completedCount=all.length-missing.length;
+    if(progress){
+      progress.className=missing.length?"status warn":"status ok";
+      progress.textContent=missing.length
+        ?`Completion Wizard: ${completedCount} of ${all.length} required items complete. ${missing.length} remaining.`
+        :`Completion Wizard: ${all.length} of ${all.length} required items complete. Ready to save.`;
+    }
+
+    const saveButton=document.getElementById("submitCheckin");
+    const printButton=document.getElementById("printReport");
+    const backButton=document.getElementById("reviewBackButton");
+    if(saveButton){
+      saveButton.disabled=missing.length!==0;
+      saveButton.textContent=missing.length?`Complete ${missing.length} Required Item${missing.length===1?"":"s"}`:"Save Inspection Report";
+    }
+    if(printButton) printButton.disabled=missing.length!==0;
+    if(backButton){
+      backButton.disabled=missing.length!==0;
+      backButton.title=missing.length?"Finish the Completion Wizard before leaving this screen.":"Return to work order";
+    }
     return missing;
   }
 
@@ -1194,6 +1217,16 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   document.addEventListener("click",(e)=>{
     const go=e.target.closest("[data-go]");
     if(go){
+      if(currentScreenId==="review" && go.dataset.go!=="review" && missingValidationItems().length){
+        e.preventDefault();
+        const status=document.getElementById("submitStatus");
+        if(status){
+          status.className="status bad";
+          status.textContent="Completion Wizard is still active. Finish every required item before leaving or saving the repair order.";
+        }
+        document.getElementById("validationCenter")?.scrollIntoView({behavior:"smooth",block:"start"});
+        return;
+      }
       if(go.dataset.go==="technician" && currentScreenId==="inspection" && !validateRequiredCornerPhotos()){
         e.preventDefault();
         return;
@@ -3037,6 +3070,15 @@ document.getElementById("validationList")?.addEventListener("click",e=>{
   });
   document.getElementById("validationNext")?.addEventListener("click",openNextMissingValidationItem);
   document.getElementById("validationReturn")?.addEventListener("click",returnToValidationCenter);
+
+  validationRequirements().forEach(item=>{
+    const element=document.getElementById(item.target);
+    if(!element) return;
+    const eventName=(element.type==="file"||element.tagName==="SELECT")?"change":"input";
+    element.addEventListener(eventName,()=>{
+      if(currentScreenId==="review") renderValidationCenter();
+    });
+  });
 
 document.getElementById("submitCheckin")?.addEventListener("click",()=>{
     const s=document.getElementById("submitStatus");
