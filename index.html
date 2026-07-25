@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.0.6</title>
+<title>Nitros Mobile Technician Portal v8.0.7</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -181,13 +181,29 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   .save-indicator.error{border-color:#803a3f;color:#ffc3c6}.save-indicator.error .save-dot{background:var(--bad)}
   @keyframes savePulse{to{opacity:.35;transform:scale(.82)}}
 
+  .photo-evidence-manager{border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:16px;background:rgba(255,255,255,.025)}
+  .evidence-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .evidence-card{border:1px solid var(--line);border-radius:15px;overflow:hidden;background:#081321}
+  .evidence-card img{width:100%;height:210px;object-fit:cover;display:block;background:#050a11}
+  .evidence-body{padding:12px}
+  .evidence-title{font-weight:800;margin-bottom:5px}
+  .evidence-meta{font-size:12px;color:var(--muted);line-height:1.45;word-break:break-word}
+  .evidence-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .photo-modal{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.82);padding:18px;overflow:auto}
+  .photo-modal-card{width:min(980px,100%);margin:0 auto;background:#0d192a;border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 18px 50px rgba(0,0,0,.5)}
+  .photo-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+  .photo-fullscreen{position:fixed;inset:0;z-index:140;background:rgba(0,0,0,.96);display:flex;align-items:center;justify-content:center;padding:14px}
+  .photo-fullscreen img{max-width:100%;max-height:92vh;object-fit:contain}
+  .photo-fullscreen button{position:absolute;top:14px;right:14px;width:auto}
+  @media(max-width:700px){.evidence-grid{grid-template-columns:1fr}.evidence-card img{height:230px}.photo-modal{padding:8px}.photo-modal-card{padding:13px}.photo-modal-head{display:block}.photo-modal-head button{margin-top:10px}}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.0.6 — Road-Test Verification</div>
+  <div class="sub">Mobile Technician Portal v8.0.7 — Photo Evidence Manager</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -201,7 +217,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.0.6 stores the field-test profile, active repair-order draft, and road-test verification record on this device.</div>
+    <div id="portalLoginStatus" class="status">Version 8.0.7 stores repair-order drafts and photographic evidence on this device.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -514,6 +530,14 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       <div class="field"><label for="photoVin">VIN label</label><input id="photoVin" type="file" accept="image/*" capture="environment"></div>
     </div>
     <div id="photoStatus" class="status warn">Four corner photos are required before continuing.</div>
+
+    <div class="photo-evidence-manager">
+      <div class="eyebrow">Photo Evidence Manager</div>
+      <h3>Review saved walk-around evidence</h3>
+      <p>Each selected photo is compressed and saved on this device with the repair order, timestamp, technician identity, VIN, RO number, and device identity. Tap a photo to enlarge it.</p>
+      <div id="activePhotoEvidenceStatus" class="status">No photographic evidence has been saved for this active repair order yet.</div>
+      <div id="activePhotoEvidenceGrid" class="evidence-grid" style="margin-top:14px"></div>
+    </div>
 
     <div class="field">
       <label for="inspectionNotes">Initial condition notes</label>
@@ -908,7 +932,15 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.0.6 • Save Status Build • Completion Wizard preserved • Local device storage</div>
+<div id="photoEvidenceModal" class="photo-modal hidden" role="dialog" aria-modal="true" aria-labelledby="photoModalTitle">
+  <div class="photo-modal-card">
+    <div class="photo-modal-head"><div><div class="eyebrow">Photo Evidence Manager</div><h2 id="photoModalTitle">Repair-order photos</h2></div><button id="closePhotoEvidenceModal" class="btn ghost small" type="button">Close</button></div>
+    <div id="photoModalStatus" class="status">Loading saved photographic evidence…</div>
+    <div id="photoModalGrid" class="evidence-grid" style="margin-top:14px"></div>
+  </div>
+</div>
+
+<div class="footer-note">Nitros Mobile Technician Portal v8.0.7 • Photo Evidence Manager • Road-Test Verification preserved • Local device storage</div>
 </div>
 
 <script>
@@ -927,6 +959,75 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   let stream = null;
   let selectedVehicle = null;
   let zxingControls = null;
+
+  const PHOTO_DB_NAME="nitros_photo_evidence_v1";
+  const PHOTO_STORE="photos";
+  const ACTIVE_PHOTO_RECORD="active-draft";
+  const PHOTO_FIELDS={
+    photoFrontLeft:"Front-left corner",photoFrontRight:"Front-right corner",photoRearLeft:"Rear-left corner",photoRearRight:"Rear-right corner",
+    photoOdometer:"Arrival odometer",photoVin:"VIN label",technicianPhoto:"Technician evidence",photoFinalOdometer:"Final road-test odometer"
+  };
+  let activePhotoEvidence={};
+  let photoObjectUrls=[];
+
+  function openPhotoDatabase(){
+    return new Promise((resolve,reject)=>{
+      const request=indexedDB.open(PHOTO_DB_NAME,1);
+      request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains(PHOTO_STORE))db.createObjectStore(PHOTO_STORE,{keyPath:"key"});};
+      request.onsuccess=()=>resolve(request.result);
+      request.onerror=()=>reject(request.error);
+    });
+  }
+  async function photoDbPut(entry){const db=await openPhotoDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction(PHOTO_STORE,"readwrite");tx.objectStore(PHOTO_STORE).put(entry);tx.oncomplete=()=>{db.close();resolve(entry)};tx.onerror=()=>{db.close();reject(tx.error)}});}
+  async function photoDbGet(key){const db=await openPhotoDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction(PHOTO_STORE,"readonly");const req=tx.objectStore(PHOTO_STORE).get(key);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);tx.oncomplete=()=>db.close()});}
+  async function photoDbDelete(key){const db=await openPhotoDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction(PHOTO_STORE,"readwrite");tx.objectStore(PHOTO_STORE).delete(key);tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}});}
+  async function photoDbList(recordId){const db=await openPhotoDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction(PHOTO_STORE,"readonly");const req=tx.objectStore(PHOTO_STORE).getAll();req.onsuccess=()=>resolve((req.result||[]).filter(x=>x.recordId===recordId));req.onerror=()=>reject(req.error);tx.oncomplete=()=>db.close()});}
+  async function clearPhotoRecord(recordId){const items=await photoDbList(recordId);await Promise.all(items.map(item=>photoDbDelete(item.key)));}
+
+  async function compressPhoto(file){
+    if(!file||!file.type.startsWith("image/"))return file;
+    const bitmap=await createImageBitmap(file);
+    const max=1600,scale=Math.min(1,max/Math.max(bitmap.width,bitmap.height));
+    const canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
+    canvas.getContext("2d").drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close?.();
+    return await new Promise(resolve=>canvas.toBlob(blob=>resolve(blob||file),"image/jpeg",.82));
+  }
+  function currentPhotoIdentity(){return {technician:portalProfile()?.name||document.getElementById("technicianName")?.value.trim()||document.getElementById("assignedTechnician")?.value.trim()||"Not entered",vin:selectedVehicle?.vin||document.getElementById("vinInput")?.value.trim().toUpperCase()||"Not entered",repairOrder:document.getElementById("roNumber")?.value.trim()||document.getElementById("workOrderNumber")?.value.trim()||"Pending",deviceIdentity:navigator.userAgent};}
+  async function savePhotoEvidence(fieldId,file){
+    const status=document.getElementById("activePhotoEvidenceStatus");
+    try{
+      if(status){status.className="status";status.textContent=`Saving ${PHOTO_FIELDS[fieldId]||"photo"} on this device…`;}
+      const blob=await compressPhoto(file),identity=currentPhotoIdentity(),capturedAt=new Date().toISOString();
+      const entry={key:`${ACTIVE_PHOTO_RECORD}:${fieldId}`,recordId:ACTIVE_PHOTO_RECORD,fieldId,label:PHOTO_FIELDS[fieldId]||fieldId,blob,mimeType:blob.type||file.type||"image/jpeg",originalName:file.name||`${fieldId}.jpg`,originalSize:file.size||0,storedSize:blob.size||0,capturedAt,...identity};
+      await photoDbPut(entry);activePhotoEvidence[fieldId]={...entry,blob:undefined};await renderActivePhotoEvidence();scheduleDraftSave();
+    }catch(error){console.error("Photo evidence save failed",error);if(status){status.className="status bad";status.textContent="Photo could not be saved. Check browser storage and try again.";}}
+  }
+  function hasPhotoEvidence(fieldId){return Boolean(document.getElementById(fieldId)?.files?.length||activePhotoEvidence[fieldId]);}
+  async function loadActivePhotoEvidence(){const items=await photoDbList(ACTIVE_PHOTO_RECORD);activePhotoEvidence=Object.fromEntries(items.map(item=>[item.fieldId,{...item,blob:undefined}]));await renderActivePhotoEvidence();}
+  function releasePhotoUrls(){photoObjectUrls.forEach(url=>URL.revokeObjectURL(url));photoObjectUrls=[];}
+  function evidenceCardHtml(item,url,allowDelete=false){
+    const when=item.capturedAt?new Date(item.capturedAt).toLocaleString():"Time unavailable";
+    return `<div class="evidence-card"><button class="open-evidence-photo" type="button" data-photo-url="${url}" aria-label="Enlarge ${escapeHtml(item.label||"photo")}" style="padding:0;border:0;background:none;width:100%"><img src="${url}" alt="${escapeHtml(item.label||"Repair-order photo")}"></button><div class="evidence-body"><div class="evidence-title">${escapeHtml(item.label||item.fieldId)}</div><div class="evidence-meta">${escapeHtml(when)}<br>Technician: ${escapeHtml(item.technician||"Not entered")}<br>RO: ${escapeHtml(item.repairOrder||"Pending")} • VIN: ${escapeHtml(item.vin||"Not entered")}</div>${allowDelete?`<div class="evidence-actions"><button class="btn secondary small open-evidence-photo" type="button" data-photo-url="${url}">Enlarge</button><button class="btn ghost small delete-active-photo" type="button" data-field-id="${escapeHtml(item.fieldId)}">Remove</button></div>`:`<div class="evidence-actions"><button class="btn secondary small open-evidence-photo" type="button" data-photo-url="${url}">Enlarge</button><button class="btn ghost small" type="button" disabled>Saved Evidence</button></div>`}</div></div>`;
+  }
+  async function renderActivePhotoEvidence(){
+    const grid=document.getElementById("activePhotoEvidenceGrid"),status=document.getElementById("activePhotoEvidenceStatus");if(!grid)return;
+    releasePhotoUrls();const items=await photoDbList(ACTIVE_PHOTO_RECORD);items.sort((a,b)=>(a.fieldId||"").localeCompare(b.fieldId||""));
+    if(!items.length){grid.innerHTML="";if(status){status.className="status";status.textContent="No photographic evidence has been saved for this active repair order yet.";}return;}
+    grid.innerHTML=items.map(item=>{const url=URL.createObjectURL(item.blob);photoObjectUrls.push(url);return evidenceCardHtml(item,url,true)}).join("");
+    if(status){status.className="status ok";status.textContent=`${items.length} photo${items.length===1?"":"s"} saved on this device for the active repair order.`;}
+  }
+  async function persistActivePhotosToRecord(recordId){
+    const items=await photoDbList(ACTIVE_PHOTO_RECORD),saved=[],identity=currentPhotoIdentity();
+    for(const item of items){const copy={...item,...identity,key:`${recordId}:${item.fieldId}`,recordId};await photoDbPut(copy);saved.push({...copy,blob:undefined});}
+    return saved;
+  }
+  async function copyRecordPhotosToActive(recordId){await clearPhotoRecord(ACTIVE_PHOTO_RECORD);const items=await photoDbList(recordId);for(const item of items)await photoDbPut({...item,key:`${ACTIVE_PHOTO_RECORD}:${item.fieldId}`,recordId:ACTIVE_PHOTO_RECORD});await loadActivePhotoEvidence();}
+  async function openPhotoEvidenceManager(recordId,title){
+    const modal=document.getElementById("photoEvidenceModal"),grid=document.getElementById("photoModalGrid"),status=document.getElementById("photoModalStatus");
+    modal.classList.remove("hidden");document.getElementById("photoModalTitle").textContent=title||"Repair-order photos";grid.innerHTML="";status.className="status";status.textContent="Loading saved photographic evidence…";
+    try{releasePhotoUrls();const items=await photoDbList(recordId);if(!items.length){status.className="status warn";status.textContent="No saved photographic evidence was found for this repair order on this device.";return;}grid.innerHTML=items.map(item=>{const url=URL.createObjectURL(item.blob);photoObjectUrls.push(url);return evidenceCardHtml(item,url,false)}).join("");status.className="status ok";status.textContent=`${items.length} saved photo${items.length===1?"":"s"} found for this repair order.`;}catch(error){status.className="status bad";status.textContent="Saved photos could not be opened on this device.";}
+  }
+
   let autoScanTimer = null;
   let autoScanBusy = false;
   let continuousReader = null;
@@ -1058,6 +1159,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     stopCamera();
     clearTimeout(draftSaveTimer);
     localStorage.removeItem(DRAFT_KEY);
+    clearPhotoRecord(ACTIVE_PHOTO_RECORD).then(()=>{activePhotoEvidence={};renderActivePhotoEvidence();});
 
     selectedVehicle=null;
     editingCheckInId=null;
@@ -1141,6 +1243,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     window.scrollTo({top:0,behavior:"instant"});
     if(target === "review"){ buildSummary(); requestAnimationFrame(renderValidationCenter); }
     if(target === "history") searchHistory();
+    if(target === "inspection") loadActivePhotoEvidence();
     if(target === "technician") requestAnimationFrame(()=>{
       signaturePadControllers.technicianSignature?.resize();
       signaturePadControllers.customerSignature?.resize();
@@ -1166,10 +1269,10 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       {label:"Phone number",section:"Customer Information",screen:"customer",target:"phone",complete:()=>!!document.getElementById("phone")?.value.trim()},
       {label:"Current mileage",section:"Customer Information",screen:"customer",target:"mileage",complete:()=>!!document.getElementById("mileage")?.value.trim()},
       {label:"Customer concern",section:"Customer Information",screen:"customer",target:"concern",complete:()=>!!document.getElementById("concern")?.value.trim()},
-      {label:"Front-left corner photo",section:"Walk-Around Inspection",screen:"inspection",target:"photoFrontLeft",complete:()=>!!document.getElementById("photoFrontLeft")?.files?.length},
-      {label:"Front-right corner photo",section:"Walk-Around Inspection",screen:"inspection",target:"photoFrontRight",complete:()=>!!document.getElementById("photoFrontRight")?.files?.length},
-      {label:"Rear-left corner photo",section:"Walk-Around Inspection",screen:"inspection",target:"photoRearLeft",complete:()=>!!document.getElementById("photoRearLeft")?.files?.length},
-      {label:"Rear-right corner photo",section:"Walk-Around Inspection",screen:"inspection",target:"photoRearRight",complete:()=>!!document.getElementById("photoRearRight")?.files?.length},
+      {label:"Front-left corner photo",section:"Walk-Around Inspection",screen:"inspection",target:"photoFrontLeft",complete:()=>hasPhotoEvidence("photoFrontLeft")},
+      {label:"Front-right corner photo",section:"Walk-Around Inspection",screen:"inspection",target:"photoFrontRight",complete:()=>hasPhotoEvidence("photoFrontRight")},
+      {label:"Rear-left corner photo",section:"Walk-Around Inspection",screen:"inspection",target:"photoRearLeft",complete:()=>hasPhotoEvidence("photoRearLeft")},
+      {label:"Rear-right corner photo",section:"Walk-Around Inspection",screen:"inspection",target:"photoRearRight",complete:()=>hasPhotoEvidence("photoRearRight")},
       {label:"Technician name",section:"Technician Inspection",screen:"technician",target:"technicianName",complete:()=>!!document.getElementById("technicianName")?.value.trim()},
       {label:"Brakes inspection status",section:"Technician Inspection",screen:"technician",target:"brakesStatus",complete:()=>inspectionStatusComplete("brakesStatus")},
       {label:"Tires inspection status",section:"Technician Inspection",screen:"technician",target:"tiresStatus",complete:()=>inspectionStatusComplete("tiresStatus")},
@@ -1182,7 +1285,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
         const status=document.getElementById("roadTestStatus")?.value||"";
         if(status!=="Required — Completed") return true;
         if(document.getElementById("odometerInoperative")?.checked) return true;
-        return !!document.getElementById("roadTestEndMileage")?.value.trim() && !!document.getElementById("photoFinalOdometer")?.files?.length;
+        return !!document.getElementById("roadTestEndMileage")?.value.trim() && hasPhotoEvidence("photoFinalOdometer");
       }},
       {label:"Road-test results / verification notes",section:"Road-Test Verification",screen:"workorder",target:"roadTestNotes",complete:()=>{
         const status=document.getElementById("roadTestStatus")?.value||"";
@@ -1288,7 +1391,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       ["Rear-left", "photoRearLeft"],
       ["Rear-right", "photoRearRight"]
     ];
-    const missing=requiredCorners.filter(([,id])=>!document.getElementById(id)?.files?.length);
+    const missing=requiredCorners.filter(([,id])=>!hasPhotoEvidence(id));
     const status=document.getElementById("photoStatus");
     if(missing.length){
       status.className="status bad";
@@ -2166,7 +2269,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 
   function countVehiclePhotos(){
     return ["photoFrontLeft","photoFrontRight","photoRearLeft","photoRearRight","photoOdometer","photoVin"]
-      .filter(id=>document.getElementById(id).files.length).length;
+      .filter(id=>hasPhotoEvidence(id)).length;
   }
 
   function calculateHealthScore(){
@@ -2596,7 +2699,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
         <div class="history-meta"><strong>Diagnostic time:</strong> ${Number(record.workOrder?.diagnosticTimeHours ?? ((record.workOrder?.activeMilliseconds||0)/3600000)).toFixed(2)} h</div>
         <div class="history-meta"><strong>Completion:</strong> ${escapeHtml(record.workOrder?.completionNotes||"None recorded")}</div>
         ${flags.length?`<div class="history-flags">${flags.map(flag=>`<span class="badge">${escapeHtml(flag)}</span>`).join("")}</div>`:""}
-        <div class="history-actions"><button class="btn secondary small reopen-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">Reopen Completed Repair</button><button class="btn ghost small print-history-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">View Report</button></div>
+        <div class="history-actions"><button class="btn secondary small reopen-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">Reopen Completed Repair</button><button class="btn ghost small print-history-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">View Report</button><button class="btn secondary small view-history-photos" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">View Photos</button></div>
       </div>`;
     }).join("");
   }
@@ -2610,6 +2713,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     if(!record){ alert("That saved repair record could not be found on this device."); return; }
     editingCheckInId=record.checkInId;
     selectedVehicle=record.vehicle||selectedVehicle;
+    copyRecordPhotosToActive(record.checkInId);
     setValue("roNumber",record.repairOrder); setValue("serviceAdvisor",record.serviceAdvisor);
     setValue("customerName",record.customer?.name); setValue("phone",record.customer?.phone); setValue("email",record.customer?.email);
     setValue("plate",record.plate); setValue("mileage",record.mileage); setValue("arrivalMethod",record.arrivalMethod);
@@ -2973,15 +3077,13 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     status.textContent="Dictation is off. Review the concern before continuing.";
   }
 
-  ["photoFrontLeft","photoFrontRight","photoRearLeft","photoRearRight","photoOdometer","photoVin"].forEach(id=>{
-    document.getElementById(id).addEventListener("change",()=>{
+  ["photoFrontLeft","photoFrontRight","photoRearLeft","photoRearRight","photoOdometer","photoVin","technicianPhoto","photoFinalOdometer"].forEach(id=>{
+    document.getElementById(id)?.addEventListener("change",async event=>{
+      const file=event.target.files?.[0];if(file)await savePhotoEvidence(id,file);
       const count=countVehiclePhotos();
       const status=document.getElementById("photoStatus");
-      const cornerCount=["photoFrontLeft","photoFrontRight","photoRearLeft","photoRearRight"].filter(photoId=>document.getElementById(photoId).files.length).length;
-      status.className=cornerCount===4?"status ok":"status warn";
-      status.textContent=cornerCount===4
-        ?`All four required corner photos captured. ${count} of 6 total documentation photos selected.`
-        :`${cornerCount} of 4 required corner photos captured. ${count} of 6 total documentation photos selected.`;
+      const cornerCount=["photoFrontLeft","photoFrontRight","photoRearLeft","photoRearRight"].filter(hasPhotoEvidence).length;
+      if(status){status.className=cornerCount===4?"status ok":"status warn";status.textContent=cornerCount===4?`All four required corner photos saved. ${count} of 6 walk-around photos stored on this device.`:`${cornerCount} of 4 required corner photos saved. ${count} of 6 walk-around photos stored on this device.`;}
     });
   });
 
@@ -3152,7 +3254,11 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 document.addEventListener("click",e=>{
     const reopen=e.target.closest(".reopen-record"); if(reopen){reopenCompletedRecord(reopen.dataset.recordId);return;}
     const view=e.target.closest(".print-history-record"); if(view){viewHistoryRecord(view.dataset.recordId);return;}
+    const photos=e.target.closest(".view-history-photos"); if(photos){const record=loadCustomerHistory().find(item=>item.checkInId===photos.dataset.recordId);openPhotoEvidenceManager(photos.dataset.recordId,`${record?.repairOrder||photos.dataset.recordId} — ${[record?.vehicle?.year,record?.vehicle?.make,record?.vehicle?.model].filter(Boolean).join(" ")}`);return;}
+    const openPhoto=e.target.closest(".open-evidence-photo");if(openPhoto){const overlay=document.createElement("div");overlay.className="photo-fullscreen";overlay.innerHTML=`<button class="btn ghost small" type="button">Close</button><img src="${openPhoto.dataset.photoUrl}" alt="Enlarged repair-order evidence">`;overlay.addEventListener("click",()=>overlay.remove());document.body.appendChild(overlay);return;}
+    const remove=e.target.closest(".delete-active-photo");if(remove){const input=document.getElementById(remove.dataset.fieldId);if(input)input.value="";photoDbDelete(`${ACTIVE_PHOTO_RECORD}:${remove.dataset.fieldId}`).then(()=>loadActivePhotoEvidence());delete activePhotoEvidence[remove.dataset.fieldId];return;}
   });
+  document.getElementById("closePhotoEvidenceModal")?.addEventListener("click",()=>{document.getElementById("photoEvidenceModal")?.classList.add("hidden");releasePhotoUrls();renderActivePhotoEvidence();});
 
 let roadTestLocation=null;
   function captureRoadTestLocation(){
@@ -3221,7 +3327,7 @@ document.getElementById("validationList")?.addEventListener("click",e=>{
     });
   });
 
-document.getElementById("submitCheckin")?.addEventListener("click",()=>{
+document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     const s=document.getElementById("submitStatus");
     const missing=renderValidationCenter();
     if(missing.length){
@@ -3231,8 +3337,10 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
       return;
     }
 
+    const recordId=editingCheckInId||`NIT-${new Date().toISOString().replace(/\D/g,"").slice(0,14)}`;
+    const persistedPhotos=await persistActivePhotosToRecord(recordId);
     const payload={
-      checkInId:editingCheckInId||`NIT-${new Date().toISOString().replace(/\D/g,"").slice(0,14)}`,
+      checkInId:recordId,
       timestamp:new Date().toISOString(),
       updatedAt:new Date().toISOString(),
       vehicle:selectedVehicle,
@@ -3254,13 +3362,14 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
         completed:c.checked
       })),
       vehiclePhotos:{
-        frontLeft:document.getElementById("photoFrontLeft").files[0]?.name||"",
-        frontRight:document.getElementById("photoFrontRight").files[0]?.name||"",
-        rearLeft:document.getElementById("photoRearLeft").files[0]?.name||"",
-        rearRight:document.getElementById("photoRearRight").files[0]?.name||"",
-        odometer:document.getElementById("photoOdometer").files[0]?.name||"",
-        vinLabel:document.getElementById("photoVin").files[0]?.name||""
+        frontLeft:activePhotoEvidence.photoFrontLeft?.originalName||document.getElementById("photoFrontLeft").files[0]?.name||"",
+        frontRight:activePhotoEvidence.photoFrontRight?.originalName||document.getElementById("photoFrontRight").files[0]?.name||"",
+        rearLeft:activePhotoEvidence.photoRearLeft?.originalName||document.getElementById("photoRearLeft").files[0]?.name||"",
+        rearRight:activePhotoEvidence.photoRearRight?.originalName||document.getElementById("photoRearRight").files[0]?.name||"",
+        odometer:activePhotoEvidence.photoOdometer?.originalName||document.getElementById("photoOdometer").files[0]?.name||"",
+        vinLabel:activePhotoEvidence.photoVin?.originalName||document.getElementById("photoVin").files[0]?.name||""
       },
+      photoEvidence:persistedPhotos.map(item=>({fieldId:item.fieldId,label:item.label,capturedAt:item.capturedAt,technician:item.technician,vin:item.vin,repairOrder:item.repairOrder,deviceIdentity:item.deviceIdentity,originalName:item.originalName,storedSize:item.storedSize})),
       inspectionNotes:document.getElementById("inspectionNotes").value.trim(),
       technicianInspection:{
         technician:document.getElementById("technicianName").value.trim(),
@@ -3290,9 +3399,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
           lrPsi:document.getElementById("lrPsi").value.trim(),
           rrPsi:document.getElementById("rrPsi").value.trim()
         },
-        photoName:document.getElementById("technicianPhoto").files.length
-          ? document.getElementById("technicianPhoto").files[0].name
-          : "",
+        photoName:activePhotoEvidence.technicianPhoto?.originalName||document.getElementById("technicianPhoto").files[0]?.name||"",
         findings:document.getElementById("technicianFindings").value.trim(),
         recommendation:document.getElementById("technicianRecommendation").value.trim(),
         priorities:{
@@ -3341,7 +3448,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
           endMileage:document.getElementById("roadTestEndMileage").value.trim(),
           odometerInoperative:document.getElementById("odometerInoperative").checked,
           odometerExceptionNotes:document.getElementById("odometerExceptionNotes").value.trim(),
-          finalOdometerPhoto:document.getElementById("photoFinalOdometer").files[0]?.name||"",
+          finalOdometerPhoto:activePhotoEvidence.photoFinalOdometer?.originalName||document.getElementById("photoFinalOdometer").files[0]?.name||"",
           notes:document.getElementById("roadTestNotes").value.trim(),
           verifiedAt:new Date().toISOString(),
           technicianIdentity:portalProfile()?.name||document.getElementById("technicianName").value.trim(),
@@ -3387,6 +3494,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",()=>{
   });
   try{history.replaceState({nitrosScreen:"home"},"",location.href.split("#")[0]+"#home");}catch(error){}
   refreshDraftPanel();
+  loadActivePhotoEvidence();
   updateEnvironment();
   refreshConnectionSaveStatus();
   window.addEventListener("online",refreshConnectionSaveStatus);
