@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.1.1</title>
+<title>Nitros Mobile Technician Portal v8.1.2</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -227,7 +227,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   .timeline-empty{padding:20px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
   @media(max-width:700px){.timeline-toolbar{grid-template-columns:1fr}.timeline-summary{grid-template-columns:1fr 1fr}.complete-timeline-entry{grid-template-columns:72px 1fr}.complete-timeline-entry img{width:72px;height:72px}}
 
-  /* v8.1.1 Technician Productivity Dashboard */
+  /* v8.1.2 Technician Productivity Dashboard */
   .productivity-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
   .productivity-card{background:#081321;border:1px solid var(--line);border-radius:16px;padding:14px;text-align:center}
   .productivity-card strong{display:block;font-size:25px;margin-bottom:4px}.productivity-card span{font-size:12px;color:var(--muted)}
@@ -248,7 +248,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.1.1 — Technician Productivity Dashboard</div>
+  <div class="sub">Mobile Technician Portal v8.1.2 — Technician Productivity Dashboard</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -1016,7 +1016,9 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 </div>
 <div id="globalSearchModal" class="productivity-modal hidden" role="dialog" aria-modal="true">
   <div class="productivity-modal-card"><div class="smart-evidence-head"><div><div class="eyebrow">Global Search</div><h2>Find anything on this device</h2><p>Search active repair data, assigned jobs, and saved customer history.</p></div><button id="closeGlobalSearch" class="btn ghost small" type="button">Close</button></div>
-  <div class="history-search"><input id="globalSearchInput" placeholder="VIN, plate, RO, customer, make, model, concern, technician..."><button id="runGlobalSearch" class="btn primary small" type="button">Search</button></div><div id="globalSearchStatus" class="status">Enter at least two characters.</div><div id="globalSearchResults" class="global-results"></div></div>
+  <div class="history-search"><input id="globalSearchInput" placeholder="VIN, plate, RO, customer, make, model, concern, technician..."><button id="runGlobalSearch" class="btn primary small" type="button">Search</button></div>
+  <div class="grid two" style="margin-top:12px"><div class="field"><label for="globalSearchFilter">Search category</label><select id="globalSearchFilter"><option value="all">All records and fields</option><option value="active">Active repair only</option><option value="job">Assigned jobs only</option><option value="history">Completed history only</option><option value="customer">Customer name or phone</option><option value="vehicle">Vehicle, VIN, or plate</option><option value="ro">Repair-order number</option><option value="concern">Concern or repair notes</option></select></div><div class="field"><label>Quick access</label><button id="showRecentRecords" class="btn secondary" type="button">Show 10 Most Recent Records</button></div></div>
+  <div id="globalSearchStatus" class="status">Enter at least two characters, or open the 10 most recent records.</div><div id="globalSearchResults" class="global-results"></div></div>
 </div>
 <div id="voiceNoteModal" class="productivity-modal hidden" role="dialog" aria-modal="true"><div class="productivity-modal-card"><div class="smart-evidence-head"><div><div class="eyebrow">Quick Voice Note</div><h2>Add technician note</h2></div><button id="closeVoiceNote" class="btn ghost small" type="button">Close</button></div><textarea id="quickVoiceText" rows="6" placeholder="Dictate or type a diagnostic, repair, or quality-control note..."></textarea><div class="grid two" style="margin-top:12px"><button id="dictateQuickVoice" class="btn secondary" type="button">🎙️ Start Dictation</button><button id="saveQuickVoice" class="btn primary" type="button">Save to Active Repair</button></div><div id="quickVoiceStatus" class="status">The note will be appended to internal technician notes.</div></div></div>
 <div id="flashlightScreen" class="flashlight-screen hidden"><button id="closeFlashlight" class="btn primary" type="button">Turn Off Light</button></div>
@@ -1084,7 +1086,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.1.1 • Technician Productivity Dashboard • Complete Evidence Timeline preserved • Local device storage</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.1.2 • Technician Productivity Dashboard • Complete Evidence Timeline preserved • Local device storage</div>
 </div>
 
 <script>
@@ -3732,7 +3734,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   });
 
 
-  // v8.1.1 Smart Evidence System — independent layer using the approved photo evidence database.
+  // v8.1.2 Smart Evidence System — independent layer using the approved photo evidence database.
   (()=>{
     const DB_NAME="nitros_photo_evidence_v1", STORE="photos", ACTIVE="active-draft";
     const allowedScreens=new Set(["technician","estimate","workorder","review"]);
@@ -3768,7 +3770,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;document.getElementById("dictateEvidenceNotes")?.addEventListener("click",()=>{if(!SR){alert("Voice dictation is not available in this browser.");return}rec=new SR();rec.lang="en-US";rec.interimResults=false;rec.onresult=e=>{const t=e.results[0][0].transcript,n=document.getElementById("evidenceNotes");n.value=(n.value?`${n.value} `:"")+t};rec.start()});
   })();
 
-  // v8.1.1 Complete Evidence Timeline — chronological view of every active repair-order image.
+  // v8.1.2 Complete Evidence Timeline — chronological view of every active repair-order image.
   (()=>{
     const DB_NAME="nitros_photo_evidence_v1", STORE="photos", ACTIVE="active-draft";
     const modal=document.getElementById("completeTimelineModal"), listBox=document.getElementById("completeTimelineList"), status=document.getElementById("completeTimelineStatus");
@@ -3790,7 +3792,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   })();
 
 
-  // v8.1.1 Technician Productivity Dashboard and Quick Actions.
+  // v8.1.2 Technician Productivity Dashboard and Quick Actions.
   (()=>{
     const FLOW=["Assigned","Diagnosing","Waiting on Approval","Waiting on Parts","Repairing","Road Test","Quality Check","Complete"];
     const DRAFT_KEY="nitros_prototype_v073_active_draft", HISTORY_KEY="nitros_prototype_customer_history_v070", JOBS_KEY="nitros_portal_v8_assigned_jobs";
@@ -3823,23 +3825,46 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
       const action=hit.type==='active'?'<button class="btn primary small global-open-result" data-result-type="active">Resume Active Repair</button>':hit.type==='job'?`<button class="btn primary small global-open-result" data-result-type="job" data-result-index="${hit.index}">Open Assigned Job</button>`:`<button class="btn primary small global-open-result" data-result-type="history" data-record-id="${esc(hit.id||'')}">Reopen Completed Repair</button><button class="btn ghost small global-view-result" data-record-id="${esc(hit.id||'')}">View Report</button>`;
       return `<article class="global-result history-item"><div class="history-head"><div><div class="history-title">${esc(d.vehicle||'Vehicle not entered')}</div><div class="history-meta">${esc(d.customer||'Customer not entered')} • ${esc(d.ro||'RO pending')}</div></div><div class="history-date">${esc(d.status||hit.label)}</div></div><div class="history-meta"><strong>VIN:</strong> ${esc(d.vin||'Not entered')} &nbsp; <strong>Plate:</strong> ${esc(d.plate||'Not entered')}</div>${d.phone?`<div class="history-meta"><strong>Phone:</strong> ${esc(d.phone)}</div>`:''}<div class="history-meta"><strong>Concern:</strong> ${esc(d.concern||'None recorded')}</div><div class="history-meta"><strong>Saved:</strong> ${esc(dateText)}</div><div class="history-actions">${action}</div></article>`;
     }
-    function runSearch(){
-      const q=document.getElementById('globalSearchInput').value.trim().toLowerCase(),box=document.getElementById('globalSearchResults'),st=document.getElementById('globalSearchStatus');
-      if(q.length<2){st.className='status warn';st.textContent='Enter at least two characters.';box.innerHTML='';return}
+    function searchSources(){
       const draft=read(DRAFT_KEY,null),jobs=read(JOBS_KEY,[]),history=read(HISTORY_KEY,[]),sources=[];
       if(draft&&Object.keys(draft).length)sources.push({type:'active',label:'Active repair',obj:draft,summary:draftSummary(draft)});
       jobs.forEach((obj,index)=>sources.push({type:'job',label:`Assigned job ${index+1}`,obj,index,summary:jobSummary(obj)}));
       history.forEach((obj,index)=>sources.push({type:'history',label:`History record ${index+1}`,obj,index,id:obj?.checkInId,summary:historySummary(obj)}));
-      const hits=sources.filter(x=>[...flatten(x.obj),...Object.values(x.summary)].join(' | ').toLowerCase().includes(q)).slice(0,50);
+      return sources;
+    }
+    function filteredSearchText(source,filter){
+      const d=source.summary||{};
+      if(filter==='customer')return [d.customer,d.phone].join(' | ');
+      if(filter==='vehicle')return [d.vehicle,d.vin,d.plate].join(' | ');
+      if(filter==='ro')return d.ro||'';
+      if(filter==='concern')return [d.concern,...flatten(source.obj).filter(x=>/concern|note|repair|complaint/i.test(x))].join(' | ');
+      return [...flatten(source.obj),...Object.values(d)].join(' | ');
+    }
+    function typeAllowed(source,filter){return !['active','job','history'].includes(filter)||source.type===filter}
+    function renderSearchHits(hits,message){
+      const box=document.getElementById('globalSearchResults'),st=document.getElementById('globalSearchStatus');
       box.innerHTML=hits.length?hits.map(resultCard).join(''):'<div class="timeline-empty">No matching records found on this device.</div>';
-      st.className=hits.length?'status ok':'status warn';st.textContent=hits.length?`Found ${hits.length} matching record${hits.length===1?'':'s'}.`:'No matching records found.';
+      st.className=hits.length?'status ok':'status warn';st.textContent=hits.length?message:'No matching records found.';
+    }
+    function runSearch(){
+      const q=document.getElementById('globalSearchInput').value.trim().toLowerCase(),filter=document.getElementById('globalSearchFilter')?.value||'all';
+      if(q.length<2){const st=document.getElementById('globalSearchStatus'),box=document.getElementById('globalSearchResults');st.className='status warn';st.textContent='Enter at least two characters, or open the 10 most recent records.';box.innerHTML='';return}
+      const hits=searchSources().filter(x=>typeAllowed(x,filter)&&filteredSearchText(x,filter).toLowerCase().includes(q)).slice(0,50);
+      renderSearchHits(hits,`Found ${hits.length} matching record${hits.length===1?'':'s'}.`);
+    }
+    function showRecentRecords(){
+      const filter=document.getElementById('globalSearchFilter')?.value||'all';
+      const hits=searchSources().filter(x=>typeAllowed(x,filter)).sort((a,b)=>{
+        const ad=new Date(a.summary?.date||0).getTime()||0,bd=new Date(b.summary?.date||0).getTime()||0;return bd-ad;
+      }).slice(0,10);
+      renderSearchHits(hits,`Showing ${hits.length} most recent record${hits.length===1?'':'s'}.`);
     }
     document.getElementById('globalSearchResults')?.addEventListener('click',e=>{
       const open=e.target.closest('.global-open-result'),view=e.target.closest('.global-view-result');
       if(open){const type=open.dataset.resultType;searchModal.classList.add('hidden');if(type==='active'){restoreDraft(true);return}if(type==='job'){startAssignedJob(Number(open.dataset.resultIndex));return}if(type==='history'){reopenCompletedRecord(open.dataset.recordId);return}}
       if(view){searchModal.classList.add('hidden');viewHistoryRecord(view.dataset.recordId)}
     });
-    document.getElementById('runGlobalSearch')?.addEventListener('click',runSearch);document.getElementById('globalSearchInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')runSearch()});
+    document.getElementById('runGlobalSearch')?.addEventListener('click',runSearch);document.getElementById('showRecentRecords')?.addEventListener('click',showRecentRecords);document.getElementById('globalSearchInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')runSearch()});
     document.getElementById('quickEvidence')?.addEventListener('click',()=>{if(document.getElementById('floatingEvidenceButton')?.classList.contains('visible'))document.getElementById('floatingEvidenceButton').click();else{go('technician');setTimeout(()=>document.getElementById('floatingEvidenceButton')?.click(),100)}});
     document.getElementById('quickVoice')?.addEventListener('click',()=>voiceModal.classList.remove('hidden'));document.getElementById('closeVoiceNote')?.addEventListener('click',()=>voiceModal.classList.add('hidden'));
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;document.getElementById('dictateQuickVoice')?.addEventListener('click',()=>{if(!SR){document.getElementById('quickVoiceStatus').textContent='Voice dictation is not available in this browser.';return}const r=new SR();r.lang='en-US';r.onresult=e=>{const t=e.results[0][0].transcript,n=document.getElementById('quickVoiceText');n.value=(n.value?`${n.value} `:'')+t};r.start()});
