@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.0.9</title>
+<title>Nitros Mobile Technician Portal v8.1.0</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -227,13 +227,28 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   .timeline-empty{padding:20px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
   @media(max-width:700px){.timeline-toolbar{grid-template-columns:1fr}.timeline-summary{grid-template-columns:1fr 1fr}.complete-timeline-entry{grid-template-columns:72px 1fr}.complete-timeline-entry img{width:72px;height:72px}}
 
+  /* v8.1.0 Technician Productivity Dashboard */
+  .productivity-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
+  .productivity-card{background:#081321;border:1px solid var(--line);border-radius:16px;padding:14px;text-align:center}
+  .productivity-card strong{display:block;font-size:25px;margin-bottom:4px}.productivity-card span{font-size:12px;color:var(--muted)}
+  .status-track{display:flex;gap:7px;overflow-x:auto;padding:6px 0 10px;scrollbar-width:thin}
+  .status-step{min-width:118px;padding:11px 9px;border:1px solid var(--line);border-radius:13px;background:#081321;color:var(--muted);font-size:12px;font-weight:800;text-align:center}
+  .status-step.complete{border-color:var(--ok);color:#d8ffed}.status-step.current{border-color:var(--accent);background:#29170b;color:#fff}
+  .quick-toolbar{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;z-index:85;width:min(640px,calc(100% - 20px));display:none;grid-template-columns:repeat(5,1fr);gap:6px;padding:8px;background:rgba(7,17,31,.96);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 36px rgba(0,0,0,.55);backdrop-filter:blur(8px)}
+  .quick-toolbar.visible{display:grid}.quick-toolbar button{padding:11px 5px;border-radius:12px;font-size:11px;line-height:1.2}
+  .productivity-modal{position:fixed;inset:0;z-index:190;background:rgba(0,0,0,.88);padding:12px;overflow:auto}
+  .productivity-modal-card{width:min(900px,100%);margin:0 auto;background:#0d192a;border:1px solid var(--line);border-radius:20px;padding:18px}
+  .global-results{display:grid;gap:10px;margin-top:12px}.global-result{padding:13px;background:#081321;border:1px solid var(--line);border-radius:13px}
+  .flashlight-screen{position:fixed;inset:0;z-index:220;background:white;display:flex;align-items:flex-end;justify-content:center;padding:28px}.flashlight-screen button{max-width:260px}
+  @media(max-width:700px){.productivity-grid{grid-template-columns:1fr 1fr}.quick-toolbar{bottom:6px}.floating-evidence-btn{bottom:76px}.app{padding-bottom:105px}}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.0.9 — Complete Evidence Timeline</div>
+  <div class="sub">Mobile Technician Portal v8.1.0 — Technician Productivity Dashboard</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -247,7 +262,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.0.8 stores repair-order drafts, photographic evidence, annotations, and evidence timelines on this device.</div>
+    <div id="portalLoginStatus" class="status">Version 8.1.0 adds global search, quick actions, repair-status tracking, and a live technician dashboard while preserving all evidence records.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -290,6 +305,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     </div>
 
     <div class="grid two" style="margin-top:12px">
+      <button class="btn primary" data-go="dashboard">Technician Dashboard</button>
       <button class="btn primary" data-go="jobs">Assigned Jobs</button>
       <button class="btn secondary" data-go="checkin">New Walk-In / Check-In</button>
       <button class="btn secondary" data-go="history">Customer History</button>
@@ -312,6 +328,30 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </section>
 
+
+
+<section id="dashboard" class="screen">
+  <button class="back" data-go="home">← Back</button>
+  <div class="card">
+    <div class="eyebrow">Version 8.1.0</div><h1>Technician Dashboard</h1>
+    <p>One-screen view of the active repair, labor clock, evidence, required items, and current workflow stage.</p>
+    <div class="productivity-grid">
+      <div class="productivity-card"><strong id="dashActiveJobs">0</strong><span>Active assigned jobs</span></div>
+      <div class="productivity-card"><strong id="dashElapsed">00:00:00</strong><span>Current job time</span></div>
+      <div class="productivity-card"><strong id="dashEvidence">0</strong><span>Evidence records</span></div>
+      <div class="productivity-card"><strong id="dashMissing">0</strong><span>Required items missing</span></div>
+    </div>
+    <div class="card" style="background:#081321"><div class="eyebrow">Active Repair</div><h3 id="dashVehicle">No active vehicle selected</h3><p id="dashIdentity">Start or resume a repair order to populate this dashboard.</p></div>
+    <h3>Repair Status Tracker</h3><div id="dashboardStatusTrack" class="status-track"></div>
+    <div class="grid two" style="margin-top:12px">
+      <button id="dashResumeJob" class="btn primary" type="button">Resume Active Job</button>
+      <button id="dashOpenTimeline" class="btn secondary" type="button">Open Evidence Timeline</button>
+      <button id="dashGlobalSearch" class="btn secondary" type="button">Global Search</button>
+      <button id="dashAssignedJobs" class="btn ghost" type="button">Assigned Jobs</button>
+    </div>
+    <div id="dashboardStatus" class="status">Dashboard refreshes automatically from the active repair order stored on this device.</div>
+  </div>
+</section>
 
 <section id="history" class="screen">
   <button class="back" data-go="home">← Back</button>
@@ -773,6 +813,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   <div class="card">
     <div class="eyebrow">Digital Work Order</div>
     <h2>Repair execution and labor tracking</h2>
+    <div id="workOrderStatusTrack" class="status-track" aria-label="Repair status tracker"></div>
 
     <div class="grid two">
       <div class="field">
@@ -786,12 +827,14 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       <div class="field">
         <label for="repairStatus">Repair status</label>
         <select id="repairStatus">
-          <option>Waiting</option>
-          <option>In Progress</option>
-          <option>Paused</option>
-          <option>Waiting on Parts</option>
+          <option>Assigned</option>
+          <option>Diagnosing</option>
           <option>Waiting on Approval</option>
-          <option>Quality Control</option>
+          <option>Waiting on Parts</option>
+          <option>Repairing</option>
+          <option>Paused</option>
+          <option>Road Test</option>
+          <option>Quality Check</option>
           <option>Complete</option>
           <option>Ready for Pickup</option>
         </select>
@@ -963,6 +1006,21 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 </div>
 
 
+
+<div id="quickToolbar" class="quick-toolbar" aria-label="Quick actions">
+  <button id="quickSearch" class="btn secondary" type="button">🔎<br>Search</button>
+  <button id="quickEvidence" class="btn primary" type="button">📷<br>Evidence</button>
+  <button id="quickVoice" class="btn secondary" type="button">🎙️<br>Voice Note</button>
+  <button id="quickFlashlight" class="btn secondary" type="button">🔦<br>Light</button>
+  <button id="quickTimer" class="btn secondary" type="button">⏱️<br>Timer</button>
+</div>
+<div id="globalSearchModal" class="productivity-modal hidden" role="dialog" aria-modal="true">
+  <div class="productivity-modal-card"><div class="smart-evidence-head"><div><div class="eyebrow">Global Search</div><h2>Find anything on this device</h2><p>Search active repair data, assigned jobs, and saved customer history.</p></div><button id="closeGlobalSearch" class="btn ghost small" type="button">Close</button></div>
+  <div class="history-search"><input id="globalSearchInput" placeholder="VIN, plate, RO, customer, make, model, concern, technician..."><button id="runGlobalSearch" class="btn primary small" type="button">Search</button></div><div id="globalSearchStatus" class="status">Enter at least two characters.</div><div id="globalSearchResults" class="global-results"></div></div>
+</div>
+<div id="voiceNoteModal" class="productivity-modal hidden" role="dialog" aria-modal="true"><div class="productivity-modal-card"><div class="smart-evidence-head"><div><div class="eyebrow">Quick Voice Note</div><h2>Add technician note</h2></div><button id="closeVoiceNote" class="btn ghost small" type="button">Close</button></div><textarea id="quickVoiceText" rows="6" placeholder="Dictate or type a diagnostic, repair, or quality-control note..."></textarea><div class="grid two" style="margin-top:12px"><button id="dictateQuickVoice" class="btn secondary" type="button">🎙️ Start Dictation</button><button id="saveQuickVoice" class="btn primary" type="button">Save to Active Repair</button></div><div id="quickVoiceStatus" class="status">The note will be appended to internal technician notes.</div></div></div>
+<div id="flashlightScreen" class="flashlight-screen hidden"><button id="closeFlashlight" class="btn primary" type="button">Turn Off Light</button></div>
+
 <button id="floatingEvidenceButton" class="btn primary floating-evidence-btn" type="button">📷 Add Evidence</button>
 <div id="smartEvidenceModal" class="smart-evidence-modal hidden" role="dialog" aria-modal="true" aria-labelledby="smartEvidenceTitle">
   <div class="smart-evidence-card">
@@ -1026,7 +1084,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.0.9 • Complete Evidence Timeline • Road-Test Verification preserved • Local device storage</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.1.0 • Technician Productivity Dashboard • Complete Evidence Timeline preserved • Local device storage</div>
 </div>
 
 <script>
@@ -3674,7 +3732,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   });
 
 
-  // v8.0.9 Smart Evidence System — independent layer using the approved photo evidence database.
+  // v8.1.0 Smart Evidence System — independent layer using the approved photo evidence database.
   (()=>{
     const DB_NAME="nitros_photo_evidence_v1", STORE="photos", ACTIVE="active-draft";
     const allowedScreens=new Set(["technician","estimate","workorder","review"]);
@@ -3710,7 +3768,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;document.getElementById("dictateEvidenceNotes")?.addEventListener("click",()=>{if(!SR){alert("Voice dictation is not available in this browser.");return}rec=new SR();rec.lang="en-US";rec.interimResults=false;rec.onresult=e=>{const t=e.results[0][0].transcript,n=document.getElementById("evidenceNotes");n.value=(n.value?`${n.value} `:"")+t};rec.start()});
   })();
 
-  // v8.0.9 Complete Evidence Timeline — chronological view of every active repair-order image.
+  // v8.1.0 Complete Evidence Timeline — chronological view of every active repair-order image.
   (()=>{
     const DB_NAME="nitros_photo_evidence_v1", STORE="photos", ACTIVE="active-draft";
     const modal=document.getElementById("completeTimelineModal"), listBox=document.getElementById("completeTimelineList"), status=document.getElementById("completeTimelineStatus");
@@ -3729,6 +3787,38 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     document.getElementById("refreshCompleteTimeline")?.addEventListener("click",load);
     document.getElementById("timelineStageFilter")?.addEventListener("change",render);
     document.getElementById("timelineSearch")?.addEventListener("input",render);
+  })();
+
+
+  // v8.1.0 Technician Productivity Dashboard and Quick Actions.
+  (()=>{
+    const FLOW=["Assigned","Diagnosing","Waiting on Approval","Waiting on Parts","Repairing","Road Test","Quality Check","Complete"];
+    const DRAFT_KEY="nitros_prototype_v073_active_draft", HISTORY_KEY="nitros_prototype_customer_history_v070", JOBS_KEY="nitros_portal_v8_assigned_jobs";
+    const toolbar=document.getElementById("quickToolbar"), searchModal=document.getElementById("globalSearchModal"), voiceModal=document.getElementById("voiceNoteModal"), light=document.getElementById("flashlightScreen");
+    const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    const read=(k,f)=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(f))}catch(e){return f}};
+    function activeScreen(){return document.querySelector('.screen.active')?.id||'home'}
+    function updateToolbar(){toolbar?.classList.toggle('visible',!['login'].includes(activeScreen()))}
+    new MutationObserver(updateToolbar).observe(document.querySelector('.app'),{subtree:true,attributes:true,attributeFilter:['class']});updateToolbar();
+    function go(id){document.querySelector(`[data-go="${id}"]`)?.click() || (typeof portalShowScreen==='function'&&portalShowScreen(id))}
+    function currentStatus(){return document.getElementById('repairStatus')?.value||read(DRAFT_KEY,{})?.repairStatus||'Assigned'}
+    function renderTrack(target){if(!target)return;let status=currentStatus(),idx=FLOW.indexOf(status);if(status==='Paused')idx=Math.max(0,FLOW.indexOf('Repairing'));if(status==='Ready for Pickup')idx=FLOW.length-1;target.innerHTML=FLOW.map((x,i)=>`<div class="status-step ${i<idx?'complete':i===idx?'current':''}">${esc(x)}</div>`).join('')}
+    function missingRequired(){const ids=['vinInput','customerName','roNumber','photoFrontLeft','photoFrontRight','photoRearLeft','photoRearRight'];return ids.reduce((n,id)=>{const e=document.getElementById(id);return n+(!e||((e.type==='file'?!e.files?.length:!e.value?.trim()))?1:0)},0)}
+    async function evidenceCount(){try{const db=await new Promise((res,rej)=>{const r=indexedDB.open('nitros_photo_evidence_v1',1);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});return await new Promise((res,rej)=>{const tx=db.transaction('photos','readonly'),r=tx.objectStore('photos').getAll();r.onsuccess=()=>res((r.result||[]).filter(x=>x.recordId==='active-draft').length);r.onerror=()=>rej(r.error);tx.oncomplete=()=>db.close()})}catch(e){return 0}}
+    async function refreshDashboard(){const draft=read(DRAFT_KEY,{}),jobs=read(JOBS_KEY,[]),vehicle=[document.getElementById('vehicleYear')?.value,draft.vehicleYear,document.getElementById('vehicleMake')?.value,draft.vehicleMake,document.getElementById('vehicleModel')?.value,draft.vehicleModel].filter(Boolean);document.getElementById('dashActiveJobs').textContent=jobs.filter(j=>!['Complete','Removed'].includes(j.status)).length;document.getElementById('dashElapsed').textContent=document.getElementById('liveJobTime')?.textContent||'00:00:00';document.getElementById('dashEvidence').textContent=await evidenceCount();document.getElementById('dashMissing').textContent=missingRequired();document.getElementById('dashVehicle').textContent=vehicle.length? [...new Set(vehicle)].join(' '):'No active vehicle selected';const vin=document.getElementById('vinInput')?.value||draft.vinInput||'VIN pending',ro=document.getElementById('roNumber')?.value||draft.roNumber||document.getElementById('workOrderNumber')?.value||'RO pending';document.getElementById('dashIdentity').textContent=`${vin} • ${ro} • Status: ${currentStatus()}`;renderTrack(document.getElementById('dashboardStatusTrack'));renderTrack(document.getElementById('workOrderStatusTrack'))}
+    document.querySelectorAll('[data-go="dashboard"]').forEach(b=>b.addEventListener('click',()=>setTimeout(refreshDashboard,0)));document.getElementById('repairStatus')?.addEventListener('change',()=>{renderTrack(document.getElementById('workOrderStatusTrack'));refreshDashboard()});setInterval(()=>{if(activeScreen()==='dashboard')refreshDashboard()},1000);renderTrack(document.getElementById('workOrderStatusTrack'));
+    document.getElementById('dashResumeJob')?.addEventListener('click',()=>go('workorder'));document.getElementById('dashOpenTimeline')?.addEventListener('click',()=>document.getElementById('openCompleteTimeline')?.click());document.getElementById('dashGlobalSearch')?.addEventListener('click',()=>openSearch());document.getElementById('dashAssignedJobs')?.addEventListener('click',()=>go('jobs'));
+    function openSearch(){searchModal.classList.remove('hidden');setTimeout(()=>document.getElementById('globalSearchInput')?.focus(),50)}
+    document.getElementById('quickSearch')?.addEventListener('click',openSearch);document.getElementById('closeGlobalSearch')?.addEventListener('click',()=>searchModal.classList.add('hidden'));
+    function flatten(o,p=''){const a=[];if(o&&typeof o==='object')for(const[k,v]of Object.entries(o)){const key=p?`${p}.${k}`:k;if(v&&typeof v==='object')a.push(...flatten(v,key));else a.push(`${key}: ${v??''}`)}return a}
+    function runSearch(){const q=document.getElementById('globalSearchInput').value.trim().toLowerCase(),box=document.getElementById('globalSearchResults'),st=document.getElementById('globalSearchStatus');if(q.length<2){st.className='status warn';st.textContent='Enter at least two characters.';box.innerHTML='';return}const sources=[['Active repair',read(DRAFT_KEY,{})],...read(JOBS_KEY,[]).map((x,i)=>[`Assigned job ${i+1}`,x]),...read(HISTORY_KEY,[]).map((x,i)=>[`History record ${i+1}`,x])];const hits=sources.map(([title,obj])=>({title,obj,text:flatten(obj).join(' | ')})).filter(x=>x.text.toLowerCase().includes(q)).slice(0,50);box.innerHTML=hits.length?hits.map(x=>`<div class="global-result"><strong>${esc(x.title)}</strong><p>${esc(x.text.slice(0,500))}</p></div>`).join(''):'<div class="timeline-empty">No matching records found on this device.</div>';st.className='status ok';st.textContent=`Found ${hits.length} matching record${hits.length===1?'':'s'}.`}
+    document.getElementById('runGlobalSearch')?.addEventListener('click',runSearch);document.getElementById('globalSearchInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')runSearch()});
+    document.getElementById('quickEvidence')?.addEventListener('click',()=>{if(document.getElementById('floatingEvidenceButton')?.classList.contains('visible'))document.getElementById('floatingEvidenceButton').click();else{go('technician');setTimeout(()=>document.getElementById('floatingEvidenceButton')?.click(),100)}});
+    document.getElementById('quickVoice')?.addEventListener('click',()=>voiceModal.classList.remove('hidden'));document.getElementById('closeVoiceNote')?.addEventListener('click',()=>voiceModal.classList.add('hidden'));
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;document.getElementById('dictateQuickVoice')?.addEventListener('click',()=>{if(!SR){document.getElementById('quickVoiceStatus').textContent='Voice dictation is not available in this browser.';return}const r=new SR();r.lang='en-US';r.onresult=e=>{const t=e.results[0][0].transcript,n=document.getElementById('quickVoiceText');n.value=(n.value?`${n.value} `:'')+t};r.start()});
+    document.getElementById('saveQuickVoice')?.addEventListener('click',()=>{const t=document.getElementById('quickVoiceText').value.trim(),n=document.getElementById('internalTechnicianNotes');if(!t){document.getElementById('quickVoiceStatus').textContent='Dictate or type a note before saving.';return}if(n){n.value=(n.value?`${n.value}\n`:'')+`[${new Date().toLocaleString()}] ${t}`;n.dispatchEvent(new Event('input',{bubbles:true}))}document.getElementById('quickVoiceText').value='';document.getElementById('quickVoiceStatus').className='status ok';document.getElementById('quickVoiceStatus').textContent='Voice note saved to the active repair.'});
+    let torchStream=null;document.getElementById('quickFlashlight')?.addEventListener('click',async()=>{try{torchStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});const track=torchStream.getVideoTracks()[0],cap=track.getCapabilities?.()||{};if(cap.torch)await track.applyConstraints({advanced:[{torch:true}]});light.classList.remove('hidden')}catch(e){light.classList.remove('hidden')}});document.getElementById('closeFlashlight')?.addEventListener('click',()=>{torchStream?.getTracks().forEach(t=>t.stop());torchStream=null;light.classList.add('hidden')});
+    document.getElementById('quickTimer')?.addEventListener('click',()=>{go('workorder');setTimeout(()=>{const state=document.getElementById('clockStateText')?.textContent||'';if(/Not started/i.test(state))document.getElementById('startJob')?.click()},120)});
   })();
 
 </script>
