@@ -242,6 +242,17 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   .flashlight-screen{position:fixed;inset:0;z-index:220;background:white;display:flex;align-items:flex-end;justify-content:center;padding:28px}.flashlight-screen button{max-width:260px}
   @media(max-width:700px){.productivity-grid{grid-template-columns:1fr 1fr}.quick-toolbar{bottom:6px}.floating-evidence-btn{bottom:76px}.app{padding-bottom:105px}}
 
+
+  /* v8.1.3 Repair Order Command Center */
+  .command-controls{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px;margin:16px 0}
+  .command-section{margin-top:20px}
+  .command-list{display:grid;gap:12px}
+  .command-card{border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:16px;padding:15px;background:#081321}
+  .command-card.priority-high{border-left-color:var(--bad)}.command-card.priority-customer{border-left-color:var(--warn)}.command-card.complete{border-left-color:var(--ok)}
+  .command-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.command-title{font-size:18px;font-weight:800}.command-meta{font-size:13px;color:var(--muted);margin-top:4px}
+  .command-badges{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.command-badge{padding:5px 9px;border-radius:999px;border:1px solid var(--line);font-size:11px;font-weight:800}.command-badge.good{color:#79e2b3}.command-badge.warn{color:#ffd089}.command-badge.bad{color:#ff9aa0}
+  .command-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.favorite-star{font-size:22px;background:none;border:0;color:#ffd089;padding:0 4px}.command-empty{padding:18px;border:1px dashed var(--line);border-radius:14px;color:var(--muted);text-align:center}
+  @media(max-width:700px){.command-controls{grid-template-columns:1fr}.command-actions{grid-template-columns:1fr 1fr}.command-head{align-items:center}}
 </style>
 </head>
 <body>
@@ -262,7 +273,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.1.1 repairs Global Search with clean repair-order cards and direct Open/Resume actions while preserving all evidence records.</div>
+    <div id="portalLoginStatus" class="status">Version 8.1.3 adds the Repair Order Command Center with favorites, recent repairs, status control, priority sorting, elapsed time, and completion indicators.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -333,7 +344,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 8.1.1</div><h1>Technician Dashboard</h1>
+    <div class="eyebrow">Version 8.1.3</div><h1>Repair Order Command Center</h1>
     <p>One-screen view of the active repair, labor clock, evidence, required items, and current workflow stage.</p>
     <div class="productivity-grid">
       <div class="productivity-card"><strong id="dashActiveJobs">0</strong><span>Active assigned jobs</span></div>
@@ -350,6 +361,18 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
       <button id="dashAssignedJobs" class="btn ghost" type="button">Assigned Jobs</button>
     </div>
     <div id="dashboardStatus" class="status">Dashboard refreshes automatically from the active repair order stored on this device.</div>
+    <div class="command-section">
+      <h3>Repair Order Controls</h3>
+      <div class="command-controls">
+        <div class="field"><label for="commandSort">Sort repair orders</label><select id="commandSort"><option value="priority">Highest priority</option><option value="recent">Newest first</option><option value="oldest">Oldest first</option><option value="customer">Customer waiting first</option></select></div>
+        <div class="field"><label for="activeRepairStatus">Active repair status</label><select id="activeRepairStatus"><option>Assigned</option><option>In Progress</option><option>Waiting for Parts</option><option>Waiting for Customer</option><option>Road Test Required</option><option>Ready for Delivery</option><option>Completed</option></select></div>
+        <div class="field"><label for="activeRepairPriority">Active priority</label><select id="activeRepairPriority"><option value="normal">Normal</option><option value="high">High Priority</option><option value="customer">Customer Waiting</option></select></div>
+      </div>
+      <div class="grid two"><button id="saveActiveCommandState" class="btn primary" type="button">Save Active Status</button><button id="refreshCommandCenter" class="btn secondary" type="button">Refresh Command Center</button></div>
+    </div>
+    <div class="command-section"><h3>⭐ Pinned Repair Orders</h3><div id="pinnedRepairOrders" class="command-list"></div></div>
+    <div class="command-section"><h3>Recently Opened</h3><div id="recentRepairOrders" class="command-list"></div></div>
+    <div class="command-section"><h3>All Active Repair Orders</h3><div id="allCommandRepairOrders" class="command-list"></div></div>
   </div>
 </section>
 
@@ -3871,6 +3894,43 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     document.getElementById('saveQuickVoice')?.addEventListener('click',()=>{const t=document.getElementById('quickVoiceText').value.trim(),n=document.getElementById('internalTechnicianNotes');if(!t){document.getElementById('quickVoiceStatus').textContent='Dictate or type a note before saving.';return}if(n){n.value=(n.value?`${n.value}\n`:'')+`[${new Date().toLocaleString()}] ${t}`;n.dispatchEvent(new Event('input',{bubbles:true}))}document.getElementById('quickVoiceText').value='';document.getElementById('quickVoiceStatus').className='status ok';document.getElementById('quickVoiceStatus').textContent='Voice note saved to the active repair.'});
     let torchStream=null;document.getElementById('quickFlashlight')?.addEventListener('click',async()=>{try{torchStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});const track=torchStream.getVideoTracks()[0],cap=track.getCapabilities?.()||{};if(cap.torch)await track.applyConstraints({advanced:[{torch:true}]});light.classList.remove('hidden')}catch(e){light.classList.remove('hidden')}});document.getElementById('closeFlashlight')?.addEventListener('click',()=>{torchStream?.getTracks().forEach(t=>t.stop());torchStream=null;light.classList.add('hidden')});
     document.getElementById('quickTimer')?.addEventListener('click',()=>{go('workorder');setTimeout(()=>{const state=document.getElementById('clockStateText')?.textContent||'';if(/Not started/i.test(state))document.getElementById('startJob')?.click()},120)});
+  })();
+
+
+  // v8.1.3 Repair Order Command Center — additive, local-device layer.
+  (()=>{
+    const COMMAND_KEY='nitros_v813_command_state';
+    const RECENT_KEY='nitros_v813_recent_repairs';
+    const DRAFT_KEY_LOCAL=typeof DRAFT_KEY!=='undefined'?DRAFT_KEY:'nitros_intake_draft_v1';
+    const JOBS_KEY_LOCAL='nitros_portal_v8_assigned_jobs';
+    const HISTORY_KEY_LOCAL=typeof HISTORY_KEY!=='undefined'?HISTORY_KEY:'nitros_inspection_history_v1';
+    const read=(k,f)=>{try{return JSON.parse(localStorage.getItem(k)||'null')??f}catch(e){return f}};
+    const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+    const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const state=()=>read(COMMAND_KEY,{});
+    const saveState=x=>write(COMMAND_KEY,x);
+    function identity(type,obj,index=0){
+      if(type==='active'){const f=obj?.fields||{},v=obj?.selectedVehicle||{};return `active:${f.roNumber||f.workOrderNumber||v.vin||'draft'}`}
+      if(type==='job')return `job:${obj?.ro||obj?.repairOrder||obj?.vin||index}`;
+      return `history:${obj?.checkInId||obj?.repairOrder||index}`;
+    }
+    function summary(type,obj,index=0){
+      if(type==='active'){const f=obj?.fields||{},v=obj?.selectedVehicle||{};return {id:identity(type,obj,index),type,index,obj,vehicle:[v.year,v.make,v.model].filter(Boolean).join(' ')||f.jobVehicle||'Active vehicle',customer:f.customerName||f.jobCustomer||'Customer not entered',ro:f.roNumber||f.workOrderNumber||'RO pending',status:f.repairStatus||'In Progress',date:obj.savedAt||'',elapsed:(obj.jobClock?.activeMs||0)+((obj.jobClock?.state==='running'&&obj.jobClock?.activeStartedAt)?Date.now()-obj.jobClock.activeStartedAt:0),missing:typeof getRequiredItems==='function'?getRequiredItems().filter(x=>!x.complete()).length:0}}
+      if(type==='job')return {id:identity(type,obj,index),type,index,obj,vehicle:obj.vehicle||[obj.year,obj.make,obj.model].filter(Boolean).join(' ')||'Assigned vehicle',customer:obj.customer||'Customer not entered',ro:obj.ro||obj.repairOrder||'RO pending',status:obj.status||'Assigned',date:obj.openedAt||obj.createdAt||obj.assignedAt||'',elapsed:obj.elapsedMs||0,missing:obj.missingEvidence??null};
+      return {id:identity(type,obj,index),type,index,obj,vehicle:[obj?.vehicle?.year,obj?.vehicle?.make,obj?.vehicle?.model].filter(Boolean).join(' ')||'Completed vehicle',customer:obj?.customer?.name||'Customer not entered',ro:obj?.repairOrder||obj?.workOrder?.workOrderNumber||'RO pending',status:obj?.workOrder?.repairStatus||'Completed',date:obj?.timestamp||'',elapsed:obj?.workOrder?.jobClock?.activeMs||0,missing:0};
+    }
+    function sources(){const out=[],d=read(DRAFT_KEY_LOCAL,null),jobs=read(JOBS_KEY_LOCAL,[]),hist=read(HISTORY_KEY_LOCAL,[]);if(d&&Object.keys(d).length)out.push(summary('active',d));jobs.forEach((x,i)=>out.push(summary('job',x,i)));hist.slice(0,25).forEach((x,i)=>out.push(summary('history',x,i)));return out}
+    function markRecent(item){let a=read(RECENT_KEY,[]).filter(x=>x.id!==item.id);a.unshift({id:item.id,type:item.type,index:item.index,openedAt:new Date().toISOString()});write(RECENT_KEY,a.slice(0,12));}
+    function itemState(item){return state()[item.id]||{favorite:false,status:item.status||'Assigned',priority:'normal',lastScreen:'workorder'};}
+    function card(item){const st=itemState(item),complete=st.status==='Completed'||item.missing===0&&item.type==='history',priority=st.priority||'normal';const miss=item.missing===null?'Evidence status unavailable':item.missing===0?'100% complete':`${item.missing} required item${item.missing===1?'':'s'} missing`;return `<article class="command-card ${complete?'complete':''} ${priority==='high'?'priority-high':''} ${priority==='customer'?'priority-customer':''}"><div class="command-head"><div><div class="command-title">${esc(item.vehicle)}</div><div class="command-meta">${esc(item.customer)} • ${esc(item.ro)}</div></div><button class="favorite-star" data-command-favorite="${esc(item.id)}" aria-label="Pin repair order">${st.favorite?'★':'☆'}</button></div><div class="command-badges"><span class="command-badge ${complete?'good':''}">${esc(st.status||item.status)}</span><span class="command-badge ${priority==='high'?'bad':priority==='customer'?'warn':''}">${priority==='high'?'High Priority':priority==='customer'?'Customer Waiting':'Normal Priority'}</span><span class="command-badge">⏱ ${formatClock(item.elapsed||0)}</span><span class="command-badge ${item.missing===0?'good':item.missing>0?'warn':''}">${esc(miss)}</span></div><div class="command-actions"><button class="btn primary small" data-command-open="${esc(item.id)}">Open / Resume</button><button class="btn secondary small" data-command-status="${esc(item.id)}">Change Status</button><button class="btn ghost small" data-command-priority="${esc(item.id)}">Change Priority</button></div></article>`}
+    function sorted(items){const mode=document.getElementById('commandSort')?.value||'priority';const rank=x=>{const s=itemState(x);return s.priority==='high'?0:s.priority==='customer'?1:2};return [...items].sort((a,b)=>{if(mode==='oldest')return (new Date(a.date||0))-(new Date(b.date||0));if(mode==='recent')return (new Date(b.date||0))-(new Date(a.date||0));if(mode==='customer')return (itemState(a).priority==='customer'?0:1)-(itemState(b).priority==='customer'?0:1);return rank(a)-rank(b)||(new Date(b.date||0))-(new Date(a.date||0))})}
+    function render(){const all=sources(),st=state(),recentIds=read(RECENT_KEY,[]).map(x=>x.id);const pinned=all.filter(x=>st[x.id]?.favorite);const recent=recentIds.map(id=>all.find(x=>x.id===id)).filter(Boolean).slice(0,6);const active=all.filter(x=>x.type!=='history'||itemState(x).favorite);const put=(id,arr,msg)=>{const el=document.getElementById(id);if(el)el.innerHTML=arr.length?sorted(arr).map(card).join(''):`<div class="command-empty">${msg}</div>`};put('pinnedRepairOrders',pinned,'No repair orders pinned yet.');put('recentRepairOrders',recent,'Open a repair order and it will appear here.');put('allCommandRepairOrders',active,'No active repair orders found on this device.');const draft=all.find(x=>x.type==='active');if(draft){const ds=itemState(draft);const status=document.getElementById('activeRepairStatus'),priority=document.getElementById('activeRepairPriority');if(status)status.value=ds.status||draft.status||'In Progress';if(priority)priority.value=ds.priority||'normal'}}
+    function findItem(id){return sources().find(x=>x.id===id)}
+    function openItem(item){if(!item)return;markRecent(item);const st=itemState(item);if(item.type==='active'){if(typeof restoreDraft==='function')restoreDraft(true);setTimeout(()=>{if(st.lastScreen&&document.getElementById(st.lastScreen))portalShowScreen(st.lastScreen)},120)}else if(item.type==='job'){startAssignedJob(item.index)}else if(typeof reopenCompletedRecord==='function')reopenCompletedRecord(item.obj?.checkInId);render()}
+    document.getElementById('saveActiveCommandState')?.addEventListener('click',()=>{const item=sources().find(x=>x.type==='active');if(!item)return;const all=state();all[item.id]={...itemState(item),status:document.getElementById('activeRepairStatus').value,priority:document.getElementById('activeRepairPriority').value,lastScreen:document.querySelector('.screen.active')?.id||'workorder'};saveState(all);const rs=document.getElementById('repairStatus');if(rs){rs.value=all[item.id].status;rs.dispatchEvent(new Event('change',{bubbles:true}))}saveDraft?.();render();const d=document.getElementById('dashboardStatus');if(d){d.className='status ok';d.textContent='Active repair status and priority saved.'}});
+    document.getElementById('refreshCommandCenter')?.addEventListener('click',render);document.getElementById('commandSort')?.addEventListener('change',render);
+    ['pinnedRepairOrders','recentRepairOrders','allCommandRepairOrders'].forEach(id=>document.getElementById(id)?.addEventListener('click',e=>{const fav=e.target.closest('[data-command-favorite]'),open=e.target.closest('[data-command-open]'),status=e.target.closest('[data-command-status]'),priority=e.target.closest('[data-command-priority]');if(fav){const item=findItem(fav.dataset.commandFavorite),all=state();all[item.id]={...itemState(item),favorite:!itemState(item).favorite};saveState(all);render()}if(open)openItem(findItem(open.dataset.commandOpen));if(status){const item=findItem(status.dataset.commandStatus),opts=['Assigned','In Progress','Waiting for Parts','Waiting for Customer','Road Test Required','Ready for Delivery','Completed'],cur=itemState(item).status||item.status,next=opts[(opts.indexOf(cur)+1)%opts.length],all=state();all[item.id]={...itemState(item),status:next};saveState(all);render()}if(priority){const item=findItem(priority.dataset.commandPriority),opts=['normal','high','customer'],cur=itemState(item).priority||'normal',next=opts[(opts.indexOf(cur)+1)%opts.length],all=state();all[item.id]={...itemState(item),priority:next};saveState(all);render()}}));
+    const originalPortalShowScreen=window.portalShowScreen||portalShowScreen;document.querySelectorAll('[data-go="dashboard"]').forEach(b=>b.addEventListener('click',()=>setTimeout(render,50)));document.getElementById('dashResumeJob')?.addEventListener('click',()=>{const item=sources().find(x=>x.type==='active');if(item)markRecent(item)});window.addEventListener('DOMContentLoaded',()=>setTimeout(render,150));setInterval(()=>{if(document.getElementById('dashboard')?.classList.contains('active'))render()},10000);
   })();
 
 </script>
