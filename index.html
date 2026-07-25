@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.0.8</title>
+<title>Nitros Mobile Technician Portal v8.0.9</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -214,13 +214,26 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   .severity-unsafe{border-color:#e15d64!important}.severity-safety{border-color:#f4b740!important}
   @media(max-width:700px){.floating-evidence-btn{right:12px;bottom:12px;min-width:126px}.annotation-tools{grid-template-columns:1fr 1fr}.smart-evidence-head{display:block}.smart-evidence-head button{margin-top:10px}}
 
+
+  .timeline-toolbar{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin:14px 0}
+  .timeline-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+  .timeline-stat{background:#081321;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+  .timeline-stat strong{display:block;font-size:24px}.timeline-stat span{font-size:12px;color:var(--muted)}
+  .complete-timeline{display:grid;gap:13px;margin-top:14px}
+  .complete-timeline-entry{display:grid;grid-template-columns:86px 1fr;gap:12px;background:#081321;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:14px;padding:12px}
+  .complete-timeline-entry img{width:86px;height:86px;object-fit:cover;border-radius:10px;background:#050a11}
+  .complete-timeline-entry h4{margin:0 0 5px;font-size:17px}.complete-timeline-entry p{margin:4px 0;font-size:13px}
+  .timeline-stage{display:inline-block;padding:4px 8px;border:1px solid var(--line);border-radius:999px;font-size:11px;font-weight:800;margin-bottom:6px}
+  .timeline-empty{padding:20px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+  @media(max-width:700px){.timeline-toolbar{grid-template-columns:1fr}.timeline-summary{grid-template-columns:1fr 1fr}.complete-timeline-entry{grid-template-columns:72px 1fr}.complete-timeline-entry img{width:72px;height:72px}}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.0.8 — Smart Evidence System</div>
+  <div class="sub">Mobile Technician Portal v8.0.9 — Complete Evidence Timeline</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -978,7 +991,30 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="evidenceNotes">Technician notes</label><textarea id="evidenceNotes" rows="4" placeholder="Describe the condition, location, measurement, risk, and recommended action."></textarea></div>
     <div class="grid two"><button id="dictateEvidenceNotes" class="btn secondary" type="button">🎙️ Dictate Notes</button><button id="saveSmartEvidence" class="btn primary" type="button">Save Evidence</button></div>
     <div id="smartEvidenceSaveStatus" class="status">Evidence will be stored with this active repair order and copied into vehicle history when the repair is finalized.</div>
-    <div class="card" style="margin-top:18px;background:#081321"><div class="eyebrow">Evidence Timeline</div><div id="activeEvidenceTimeline" class="evidence-timeline"></div></div>
+    <div class="card" style="margin-top:18px;background:#081321"><div class="eyebrow">Evidence Timeline</div><div id="activeEvidenceTimeline" class="evidence-timeline"></div><button id="openCompleteTimeline" class="btn secondary" type="button" style="margin-top:12px">Open Complete Job Timeline</button></div>
+  </div>
+</div>
+
+
+<div id="completeTimelineModal" class="smart-evidence-modal hidden" role="dialog" aria-modal="true" aria-labelledby="completeTimelineTitle">
+  <div class="smart-evidence-card">
+    <div class="smart-evidence-head">
+      <div><div class="eyebrow">Version 8.0.9</div><h2 id="completeTimelineTitle">Complete Evidence Timeline</h2><p>Every available repair-order image is organized chronologically from arrival through final road-test verification.</p></div>
+      <button id="closeCompleteTimeline" class="btn ghost small" type="button">Close</button>
+    </div>
+    <div class="timeline-summary">
+      <div class="timeline-stat"><strong id="timelineTotalCount">0</strong><span>Total evidence</span></div>
+      <div class="timeline-stat"><strong id="timelineRequiredCount">0</strong><span>Required photos</span></div>
+      <div class="timeline-stat"><strong id="timelineAdditionalCount">0</strong><span>Additional findings</span></div>
+      <div class="timeline-stat"><strong id="timelineSafetyCount">0</strong><span>Safety flags</span></div>
+    </div>
+    <div class="timeline-toolbar">
+      <div class="field"><label for="timelineStageFilter">Stage</label><select id="timelineStageFilter"><option value="all">All stages</option><option>Arrival / Intake</option><option>Walk-Around</option><option>Diagnosis / Repair</option><option>Additional Finding</option><option>Road-Test / Completion</option></select></div>
+      <div class="field"><label for="timelineSearch">Search evidence</label><input id="timelineSearch" placeholder="Title, notes, category, repair line"></div>
+      <button id="refreshCompleteTimeline" class="btn secondary" type="button" style="align-self:end">Refresh</button>
+    </div>
+    <div id="completeTimelineStatus" class="status">Loading the repair-order evidence record…</div>
+    <div id="completeTimelineList" class="complete-timeline"></div>
   </div>
 </div>
 
@@ -990,7 +1026,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.0.8 • Smart Evidence System • Road-Test Verification preserved • Local device storage</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.0.9 • Complete Evidence Timeline • Road-Test Verification preserved • Local device storage</div>
 </div>
 
 <script>
@@ -3638,7 +3674,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   });
 
 
-  // v8.0.8 Smart Evidence System — independent layer using the approved photo evidence database.
+  // v8.0.9 Smart Evidence System — independent layer using the approved photo evidence database.
   (()=>{
     const DB_NAME="nitros_photo_evidence_v1", STORE="photos", ACTIVE="active-draft";
     const allowedScreens=new Set(["technician","estimate","workorder","review"]);
@@ -3673,6 +3709,28 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     document.getElementById("saveSmartEvidence")?.addEventListener("click",async()=>{const status=document.getElementById("smartEvidenceSaveStatus"),title=document.getElementById("evidenceTitle").value.trim(),notes=document.getElementById("evidenceNotes").value.trim();if(!originalBlob){status.className="status warn";status.textContent="Take or select an evidence photo before saving.";return}if(!title){status.className="status warn";status.textContent="Enter a short evidence title before saving.";return}try{status.className="status";status.textContent="Saving original and annotated evidence on this device…";const id=`additionalEvidence_${Date.now()}`,capturedAt=new Date().toISOString(),meta={recordId:ACTIVE,capturedAt,title,category:document.getElementById("evidenceCategory").value,severity:document.getElementById("evidenceSeverity").value,repairLine:document.getElementById("evidenceRepairLine").value.trim(),notes,sourceScreen:currentScreen(),...identity()};await put({...meta,key:`${ACTIVE}:${id}_original`,fieldId:`${id}_original`,label:`${title} — Original`,blob:originalBlob,mimeType:originalBlob.type||"image/jpeg",evidenceType:"additional-original"});const ann=await annotatedBlob();await put({...meta,key:`${ACTIVE}:${id}_annotated`,fieldId:`${id}_annotated`,label:`${title} — Annotated`,blob:ann,mimeType:"image/jpeg",evidenceType:"additional-annotated"});status.className="status ok";status.textContent="Evidence saved and added to the repair-order timeline.";["evidenceTitle","evidenceRepairLine","evidenceNotes"].forEach(id=>document.getElementById(id).value="");input.value="";originalBlob=null;document.getElementById("annotationSection").classList.add("hidden");ctx.clearRect(0,0,canvas.width,canvas.height);await renderTimeline()}catch(err){console.error(err);status.className="status bad";status.textContent="Evidence could not be saved. Check browser storage and try again."}});
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;document.getElementById("dictateEvidenceNotes")?.addEventListener("click",()=>{if(!SR){alert("Voice dictation is not available in this browser.");return}rec=new SR();rec.lang="en-US";rec.interimResults=false;rec.onresult=e=>{const t=e.results[0][0].transcript,n=document.getElementById("evidenceNotes");n.value=(n.value?`${n.value} `:"")+t};rec.start()});
   })();
+
+  // v8.0.9 Complete Evidence Timeline — chronological view of every active repair-order image.
+  (()=>{
+    const DB_NAME="nitros_photo_evidence_v1", STORE="photos", ACTIVE="active-draft";
+    const modal=document.getElementById("completeTimelineModal"), listBox=document.getElementById("completeTimelineList"), status=document.getElementById("completeTimelineStatus");
+    let entries=[], objectUrls=[];
+    const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    function openDb(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB_NAME,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE,{keyPath:"key"})};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+    function all(){return openDb().then(db=>new Promise((resolve,reject)=>{const tx=db.transaction(STORE,"readonly"),r=tx.objectStore(STORE).getAll();r.onsuccess=()=>resolve((r.result||[]).filter(x=>x.recordId===ACTIVE));r.onerror=()=>reject(r.error);tx.oncomplete=()=>db.close()}))}
+    function stageFor(i){const f=String(i.fieldId||"");if(/finalOdometer|road/i.test(f))return "Road-Test / Completion";if(/FrontLeft|FrontRight|RearLeft|RearRight/i.test(f))return "Walk-Around";if(/photoOdometer|photoVin/i.test(f))return "Arrival / Intake";if(/^additionalEvidence_/i.test(f))return "Additional Finding";return "Diagnosis / Repair"}
+    function preferred(items){const map=new Map();for(const i of items){const raw=String(i.fieldId||i.key||"");const group=raw.replace(/_(original|annotated)$/i,"");const old=map.get(group);if(!old||/annotated$/i.test(raw))map.set(group,i)}return [...map.values()]}
+    function titleFor(i){return i.title||i.label||({photoFrontLeft:"Front-left corner",photoFrontRight:"Front-right corner",photoRearLeft:"Rear-left corner",photoRearRight:"Rear-right corner",photoOdometer:"Arrival odometer",photoVin:"VIN identification",technicianPhoto:"Technician repair evidence",photoFinalOdometer:"Final road-test odometer"}[i.fieldId])||"Repair-order evidence"}
+    function cleanup(){objectUrls.forEach(URL.revokeObjectURL);objectUrls=[]}
+    function render(){cleanup();const stage=document.getElementById("timelineStageFilter").value,q=document.getElementById("timelineSearch").value.trim().toLowerCase();const shown=entries.filter(i=>{const st=stageFor(i),hay=[titleFor(i),i.notes,i.category,i.severity,i.repairLine,i.technician].join(" ").toLowerCase();return(stage==="all"||st===stage)&&(!q||hay.includes(q))});listBox.innerHTML=shown.length?shown.map(i=>{const url=i.blob?URL.createObjectURL(i.blob):"";if(url)objectUrls.push(url);const when=i.capturedAt?new Date(i.capturedAt).toLocaleString():"Time not recorded",sev=i.severity||"Standard evidence",st=stageFor(i);return `<article class="complete-timeline-entry ${sev==="Vehicle Unsafe to Operate"?"severity-unsafe":sev==="Safety Concern"?"severity-safety":""}">${url?`<img src="${url}" alt="${esc(titleFor(i))}">`:'<div></div>'}<div><span class="timeline-stage">${esc(st)}</span><h4>${esc(titleFor(i))}</h4><p><strong>${esc(when)}</strong> • ${esc(sev)}</p>${i.category?`<p>Category: ${esc(i.category)}</p>`:""}${i.notes?`<p>${esc(i.notes)}</p>`:""}${i.repairLine?`<p>Repair line: ${esc(i.repairLine)}</p>`:""}<p>Technician: ${esc(i.technician||document.getElementById("technicianName")?.value||"Not entered")}</p></div></article>`}).join(""):'<div class="timeline-empty">No evidence matches the selected stage or search.</div>';status.className="status ok";status.textContent=`Showing ${shown.length} of ${entries.length} chronological evidence records.`}
+    async function load(){try{status.className="status";status.textContent="Building the chronological repair-order evidence record…";entries=preferred(await all()).sort((a,b)=>String(a.capturedAt||"").localeCompare(String(b.capturedAt||"")));document.getElementById("timelineTotalCount").textContent=entries.length;document.getElementById("timelineRequiredCount").textContent=entries.filter(i=>["Arrival / Intake","Walk-Around","Road-Test / Completion"].includes(stageFor(i))).length;document.getElementById("timelineAdditionalCount").textContent=entries.filter(i=>stageFor(i)==="Additional Finding").length;document.getElementById("timelineSafetyCount").textContent=entries.filter(i=>["Safety Concern","Vehicle Unsafe to Operate"].includes(i.severity)).length;render()}catch(e){console.error(e);status.className="status bad";status.textContent="The evidence timeline could not be loaded. Check browser storage and try again."}}
+    document.getElementById("openCompleteTimeline")?.addEventListener("click",()=>{modal.classList.remove("hidden");load()});
+    document.getElementById("closeCompleteTimeline")?.addEventListener("click",()=>{modal.classList.add("hidden");cleanup()});
+    document.getElementById("refreshCompleteTimeline")?.addEventListener("click",load);
+    document.getElementById("timelineStageFilter")?.addEventListener("change",render);
+    document.getElementById("timelineSearch")?.addEventListener("input",render);
+  })();
+
 </script>
 </body>
 </html>
