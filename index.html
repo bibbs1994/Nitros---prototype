@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.2.9 — Repair Order Dashboard Handoff</title>
+<title>Nitros Mobile Technician Portal v8.3.0 — Oliver Guided Diagnostics</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -417,7 +417,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.2.9 — Repair Order Dashboard Handoff</div>
+  <div class="sub">Mobile Technician Portal v8.3.0 — Oliver Guided Diagnostics</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -431,7 +431,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.2.6 adds a movable, floating, minimizable Oliver Guided Test Assistant while preserving Convert to RO routing and explicit guided-field confirmation. Tap Oliver for a screen-by-screen test that highlights each required control, verifies your entry, and records completed test steps. Every verified prior-version workflow is preserved.</div>
+    <div id="portalLoginStatus" class="status">Version 8.3.0 activates Oliver as the technician diagnostic copilot. Open the Oliver Hub from any screen, choose Repair Assistant, and use the active repair context to verify the complaint, review scan information, select the next-best test, record evidence, and verify the repair. The complete validated v8.2.9 intake, walk-around, Convert to RO, and Technician Dashboard workflow is preserved.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -1554,7 +1554,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.2.9 • Mandatory walk-around • Convert to RO • Automatic Technician Dashboard handoff • Preserved audit trail</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.3.0 • Oliver guided diagnostics • Evidence-based testing • Repair timeline • Preserved v8.2.9 workflow</div>
 </div>
 
 <script>
@@ -4901,7 +4901,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v8.2.8 • Active repair copilot</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v8.3.0 • Active diagnostic copilot</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -4920,7 +4920,9 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
       </div>
       <div class="smart-pane" data-smart-pane="diagnose">
         <div id="smartDiagnosticStep" class="smart-response">Start a guided diagnostic sequence based on the current concern.</div>
-        <div class="smart-action-grid"><button id="smartDiagStart" class="btn primary" type="button">Start Diagnostic Guide</button><button id="smartDiagComplete" class="btn secondary" type="button">Complete Step</button><button id="smartDiagBack" class="btn ghost" type="button">Previous</button><button id="smartDiagReset" class="btn ghost" type="button">Restart</button></div>
+        <label for="smartDiagResult" style="margin-top:10px">Measured result / observation</label>
+        <textarea id="smartDiagResult" rows="3" placeholder="Example: Battery voltage 12.61 V KOEO; starter relay terminal 30 has battery voltage; no crank when 30 is jumped to 87."></textarea>
+        <div class="smart-action-grid"><button id="smartDiagStart" class="btn primary" type="button">Start Diagnostic Guide</button><button id="smartDiagRecord" class="btn secondary" type="button">Record Test Result</button><button id="smartDiagComplete" class="btn secondary" type="button">Complete & Next</button><button id="smartDiagBack" class="btn ghost" type="button">Previous</button><button id="smartDiagReset" class="btn ghost" type="button">Restart</button></div>
       </div>
       <div class="smart-pane" data-smart-pane="check">
         <div id="smartCompletenessList" class="smart-check-list"></div>
@@ -5221,16 +5223,26 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     else r=`I recorded your question in the active repair context. Based on the information currently entered, verify the complaint first, separate verified facts from assumptions, and document the result of each test before selecting the next test.\n\nCurrent concern: ${c.concern||'not entered'}.`;
     $('smartOliverResponse').textContent=r;addEvent('Oliver consultation',q);return r;
   }
-  const diagnosticSteps=[
+  const baseDiagnosticSteps=[
     'Step 1 — Verify the customer concern. Reproduce the symptom safely and record the exact operating conditions.',
-    'Step 2 — Perform a complete system scan. Record all current, pending, history, and network DTCs before clearing anything.',
-    'Step 3 — Review freeze-frame and relevant live data. Identify what changed when the fault occurred.',
-    'Step 4 — Build and rank likely causes. Separate verified evidence from assumptions.',
+    'Step 2 — Perform a complete vehicle scan. Save current, pending, history, and network DTCs before clearing anything.',
+    'Step 3 — Review freeze-frame and relevant live data. Compare actual values with specifications and known-good behavior.',
+    'Step 4 — Build and rank likely causes. Separate verified evidence from assumptions and previous parts replacement.',
     'Step 5 — Perform the least intrusive test that can prove or disprove the highest-ranked cause.',
-    'Step 6 — Record the measured result, specification, tool used, and pass/fail conclusion.',
-    'Step 7 — Repair only the verified fault, then repeat the original test and complete final verification.'
-  ];let diagIndex=-1;
-  function renderDiag(){if(diagIndex<0){$('smartDiagnosticStep').textContent='Start a guided diagnostic sequence based on the current concern.';return}$('smartDiagnosticStep').textContent=diagnosticSteps[diagIndex]+`\n\nConcern: ${context().concern||'Enter the customer concern in the repair order.'}`}
+    'Step 6 — Record the measured result, specification, tool used, test location, and pass/fail conclusion.',
+    'Step 7 — Repair only the verified fault. Repeat the failed test, clear codes only when appropriate, and complete final verification.'
+  ];
+  function systemStep(){const x=((context().concern||'')+' '+(context().dtcs||'')).toLowerCase();
+    if(/no.?crank|starter|crank.*no start/.test(x))return 'System-specific test — Confirm battery state, voltage drop on both starter circuits, relay command and load-side output, park/neutral or clutch input, immobilizer authorization, and starter response at the starter before condemning a module.';
+    if(/misfire|p030[0-9]/.test(x))return 'System-specific test — Identify the affected cylinder, compare misfire counters, inspect plug and coil evidence, verify injector control and contribution, then test mechanical integrity before replacing parts.';
+    if(/evap|p044|p045/.test(x))return 'System-specific test — Confirm fuel level and cap condition, command the vent and purge valves, smoke-test at controlled pressure, and prove whether the leak is a sealing fault, plumbing fault, or control fault.';
+    if(/charging|alternator|battery light/.test(x))return 'System-specific test — Test battery state first, measure charging voltage and amperage under load, verify command duty cycle when applicable, and perform B+ and ground voltage-drop tests.';
+    if(/overheat|coolant|temperature/.test(x))return 'System-specific test — Verify coolant level cold, pressure-test the system, confirm actual temperature with scan data and an independent measurement, and evaluate circulation, fan operation, thermostat control, and combustion-gas evidence.';
+    if(/abs|wheel speed|c11|c12/.test(x))return 'System-specific test — Compare all wheel-speed PIDs during the fault, inspect signal integrity and air gap, verify powers and grounds, and load-test the circuit before replacing a sensor or module.';
+    return 'System-specific test — Identify the affected system, obtain the wiring diagram and specifications, then choose one test that divides the circuit or system in half and produces a measurable pass/fail result.'}
+  let diagnosticSteps=[],diagIndex=-1;
+  function buildDiagnosticSteps(){diagnosticSteps=[baseDiagnosticSteps[0],baseDiagnosticSteps[1],systemStep(),...baseDiagnosticSteps.slice(2)];}
+  function renderDiag(){if(!diagnosticSteps.length)buildDiagnosticSteps();if(diagIndex<0){$('smartDiagnosticStep').textContent='Start a guided diagnostic sequence based on the current concern.';return}$('smartDiagnosticStep').textContent=diagnosticSteps[diagIndex]+`\n\nConcern: ${context().concern||'Enter the customer concern in the repair order.'}\nDTC / scan information: ${context().dtcs||'Not entered yet.'}`}
   function runCompleteness(){const checks=[
     ['Customer concern documented',!!context().concern],['Vehicle identification entered',!!(value('vinInput')||value('vehicleYear')||value('appointmentVehicle'))],['Technician findings documented',!!(value('inspectionFindings')||value('technicianFindings')||value('internalTechnicianNotes'))],['Repair status selected',!!value('repairStatus')],['Completion or verification notes entered',!!(value('completionNotes')||value('roadTestNotes'))],['Road-test evidence addressed',!!(value('roadTestNotes')||value('roadTestNotRequiredReason')||document.querySelector('[data-road-test-complete="true"]'))],['Customer signature captured or exception documented',!!(value('customerSignatureName')||value('signatureException'))]];
     $('smartCompletenessList').innerHTML=checks.map(([n,ok])=>`<div class="smart-check ${ok?'good':'warn'}"><strong>${ok?'✓':'!'} ${n}</strong></div>`).join('');addEvent('Completeness check',`${checks.filter(x=>x[1]).length} of ${checks.length} checks complete`)
@@ -5242,7 +5254,9 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   $('smartOliverSaveNote').addEventListener('click',()=>{const q=value('smartOliverQuestion');if(!q)return;$('internalTechnicianNotes')&&($('internalTechnicianNotes').value=[$('internalTechnicianNotes').value,`[${new Date().toLocaleString()}] ${q}`].filter(Boolean).join('\n'));addEvent('Repair note',q);$('smartOliverResponse').textContent='The note was timestamped and added to the active repair timeline and technician notes.'});
   $('smartOliverRead').addEventListener('click',()=>{if(!('speechSynthesis'in window))return;window.speechSynthesis.cancel();window.speechSynthesis.speak(new SpeechSynthesisUtterance($('smartOliverResponse').textContent))});
   $('smartOliverDictate').addEventListener('click',()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){$('smartOliverResponse').textContent='Voice recognition is unavailable in this browser or local-file mode. Use the keyboard microphone or type the note.';return}const r=new SR();r.lang='en-US';r.onresult=e=>{$('smartOliverQuestion').value=e.results[0][0].transcript};r.onerror=e=>{$('smartOliverResponse').textContent='Voice recognition could not start: '+(e.error||'browser restriction')};try{r.start()}catch(e){}});
-  $('smartDiagStart').addEventListener('click',()=>{diagIndex=0;renderDiag();addEvent('Diagnostic guide started',diagnosticSteps[0])});$('smartDiagComplete').addEventListener('click',()=>{if(diagIndex<0)diagIndex=0;addEvent('Diagnostic step completed',diagnosticSteps[diagIndex]);if(diagIndex<diagnosticSteps.length-1)diagIndex++;renderDiag()});$('smartDiagBack').addEventListener('click',()=>{diagIndex=Math.max(0,diagIndex-1);renderDiag()});$('smartDiagReset').addEventListener('click',()=>{diagIndex=0;renderDiag()});
+  $('smartDiagStart').addEventListener('click',()=>{buildDiagnosticSteps();diagIndex=0;renderDiag();addEvent('Diagnostic guide started',diagnosticSteps[0])});
+  $('smartDiagRecord').addEventListener('click',()=>{const result=value('smartDiagResult');if(!result){$('smartDiagnosticStep').textContent+='\n\nEnter the measured result or observation before recording it.';return}const step=diagnosticSteps[Math.max(0,diagIndex)]||'Diagnostic test';const note=`${step}\nResult: ${result}`;if($('internalTechnicianNotes'))$('internalTechnicianNotes').value=[$('internalTechnicianNotes').value,`[${new Date().toLocaleString()}] ${note}`].filter(Boolean).join('\n');addEvent('Diagnostic evidence',note);$('smartDiagResult').value='';$('smartDiagnosticStep').textContent=step+'\n\nResult recorded in the repair timeline and technician notes.'});
+  $('smartDiagComplete').addEventListener('click',()=>{if(!diagnosticSteps.length)buildDiagnosticSteps();if(diagIndex<0)diagIndex=0;addEvent('Diagnostic step completed',diagnosticSteps[diagIndex]);if(diagIndex<diagnosticSteps.length-1)diagIndex++;renderDiag()});$('smartDiagBack').addEventListener('click',()=>{diagIndex=Math.max(0,diagIndex-1);renderDiag()});$('smartDiagReset').addEventListener('click',()=>{buildDiagnosticSteps();diagIndex=0;renderDiag()});
   $('smartRunCompleteness').addEventListener('click',runCompleteness);$('smartAddTimeline').addEventListener('click',()=>{const q=value('smartOliverQuestion')||'Manual timeline checkpoint';addEvent('Manual checkpoint',q)});$('smartRefreshTimeline').addEventListener('click',renderTimeline);
   let drag=false,dx=0,dy=0;function pos(l,t){const ml=Math.max(8,innerWidth-dialog.offsetWidth-8),mt=Math.max(8,innerHeight-dialog.offsetHeight-8);dialog.classList.add('drag-positioned');dialog.style.left=Math.min(ml,Math.max(8,l))+'px';dialog.style.top=Math.min(mt,Math.max(8,t))+'px';dialog.style.right='auto';dialog.style.bottom='auto'}
   head.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;const r=dialog.getBoundingClientRect();drag=true;dx=e.clientX-r.left;dy=e.clientY-r.top;head.setPointerCapture?.(e.pointerId)});head.addEventListener('pointermove',e=>{if(drag)pos(e.clientX-dx,e.clientY-dy)});head.addEventListener('pointerup',e=>{drag=false;head.releasePointerCapture?.(e.pointerId)});
