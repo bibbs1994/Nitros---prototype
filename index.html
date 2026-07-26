@@ -343,13 +343,25 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   .schedule-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.schedule-list{max-height:620px;overflow:auto;padding-right:2px}
   @media(max-width:760px){.briefing-grid,.schedule-summary{grid-template-columns:1fr 1fr}.schedule-two{grid-template-columns:1fr}.appointment-head{display:block}.appointment-time{margin-top:5px}.appointment-actions .btn{flex:1 1 45%}}
 
+  /* v8.2.1 Technician Dashboard & Daily Command Center */
+  .command-hero{border:1px solid #315476;background:linear-gradient(135deg,#0b1d31,#102944);border-radius:18px;padding:18px;margin-bottom:14px}
+  .command-metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin:13px 0}
+  .command-metric{border:1px solid var(--line);border-radius:13px;padding:11px;background:#081321;text-align:center}.command-metric strong{display:block;font-size:22px}.command-metric span{font-size:11px;color:var(--muted)}
+  .command-columns{display:grid;grid-template-columns:1.05fr .95fr;gap:14px}.command-list{display:grid;gap:9px}.command-item{border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:13px;padding:12px;background:#081321}.command-item.red{border-left-color:var(--bad)}.command-item.yellow{border-left-color:var(--warn)}.command-item.green{border-left-color:var(--ok)}
+  .command-item-head{display:flex;justify-content:space-between;gap:10px}.command-item-title{font-weight:900}.command-item-meta{font-size:12px;color:var(--muted);margin-top:5px}.command-item-text{margin-top:7px;white-space:pre-wrap}.command-empty{border:1px dashed var(--line);border-radius:12px;padding:13px;color:var(--muted)}
+  .shop-status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.shop-status-box{border:1px solid var(--line);border-radius:13px;padding:11px;background:#081321}.shop-status-box strong{display:block;font-size:20px}.shop-status-box span{font-size:11px;color:var(--muted)}
+  .progress-board{display:grid;gap:10px}.progress-row{border:1px solid var(--line);border-radius:13px;padding:12px;background:#081321}.progress-checks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.progress-chip{border:1px solid var(--line);border-radius:999px;padding:5px 8px;font-size:10px;font-weight:800;color:var(--muted)}.progress-chip.done{color:#79e2b3;border-color:#2f8f70}.progress-chip.current{color:#07131f;background:#ffd089;border-color:#ffd089}
+  .command-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+  @media(max-width:900px){.command-metrics{grid-template-columns:repeat(3,1fr)}.command-columns{grid-template-columns:1fr}.shop-status-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.command-metrics{grid-template-columns:repeat(2,1fr)}.shop-status-grid,.command-actions{grid-template-columns:1fr 1fr}.command-item-head{display:block}}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.2.0 — Appointment Confirmation & Check-In Workflow</div>
+  <div class="sub">Mobile Technician Portal v8.2.1 — Technician Dashboard & Daily Command Center</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -363,7 +375,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.2.0 adds the complete appointment confirmation and customer check-in pipeline, including confirmation records, arrival and key-receipt documentation, promised completion time, one-touch workflow status controls, and audit timestamps. Every verified Version 8.1.9 feature is preserved.</div>
+    <div id="portalLoginStatus" class="status">Version 8.2.1 adds the Technician Daily Command Center with today’s schedule, live shop-status groups, priority alerts, parts status, repair-progress tracking, performance metrics, and Oliver’s spoken daily briefing. Every verified Version 8.2.0 workflow is preserved.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -435,7 +447,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <section id="schedule" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="schedule-hero">
-    <div class="eyebrow">Version 8.2.0</div>
+    <div class="eyebrow">Version 8.2.1</div>
     <h1>Appointment Confirmation & Check-In</h1>
     <p id="morningGreeting">Good morning. Your shop schedule and unfinished follow-ups are ready.</p>
     <div class="briefing-grid">
@@ -526,8 +538,33 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 8.1.7</div><h1>Repair Order Command Center</h1>
-    <p>One-screen view of the active repair, labor clock, evidence, required items, and current workflow stage.</p>
+    <div class="eyebrow">Version 8.2.1</div><h1>Technician Dashboard & Daily Command Center</h1>
+    <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
+    <div class="command-hero">
+      <div class="eyebrow">Oliver Daily Briefing</div>
+      <h2 id="commandGreeting">Good morning. Your shop command center is ready.</h2>
+      <div id="commandBriefingText" class="status">Oliver is reviewing today’s appointments, follow-ups, jobs, and parts requests.</div>
+      <div class="command-actions"><button id="commandReadBriefing" class="btn primary" type="button">🔊 Read Briefing</button><button id="commandRefresh" class="btn secondary" type="button">Refresh Dashboard</button><button class="btn secondary" data-go="schedule" type="button">Open Schedule</button><button class="btn ghost" data-go="jobs" type="button">Assigned Jobs</button></div>
+    </div>
+    <div class="command-metrics">
+      <div class="command-metric"><strong id="cmdTodayAppointments">0</strong><span>Appointments today</span></div>
+      <div class="command-metric"><strong id="cmdVehiclesInShop">0</strong><span>Vehicles in shop</span></div>
+      <div class="command-metric"><strong id="cmdOpenAlerts">0</strong><span>Priority alerts</span></div>
+      <div class="command-metric"><strong id="cmdPartsPending">0</strong><span>Parts pending</span></div>
+      <div class="command-metric"><strong id="cmdRoadTests">0</strong><span>Road tests pending</span></div>
+      <div class="command-metric"><strong id="cmdCompletedToday">0</strong><span>Completed today</span></div>
+    </div>
+    <div class="command-columns">
+      <div>
+        <h3>Today’s Schedule</h3><div id="commandScheduleList" class="command-list"></div>
+        <h3 style="margin-top:16px">Vehicles Currently in the Shop</h3><div id="commandShopStatus" class="shop-status-grid"></div>
+      </div>
+      <div>
+        <h3>Priority Alert Center</h3><div id="commandAlertList" class="command-list"></div>
+        <h3 style="margin-top:16px">Parts Status</h3><div id="commandPartsList" class="command-list"></div>
+      </div>
+    </div>
+    <h3 style="margin-top:18px">Repair Progress</h3><div id="commandProgressBoard" class="progress-board"></div>
     <div class="productivity-grid">
       <div class="productivity-card"><strong id="dashActiveJobs">0</strong><span>Active assigned jobs</span></div>
       <div class="productivity-card"><strong id="dashElapsed">00:00:00</strong><span>Current job time</span></div>
@@ -1400,7 +1437,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.2.0 • Appointment confirmation • Customer check-in • Workflow audit timestamps • Version 8.1.9 preserved</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.2.1 • Technician Daily Command Center • Priority alerts • Parts status • Repair progress • Version 8.2.0 preserved</div>
 </div>
 
 <script>
@@ -4419,13 +4456,40 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     function parseTime(text){const m=text.match(/(?:at\s*)?(1[0-2]|0?\d)(?::([0-5]\d))?\s*(a\.?m\.?|p\.?m\.?)?/i);if(!m)return '08:00';let h=+m[1],min=m[2]||'00',amp=(m[3]||'').toLowerCase();if(amp.startsWith('p')&&h<12)h+=12;if(amp.startsWith('a')&&h===12)h=0;return `${String(h).padStart(2,'0')}:${min}`}
     function oliverParse(){const text=el('oliverScheduleInput')?.value.trim();if(!text){el('oliverScheduleResponse').textContent='Tell me what you would like scheduled or remembered.';return}const low=text.toLowerCase(),isFollow=/remind|don't forget|order|call back|follow up|follow-up/.test(low);if(isFollow){blankFollowup();el('followupDueDate').value=parseDate(text);el('followupDueTime').value=parseTime(text);el('followupTask').value=text.replace(/^oliver[, ]*/i,'').trim();if(/order/.test(low))el('followupCategory').value='Order Parts';if(/urgent|safety|first thing/.test(low))el('followupPriority').value=/urgent|safety/.test(low)?'urgent':'high';const kia=text.match(/([A-Z][a-z]+)'?s?\s+(Kia Soul|[A-Z][a-z]+\s+[A-Z][a-z]+)/);if(kia){el('followupCustomer').value=kia[1];el('followupVehicle').value=kia[2]}el('oliverScheduleResponse').textContent='I prepared a shop follow-up below. Review the due date, customer, vehicle, vendors, and task, then tap Save Follow-Up.';el('followupCustomer').scrollIntoView({behavior:'smooth',block:'center'})}else{blankAppointment();el('appointmentDate').value=parseDate(text);el('appointmentTime').value=parseTime(text);const name=text.match(/(?:schedule|book|add)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i);if(name)el('appointmentCustomer').value=name[1];const veh=text.match(/(?:with|bringing|in|the)\s+(?:the\s+)?((?:19|20)\d{2}\s+[^,.]+|[A-Z][a-z]+\s+(?:Soul|Cougar|Truck|Buick|Kia|Ford|Chevy|Toyota|Honda|Jeep))/i);if(veh)el('appointmentVehicle').value=veh[1].trim();el('appointmentConcern').value=text.replace(/^oliver[, ]*/i,'').trim();if(/wait/.test(low))el('appointmentArrival').value='Waiting';else if(/tow/.test(low))el('appointmentArrival').value='Tow-in';else if(/key drop/.test(low))el('appointmentArrival').value='Key drop';const draft=currentDraft(),hits=showConflict(draft);el('oliverScheduleResponse').textContent=hits.length?`I prepared the appointment, but I found ${hits.length} schedule conflict${hits.length===1?'':'s'}. Review the highlighted schedule warning before saving.`:'I prepared the appointment and checked the schedule. Review the details, then tap Save Appointment.';el('appointmentCustomer').scrollIntoView({behavior:'smooth',block:'center'})}}
     function listen(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){el('oliverScheduleResponse').textContent='Voice recognition is not available in this browser. You can still type or use the phone keyboard microphone.';return}const r=new SR();r.lang='en-US';r.interimResults=false;r.onstart=()=>el('oliverScheduleResponse').textContent='Listening…';r.onerror=e=>el('oliverScheduleResponse').textContent=`Voice recognition stopped: ${e.error}. You can type the instruction instead.`;r.onresult=e=>{el('oliverScheduleInput').value=e.results[0][0].transcript;el('oliverScheduleResponse').textContent='I heard your instruction. Tap Have Oliver Prepare It.'};r.start()}
-    function download(){const payload={schema:'nitros-schedule-package',version:'8.2.0',createdAt:new Date().toISOString(),appointments:read(APPT_KEY),followups:read(FOLLOW_KEY)},blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`Nitros_v8.2.0_Schedule_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setMsg('scheduleTransferStatus','Schedule and follow-ups exported successfully.','status ok')}
+    function download(){const payload={schema:'nitros-schedule-package',version:'8.2.1',createdAt:new Date().toISOString(),appointments:read(APPT_KEY),followups:read(FOLLOW_KEY)},blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`Nitros_v8.2.1_Schedule_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setMsg('scheduleTransferStatus','Schedule and follow-ups exported successfully.','status ok')}
     async function importData(file){const d=JSON.parse(await file.text());if(d?.schema!=='nitros-schedule-package')throw new Error('Unsupported file');const am=new Map(read(APPT_KEY).map(x=>[x.id,x]));(d.appointments||[]).forEach(x=>x?.id&&am.set(x.id,{...am.get(x.id),...x}));const fm=new Map(read(FOLLOW_KEY).map(x=>[x.id,x]));(d.followups||[]).forEach(x=>x?.id&&fm.set(x.id,{...fm.get(x.id),...x}));localStorage.setItem(APPT_KEY,JSON.stringify([...am.values()]));localStorage.setItem(FOLLOW_KEY,JSON.stringify([...fm.values()]));renderAll();setMsg('scheduleTransferStatus','Schedule package imported and merged without deleting existing records.','status ok')}
-    el('saveAppointment')?.addEventListener('click',saveAppointment);el('checkAppointmentConflict')?.addEventListener('click',()=>showConflict());el('createLinkedFollowup')?.addEventListener('click',linkedFollowup);el('oliverNextJob')?.addEventListener('click',whatsNext);el('oliverReadBriefing')?.addEventListener('click',()=>speak(el('morningBriefingText')?.textContent||'No morning briefing is available.'));el('clearAppointment')?.addEventListener('click',blankAppointment);el('saveFollowup')?.addEventListener('click',saveFollowup);el('clearFollowup')?.addEventListener('click',blankFollowup);el('oliverParseSchedule')?.addEventListener('click',oliverParse);el('oliverListenSchedule')?.addEventListener('click',listen);el('exportScheduleData')?.addEventListener('click',download);el('importScheduleData')?.addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{await importData(f)}catch(err){setMsg('scheduleTransferStatus','That file is not a valid Nitros v8.2.0 schedule package.','status bad')}finally{e.target.value=''}});
+    el('saveAppointment')?.addEventListener('click',saveAppointment);el('checkAppointmentConflict')?.addEventListener('click',()=>showConflict());el('createLinkedFollowup')?.addEventListener('click',linkedFollowup);el('oliverNextJob')?.addEventListener('click',whatsNext);el('oliverReadBriefing')?.addEventListener('click',()=>speak(el('morningBriefingText')?.textContent||'No morning briefing is available.'));el('clearAppointment')?.addEventListener('click',blankAppointment);el('saveFollowup')?.addEventListener('click',saveFollowup);el('clearFollowup')?.addEventListener('click',blankFollowup);el('oliverParseSchedule')?.addEventListener('click',oliverParse);el('oliverListenSchedule')?.addEventListener('click',listen);el('exportScheduleData')?.addEventListener('click',download);el('importScheduleData')?.addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{await importData(f)}catch(err){setMsg('scheduleTransferStatus','That file is not a valid Nitros v8.2.1 schedule package.','status bad')}finally{e.target.value=''}});
     document.querySelectorAll('[data-schedule-view]').forEach(b=>b.addEventListener('click',()=>{view=b.dataset.scheduleView;document.querySelectorAll('[data-schedule-view]').forEach(x=>x.classList.toggle('active',x===b));renderAppointments()}));
     el('appointmentList')?.addEventListener('click',e=>{const ro=e.target.closest('[data-appt-ro]')?.dataset.apptRo,edit=e.target.closest('[data-appt-edit]')?.dataset.apptEdit,confirmId=e.target.closest('[data-appt-confirm]')?.dataset.apptConfirm,arrive=e.target.closest('[data-appt-arrive]')?.dataset.apptArrive,checkin=e.target.closest('[data-appt-checkin]')?.dataset.apptCheckin,del=e.target.closest('[data-appt-delete]')?.dataset.apptDelete;if(ro)convertToRO(ro);if(edit)editAppointment(edit);if(confirmId)updateAppointmentStatus(confirmId,'Confirmed');if(arrive)updateAppointmentStatus(arrive,'Customer Arrived');if(checkin)updateAppointmentStatus(checkin,'Vehicle Checked In');if(del&&confirm('Delete this appointment?'))write(APPT_KEY,read(APPT_KEY).filter(x=>x.id!==del))});
     el('followupList')?.addEventListener('click',e=>{const done=e.target.closest('[data-follow-done]')?.dataset.followDone,edit=e.target.closest('[data-follow-edit]')?.dataset.followEdit,snooze=e.target.closest('[data-follow-snooze]')?.dataset.followSnooze,del=e.target.closest('[data-follow-delete]')?.dataset.followDelete;if(done)write(FOLLOW_KEY,read(FOLLOW_KEY).map(x=>x.id===done?{...x,completed:!x.completed,updatedAt:new Date().toISOString()}:x));if(edit)editFollowup(edit);if(snooze){const d=new Date();d.setDate(d.getDate()+1);write(FOLLOW_KEY,read(FOLLOW_KEY).map(x=>x.id===snooze?{...x,date:isoDate(d),completed:false,updatedAt:new Date().toISOString()}:x))}if(del&&confirm('Delete this follow-up?'))write(FOLLOW_KEY,read(FOLLOW_KEY).filter(x=>x.id!==del))});
     document.querySelectorAll('[data-go="schedule"]').forEach(b=>b.addEventListener('click',()=>setTimeout(renderAll,80)));blankAppointment();blankFollowup();renderAll();
+  })();
+
+  // v8.2.1 Technician Dashboard & Daily Command Center
+  (()=>{
+    const APPT='nitros_v818_appointments',FOLLOW='nitros_v818_followups',JOBS='nitros_portal_v8_assigned_jobs',PARTS='nitros_v817_parts_requests',HISTORY='nitros_prototype_customer_history_v070';
+    const el=id=>document.getElementById(id),read=(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d}},esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+    const iso=d=>{const x=new Date(d);return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`},today=()=>iso(new Date()),fmt=t=>{if(!t)return 'Time not set';const [h,m]=t.split(':').map(Number);return new Date(2000,0,1,h,m).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})};
+    const stages=['Customer Checked In','Initial Inspection','Diagnosis Complete','Estimate Sent','Customer Approved','Parts Ordered','Parts Received','Repair Started','Repair Complete','Road Test','Final Inspection','Ready for Pickup'];
+    function statusOf(x){return x.shopStatus||x.workflowStatus||x.status||'Waiting Diagnosis'}
+    function classify(s){s=String(s).toLowerCase();if(s.includes('approval'))return 'Waiting Approval';if(s.includes('part'))return 'Waiting Parts';if(s.includes('road'))return 'Road Test Required';if(s.includes('delivery')||s.includes('pickup')||s.includes('complete'))return 'Ready for Delivery';if(s.includes('repair'))return 'Ready to Repair';return 'Waiting Diagnosis'}
+    function speak(text){if(!('speechSynthesis'in window))return; speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=.94;u.lang='en-US';speechSynthesis.speak(u)}
+    function render(){
+      const td=today(),appts=read(APPT).filter(x=>x.date===td&&!['Cancelled','Rescheduled'].includes(x.status)).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99')),follows=read(FOLLOW).filter(x=>!x.completed),jobs=read(JOBS),parts=read(PARTS),history=read(HISTORY);
+      const inShopAppts=appts.filter(x=>['Customer Arrived','Vehicle Checked In','Repair Order Created'].includes(x.status));const activeJobs=jobs.filter(x=>!['Complete','Completed','Removed','Ready for Delivery'].includes(x.status));const vehicles=[...inShopAppts.map(x=>({customer:x.customer,vehicle:x.vehicle,status:classify(x.status),concern:x.concern})),...activeJobs.map(x=>({customer:x.customer||x.customerName||'Customer',vehicle:x.vehicle||x.vehicleDescription||'Vehicle',status:classify(statusOf(x)),concern:x.concern||x.assignedWork||x.jobConcern||''}))];
+      const pendingParts=parts.filter(x=>!['Installed','Received','Ready to Install'].includes(x.officeStatus));const readyParts=parts.filter(x=>['Received','Ready to Install'].includes(x.officeStatus));const urgentF=follows.filter(x=>x.priority==='urgent'||x.priority==='high'||x.date<=td);const waitingApproval=vehicles.filter(x=>x.status==='Waiting Approval');const road=vehicles.filter(x=>x.status==='Road Test Required');const completed=history.filter(x=>iso(x.savedAt||x.completedAt||x.updatedAt||0)===td).length;
+      el('cmdTodayAppointments').textContent=appts.length;el('cmdVehiclesInShop').textContent=vehicles.length;el('cmdOpenAlerts').textContent=urgentF.length+waitingApproval.length+road.length;el('cmdPartsPending').textContent=pendingParts.length;el('cmdRoadTests').textContent=road.length;el('cmdCompletedToday').textContent=completed;
+      const hour=new Date().getHours(),g=hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';el('commandGreeting').textContent=`${g}. Your shop command center is ready.`;
+      const first=appts[0],brief=`${g}. You have ${appts.length} appointment${appts.length===1?'':'s'} today.${first?` ${first.customer}'s ${first.vehicle||'vehicle'} is first at ${fmt(first.time)}.`:''} ${urgentF.length?`${urgentF.length} important follow-up${urgentF.length===1?'':'s'} need attention.`:'There are no overdue follow-ups.'} ${pendingParts.length?`${pendingParts.length} parts request${pendingParts.length===1?' is':'s are'} still pending.`:'No parts requests are pending.'} ${road.length?`${road.length} vehicle${road.length===1?' requires':'s require'} a road test.`:''}`;
+      el('commandBriefingText').textContent=brief;
+      el('commandScheduleList').innerHTML=appts.length?appts.map(x=>`<div class="command-item ${x.priority==='urgent'?'red':x.status==='Vehicle Checked In'?'green':'yellow'}"><div class="command-item-head"><div class="command-item-title">${esc(x.customer)} — ${esc(x.vehicle||'Vehicle not entered')}</div><div>${esc(fmt(x.time))}</div></div><div class="command-item-meta">${esc(x.status||'Scheduled')} • ${esc(x.arrival||'Drop-off')}</div><div class="command-item-text">${esc(x.concern||'No concern entered')}</div></div>`).join(''):'<div class="command-empty">No appointments are scheduled for today.</div>';
+      const groups=['Waiting Diagnosis','Waiting Approval','Waiting Parts','Ready to Repair','Road Test Required','Ready for Delivery'];el('commandShopStatus').innerHTML=groups.map(g=>`<div class="shop-status-box"><strong>${vehicles.filter(v=>v.status===g).length}</strong><span>${g}</span></div>`).join('');
+      const alerts=[...urgentF.map(x=>({tone:x.priority==='urgent'?'red':'yellow',title:`${x.customer||'Shop follow-up'} ${x.vehicle||''}`.trim(),meta:x.category||'Follow-up',text:x.task})),...waitingApproval.map(x=>({tone:'yellow',title:`${x.customer} — ${x.vehicle}`,meta:'Waiting for customer approval',text:x.concern||'Approval required'})),...road.map(x=>({tone:'green',title:`${x.customer} — ${x.vehicle}`,meta:'Road test required',text:x.concern||'Verification pending'})),...readyParts.map(x=>({tone:'green',title:`${x.customer||'Customer'} — ${x.vehicle||'Vehicle'}`,meta:'Parts received / ready',text:`${x.quantity||1} × ${x.description}`}))];
+      el('commandAlertList').innerHTML=alerts.length?alerts.slice(0,12).map(a=>`<div class="command-item ${a.tone}"><div class="command-item-title">${esc(a.title)}</div><div class="command-item-meta">${esc(a.meta)}</div><div class="command-item-text">${esc(a.text)}</div></div>`).join(''):'<div class="command-empty">No priority alerts. The shop is clear.</div>';
+      el('commandPartsList').innerHTML=parts.length?parts.slice().sort((a,b)=>new Date(b.updatedAt||b.createdAt)-new Date(a.updatedAt||a.createdAt)).slice(0,8).map(p=>`<div class="command-item ${['Received','Ready to Install'].includes(p.officeStatus)?'green':p.priority==='safety-critical'?'red':'yellow'}"><div class="command-item-title">${esc(p.quantity||1)} × ${esc(p.description)}</div><div class="command-item-meta">${esc(p.officeStatus||'Request Sent')} • ${esc(p.vehicle||'Vehicle not selected')}</div></div>`).join(''):'<div class="command-empty">No parts requests are currently recorded.</div>';
+      const progress=vehicles.slice(0,8);el('commandProgressBoard').innerHTML=progress.length?progress.map(v=>{const s=v.status,idx=s==='Waiting Diagnosis'?0:s==='Waiting Approval'?4:s==='Waiting Parts'?5:s==='Ready to Repair'?6:s==='Road Test Required'?9:s==='Ready for Delivery'?11:0;return `<div class="progress-row"><div class="command-item-title">${esc(v.customer)} — ${esc(v.vehicle)}</div><div class="command-item-meta">Current shop status: ${esc(s)}</div><div class="progress-checks">${stages.map((st,i)=>`<span class="progress-chip ${i<idx?'done':i===idx?'current':''}">${i<idx?'✓ ':''}${esc(st)}</span>`).join('')}</div></div>`}).join(''):'<div class="command-empty">Check in a vehicle or add an assigned job to begin repair-progress tracking.</div>';
+    }
+    el('commandRefresh')?.addEventListener('click',render);el('commandReadBriefing')?.addEventListener('click',()=>speak(el('commandBriefingText')?.textContent||'No briefing is available.'));document.querySelectorAll('[data-go="dashboard"]').forEach(b=>b.addEventListener('click',()=>setTimeout(render,80)));window.addEventListener('storage',render);setTimeout(render,200);
   })();
 
 </script>
