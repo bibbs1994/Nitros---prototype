@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.2.8 — Mandatory Walk-Around RO Gate</title>
+<title>Nitros Mobile Technician Portal v8.2.8A — Resume Walk-Around Button Fix</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -383,7 +383,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   @media(max-width:520px){.smart-tabs{grid-template-columns:1fr 1fr}.smart-oliver-dialog{right:8px;bottom:78px;width:calc(100vw - 16px)}}
 
 
-  /* v8.2.8 Mandatory Walk-Around RO Gate */
+  /* v8.2.8A Resume Walk-Around Button Fix */
   .walkaround-gate{border:1px solid #2f8f70;background:linear-gradient(180deg,rgba(57,185,130,.14),rgba(8,19,33,.94));border-radius:16px;padding:16px;margin:0 0 18px}
   .walkaround-gate h3{margin:0 0 7px}.walkaround-progress{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:12px 0}
   .walkaround-progress span{border:1px solid var(--line);border-radius:10px;padding:8px 5px;text-align:center;font-size:11px;font-weight:800;color:var(--muted)}
@@ -417,7 +417,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.2.8 — Mandatory Walk-Around RO Gate</div>
+  <div class="sub">Mobile Technician Portal v8.2.8A — Resume Walk-Around Button Fix</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -1554,7 +1554,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.2.8 • Oliver Smart Repair Assistant • Mandatory walk-around workflow • Diagnostic copilot • Repair notes • Completeness review • Timeline</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.2.8A • Oliver Smart Repair Assistant • Resume walk-around navigation fix • Diagnostic copilot • Repair notes • Completeness review • Timeline</div>
 </div>
 
 <script>
@@ -4717,6 +4717,30 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
       setMsg('appointmentStatusMessage',`${x.customer}'s ${ro} is open in Customer Check-In. The same repair order will continue to the technician dashboard.`,'status ok');
       document.dispatchEvent(new CustomEvent('nitros:appointment-converted',{detail:{appointmentId:id,customer:x.customer,repairOrder:ro,status:targetStatus}}));
     }
+    function openAppointmentWalkAround(id){
+      if(!id){
+        setMsg('appointmentStatusMessage','Unable to identify this appointment. Refresh Appointments and try again.','status bad');
+        return false;
+      }
+      localStorage.setItem('nitros_active_appointment_id',String(id));
+      openAppointmentInCheckIn(String(id),'Vehicle Checked In');
+      // openAppointmentInCheckIn restores the saved appointment into the check-in form.
+      // Move directly to the inspection after restoration, with delayed fallbacks for iPhone rendering.
+      const openInspection=()=>{
+        if(typeof showScreen==='function') showScreen('inspection');
+        const inspection=document.getElementById('inspection');
+        if(inspection){
+          document.querySelectorAll('.screen').forEach(screen=>screen.classList.remove('active'));
+          inspection.classList.add('active');
+          inspection.scrollIntoView({behavior:'smooth',block:'start'});
+        }
+        document.dispatchEvent(new CustomEvent('nitros:walkaround-opened',{detail:{appointmentId:String(id)}}));
+      };
+      setTimeout(openInspection,80);
+      setTimeout(openInspection,300);
+      return false;
+    }
+    window.nitrosOpenAppointmentWalkAround=openAppointmentWalkAround;
     function beginVehicleCheckIn(id){
       if(!id){
         setMsg('appointmentStatusMessage','Unable to identify this appointment. Refresh Appointments and try again.','status bad');
@@ -4754,7 +4778,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
         const isChecked=a.status==='Vehicle Checked In';
         const walkBadge=isChecked||a.walkAroundComplete?`<span class="walkaround-badge ${a.walkAroundComplete?'complete':'pending'}">${a.walkAroundComplete?'✓ Walk-Around Complete':'Walk-Around Required'}</span>`:'';
         const checkInButton=a.status==='Customer Arrived'?`<button class="btn primary small" type="button" data-appt-checkin="${a.id}" onclick="return window.nitrosBeginAppointmentCheckIn && window.nitrosBeginAppointmentCheckIn('${a.id}')">Check In Vehicle</button>`:'';
-        const resumeButton=isChecked&&!a.walkAroundComplete?`<button class="btn primary small" type="button" data-appt-resume-walkaround="${a.id}">Resume Walk-Around</button>`:'';
+        const resumeButton=isChecked&&!a.walkAroundComplete?`<button class="btn primary small" type="button" data-appt-resume-walkaround="${a.id}" onclick="return window.nitrosOpenAppointmentWalkAround && window.nitrosOpenAppointmentWalkAround('${a.id}')">Resume Walk-Around</button>`:'';
         const roButton=a.walkAroundComplete&&!['Repair Order Created','Completed'].includes(a.status)?`<button class="btn primary small" data-appt-ro="${a.id}">Convert to RO</button>`:'';
         return `<div class="appointment-card ${a.status==='Completed'?'completed':a.status==='Cancelled'?'cancelled':a.status==='Customer Arrived'||isChecked?'arrived':''}"><div class="appointment-head"><div><div class="appointment-title">${esc(a.customer)} — ${esc(a.vehicle||'Vehicle not entered')}</div><div class="appointment-meta">${esc(a.arrival)} • ${esc(a.status)} • ${esc(a.phone||'No phone recorded')}</div><div class="appointment-meta"><strong>${esc(a.roNumber||'RO assigned when saved')}</strong></div></div><div class="appointment-time">${fmtDate(a.date)}<br>${fmtTime(a.time)}${a.duration?`<div class="appointment-meta">${a.duration>=480?'Full day':a.duration+' min'}</div>`:''}</div></div>${workflowHtml(a.status)}${walkBadge}<div class="appointment-concern"><strong>Concern:</strong> ${esc(a.concern)}</div>${a.inspections?`<div class="appointment-concern"><strong>Also check:</strong> ${esc(a.inspections)}</div>`:''}${a.confirmationMethod?`<div class="appointment-meta">Confirmed by: ${esc(a.confirmationMethod)}</div>`:''}${a.promisedTime?`<div class="appointment-meta">Promised completion: ${fmtTime(a.promisedTime)}</div>`:''}${a.keys?`<div class="appointment-meta">Keys: ${esc(a.keys)}</div>`:''}${a.transportation?`<div class="appointment-meta">Transportation: ${esc(a.transportation)}</div>`:''}${a.notes?`<div class="appointment-meta">Notes: ${esc(a.notes)}</div>`:''}${a.checkinNotes?`<div class="appointment-meta">Check-in: ${esc(a.checkinNotes)}</div>`:''}${audit?`<div class="checkin-audit">${esc(audit)}</div>`:''}<span class="priority-pill ${a.priority==='urgent'?'high':a.priority}">${esc(a.priority==='urgent'?'Urgent':a.priority==='high'?'High priority':'Normal')}</span><div class="appointment-actions">${a.status==='Scheduled'?`<button class="btn secondary small" data-appt-confirm="${a.id}">Confirm</button>`:''}${['Scheduled','Confirmed'].includes(a.status)?`<button class="btn ghost small" data-appt-arrive="${a.id}">Mark Arrived</button>`:''}${checkInButton}${resumeButton}${roButton}<button class="btn secondary small" data-appt-edit="${a.id}">Edit</button><button class="btn ghost small" data-appt-delete="${a.id}">Delete</button></div></div>`;
       }).join(''):'<div class="history-empty">No appointments in this view.</div>';
@@ -4787,7 +4811,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
       }
       const resume=e.target.closest('[data-appt-resume-walkaround]')?.dataset.apptResumeWalkaround;
       const ro=e.target.closest('[data-appt-ro]')?.dataset.apptRo,edit=e.target.closest('[data-appt-edit]')?.dataset.apptEdit,confirmId=e.target.closest('[data-appt-confirm]')?.dataset.apptConfirm,arrive=e.target.closest('[data-appt-arrive]')?.dataset.apptArrive,del=e.target.closest('[data-appt-delete]')?.dataset.apptDelete;
-      if(resume){localStorage.setItem('nitros_active_appointment_id',resume);openAppointmentInCheckIn(resume,'Vehicle Checked In');return;}
+      if(resume){e.preventDefault();e.stopPropagation();openAppointmentWalkAround(resume);return;}
       if(ro)convertToRO(ro);if(edit)editAppointment(edit);if(confirmId)updateAppointmentStatus(confirmId,'Confirmed');if(arrive)updateAppointmentStatus(arrive,'Customer Arrived');if(del&&confirm('Delete this appointment?'))write(APPT_KEY,read(APPT_KEY).filter(x=>x.id!==del));
     });
     document.addEventListener('click',e=>{
@@ -4795,6 +4819,13 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
       if(!button || button.closest('#appointmentList'))return;
       e.preventDefault();
       beginVehicleCheckIn(button.getAttribute('data-appt-checkin'));
+    },true);
+    document.addEventListener('click',e=>{
+      const button=e.target.closest?.('[data-appt-resume-walkaround]');
+      if(!button)return;
+      e.preventDefault();
+      e.stopPropagation();
+      openAppointmentWalkAround(button.getAttribute('data-appt-resume-walkaround'));
     },true);
 
     el('followupList')?.addEventListener('click',e=>{const done=e.target.closest('[data-follow-done]')?.dataset.followDone,edit=e.target.closest('[data-follow-edit]')?.dataset.followEdit,snooze=e.target.closest('[data-follow-snooze]')?.dataset.followSnooze,del=e.target.closest('[data-follow-delete]')?.dataset.followDelete;if(done)write(FOLLOW_KEY,read(FOLLOW_KEY).map(x=>x.id===done?{...x,completed:!x.completed,updatedAt:new Date().toISOString()}:x));if(edit)editFollowup(edit);if(snooze){const d=new Date();d.setDate(d.getDate()+1);write(FOLLOW_KEY,read(FOLLOW_KEY).map(x=>x.id===snooze?{...x,date:isoDate(d),completed:false,updatedAt:new Date().toISOString()}:x))}if(del&&confirm('Delete this follow-up?'))write(FOLLOW_KEY,read(FOLLOW_KEY).filter(x=>x.id!==del))});
@@ -5327,7 +5358,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 
 <script>
-// v8.2.8 Mandatory Appointment Walk-Around Completion Gate
+// v8.2.8A Mandatory Appointment Walk-Around Completion Gate
 (()=>{
   const APPT_KEY='nitros_v818_appointments';
   const el=id=>document.getElementById(id);
