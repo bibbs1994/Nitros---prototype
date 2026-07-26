@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.2.8A — Resume Walk-Around Button Fix</title>
+<title>Nitros Mobile Technician Portal v8.2.9 — Repair Order Dashboard Handoff</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -417,7 +417,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.2.8A — Resume Walk-Around Button Fix</div>
+  <div class="sub">Mobile Technician Portal v8.2.9 — Repair Order Dashboard Handoff</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -1554,7 +1554,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.2.8A • Oliver Smart Repair Assistant • Resume walk-around navigation fix • Diagnostic copilot • Repair notes • Completeness review • Timeline</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.2.9 • Mandatory walk-around • Convert to RO • Automatic Technician Dashboard handoff • Preserved audit trail</div>
 </div>
 
 <script>
@@ -5408,6 +5408,100 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   });
   document.addEventListener('nitros:appointment-converted',e=>{if(e.detail?.status==='Vehicle Checked In'){localStorage.setItem('nitros_active_appointment_id',e.detail.appointmentId);setTimeout(()=>{const msg=el('walkAroundGateMessage');if(msg)msg.textContent=`Let’s inspect ${e.detail.customer}'s vehicle together. Complete the required evidence before ${e.detail.repairOrder} can be converted to an active repair order.`;},80)}});
   setTimeout(progress,200);
+})();
+</script>
+
+
+<script>
+// v8.2.9 Convert-to-RO -> Technician Dashboard handoff
+(()=>{
+  const APPT_KEY='nitros_v818_appointments';
+  const WORKBOARD_KEY='nitros_v822_workboard';
+  const read=(key,fallback=[])=>{try{const value=JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback));return Array.isArray(value)?value:fallback}catch(e){return fallback}};
+  const write=(key,value)=>localStorage.setItem(key,JSON.stringify(value));
+  const uid=()=>`wb_appt_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+  const now=()=>new Date().toISOString();
+  const techName=()=>{
+    try{
+      const profile=JSON.parse(localStorage.getItem('nitros_portal_v8_technician')||'{}');
+      return profile.name||profile.technicianName||'Technician';
+    }catch(e){return 'Technician'}
+  };
+  function announce(message,kind='ok'){
+    const status=document.getElementById('appointmentStatusMessage');
+    if(status){status.className=`status ${kind}`;status.textContent=message;}
+  }
+  function convertAndOpenDashboard(id){
+    const appointments=read(APPT_KEY);
+    const appt=appointments.find(x=>String(x.id)===String(id));
+    if(!appt){announce('The appointment could not be found. Refresh Appointments and try again.','bad');return;}
+    if(!appt.walkAroundComplete){
+      announce('Walk-around inspection must be completed before creating the repair order.','warn');
+      if(typeof window.nitrosOpenAppointmentWalkAround==='function')window.nitrosOpenAppointmentWalkAround(String(id));
+      return;
+    }
+    const stamp=now();
+    const ro=String(appt.roNumber||`RO-${stamp.replace(/\D/g,'').slice(0,14)}`);
+    const technician=techName();
+    const sourceId=`appt:${appt.id}`;
+    const items=read(WORKBOARD_KEY);
+    const index=items.findIndex(x=>x.sourceId===sourceId||(ro&&String(x.ro||'')===ro));
+    const existing=index>=0?items[index]:{};
+    const audit=Array.isArray(existing.audit)?existing.audit.slice():[];
+    audit.unshift({at:stamp,by:technician,action:index>=0?'Repair order refreshed from completed walk-around':'Repair order created from completed walk-around',detail:`Walk-around verified and ${ro} sent to Technician Dashboard.`});
+    const record={
+      ...existing,
+      id:existing.id||uid(),
+      sourceId,
+      appointmentId:appt.id,
+      customer:appt.customer||'Customer',
+      vehicle:appt.vehicle||'Vehicle',
+      vin:appt.vin||existing.vin||'',
+      ro,
+      technician,
+      stage:existing.stage||'Waiting Diagnosis',
+      priority:existing.priority||appt.priority||'normal',
+      concern:appt.concern||'',
+      instructions:[appt.inspections,appt.notes,appt.checkinNotes,appt.walkAroundEvidence?.conditionNotes].filter(Boolean).join('\n'),
+      approval:existing.approval||'Not Prepared',
+      approvalMethod:existing.approvalMethod||'',
+      approvedAmount:existing.approvedAmount||'',
+      promisedAt:existing.promisedAt||appt.promisedTime||'',
+      partsStatus:existing.partsStatus||'No Parts Required',
+      roadTest:existing.roadTest||'Not Required',
+      walkAroundComplete:true,
+      walkAroundCompletedAt:appt.walkAroundCompletedAt||stamp,
+      createdAt:existing.createdAt||stamp,
+      updatedAt:stamp,
+      audit
+    };
+    if(index>=0)items[index]=record;else items.push(record);
+    write(WORKBOARD_KEY,items);
+    write(APPT_KEY,appointments.map(x=>String(x.id)===String(id)?{...x,roNumber:ro,status:'Repair Order Created',roCreatedAt:stamp,sentToTechnicianDashboardAt:stamp,updatedAt:stamp}:x));
+    localStorage.setItem('nitros_active_repair_order',ro);
+    localStorage.setItem('nitros_active_workboard_id',record.id);
+    localStorage.removeItem('nitros_active_appointment_id');
+    window.dispatchEvent(new CustomEvent('nitros-workboard-change',{detail:{source:'appointment-conversion',appointmentId:appt.id,repairOrder:ro}}));
+    document.dispatchEvent(new CustomEvent('nitros:repair-order-created',{detail:{appointmentId:appt.id,repairOrder:ro,workboardId:record.id}}));
+    announce(`${ro} created and sent to the Technician Dashboard under Waiting Diagnosis.`,'ok');
+    if(typeof showScreen==='function')showScreen('dashboard');
+    const dashboard=document.getElementById('dashboard');
+    if(dashboard){
+      document.querySelectorAll('.screen').forEach(screen=>screen.classList.remove('active'));
+      dashboard.classList.add('active');
+      setTimeout(()=>dashboard.scrollIntoView({behavior:'smooth',block:'start'}),80);
+    }
+    document.querySelector('[data-go="dashboard"]')?.dispatchEvent(new Event('click',{bubbles:true}));
+  }
+  window.nitrosConvertAppointmentToRO=convertAndOpenDashboard;
+  document.addEventListener('click',event=>{
+    const button=event.target.closest?.('[data-appt-ro]');
+    if(!button)return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    convertAndOpenDashboard(button.getAttribute('data-appt-ro'));
+  },true);
 })();
 </script>
 
