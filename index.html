@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.2.2 — Live Repair Order Workboard</title>
+<title>Nitros Mobile Technician Portal v8.2.3 — Oliver Guided Test Assistant</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -343,7 +343,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   .schedule-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.schedule-list{max-height:620px;overflow:auto;padding-right:2px}
   @media(max-width:760px){.briefing-grid,.schedule-summary{grid-template-columns:1fr 1fr}.schedule-two{grid-template-columns:1fr}.appointment-head{display:block}.appointment-time{margin-top:5px}.appointment-actions .btn{flex:1 1 45%}}
 
-  /* v8.2.2 Inherited Technician Dashboard & Daily Command Center */
+  /* v8.2.3 Inherited Technician Dashboard & Daily Command Center */
   .command-hero{border:1px solid #315476;background:linear-gradient(135deg,#0b1d31,#102944);border-radius:18px;padding:18px;margin-bottom:14px}
   .command-metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin:13px 0}
   .command-metric{border:1px solid var(--line);border-radius:13px;padding:11px;background:#081321;text-align:center}.command-metric strong{display:block;font-size:22px}.command-metric span{font-size:11px;color:var(--muted)}
@@ -355,8 +355,19 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   @media(max-width:900px){.command-metrics{grid-template-columns:repeat(3,1fr)}.command-columns{grid-template-columns:1fr}.shop-status-grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:600px){.command-metrics{grid-template-columns:repeat(2,1fr)}.shop-status-grid,.command-actions{grid-template-columns:1fr 1fr}.command-item-head{display:block}}
 
-  /* v8.2.2 Live Repair Order Workboard */
+  /* v8.2.3 Live Repair Order Workboard */
   .workboard-shell{margin-top:18px;border-top:1px solid var(--line);padding-top:18px}.workboard-toolbar{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:9px;align-items:end}.workboard-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:12px 0}.workboard-lanes{display:grid;grid-template-columns:repeat(4,minmax(230px,1fr));gap:10px;overflow-x:auto;padding-bottom:8px}.workboard-lane{border:1px solid var(--line);border-radius:14px;background:#07111d;min-height:170px;padding:10px}.workboard-lane h4{margin:0 0 9px;display:flex;justify-content:space-between;gap:8px}.workboard-count{border:1px solid var(--line);border-radius:999px;padding:2px 7px;font-size:11px;color:var(--muted)}.workboard-card{border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:10px;background:#0a1726;margin-bottom:9px}.workboard-card.at-risk{border-left-color:var(--warn)}.workboard-card.overdue{border-left-color:var(--bad)}.workboard-card.clear{border-left-color:var(--ok)}.workboard-card-title{font-weight:900}.workboard-card-meta{font-size:11px;color:var(--muted);margin-top:4px}.workboard-card-text{font-size:12px;margin-top:6px}.workboard-card-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.workboard-card-actions .btn{padding:7px 9px;font-size:11px}.workboard-editor{margin-top:14px;border:1px solid #315476;border-radius:15px;padding:13px;background:#081321}.workboard-audit{max-height:180px;overflow:auto;border:1px dashed var(--line);border-radius:11px;padding:9px;margin-top:10px}.workboard-audit div{font-size:11px;color:var(--muted);padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}.workboard-audit div:last-child{border-bottom:0}.deadline-badge{display:inline-block;border-radius:999px;border:1px solid var(--line);padding:3px 7px;font-size:10px;font-weight:900;margin-top:6px}.deadline-badge.ok{color:#79e2b3}.deadline-badge.risk{color:#ffd089}.deadline-badge.late{color:#ff9aa0}.blocker-badge{display:inline-block;border-radius:999px;border:1px solid #8c6a22;padding:3px 7px;font-size:10px;color:#ffd089;margin:6px 4px 0 0}@media(max-width:900px){.workboard-toolbar{grid-template-columns:1fr 1fr}.workboard-summary{grid-template-columns:1fr 1fr}.workboard-lanes{grid-template-columns:repeat(2,minmax(250px,1fr))}}@media(max-width:600px){.workboard-toolbar{grid-template-columns:1fr}.workboard-lanes{grid-template-columns:1fr;overflow:visible}.workboard-summary{grid-template-columns:1fr 1fr}}
+
+
+  /* v8.2.3 Oliver Guided Test Assistant */
+  .oliver-guide-launch{position:fixed;right:18px;bottom:18px;z-index:9995;border:2px solid #71c8ff;background:#09223a;color:#fff;border-radius:999px;padding:12px 16px;font-weight:900;box-shadow:0 8px 30px rgba(0,0,0,.45);display:flex;align-items:center;gap:8px}.oliver-guide-launch:hover{transform:translateY(-1px)}
+  .oliver-guide-panel{position:fixed;inset:0;z-index:9998;background:rgba(1,7,14,.78);display:flex;align-items:flex-end;justify-content:center;padding:14px}.oliver-guide-panel.hidden{display:none}.oliver-guide-panel.guiding{background:transparent;pointer-events:none;align-items:flex-end;justify-content:flex-start}.oliver-guide-panel.guiding .oliver-guide-dialog{pointer-events:auto;width:min(430px,calc(100% - 28px));max-height:48vh}.oliver-guide-dialog{width:min(720px,100%);max-height:88vh;overflow:auto;border:1px solid #42749e;background:#071522;border-radius:18px;padding:16px;box-shadow:0 18px 60px rgba(0,0,0,.6)}
+  .oliver-guide-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.oliver-guide-avatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#0c3656;border:2px solid #71c8ff;font-size:25px;flex:none}.oliver-guide-title{font-weight:900;font-size:20px}.oliver-guide-sub{font-size:12px;color:var(--muted);margin-top:3px}.oliver-guide-close{border:1px solid var(--line);background:transparent;color:#fff;border-radius:10px;padding:8px 10px}
+  .oliver-guide-command{display:grid;grid-template-columns:1fr auto;gap:8px;margin:14px 0}.oliver-guide-command input{min-width:0}.oliver-guide-tours{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.oliver-guide-tour{border:1px solid var(--line);border-radius:12px;padding:11px;background:#091a2a;color:#fff;text-align:left}.oliver-guide-tour strong{display:block}.oliver-guide-tour span{display:block;font-size:11px;color:var(--muted);margin-top:4px}
+  .oliver-guide-stepbox{margin-top:13px;border:1px solid #315476;border-radius:14px;padding:13px;background:#081a2a}.oliver-guide-progress{font-size:11px;color:#91d4ff;font-weight:800}.oliver-guide-instruction{margin-top:7px;font-size:16px;font-weight:800}.oliver-guide-detail{margin-top:5px;color:var(--muted);font-size:13px}.oliver-guide-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}.oliver-guide-status{margin-top:9px;font-size:12px;color:var(--muted)}
+  .oliver-highlight{position:relative!important;z-index:9999!important;outline:4px solid #ffd166!important;outline-offset:4px!important;box-shadow:0 0 0 9999px rgba(0,0,0,.48),0 0 28px #ffd166!important;border-radius:10px!important;animation:oliverPulse 1.3s ease-in-out infinite}.oliver-highlight-label{position:fixed;z-index:10000;max-width:min(380px,88vw);background:#10283f;color:#fff;border:2px solid #ffd166;border-radius:12px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.55);font-size:13px}.oliver-highlight-label strong{display:block;color:#ffd166;margin-bottom:4px}
+  @keyframes oliverPulse{0%,100%{outline-color:#ffd166}50%{outline-color:#fff0a6}}
+  @media(max-width:650px){.oliver-guide-tours{grid-template-columns:1fr}.oliver-guide-command{grid-template-columns:1fr}.oliver-guide-actions{grid-template-columns:1fr}.oliver-guide-launch{right:10px;bottom:10px;padding:11px 13px}.oliver-guide-dialog{max-height:91vh}}
 
 </style>
 </head>
@@ -364,7 +375,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.2.2 — Live Repair Order Workboard</div>
+  <div class="sub">Mobile Technician Portal v8.2.3 — Oliver Guided Test Assistant</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -378,7 +389,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.2.2 adds the Live Repair Order Workboard with actionable status lanes, customer-approval tracking, parts blockers, promised-time warnings, and timestamped stage changes. Every verified prior-version workflow is preserved.</div>
+    <div id="portalLoginStatus" class="status">Version 8.2.3 adds the Oliver Guided Test Assistant. Tap Oliver for a screen-by-screen test that highlights each required control, verifies your entry, and records completed test steps. Every verified prior-version workflow is preserved.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -450,7 +461,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <section id="schedule" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="schedule-hero">
-    <div class="eyebrow">Version 8.2.2</div>
+    <div class="eyebrow">Version 8.2.3</div>
     <h1>Appointment Confirmation & Check-In</h1>
     <p id="morningGreeting">Good morning. Your shop schedule and unfinished follow-ups are ready.</p>
     <div class="briefing-grid">
@@ -541,7 +552,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 8.2.2</div><h1>Technician Dashboard & Live Repair Order Workboard</h1>
+    <div class="eyebrow">Version 8.2.3</div><h1>Technician Dashboard & Live Repair Order Workboard</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -594,7 +605,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 8.2.2</div>
+      <div class="eyebrow">Version 8.2.3</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1483,7 +1494,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.2.2 • Live Repair Order Workboard • Approval tracking • Parts blockers • Promised-time warnings • Previous workflows preserved</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.2.3 • Oliver Guided Test Assistant • Screen-by-screen highlighting • Step verification • Previous workflows preserved</div>
 </div>
 
 <script>
@@ -4502,16 +4513,16 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     function parseTime(text){const m=text.match(/(?:at\s*)?(1[0-2]|0?\d)(?::([0-5]\d))?\s*(a\.?m\.?|p\.?m\.?)?/i);if(!m)return '08:00';let h=+m[1],min=m[2]||'00',amp=(m[3]||'').toLowerCase();if(amp.startsWith('p')&&h<12)h+=12;if(amp.startsWith('a')&&h===12)h=0;return `${String(h).padStart(2,'0')}:${min}`}
     function oliverParse(){const text=el('oliverScheduleInput')?.value.trim();if(!text){el('oliverScheduleResponse').textContent='Tell me what you would like scheduled or remembered.';return}const low=text.toLowerCase(),isFollow=/remind|don't forget|order|call back|follow up|follow-up/.test(low);if(isFollow){blankFollowup();el('followupDueDate').value=parseDate(text);el('followupDueTime').value=parseTime(text);el('followupTask').value=text.replace(/^oliver[, ]*/i,'').trim();if(/order/.test(low))el('followupCategory').value='Order Parts';if(/urgent|safety|first thing/.test(low))el('followupPriority').value=/urgent|safety/.test(low)?'urgent':'high';const kia=text.match(/([A-Z][a-z]+)'?s?\s+(Kia Soul|[A-Z][a-z]+\s+[A-Z][a-z]+)/);if(kia){el('followupCustomer').value=kia[1];el('followupVehicle').value=kia[2]}el('oliverScheduleResponse').textContent='I prepared a shop follow-up below. Review the due date, customer, vehicle, vendors, and task, then tap Save Follow-Up.';el('followupCustomer').scrollIntoView({behavior:'smooth',block:'center'})}else{blankAppointment();el('appointmentDate').value=parseDate(text);el('appointmentTime').value=parseTime(text);const name=text.match(/(?:schedule|book|add)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i);if(name)el('appointmentCustomer').value=name[1];const veh=text.match(/(?:with|bringing|in|the)\s+(?:the\s+)?((?:19|20)\d{2}\s+[^,.]+|[A-Z][a-z]+\s+(?:Soul|Cougar|Truck|Buick|Kia|Ford|Chevy|Toyota|Honda|Jeep))/i);if(veh)el('appointmentVehicle').value=veh[1].trim();el('appointmentConcern').value=text.replace(/^oliver[, ]*/i,'').trim();if(/wait/.test(low))el('appointmentArrival').value='Waiting';else if(/tow/.test(low))el('appointmentArrival').value='Tow-in';else if(/key drop/.test(low))el('appointmentArrival').value='Key drop';const draft=currentDraft(),hits=showConflict(draft);el('oliverScheduleResponse').textContent=hits.length?`I prepared the appointment, but I found ${hits.length} schedule conflict${hits.length===1?'':'s'}. Review the highlighted schedule warning before saving.`:'I prepared the appointment and checked the schedule. Review the details, then tap Save Appointment.';el('appointmentCustomer').scrollIntoView({behavior:'smooth',block:'center'})}}
     function listen(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){el('oliverScheduleResponse').textContent='Voice recognition is not available in this browser. You can still type or use the phone keyboard microphone.';return}const r=new SR();r.lang='en-US';r.interimResults=false;r.onstart=()=>el('oliverScheduleResponse').textContent='Listening…';r.onerror=e=>el('oliverScheduleResponse').textContent=`Voice recognition stopped: ${e.error}. You can type the instruction instead.`;r.onresult=e=>{el('oliverScheduleInput').value=e.results[0][0].transcript;el('oliverScheduleResponse').textContent='I heard your instruction. Tap Have Oliver Prepare It.'};r.start()}
-    function download(){const payload={schema:'nitros-schedule-package',version:'8.2.2',createdAt:new Date().toISOString(),appointments:read(APPT_KEY),followups:read(FOLLOW_KEY)},blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`Nitros_v8.2.2_Schedule_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setMsg('scheduleTransferStatus','Schedule and follow-ups exported successfully.','status ok')}
+    function download(){const payload={schema:'nitros-schedule-package',version:'8.2.3',createdAt:new Date().toISOString(),appointments:read(APPT_KEY),followups:read(FOLLOW_KEY)},blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`Nitros_v8.2.3_Schedule_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setMsg('scheduleTransferStatus','Schedule and follow-ups exported successfully.','status ok')}
     async function importData(file){const d=JSON.parse(await file.text());if(d?.schema!=='nitros-schedule-package')throw new Error('Unsupported file');const am=new Map(read(APPT_KEY).map(x=>[x.id,x]));(d.appointments||[]).forEach(x=>x?.id&&am.set(x.id,{...am.get(x.id),...x}));const fm=new Map(read(FOLLOW_KEY).map(x=>[x.id,x]));(d.followups||[]).forEach(x=>x?.id&&fm.set(x.id,{...fm.get(x.id),...x}));localStorage.setItem(APPT_KEY,JSON.stringify([...am.values()]));localStorage.setItem(FOLLOW_KEY,JSON.stringify([...fm.values()]));renderAll();setMsg('scheduleTransferStatus','Schedule package imported and merged without deleting existing records.','status ok')}
-    el('saveAppointment')?.addEventListener('click',saveAppointment);el('checkAppointmentConflict')?.addEventListener('click',()=>showConflict());el('createLinkedFollowup')?.addEventListener('click',linkedFollowup);el('oliverNextJob')?.addEventListener('click',whatsNext);el('oliverReadBriefing')?.addEventListener('click',()=>speak(el('morningBriefingText')?.textContent||'No morning briefing is available.'));el('clearAppointment')?.addEventListener('click',blankAppointment);el('saveFollowup')?.addEventListener('click',saveFollowup);el('clearFollowup')?.addEventListener('click',blankFollowup);el('oliverParseSchedule')?.addEventListener('click',oliverParse);el('oliverListenSchedule')?.addEventListener('click',listen);el('exportScheduleData')?.addEventListener('click',download);el('importScheduleData')?.addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{await importData(f)}catch(err){setMsg('scheduleTransferStatus','That file is not a valid Nitros v8.2.2 schedule package.','status bad')}finally{e.target.value=''}});
+    el('saveAppointment')?.addEventListener('click',saveAppointment);el('checkAppointmentConflict')?.addEventListener('click',()=>showConflict());el('createLinkedFollowup')?.addEventListener('click',linkedFollowup);el('oliverNextJob')?.addEventListener('click',whatsNext);el('oliverReadBriefing')?.addEventListener('click',()=>speak(el('morningBriefingText')?.textContent||'No morning briefing is available.'));el('clearAppointment')?.addEventListener('click',blankAppointment);el('saveFollowup')?.addEventListener('click',saveFollowup);el('clearFollowup')?.addEventListener('click',blankFollowup);el('oliverParseSchedule')?.addEventListener('click',oliverParse);el('oliverListenSchedule')?.addEventListener('click',listen);el('exportScheduleData')?.addEventListener('click',download);el('importScheduleData')?.addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{await importData(f)}catch(err){setMsg('scheduleTransferStatus','That file is not a valid Nitros v8.2.3 schedule package.','status bad')}finally{e.target.value=''}});
     document.querySelectorAll('[data-schedule-view]').forEach(b=>b.addEventListener('click',()=>{view=b.dataset.scheduleView;document.querySelectorAll('[data-schedule-view]').forEach(x=>x.classList.toggle('active',x===b));renderAppointments()}));
     el('appointmentList')?.addEventListener('click',e=>{const ro=e.target.closest('[data-appt-ro]')?.dataset.apptRo,edit=e.target.closest('[data-appt-edit]')?.dataset.apptEdit,confirmId=e.target.closest('[data-appt-confirm]')?.dataset.apptConfirm,arrive=e.target.closest('[data-appt-arrive]')?.dataset.apptArrive,checkin=e.target.closest('[data-appt-checkin]')?.dataset.apptCheckin,del=e.target.closest('[data-appt-delete]')?.dataset.apptDelete;if(ro)convertToRO(ro);if(edit)editAppointment(edit);if(confirmId)updateAppointmentStatus(confirmId,'Confirmed');if(arrive)updateAppointmentStatus(arrive,'Customer Arrived');if(checkin)updateAppointmentStatus(checkin,'Vehicle Checked In');if(del&&confirm('Delete this appointment?'))write(APPT_KEY,read(APPT_KEY).filter(x=>x.id!==del))});
     el('followupList')?.addEventListener('click',e=>{const done=e.target.closest('[data-follow-done]')?.dataset.followDone,edit=e.target.closest('[data-follow-edit]')?.dataset.followEdit,snooze=e.target.closest('[data-follow-snooze]')?.dataset.followSnooze,del=e.target.closest('[data-follow-delete]')?.dataset.followDelete;if(done)write(FOLLOW_KEY,read(FOLLOW_KEY).map(x=>x.id===done?{...x,completed:!x.completed,updatedAt:new Date().toISOString()}:x));if(edit)editFollowup(edit);if(snooze){const d=new Date();d.setDate(d.getDate()+1);write(FOLLOW_KEY,read(FOLLOW_KEY).map(x=>x.id===snooze?{...x,date:isoDate(d),completed:false,updatedAt:new Date().toISOString()}:x))}if(del&&confirm('Delete this follow-up?'))write(FOLLOW_KEY,read(FOLLOW_KEY).filter(x=>x.id!==del))});
     document.querySelectorAll('[data-go="schedule"]').forEach(b=>b.addEventListener('click',()=>setTimeout(renderAll,80)));blankAppointment();blankFollowup();renderAll();
   })();
 
-  // v8.2.2 Inherited Technician Dashboard & Daily Command Center
+  // v8.2.3 Inherited Technician Dashboard & Daily Command Center
   (()=>{
     const APPT='nitros_v818_appointments',FOLLOW='nitros_v818_followups',JOBS='nitros_portal_v8_assigned_jobs',PARTS='nitros_v817_parts_requests',HISTORY='nitros_prototype_customer_history_v070';
     const el=id=>document.getElementById(id),read=(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d}},esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -4538,7 +4549,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     el('commandRefresh')?.addEventListener('click',render);el('commandReadBriefing')?.addEventListener('click',()=>speak(el('commandBriefingText')?.textContent||'No briefing is available.'));document.querySelectorAll('[data-go="dashboard"]').forEach(b=>b.addEventListener('click',()=>setTimeout(render,80)));window.addEventListener('storage',render);setTimeout(render,200);
   })();
 
-  // v8.2.2 Live Repair Order Workboard
+  // v8.2.3 Live Repair Order Workboard
   (()=>{
     const KEY='nitros_v822_workboard', APPT='nitros_v818_appointments', JOBS='nitros_portal_v8_assigned_jobs', TECH='nitros_portal_v8_technician';
     const stages=['Waiting Diagnosis','Diagnosing','Waiting Approval','Waiting Parts','Ready to Repair','Repair in Progress','Verification / Road Test','Ready for Pickup'];
@@ -4573,5 +4584,97 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   })();
 
 </script>
+
+<button id="oliverGuideLaunch" class="oliver-guide-launch" type="button" aria-label="Open Oliver guided testing">🧭 Oliver Test Guide</button>
+<div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
+  <div class="oliver-guide-dialog">
+    <div class="oliver-guide-head">
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 8.2.3 • Screen-by-screen testing with highlighted controls</div></div></div>
+      <button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button>
+    </div>
+    <div class="oliver-guide-command">
+      <input id="oliverGuideCommand" placeholder="Say or type: Oliver, take me through an appointment test">
+      <button id="oliverGuideListen" class="btn secondary" type="button">🎤 Speak</button>
+    </div>
+    <div class="oliver-guide-tours">
+      <button class="oliver-guide-tour" data-tour="appointment" type="button"><strong>Appointment & Check-In</strong><span>Create, confirm, arrive, check in, and convert to RO.</span></button>
+      <button class="oliver-guide-tour" data-tour="workboard" type="button"><strong>Live Workboard</strong><span>Add an active RO, record approval and parts, then advance stages.</span></button>
+      <button class="oliver-guide-tour" data-tour="full" type="button"><strong>Complete Portal Test</strong><span>Home, schedule, dashboard, workboard, check-in, inspection, and review.</span></button>
+    </div>
+    <div id="oliverGuideStepbox" class="oliver-guide-stepbox hidden">
+      <div id="oliverGuideProgress" class="oliver-guide-progress"></div>
+      <div id="oliverGuideInstruction" class="oliver-guide-instruction"></div>
+      <div id="oliverGuideDetail" class="oliver-guide-detail"></div>
+      <div class="oliver-guide-actions"><button id="oliverGuideBack" class="btn ghost" type="button">Previous</button><button id="oliverGuideVerify" class="btn primary" type="button">Verify & Continue</button><button id="oliverGuideStop" class="btn danger" type="button">Stop Test</button></div>
+      <div id="oliverGuideStatus" class="oliver-guide-status" aria-live="polite"></div>
+    </div>
+  </div>
+</div>
+<div id="oliverHighlightLabel" class="oliver-highlight-label hidden"></div>
+
+
+<script>
+(function(){
+  const GUIDE_KEY='nitros_v823_guided_test_history';
+  const $=id=>document.getElementById(id);
+  const panel=$('oliverGuidePanel'), stepbox=$('oliverGuideStepbox'), label=$('oliverHighlightLabel');
+  let tourName='', steps=[], index=0, highlighted=null;
+  const tours={
+    appointment:[
+      {screen:'home',target:'[data-go="schedule"]',title:'Open Appointments',detail:'Tap Appointments & Morning Briefing from the home screen.',action:'click'},
+      {screen:'schedule',target:'#appointmentCustomer',title:'Enter the customer',detail:'Type a test customer name. Oliver will verify that the field is not empty.',check:el=>el.value.trim().length>0},
+      {screen:'schedule',target:'#appointmentVehicle',title:'Enter the vehicle',detail:'Enter year, make, and model.',check:el=>el.value.trim().length>0},
+      {screen:'schedule',target:'#appointmentDate',title:'Choose the appointment date',detail:'Select today or a future shop date.',check:el=>!!el.value},
+      {screen:'schedule',target:'#appointmentTime',title:'Choose the appointment time',detail:'Select the planned arrival time.',check:el=>!!el.value},
+      {screen:'schedule',target:'#appointmentConcern',title:'Enter the concern',detail:'Enter the customer complaint or requested repair.',check:el=>el.value.trim().length>0},
+      {screen:'schedule',target:'#checkAppointmentConflict',title:'Check the schedule',detail:'Tap Check Schedule. Oliver will look for overlapping appointments.',action:'click'},
+      {screen:'schedule',target:'#saveAppointment',title:'Save the appointment',detail:'Tap Save Appointment. The entry should appear in the schedule.',action:'click'},
+      {screen:'schedule',target:'#appointmentList, #todayAppointments, .appointment-list',title:'Review the saved appointment',detail:'Confirm the appointment appears in the schedule. Use the appointment card controls to Confirm, Mark Arrived, Check In, and Convert to RO.',optional:true}
+    ],
+    workboard:[
+      {screen:'home',target:'[data-go="dashboard"]',title:'Open the Technician Dashboard',detail:'Tap Technician Dashboard.',action:'click'},
+      {screen:'dashboard',target:'#workboardAddActive',title:'Add an active repair order',detail:'Tap Add Active Repair Order to open the editor.',action:'click'},
+      {screen:'dashboard',target:'#workboardCustomer',title:'Enter the customer',detail:'Enter a test customer name.',check:el=>el.value.trim().length>0},
+      {screen:'dashboard',target:'#workboardVehicle',title:'Enter the vehicle',detail:'Enter the vehicle description.',check:el=>el.value.trim().length>0},
+      {screen:'dashboard',target:'#workboardConcern',title:'Enter the assigned work',detail:'Describe the concern or repair.',check:el=>el.value.trim().length>0},
+      {screen:'dashboard',target:'#workboardPromised',title:'Set promised completion',detail:'Enter a promised date and time to test deadline warnings.',check:el=>!!el.value,optional:true},
+      {screen:'dashboard',target:'#workboardSave',title:'Save the repair order',detail:'Tap Save Repair Order.',action:'click'},
+      {screen:'dashboard',target:'#workboardLanes',title:'Verify the workboard card',detail:'Confirm the vehicle appears in the correct status lane. Open it to test approval, parts status, road test, and Advance to Next Stage.',optional:true}
+    ],
+    full:[
+      {screen:'home',target:'[data-go="schedule"]',title:'Test scheduling',detail:'Open Appointments & Morning Briefing and confirm the schedule loads.',action:'click'},
+      {screen:'schedule',target:'#oliverNextJob',title:'Test Oliver scheduling summary',detail:'Tap Oliver, What’s Next? and confirm a useful summary appears.',action:'click'},
+      {screen:'home',target:'[data-go="dashboard"]',title:'Open command center',detail:'Return Home, then open Technician Dashboard.',action:'click'},
+      {screen:'dashboard',target:'#refreshCommandCenter',title:'Refresh command center',detail:'Tap Refresh Command Center and verify the metrics update.',action:'click'},
+      {screen:'dashboard',target:'#workboardRefresh',title:'Refresh the workboard',detail:'Import active appointments and assigned jobs into the workboard.',action:'click'},
+      {screen:'home',target:'[data-go="checkin"]',title:'Begin a vehicle check-in',detail:'Return Home and tap New Walk-In / Check-In.',action:'click'},
+      {screen:'checkin',target:'input,button,select',title:'Test the check-in screen',detail:'Complete the required vehicle-identification fields and proceed through the normal workflow.',optional:true},
+      {screen:'inspection',target:'button,input,select,textarea',title:'Test inspection capture',detail:'Verify inspection controls, photos, and required-field validation.',optional:true},
+      {screen:'review',target:'button',title:'Test final review',detail:'Confirm the review screen identifies missing required fields and can return you to each one.',optional:true}
+    ]
+  };
+  function activeScreen(){return document.querySelector('.screen.active')?.id||''}
+  function removeHighlight(){if(highlighted){highlighted.classList.remove('oliver-highlight');highlighted=null}label.classList.add('hidden');}
+  function locate(step){return document.querySelector(step.target)}
+  function positionLabel(el,step){const r=el.getBoundingClientRect();label.innerHTML='<strong>'+step.title+'</strong>'+step.detail;label.classList.remove('hidden');const top=Math.min(window.innerHeight-label.offsetHeight-12,Math.max(10,r.bottom+10));const left=Math.min(window.innerWidth-label.offsetWidth-10,Math.max(10,r.left));label.style.top=top+'px';label.style.left=left+'px';}
+  function goScreen(id){if(activeScreen()===id)return; if(typeof window.showScreen==='function')window.showScreen(id); else {document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x.id===id));}}
+  function render(){removeHighlight();const step=steps[index];if(!step)return finish();goScreen(step.screen);setTimeout(()=>{const el=locate(step);$('oliverGuideProgress').textContent='Step '+(index+1)+' of '+steps.length+' • '+tourName;$('oliverGuideInstruction').textContent=step.title;$('oliverGuideDetail').textContent=step.detail;$('oliverGuideStatus').textContent=step.optional?'This is a visual verification step. Continue after confirming the screen looks correct.':'Complete the highlighted action, then tap Verify & Continue.';$('oliverGuideBack').disabled=index===0;if(el){highlighted=el;el.classList.add('oliver-highlight');el.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>positionLabel(el,step),350);if(step.action==='click'){el.addEventListener('click',autoAdvance,{once:true});}}else{$('oliverGuideStatus').textContent='Oliver could not find this control on the current screen. You may skip forward or stop the test.';}},180);}
+  function autoAdvance(){setTimeout(()=>{if(index<steps.length-1){index++;render()}else finish()},500)}
+  function verify(){const step=steps[index],el=locate(step);if(step.check&&!step.optional){if(!el||!step.check(el)){$('oliverGuideStatus').textContent='This step is not complete yet. Enter the requested information in the highlighted field.';el?.focus();return}}if(index<steps.length-1){index++;render()}else finish()}
+  function finish(){removeHighlight();const history=JSON.parse(localStorage.getItem(GUIDE_KEY)||'[]');history.push({tour:tourName,completedAt:new Date().toISOString(),steps:steps.length});localStorage.setItem(GUIDE_KEY,JSON.stringify(history.slice(-25)));$('oliverGuideProgress').textContent='Test completed';$('oliverGuideInstruction').textContent='Oliver completed the guided walkthrough.';$('oliverGuideDetail').textContent='The completed test was recorded on this device. You can close Oliver or start another test.';$('oliverGuideStatus').textContent='All guided steps completed.';$('oliverGuideVerify').disabled=true;$('oliverGuideBack').disabled=true;}
+  function start(name){tourName=name;steps=tours[name];index=0;$('oliverGuideVerify').disabled=false;stepbox.classList.remove('hidden');panel.classList.remove('hidden');panel.classList.add('guiding');render()}
+  function parseCommand(){const q=$('oliverGuideCommand').value.toLowerCase();if(q.includes('workboard')||q.includes('repair order'))start('workboard');else if(q.includes('complete')||q.includes('full')||q.includes('everything'))start('full');else start('appointment')}
+  $('oliverGuideLaunch').addEventListener('click',()=>{panel.classList.remove('hidden');panel.classList.remove('guiding')});
+  $('oliverGuideClose').addEventListener('click',()=>{panel.classList.add('hidden');panel.classList.remove('guiding');removeHighlight()});
+  $('oliverGuideStop').addEventListener('click',()=>{panel.classList.add('hidden');panel.classList.remove('guiding');removeHighlight()});
+  $('oliverGuideVerify').addEventListener('click',verify);
+  $('oliverGuideBack').addEventListener('click',()=>{if(index>0){index--;render()}});
+  document.querySelectorAll('[data-tour]').forEach(b=>b.addEventListener('click',()=>start(b.dataset.tour)));
+  $('oliverGuideCommand').addEventListener('keydown',e=>{if(e.key==='Enter')parseCommand()});
+  $('oliverGuideListen').addEventListener('click',()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){$('oliverGuideStatus').textContent='Voice recognition is unavailable here. Type the request and press Enter.';return}const r=new SR();r.lang='en-US';r.interimResults=false;r.onstart=()=>{$('oliverGuideCommand').value='Listening…'};r.onerror=()=>{$('oliverGuideCommand').value='';$('oliverGuideStatus').textContent='Voice recognition stopped. Type the request instead.'};r.onresult=e=>{$('oliverGuideCommand').value=e.results[0][0].transcript;parseCommand()};r.start()});
+  window.addEventListener('resize',()=>{if(highlighted&&steps[index])positionLabel(highlighted,steps[index])});
+})();
+</script>
+
 </body>
 </html>
