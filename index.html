@@ -3280,7 +3280,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
         <div class="history-meta"><strong>Diagnostic time:</strong> ${Number(record.workOrder?.diagnosticTimeHours ?? ((record.workOrder?.activeMilliseconds||0)/3600000)).toFixed(2)} h</div>
         <div class="history-meta"><strong>Completion:</strong> ${escapeHtml(record.workOrder?.completionNotes||"None recorded")}</div>
         ${flags.length?`<div class="history-flags">${flags.map(flag=>`<span class="badge">${escapeHtml(flag)}</span>`).join("")}</div>`:""}
-        <div class="history-actions"><button class="btn secondary small reopen-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">Reopen Completed Repair</button><button class="btn ghost small print-history-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">View Report</button><button class="btn secondary small view-history-photos" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">View Photos</button></div>
+        <div class="history-actions"><button class="btn primary small checkin-history-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">Check In / Open Same RO</button><button class="btn secondary small send-history-dashboard" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">Send to Technician Dashboard</button><button class="btn secondary small reopen-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">Open Repair Order</button><button class="btn ghost small print-history-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">View Report</button><button class="btn secondary small view-history-photos" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">View Photos</button></div>
       </div>`;
     }).join("");
   }
@@ -3321,6 +3321,26 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     jobClock={state:"finished",activeStartedAt:null,pauseStartedAt:null,activeMs:Number(record.workOrder?.activeMilliseconds)||0,pausedMs:Number(record.workOrder?.pausedMilliseconds)||0,timeline:Array.isArray(record.workOrder?.timeline)?record.workOrder.timeline:[]};
     updateEstimateTotals(); updateAuthorizationBadge(); updateJobClockUI(); renderTimeline(); buildSummary(); saveDraft(); showScreen("workorder");
     const status=document.getElementById("submitStatus"); if(status){status.className="status warn";status.textContent=`Reopened ${record.checkInId}. Saving will update this record without creating a duplicate.`;}
+  }
+
+  function checkInFromCustomerHistory(recordId){
+    const record=loadCustomerHistory().find(item=>item.checkInId===recordId);
+    if(!record){ alert("That saved customer record could not be found on this device."); return; }
+    reopenCompletedRecord(recordId);
+    showScreen("checkin");
+    const status=document.getElementById("vinStatus");
+    if(status){status.className="status ok";status.textContent=`Customer history loaded. Continue this check-in under the same repair order: ${record.repairOrder||"RO pending"}.`;}
+  }
+
+  function sendHistoryRecordToDashboard(recordId){
+    const record=loadCustomerHistory().find(item=>item.checkInId===recordId);
+    if(!record){ alert("That saved customer record could not be found on this device."); return; }
+    const linked=syncCompletedCheckInToTechnicianDashboard(record);
+    showScreen("dashboard");
+    window.dispatchEvent(new CustomEvent("nitros-workboard-change",{detail:{source:"customer-history",checkInId:record.checkInId,repairOrder:record.repairOrder}}));
+    setTimeout(()=>document.getElementById("workboardLanes")?.scrollIntoView({behavior:"smooth",block:"start"}),180);
+    const status=document.getElementById("workboardStatus");
+    if(status){status.className="status ok";status.textContent=`${linked.ro?`RO ${linked.ro}`:"The repair order"} is now on the Technician Dashboard under ${linked.stage}.`;}
   }
 
   function viewHistoryRecord(recordId){
@@ -3833,6 +3853,8 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   }
 
 document.addEventListener("click",e=>{
+    const checkin=e.target.closest(".checkin-history-record"); if(checkin){checkInFromCustomerHistory(checkin.dataset.recordId);return;}
+    const sendDashboard=e.target.closest(".send-history-dashboard"); if(sendDashboard){sendHistoryRecordToDashboard(sendDashboard.dataset.recordId);return;}
     const reopen=e.target.closest(".reopen-record"); if(reopen){reopenCompletedRecord(reopen.dataset.recordId);return;}
     const view=e.target.closest(".print-history-record"); if(view){viewHistoryRecord(view.dataset.recordId);return;}
     const photos=e.target.closest(".view-history-photos"); if(photos){const record=loadCustomerHistory().find(item=>item.checkInId===photos.dataset.recordId);openPhotoEvidenceManager(photos.dataset.recordId,`${record?.repairOrder||photos.dataset.recordId} — ${[record?.vehicle?.year,record?.vehicle?.make,record?.vehicle?.model].filter(Boolean).join(" ")}`);return;}
@@ -5054,7 +5076,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
       <div class="oliver-voice-box">
         <div class="oliver-voice-row"><textarea id="oliverHubInput" class="oliver-voice-input" rows="2" placeholder="Say or type: Oliver, show me how to input this customer"></textarea><button id="oliverHubMic" class="oliver-voice-btn" type="button">🎙️ Talk</button></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><button id="oliverHubSend" class="btn primary" type="button">Ask Oliver</button><button id="oliverHubReadLast" class="btn ghost" type="button">🔊 Read Last Reply</button></div>
-        <div id="oliverHubTranscript" class="oliver-transcript"><div class="oliver-line oliver"><strong>Oliver:</strong> I’m ready. I will answer aloud and keep the same response here in writing.</div></div>
+        <div id="oliverHubTranscript" class="oliver-transcript"><div class="oliver-line oliver"><strong>Oliver:</strong> I’m ready. Tap Talk, speak naturally, and I will answer aloud while keeping the same response here in writing.</div></div>
       </div>
       <div id="oliverHubSettings" class="oliver-hub-settings">
         <div class="oliver-setting-row"><span>Preferred mode</span><select id="oliverPreferredMode"><option value="auto">Automatic by screen</option><option value="instructor">Instructor</option><option value="technician">Technician</option><option value="office">Office</option><option value="founder">Founder</option></select></div>
@@ -5072,7 +5094,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   const $=id=>document.getElementById(id);
   const launch=$('unifiedOliverLaunch'),hub=$('unifiedOliverHub'),modeEl=$('unifiedOliverMode'),input=$('oliverHubInput'),transcript=$('oliverHubTranscript');
   if(!launch||!hub)return;
-  const POS='nitros_v825_unified_oliver_position',SET='nitros_v825_oliver_settings',CHAT='nitros_v825_oliver_transcript';
+  const POS='nitros_v826_unified_oliver_position',SET='nitros_v826_oliver_settings',CHAT='nitros_v826_oliver_transcript';
   let lastReply='',dragging=false,moved=false,startX=0,startY=0,baseL=0,baseT=0;
   const modeMap={instructor:'🎓 Oliver — Instructor',technician:'🔧 Oliver — Technician',office:'🏢 Oliver — Office',founder:'👨‍💼 Oliver — Founder'};
   function activeScreen(){return document.querySelector('.screen.active')?.id||document.querySelector('[data-screen].active')?.dataset.screen||''}
@@ -5080,12 +5102,40 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   function settings(){try{return Object.assign({mode:'auto',spoken:'on'},JSON.parse(localStorage.getItem(SET)||'{}'))}catch{return{mode:'auto',spoken:'on'}}}
   function currentMode(){const x=settings();return x.mode==='auto'?autoMode():x.mode}
   function refreshMode(){modeEl.textContent=modeMap[currentMode()]||modeMap.technician}
-  function openHub(){refreshMode();hub.classList.remove('hidden');input.focus()}
+  function openHub(){unlockSpeech();refreshMode();hub.classList.remove('hidden');input.focus()}
   function closeHub(){hub.classList.add('hidden')}
   function line(who,text){const d=document.createElement('div');d.className='oliver-line '+(who==='You'?'user':'oliver');const st=document.createElement('strong');st.textContent=who+':';d.append(st,document.createTextNode(' '+text));transcript.appendChild(d);transcript.scrollTop=transcript.scrollHeight;saveChat()}
   function saveChat(){localStorage.setItem(CHAT,transcript.innerHTML)}
   function loadChat(){const h=localStorage.getItem(CHAT);if(h)transcript.innerHTML=h}
-  function speak(text){lastReply=text;if(settings().spoken==='off'||!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.94;u.onstart=()=>launch.classList.add('speaking');u.onend=()=>launch.classList.remove('speaking');u.onerror=()=>launch.classList.remove('speaking');speechSynthesis.speak(u)}
+  let speechUnlocked=false;
+  function unlockSpeech(){
+    if(!('speechSynthesis' in window)||speechUnlocked)return;
+    try{
+      speechSynthesis.cancel();
+      const warmup=new SpeechSynthesisUtterance('');
+      warmup.volume=0;
+      speechSynthesis.speak(warmup);
+      speechSynthesis.resume();
+      speechUnlocked=true;
+    }catch(error){}
+  }
+  function speak(text){
+    lastReply=text;
+    if(settings().spoken==='off'||!('speechSynthesis'in window))return;
+    try{
+      unlockSpeech();
+      speechSynthesis.cancel();
+      speechSynthesis.resume();
+      const u=new SpeechSynthesisUtterance(text);
+      u.lang='en-US';u.rate=.94;u.pitch=1;u.volume=1;
+      const voices=speechSynthesis.getVoices?.()||[];
+      u.voice=voices.find(v=>/^en-US/i.test(v.lang)&&/Samantha|Ava|Alex|Aaron|Daniel/i.test(v.name))||voices.find(v=>/^en/i.test(v.lang))||null;
+      u.onstart=()=>launch.classList.add('speaking');
+      u.onend=()=>launch.classList.remove('speaking');
+      u.onerror=()=>{launch.classList.remove('speaking');const mode=$('oliverSpokenReplies');if(mode)mode.value='on';};
+      setTimeout(()=>{speechSynthesis.resume();speechSynthesis.speak(u)},60);
+    }catch(error){launch.classList.remove('speaking');}
+  }
   function reply(text){line('Oliver',text);speak(text)}
   function routeCommand(raw){const text=raw.trim();if(!text)return;line('You',text);const q=text.replace(/^oliver[,:]?\s*/i,'').toLowerCase(),mode=currentMode();
     if(/show me how|walk me through|guided|learn the software|input this customer|check.?in/.test(q)){reply('I am opening Instructor Mode and the guided software walkthrough. Choose the workflow you want, and I will wait for each confirmation.');closeHub();setTimeout(()=>{$('oliverGuideLaunch')?.click()},120);return}
@@ -5107,7 +5157,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   $('oliverHubSend').addEventListener('click',()=>{const q=input.value;input.value='';routeCommand(q)});input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('oliverHubSend').click()}});
   $('oliverHubReadLast').addEventListener('click',()=>{if(lastReply)speak(lastReply);else reply('There is no previous reply to read yet.')});
   const pref=$('oliverPreferredMode'),spoken=$('oliverSpokenReplies'),st=settings();pref.value=st.mode;spoken.value=st.spoken;function saveSettings(){localStorage.setItem(SET,JSON.stringify({mode:pref.value,spoken:spoken.value}));refreshMode()}pref.addEventListener('change',saveSettings);spoken.addEventListener('change',saveSettings);
-  $('oliverHubMic').addEventListener('click',()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){reply('Voice recognition is unavailable in this browser or local-file mode. Use the phone keyboard microphone or type the command.');return}const r=new SR();r.lang='en-US';r.interimResults=false;r.continuous=false;r.onstart=()=>{launch.classList.add('listening');$('oliverHubMic').textContent='Listening…'};r.onend=()=>{launch.classList.remove('listening');$('oliverHubMic').textContent='🎙️ Talk'};r.onerror=e=>reply('Voice recognition stopped because of '+(e.error||'a browser restriction')+'. You can still type the command.');r.onresult=e=>{const t=e.results[0][0].transcript;input.value=t;routeCommand(t);input.value=''};try{r.start()}catch{reply('The microphone is already active or blocked by the browser.')}});
+  $('oliverHubMic').addEventListener('click',()=>{unlockSpeech();const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){reply('Voice recognition is unavailable in this browser or local-file mode. Use the phone keyboard microphone or type the command.');return}const r=new SR();r.lang='en-US';r.interimResults=false;r.continuous=false;r.onstart=()=>{launch.classList.add('listening');$('oliverHubMic').textContent='Listening…'};r.onend=()=>{launch.classList.remove('listening');$('oliverHubMic').textContent='🎙️ Talk'};r.onerror=e=>reply('Voice recognition stopped because of '+(e.error||'a browser restriction')+'. You can still type the command.');r.onresult=e=>{const t=e.results[0][0].transcript;input.value=t;routeCommand(t);input.value=''};try{r.start()}catch{reply('The microphone is already active or blocked by the browser.')}});
   document.addEventListener('click',e=>{if(e.target.closest('[data-screen],.nav-btn,.bottom-nav button'))setTimeout(refreshMode,80)});window.addEventListener('resize',()=>{const r=launch.getBoundingClientRect();launch.style.left=Math.max(0,Math.min(innerWidth-r.width,r.left))+'px';launch.style.top=Math.max(0,Math.min(innerHeight-r.height,r.top))+'px'});
   loadChat();refreshMode();
 })();
