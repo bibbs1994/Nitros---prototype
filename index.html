@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.3.1 — Oliver Guided Diagnostics</title>
+<title>Nitros Mobile Technician Portal v8.3.2 — Oliver Guided Diagnostics</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -417,7 +417,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.3.1 — Oliver Guided Diagnostics</div>
+  <div class="sub">Mobile Technician Portal v8.3.2 — Oliver Guided Diagnostics</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -1554,7 +1554,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.3.1 • Oliver guided diagnostics • Evidence-based testing • Repair timeline • Preserved v8.2.9 workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.3.2 • Oliver guided diagnostics • Evidence-based testing • Repair timeline • Preserved v8.2.9 workflow</div>
 </div>
 
 <script>
@@ -4901,7 +4901,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v8.3.1 • Active diagnostic copilot</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v8.3.2 • Active diagnostic copilot</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5622,6 +5622,71 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     start.dataset.v831Wired='true';
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});else wire();
+})();
+</script>
+
+
+<script id="v832OliverVehicleContextFix">
+(()=>{
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch(_){return fallback}};
+  const clean=v=>String(v??'').trim();
+  function ensureHidden(id){
+    let node=$(id);
+    if(!node){node=document.createElement('input');node.type='hidden';node.id=id;node.setAttribute('data-v832-context','true');document.body.appendChild(node)}
+    return node;
+  }
+  function draftVehicle(){
+    const draft=read('nitros_prototype_v073_active_draft',{})||read('nitros_current_draft',{})||{};
+    const fields=draft.fields||{};
+    const vehicle=draft.selectedVehicle||{};
+    return {
+      year:clean(vehicle.year||fields.vehicleYear), make:clean(vehicle.make||fields.vehicleMake), model:clean(vehicle.model||fields.vehicleModel),
+      engine:clean(vehicle.engine||vehicle.engineSize||fields.engine||fields.engineSize), vin:clean(vehicle.vin||fields.vinInput),
+      customer:clean(fields.customerName||fields.jobCustomer), concern:clean(fields.customerConcern||fields.concern||fields.jobConcern),
+      ro:clean(fields.roNumber||fields.workOrderNumber||fields.jobRo)
+    };
+  }
+  function workboardVehicle(){
+    const items=read('nitros_v828_live_workboard',[]);
+    const activeId=localStorage.getItem('nitros_active_workboard_id');
+    const activeRo=localStorage.getItem('nitros_active_repair_order');
+    const item=(Array.isArray(items)?items:[]).find(x=>String(x.id)===String(activeId)||clean(x.ro||x.repairOrder)===clean(activeRo))||{};
+    const raw=item.vehicle||{};
+    const text=typeof raw==='string'?raw:'';
+    return {
+      year:clean(raw.year),make:clean(raw.make),model:clean(raw.model||text),engine:clean(raw.engine||raw.engineSize||item.engine),vin:clean(raw.vin||item.vin),
+      customer:clean(item.customer),concern:clean(item.concern),ro:clean(item.ro||item.repairOrder)
+    };
+  }
+  function resolve(){
+    let live={};
+    try{if(typeof selectedVehicle!=='undefined'&&selectedVehicle)live=selectedVehicle}catch(_){}
+    const draft=draftVehicle(), board=workboardVehicle();
+    return {
+      year:clean(live.year||draft.year||board.year),make:clean(live.make||draft.make||board.make),model:clean(live.model||draft.model||board.model),
+      engine:clean(live.engine||live.engineSize||draft.engine||board.engine),vin:clean(live.vin||draft.vin||board.vin),
+      customer:clean($('customerName')?.value||draft.customer||board.customer), concern:clean($('customerConcern')?.value||$('concern')?.value||draft.concern||board.concern),
+      ro:clean($('roNumber')?.value||$('workOrderNumber')?.value||draft.ro||board.ro)
+    };
+  }
+  function sync(){
+    const v=resolve();
+    ensureHidden('vehicleYear').value=v.year;ensureHidden('vehicleMake').value=v.make;ensureHidden('vehicleModel').value=v.model;
+    ensureHidden('vehicleEngine').value=v.engine;ensureHidden('engineSize').value=v.engine;ensureHidden('activeVehicleVin').value=v.vin;
+    const label=[v.year,v.make,v.model].filter(Boolean).join(' ');
+    const dash=$('dashVehicle');if(dash&&label)dash.textContent=label+(v.engine?' • '+v.engine:'');
+    const identity=$('smartOliverIdentity');if(identity&&label)identity.textContent=`Active context: ${v.customer||'Customer not entered'} • ${label}${v.engine?' • '+v.engine:''} • ${v.ro||'RO pending'}`;
+    return v;
+  }
+  document.addEventListener('click',e=>{
+    if(e.target.closest?.('#oliverHubRepair,#smartOliverLaunch,#smartDiagStart,.oliver-hub-launch'))sync();
+  },true);
+  document.addEventListener('nitros:repair-order-created',sync);
+  window.addEventListener('nitros-workboard-change',sync);
+  window.nitrosSyncOliverVehicleContext=sync;
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
 })();
 </script>
 
