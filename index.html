@@ -325,13 +325,28 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   .office-only-note{border:1px dashed #8c6a22;border-radius:12px;padding:11px;margin:12px 0;color:#ffd089;background:rgba(255,176,32,.05);font-size:12px}
   @media(max-width:760px){.parts-request-grid,.parts-request-actions,.parts-request-summary{grid-template-columns:1fr}.parts-request-head{display:block}.parts-request-buttons{grid-template-columns:1fr 1fr}.parts-photo-preview{grid-template-columns:1fr 1fr}}
 
+
+  /* v8.1.8 Appointment & Morning Briefing Center */
+  .schedule-hero{border:1px solid #315476;background:linear-gradient(135deg,#0b1d31,#102944);border-radius:18px;padding:18px;margin-bottom:14px}
+  .briefing-grid,.schedule-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+  .briefing-stat{border:1px solid var(--line);border-radius:14px;padding:13px;background:#081321}.briefing-stat strong{display:block;font-size:24px}.briefing-stat span{font-size:12px;color:var(--muted)}
+  .schedule-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.schedule-tab.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+  .appointment-card,.followup-card{border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:14px;padding:13px;background:#081321;margin:10px 0}
+  .appointment-card.arrived{border-left-color:var(--ok)}.appointment-card.cancelled{opacity:.65;border-left-color:var(--bad)}.appointment-card.completed{border-left-color:#79e2b3}
+  .appointment-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.appointment-title{font-weight:900;font-size:17px}.appointment-time{font-weight:900;color:#ffd089;white-space:nowrap}.appointment-meta{font-size:12px;color:var(--muted);margin-top:5px}.appointment-concern{margin-top:9px;white-space:pre-wrap}.appointment-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+  .followup-card.overdue{border-left-color:var(--bad)}.followup-card.today{border-left-color:var(--warn)}.followup-card.done{opacity:.6;border-left-color:var(--ok)}
+  .priority-pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:11px;font-weight:800;margin-top:7px}.priority-pill.high{color:#ff9aa0}.priority-pill.normal{color:#ffd089}.priority-pill.low{color:#9ecbff}
+  .oliver-panel{border:1px solid #39658c;border-radius:16px;padding:14px;background:rgba(38,120,180,.09);margin:14px 0}.oliver-response{min-height:48px;border-radius:12px;padding:11px;background:#07111d;border:1px solid var(--line);margin-top:9px;white-space:pre-wrap}
+  .schedule-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.schedule-list{max-height:620px;overflow:auto;padding-right:2px}
+  @media(max-width:760px){.briefing-grid,.schedule-summary{grid-template-columns:1fr 1fr}.schedule-two{grid-template-columns:1fr}.appointment-head{display:block}.appointment-time{margin-top:5px}.appointment-actions .btn{flex:1 1 45%}}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.1.7 — Technician Parts Request Center</div>
+  <div class="sub">Mobile Technician Portal v8.1.8 — Appointment & Morning Briefing Center</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -345,7 +360,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.1.7 adds a technician-only Parts Request Center for documenting needed parts, reasons, priorities, and evidence while keeping purchasing, vendors, pricing, inventory, and accounting exclusively in the Office Management Software. Every verified Version 8.1.6 feature is preserved.</div>
+    <div id="portalLoginStatus" class="status">Version 8.1.8 adds an Appointment & Morning Briefing Center with local-first scheduling, Oliver-assisted appointment capture, appointment-to-repair-order conversion, and persistent shop follow-up reminders. Every verified Version 8.1.7 feature is preserved.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -388,6 +403,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     </div>
 
     <div class="grid two" style="margin-top:12px">
+      <button class="btn primary" data-go="schedule">Appointments & Morning Briefing</button>
       <button class="btn primary" data-go="dashboard">Technician Dashboard</button>
       <button class="btn primary" data-go="jobs">Assigned Jobs</button>
       <button class="btn secondary" data-go="checkin">New Walk-In / Check-In</button>
@@ -411,6 +427,90 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </section>
 
+
+
+<section id="schedule" class="screen">
+  <button class="back" data-go="home">← Back</button>
+  <div class="schedule-hero">
+    <div class="eyebrow">Version 8.1.8</div>
+    <h1>Appointment & Morning Briefing Center</h1>
+    <p id="morningGreeting">Good morning. Your shop schedule and unfinished follow-ups are ready.</p>
+    <div class="briefing-grid">
+      <div class="briefing-stat"><strong id="briefTodayCount">0</strong><span>Today's appointments</span></div>
+      <div class="briefing-stat"><strong id="briefTomorrowCount">0</strong><span>Tomorrow's appointments</span></div>
+      <div class="briefing-stat"><strong id="briefFollowupCount">0</strong><span>Open follow-ups</span></div>
+      <div class="briefing-stat"><strong id="briefUrgentCount">0</strong><span>Urgent items</span></div>
+    </div>
+    <div id="morningBriefingText" class="status">No appointments or follow-ups have been entered yet.</div>
+  </div>
+
+  <div class="oliver-panel">
+    <div class="eyebrow">Oliver Scheduling Assistant — Local Field Test</div>
+    <h3>Tell Oliver what to schedule or remember</h3>
+    <p>Use natural shop language. Oliver will fill the appointment or follow-up form for your review before anything is saved.</p>
+    <div class="field"><label for="oliverScheduleInput">Voice or typed instruction</label><textarea id="oliverScheduleInput" rows="3" placeholder="Example: Schedule John tomorrow at 8 with the Buick for ball joints and inspect the brakes, dropping it off.\n\nOr: Remind me Monday morning to order Joanne's Kia Soul rack from Artie's, and the vent valve and passenger mirror from the dealer."></textarea></div>
+    <div class="grid two"><button id="oliverListenSchedule" class="btn secondary" type="button">🎤 Dictate to Oliver</button><button id="oliverParseSchedule" class="btn primary" type="button">Have Oliver Prepare It</button></div>
+    <div id="oliverScheduleResponse" class="oliver-response">Oliver is ready.</div>
+  </div>
+
+  <div class="schedule-two">
+    <div>
+      <div class="card">
+        <div class="eyebrow">New Appointment</div><h2>Schedule a vehicle</h2>
+        <input id="appointmentEditId" type="hidden">
+        <div class="grid two">
+          <div class="field"><label for="appointmentCustomer">Customer name</label><input id="appointmentCustomer" placeholder="Customer name"></div>
+          <div class="field"><label for="appointmentPhone">Phone number</label><input id="appointmentPhone" inputmode="tel" placeholder="Phone number"></div>
+          <div class="field"><label for="appointmentVehicle">Vehicle</label><input id="appointmentVehicle" placeholder="Year make model or customer vehicle name"></div>
+          <div class="field"><label for="appointmentDate">Appointment date</label><input id="appointmentDate" type="date"></div>
+          <div class="field"><label for="appointmentTime">Appointment time</label><input id="appointmentTime" type="time"></div>
+          <div class="field"><label for="appointmentArrival">Arrival type</label><select id="appointmentArrival"><option>Drop-off</option><option>Waiting</option><option>Tow-in</option><option>Key drop</option><option>Pickup requested</option></select></div>
+          <div class="field"><label for="appointmentStatus">Status</label><select id="appointmentStatus"><option>Scheduled</option><option>Confirmed</option><option>Customer Arrived</option><option>Vehicle Checked In</option><option>Repair Order Created</option><option>Completed</option><option>Cancelled</option><option>Rescheduled</option></select></div>
+          <div class="field"><label for="appointmentPriority">Priority</label><select id="appointmentPriority"><option value="normal">Normal</option><option value="high">High / Important</option><option value="urgent">Urgent / Safety</option></select></div>
+        </div>
+        <div class="field"><label for="appointmentConcern">Primary concern / requested work</label><textarea id="appointmentConcern" rows="3" placeholder="What the customer wants repaired or diagnosed..."></textarea></div>
+        <div class="field"><label for="appointmentInspections">Additional requested inspections</label><textarea id="appointmentInspections" rows="3" placeholder="Check brakes, fluids, wipers, leaks, warning lights..."></textarea></div>
+        <div class="field"><label for="appointmentNotes">Appointment notes</label><textarea id="appointmentNotes" rows="3" placeholder="Keys, transportation, special instructions, promised time..."></textarea></div>
+        <div class="grid two"><button id="saveAppointment" class="btn primary" type="button">Save Appointment</button><button id="clearAppointment" class="btn secondary" type="button">Clear Form</button></div>
+        <div id="appointmentStatusMessage" class="status">Appointment information is stored locally on this device.</div>
+      </div>
+
+      <div class="card">
+        <div class="eyebrow">Shop Follow-Up</div><h2>Remember unfinished business</h2>
+        <input id="followupEditId" type="hidden">
+        <div class="grid two">
+          <div class="field"><label for="followupCustomer">Customer / account</label><input id="followupCustomer" placeholder="Joanne"></div>
+          <div class="field"><label for="followupVehicle">Vehicle</label><input id="followupVehicle" placeholder="Kia Soul"></div>
+          <div class="field"><label for="followupDueDate">Due date</label><input id="followupDueDate" type="date"></div>
+          <div class="field"><label for="followupDueTime">Due time — optional</label><input id="followupDueTime" type="time"></div>
+          <div class="field"><label for="followupPriority">Priority</label><select id="followupPriority"><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>
+          <div class="field"><label for="followupCategory">Category</label><select id="followupCategory"><option>Order Parts</option><option>Call Customer</option><option>Check Parts Status</option><option>Complete Estimate</option><option>Office Follow-Up</option><option>Shop Task</option><option>Other</option></select></div>
+        </div>
+        <div class="field"><label for="followupTask">Task / reminder</label><textarea id="followupTask" rows="3" placeholder="Order rack from Artie's; order passenger mirror and canister vent valve from dealer."></textarea></div>
+        <div class="field"><label for="followupNotes">Notes — optional</label><textarea id="followupNotes" rows="2" placeholder="Vendor details, phone number, part notes, or next action..."></textarea></div>
+        <div class="grid two"><button id="saveFollowup" class="btn primary" type="button">Save Follow-Up</button><button id="clearFollowup" class="btn secondary" type="button">Clear Form</button></div>
+        <div id="followupStatusMessage" class="status">Open follow-ups remain in the morning briefing until completed.</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="eyebrow">Schedule Views</div>
+        <div class="schedule-tabs"><button class="btn secondary small schedule-tab active" data-schedule-view="today">Today</button><button class="btn secondary small schedule-tab" data-schedule-view="tomorrow">Tomorrow</button><button class="btn secondary small schedule-tab" data-schedule-view="upcoming">Upcoming</button><button class="btn secondary small schedule-tab" data-schedule-view="all">All</button></div>
+        <div id="appointmentList" class="schedule-list"></div>
+      </div>
+      <div class="card">
+        <div class="eyebrow">Important Follow-Ups</div><h2>Open shop tasks</h2>
+        <div id="followupList" class="schedule-list"></div>
+      </div>
+      <div class="card">
+        <div class="eyebrow">Backup & Transfer</div>
+        <div class="grid two"><button id="exportScheduleData" class="btn secondary" type="button">Export Schedule</button><label class="btn ghost" style="text-align:center">Import Schedule<input id="importScheduleData" type="file" accept="application/json,.json" hidden></label></div>
+        <div id="scheduleTransferStatus" class="status">Appointments and follow-ups can be exported for backup or transfer.</div>
+      </div>
+    </div>
+  </div>
+</section>
 
 
 <section id="dashboard" class="screen">
@@ -1290,7 +1390,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.1.7 • Technician Parts Request Center • Office purchasing remains office-only • Version 8.1.6 communication preserved</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.1.8 • Appointment & Morning Briefing Center • Persistent follow-ups • Version 8.1.7 preserved</div>
 </div>
 
 <script>
@@ -4273,6 +4373,38 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     el('importPartsRequests')?.addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{await importAll(f)}catch(err){status('That file is not a valid Nitros Version 8.1.7 parts request package.','status bad')}finally{e.target.value=''}});
     el('partsRequestList')?.addEventListener('click',async e=>{const copyId=e.target.closest('[data-part-copy]')?.dataset.partCopy,exportId=e.target.closest('[data-part-export]')?.dataset.partExport,deleteId=e.target.closest('[data-part-delete]')?.dataset.partDelete,item=read().find(x=>x.id===(copyId||exportId||deleteId));if(copyId&&item){const text=`Parts Request ${item.ro}\n${item.quantity} x ${item.description}${item.partNumber?`\nPart #: ${item.partNumber}`:''}\nReason: ${item.reason}\nPriority: ${item.priorityLabel}\nStatus: ${item.officeStatus}`;try{await navigator.clipboard.writeText(text);status('Parts request copied.','status ok')}catch(err){status('Clipboard access was unavailable on this device.','status warn')}}if(exportId&&item){download({schema:'nitros-parts-request-package',version:'8.1.7',createdAt:new Date().toISOString(),partsRequests:[item]},`Nitros_${item.id}.json`);status('Individual parts request exported.','status ok')}if(deleteId&&item&&confirm('Delete this parts request from this device?'))write(read().filter(x=>x.id!==deleteId))});
     document.querySelectorAll('[data-go="dashboard"]').forEach(b=>b.addEventListener('click',()=>setTimeout(render,100)));render();
+  })();
+
+
+  // v8.1.8 Appointment & Morning Briefing Center
+  (()=>{
+    const APPT_KEY='nitros_v818_appointments', FOLLOW_KEY='nitros_v818_followups';
+    const el=id=>document.getElementById(id), read=(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d}}, write=(k,v)=>{localStorage.setItem(k,JSON.stringify(v));renderAll()}, esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const isoDate=d=>{const x=new Date(d);return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`}, today=()=>isoDate(new Date()), tomorrow=()=>{const d=new Date();d.setDate(d.getDate()+1);return isoDate(d)}, fmtDate=d=>{if(!d)return'No date';const x=new Date(`${d}T12:00:00`);return x.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'})}, fmtTime=t=>{if(!t)return'Time not set';const [h,m]=t.split(':').map(Number),d=new Date();d.setHours(h,m||0,0,0);return d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})};
+    let view='today';
+    function setMsg(id,text,cls='status'){const x=el(id);if(x){x.className=cls;x.textContent=text}}
+    function blankAppointment(){['appointmentEditId','appointmentCustomer','appointmentPhone','appointmentVehicle','appointmentConcern','appointmentInspections','appointmentNotes'].forEach(id=>{if(el(id))el(id).value=''});if(el('appointmentDate'))el('appointmentDate').value=today();if(el('appointmentTime'))el('appointmentTime').value='08:00';if(el('appointmentArrival'))el('appointmentArrival').value='Drop-off';if(el('appointmentStatus'))el('appointmentStatus').value='Scheduled';if(el('appointmentPriority'))el('appointmentPriority').value='normal'}
+    function blankFollowup(){['followupEditId','followupCustomer','followupVehicle','followupTask','followupNotes'].forEach(id=>{if(el(id))el(id).value=''});if(el('followupDueDate'))el('followupDueDate').value=today();if(el('followupDueTime'))el('followupDueTime').value='08:00';if(el('followupPriority'))el('followupPriority').value='normal';if(el('followupCategory'))el('followupCategory').value='Order Parts'}
+    function saveAppointment(){const customer=el('appointmentCustomer')?.value.trim(),vehicle=el('appointmentVehicle')?.value.trim(),date=el('appointmentDate')?.value,concern=el('appointmentConcern')?.value.trim();if(!customer){setMsg('appointmentStatusMessage','Enter the customer name.','status bad');el('appointmentCustomer')?.focus();return}if(!date){setMsg('appointmentStatusMessage','Select an appointment date.','status bad');return}if(!concern){setMsg('appointmentStatusMessage','Enter the primary concern or requested work.','status bad');return}const list=read(APPT_KEY),id=el('appointmentEditId')?.value||`APT-${Date.now()}`,old=list.find(x=>x.id===id)||{},item={...old,id,customer,phone:el('appointmentPhone')?.value.trim()||'',vehicle,date,time:el('appointmentTime')?.value||'',arrival:el('appointmentArrival')?.value||'Drop-off',status:el('appointmentStatus')?.value||'Scheduled',priority:el('appointmentPriority')?.value||'normal',concern,inspections:el('appointmentInspections')?.value.trim()||'',notes:el('appointmentNotes')?.value.trim()||'',createdAt:old.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};write(APPT_KEY,[...list.filter(x=>x.id!==id),item]);blankAppointment();setMsg('appointmentStatusMessage','Appointment saved and added to the morning briefing.','status ok')}
+    function saveFollowup(){const task=el('followupTask')?.value.trim(),date=el('followupDueDate')?.value;if(!task){setMsg('followupStatusMessage','Enter the task or reminder.','status bad');el('followupTask')?.focus();return}if(!date){setMsg('followupStatusMessage','Select the date this follow-up is due.','status bad');return}const list=read(FOLLOW_KEY),id=el('followupEditId')?.value||`FOLLOW-${Date.now()}`,old=list.find(x=>x.id===id)||{},item={...old,id,customer:el('followupCustomer')?.value.trim()||'',vehicle:el('followupVehicle')?.value.trim()||'',date,time:el('followupDueTime')?.value||'',priority:el('followupPriority')?.value||'normal',category:el('followupCategory')?.value||'Shop Task',task,notes:el('followupNotes')?.value.trim()||'',completed:old.completed||false,createdAt:old.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};write(FOLLOW_KEY,[...list.filter(x=>x.id!==id),item]);blankFollowup();setMsg('followupStatusMessage','Follow-up saved. It will remain visible until marked completed.','status ok')}
+    function editAppointment(id){const x=read(APPT_KEY).find(a=>a.id===id);if(!x)return;el('appointmentEditId').value=x.id;el('appointmentCustomer').value=x.customer||'';el('appointmentPhone').value=x.phone||'';el('appointmentVehicle').value=x.vehicle||'';el('appointmentDate').value=x.date||'';el('appointmentTime').value=x.time||'';el('appointmentArrival').value=x.arrival||'Drop-off';el('appointmentStatus').value=x.status||'Scheduled';el('appointmentPriority').value=x.priority||'normal';el('appointmentConcern').value=x.concern||'';el('appointmentInspections').value=x.inspections||'';el('appointmentNotes').value=x.notes||'';el('appointmentCustomer').scrollIntoView({behavior:'smooth',block:'center'});setMsg('appointmentStatusMessage','Editing existing appointment. Save to apply changes.','status warn')}
+    function editFollowup(id){const x=read(FOLLOW_KEY).find(a=>a.id===id);if(!x)return;el('followupEditId').value=x.id;el('followupCustomer').value=x.customer||'';el('followupVehicle').value=x.vehicle||'';el('followupDueDate').value=x.date||'';el('followupDueTime').value=x.time||'';el('followupPriority').value=x.priority||'normal';el('followupCategory').value=x.category||'Shop Task';el('followupTask').value=x.task||'';el('followupNotes').value=x.notes||'';el('followupCustomer').scrollIntoView({behavior:'smooth',block:'center'});setMsg('followupStatusMessage','Editing existing follow-up. Save to apply changes.','status warn')}
+    function convertToRO(id){const x=read(APPT_KEY).find(a=>a.id===id);if(!x)return;const map={customerName:x.customer,vehicleDescription:x.vehicle,customerConcern:x.concern,additionalRequestedInspections:x.inspections,appointmentNotes:x.notes,appointmentId:x.id,appointmentDate:x.date,appointmentTime:x.time};let draft={};try{draft=JSON.parse(localStorage.getItem('nitros_prototype_v073_active_draft')||'{}')}catch(e){}draft={...draft,fields:{...(draft.fields||{}),...map},appointmentSource:x};localStorage.setItem('nitros_prototype_v073_active_draft',JSON.stringify(draft));localStorage.setItem('nitros_current_draft',JSON.stringify(draft));write(APPT_KEY,read(APPT_KEY).map(a=>a.id===id?{...a,status:'Repair Order Created',updatedAt:new Date().toISOString()}:a));setMsg('appointmentStatusMessage',`${x.customer}'s appointment was prepared as a repair-order draft. Open New Walk-In / Check-In to review it.`,'status ok')}
+    function renderAppointments(){const all=read(APPT_KEY).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)),filtered=all.filter(a=>view==='all'||view==='upcoming'?(a.date>=today()):a.date===(view==='today'?today():tomorrow())),box=el('appointmentList');if(!box)return;box.innerHTML=filtered.length?filtered.map(a=>`<div class="appointment-card ${a.status==='Completed'?'completed':a.status==='Cancelled'?'cancelled':a.status==='Customer Arrived'?'arrived':''}"><div class="appointment-head"><div><div class="appointment-title">${esc(a.customer)} — ${esc(a.vehicle||'Vehicle not entered')}</div><div class="appointment-meta">${esc(a.arrival)} • ${esc(a.status)} • ${esc(a.phone||'No phone recorded')}</div></div><div class="appointment-time">${fmtDate(a.date)}<br>${fmtTime(a.time)}</div></div><div class="appointment-concern"><strong>Concern:</strong> ${esc(a.concern)}</div>${a.inspections?`<div class="appointment-concern"><strong>Also check:</strong> ${esc(a.inspections)}</div>`:''}${a.notes?`<div class="appointment-meta">Notes: ${esc(a.notes)}</div>`:''}<span class="priority-pill ${a.priority==='urgent'?'high':a.priority}">${esc(a.priority==='urgent'?'Urgent':a.priority==='high'?'High priority':'Normal')}</span><div class="appointment-actions"><button class="btn primary small" data-appt-ro="${a.id}">Convert to RO</button><button class="btn secondary small" data-appt-edit="${a.id}">Edit</button><button class="btn ghost small" data-appt-arrive="${a.id}">Mark Arrived</button><button class="btn ghost small" data-appt-delete="${a.id}">Delete</button></div></div>`).join(''):'<div class="history-empty">No appointments in this view.</div>'}
+    function renderFollowups(){const all=read(FOLLOW_KEY).sort((a,b)=>(a.completed-b.completed)||((a.date+a.time).localeCompare(b.date+b.time))),box=el('followupList');if(!box)return;box.innerHTML=all.length?all.map(f=>{const cls=f.completed?'done':f.date<today()?'overdue':f.date===today()?'today':'';return `<div class="followup-card ${cls}"><div class="appointment-head"><div><div class="appointment-title">${esc(f.customer||'Shop follow-up')}${f.vehicle?' — '+esc(f.vehicle):''}</div><div class="appointment-meta">${esc(f.category)} • ${f.completed?'Completed':'Open'}</div></div><div class="appointment-time">${fmtDate(f.date)}${f.time?'<br>'+fmtTime(f.time):''}</div></div><div class="appointment-concern">${esc(f.task)}</div>${f.notes?`<div class="appointment-meta">${esc(f.notes)}</div>`:''}<span class="priority-pill ${f.priority==='urgent'?'high':f.priority}">${esc(f.priority==='urgent'?'Urgent':f.priority==='high'?'High priority':'Normal')}</span><div class="appointment-actions"><button class="btn primary small" data-follow-done="${f.id}">${f.completed?'Reopen':'Mark Completed'}</button><button class="btn secondary small" data-follow-edit="${f.id}">Edit</button><button class="btn ghost small" data-follow-snooze="${f.id}">Tomorrow</button><button class="btn ghost small" data-follow-delete="${f.id}">Delete</button></div></div>`}).join(''):'<div class="history-empty">No follow-ups have been entered.</div>'}
+    function renderBriefing(){const ap=read(APPT_KEY),fu=read(FOLLOW_KEY),tod=ap.filter(x=>x.date===today()&&!['Cancelled','Completed'].includes(x.status)),tom=ap.filter(x=>x.date===tomorrow()&&!['Cancelled','Completed'].includes(x.status)),open=fu.filter(x=>!x.completed),urgent=open.filter(x=>x.priority==='urgent'||x.date<today()).length+tod.filter(x=>x.priority==='urgent').length;el('briefTodayCount').textContent=tod.length;el('briefTomorrowCount').textContent=tom.length;el('briefFollowupCount').textContent=open.length;el('briefUrgentCount').textContent=urgent;const hour=new Date().getHours(),g=hour<12?'Good morning':hour<17?'Good afternoon':'Good evening',name=localStorage.getItem('nitros_portal_tech_name')||el('portalTechName')?.value||'Bobby';el('morningGreeting').textContent=`${g}, ${name}. Here is the current shop briefing.`;const lines=[];if(tod.length)lines.push(`You have ${tod.length} appointment${tod.length===1?'':'s'} today: ${tod.slice(0,3).map(x=>`${fmtTime(x.time)} ${x.customer}`).join(', ')}.`);else lines.push('There are no active appointments scheduled for today.');if(open.length)lines.push(`${open.length} follow-up${open.length===1?' requires':'s require'} attention. ${open.filter(x=>x.date<=today()).length} ${open.filter(x=>x.date<=today()).length===1?'is':'are'} due or overdue.`);if(tom.length)lines.push(`${tom.length} appointment${tom.length===1?' is':'s are'} scheduled for tomorrow.`);el('morningBriefingText').textContent=lines.join(' ');el('morningBriefingText').className=urgent?'status warn':'status ok'}
+    function renderAll(){renderAppointments();renderFollowups();renderBriefing()}
+    function parseDate(text){const low=text.toLowerCase(),base=new Date();if(low.includes('tomorrow'))base.setDate(base.getDate()+1);else if(low.includes('monday')){let d=(1-base.getDay()+7)%7;if(d===0)d=7;base.setDate(base.getDate()+d)}else if(low.includes('tuesday')){let d=(2-base.getDay()+7)%7;if(d===0)d=7;base.setDate(base.getDate()+d)}else if(low.includes('wednesday')){let d=(3-base.getDay()+7)%7;if(d===0)d=7;base.setDate(base.getDate()+d)}else if(low.includes('thursday')){let d=(4-base.getDay()+7)%7;if(d===0)d=7;base.setDate(base.getDate()+d)}else if(low.includes('friday')){let d=(5-base.getDay()+7)%7;if(d===0)d=7;base.setDate(base.getDate()+d)}return isoDate(base)}
+    function parseTime(text){const m=text.match(/(?:at\s*)?(1[0-2]|0?\d)(?::([0-5]\d))?\s*(a\.?m\.?|p\.?m\.?)?/i);if(!m)return '08:00';let h=+m[1],min=m[2]||'00',amp=(m[3]||'').toLowerCase();if(amp.startsWith('p')&&h<12)h+=12;if(amp.startsWith('a')&&h===12)h=0;return `${String(h).padStart(2,'0')}:${min}`}
+    function oliverParse(){const text=el('oliverScheduleInput')?.value.trim();if(!text){el('oliverScheduleResponse').textContent='Tell me what you would like scheduled or remembered.';return}const low=text.toLowerCase(),isFollow=/remind|don't forget|order|call back|follow up|follow-up/.test(low);if(isFollow){blankFollowup();el('followupDueDate').value=parseDate(text);el('followupDueTime').value=parseTime(text);el('followupTask').value=text.replace(/^oliver[, ]*/i,'').trim();if(/order/.test(low))el('followupCategory').value='Order Parts';if(/urgent|safety|first thing/.test(low))el('followupPriority').value=/urgent|safety/.test(low)?'urgent':'high';const kia=text.match(/([A-Z][a-z]+)'?s?\s+(Kia Soul|[A-Z][a-z]+\s+[A-Z][a-z]+)/);if(kia){el('followupCustomer').value=kia[1];el('followupVehicle').value=kia[2]}el('oliverScheduleResponse').textContent='I prepared a shop follow-up below. Review the due date, customer, vehicle, vendors, and task, then tap Save Follow-Up.';el('followupCustomer').scrollIntoView({behavior:'smooth',block:'center'})}else{blankAppointment();el('appointmentDate').value=parseDate(text);el('appointmentTime').value=parseTime(text);const name=text.match(/(?:schedule|book|add)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i);if(name)el('appointmentCustomer').value=name[1];const veh=text.match(/(?:with|bringing|in|the)\s+(?:the\s+)?((?:19|20)\d{2}\s+[^,.]+|[A-Z][a-z]+\s+(?:Soul|Cougar|Truck|Buick|Kia|Ford|Chevy|Toyota|Honda|Jeep))/i);if(veh)el('appointmentVehicle').value=veh[1].trim();el('appointmentConcern').value=text.replace(/^oliver[, ]*/i,'').trim();if(/wait/.test(low))el('appointmentArrival').value='Waiting';else if(/tow/.test(low))el('appointmentArrival').value='Tow-in';else if(/key drop/.test(low))el('appointmentArrival').value='Key drop';el('oliverScheduleResponse').textContent='I prepared an appointment below. Review the customer, vehicle, date, time, and concern, then tap Save Appointment.';el('appointmentCustomer').scrollIntoView({behavior:'smooth',block:'center'})}}
+    function listen(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){el('oliverScheduleResponse').textContent='Voice recognition is not available in this browser. You can still type or use the phone keyboard microphone.';return}const r=new SR();r.lang='en-US';r.interimResults=false;r.onstart=()=>el('oliverScheduleResponse').textContent='Listening…';r.onerror=e=>el('oliverScheduleResponse').textContent=`Voice recognition stopped: ${e.error}. You can type the instruction instead.`;r.onresult=e=>{el('oliverScheduleInput').value=e.results[0][0].transcript;el('oliverScheduleResponse').textContent='I heard your instruction. Tap Have Oliver Prepare It.'};r.start()}
+    function download(){const payload={schema:'nitros-schedule-package',version:'8.1.8',createdAt:new Date().toISOString(),appointments:read(APPT_KEY),followups:read(FOLLOW_KEY)},blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`Nitros_v8.1.8_Schedule_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setMsg('scheduleTransferStatus','Schedule and follow-ups exported successfully.','status ok')}
+    async function importData(file){const d=JSON.parse(await file.text());if(d?.schema!=='nitros-schedule-package')throw new Error('Unsupported file');const am=new Map(read(APPT_KEY).map(x=>[x.id,x]));(d.appointments||[]).forEach(x=>x?.id&&am.set(x.id,{...am.get(x.id),...x}));const fm=new Map(read(FOLLOW_KEY).map(x=>[x.id,x]));(d.followups||[]).forEach(x=>x?.id&&fm.set(x.id,{...fm.get(x.id),...x}));localStorage.setItem(APPT_KEY,JSON.stringify([...am.values()]));localStorage.setItem(FOLLOW_KEY,JSON.stringify([...fm.values()]));renderAll();setMsg('scheduleTransferStatus','Schedule package imported and merged without deleting existing records.','status ok')}
+    el('saveAppointment')?.addEventListener('click',saveAppointment);el('clearAppointment')?.addEventListener('click',blankAppointment);el('saveFollowup')?.addEventListener('click',saveFollowup);el('clearFollowup')?.addEventListener('click',blankFollowup);el('oliverParseSchedule')?.addEventListener('click',oliverParse);el('oliverListenSchedule')?.addEventListener('click',listen);el('exportScheduleData')?.addEventListener('click',download);el('importScheduleData')?.addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{await importData(f)}catch(err){setMsg('scheduleTransferStatus','That file is not a valid Nitros v8.1.8 schedule package.','status bad')}finally{e.target.value=''}});
+    document.querySelectorAll('[data-schedule-view]').forEach(b=>b.addEventListener('click',()=>{view=b.dataset.scheduleView;document.querySelectorAll('[data-schedule-view]').forEach(x=>x.classList.toggle('active',x===b));renderAppointments()}));
+    el('appointmentList')?.addEventListener('click',e=>{const ro=e.target.closest('[data-appt-ro]')?.dataset.apptRo,edit=e.target.closest('[data-appt-edit]')?.dataset.apptEdit,arrive=e.target.closest('[data-appt-arrive]')?.dataset.apptArrive,del=e.target.closest('[data-appt-delete]')?.dataset.apptDelete;if(ro)convertToRO(ro);if(edit)editAppointment(edit);if(arrive)write(APPT_KEY,read(APPT_KEY).map(x=>x.id===arrive?{...x,status:'Customer Arrived',updatedAt:new Date().toISOString()}:x));if(del&&confirm('Delete this appointment?'))write(APPT_KEY,read(APPT_KEY).filter(x=>x.id!==del))});
+    el('followupList')?.addEventListener('click',e=>{const done=e.target.closest('[data-follow-done]')?.dataset.followDone,edit=e.target.closest('[data-follow-edit]')?.dataset.followEdit,snooze=e.target.closest('[data-follow-snooze]')?.dataset.followSnooze,del=e.target.closest('[data-follow-delete]')?.dataset.followDelete;if(done)write(FOLLOW_KEY,read(FOLLOW_KEY).map(x=>x.id===done?{...x,completed:!x.completed,updatedAt:new Date().toISOString()}:x));if(edit)editFollowup(edit);if(snooze){const d=new Date();d.setDate(d.getDate()+1);write(FOLLOW_KEY,read(FOLLOW_KEY).map(x=>x.id===snooze?{...x,date:isoDate(d),completed:false,updatedAt:new Date().toISOString()}:x))}if(del&&confirm('Delete this follow-up?'))write(FOLLOW_KEY,read(FOLLOW_KEY).filter(x=>x.id!==del))});
+    document.querySelectorAll('[data-go="schedule"]').forEach(b=>b.addEventListener('click',()=>setTimeout(renderAll,80)));blankAppointment();blankFollowup();renderAll();
   })();
 
 </script>
