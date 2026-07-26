@@ -1817,6 +1817,22 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     showScreen("home");
   }
 
+  function prefillAppointmentFromActiveCustomer(force=false){
+    const apptName=document.getElementById("appointmentCustomer");
+    if(!apptName) return;
+    const activeName=(document.getElementById("customerName")?.value||"").trim();
+    if(activeName && (force || !apptName.value.trim())) apptName.value=activeName;
+    const activePhone=(document.getElementById("phone")?.value||"").trim();
+    const apptPhone=document.getElementById("appointmentPhone");
+    if(activePhone && apptPhone && (force || !apptPhone.value.trim())) apptPhone.value=activePhone;
+    const vehicle=[selectedVehicle?.year,selectedVehicle?.make,selectedVehicle?.model].filter(Boolean).join(" ").trim();
+    const apptVehicle=document.getElementById("appointmentVehicle");
+    if(vehicle && apptVehicle && (force || !apptVehicle.value.trim())) apptVehicle.value=vehicle;
+    const concern=(document.getElementById("concern")?.value||"").trim();
+    const apptConcern=document.getElementById("appointmentConcern");
+    if(concern && apptConcern && (force || !apptConcern.value.trim())) apptConcern.value=concern;
+  }
+
   function showScreen(id,pushHistory=true){
     const target=document.getElementById(id) ? id : "home";
     currentScreenId=target;
@@ -1824,6 +1840,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     window.scrollTo({top:0,behavior:"instant"});
     if(target === "review"){ buildSummary(); requestAnimationFrame(renderValidationCenter); }
     if(target === "history") searchHistory();
+    if(target === "schedule") requestAnimationFrame(()=>prefillAppointmentFromActiveCustomer(false));
     if(target === "inspection") loadActivePhotoEvidence();
     if(target === "technician") requestAnimationFrame(()=>{
       signaturePadControllers.technicianSignature?.resize();
@@ -3280,7 +3297,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
         <div class="history-meta"><strong>Diagnostic time:</strong> ${Number(record.workOrder?.diagnosticTimeHours ?? ((record.workOrder?.activeMilliseconds||0)/3600000)).toFixed(2)} h</div>
         <div class="history-meta"><strong>Completion:</strong> ${escapeHtml(record.workOrder?.completionNotes||"None recorded")}</div>
         ${flags.length?`<div class="history-flags">${flags.map(flag=>`<span class="badge">${escapeHtml(flag)}</span>`).join("")}</div>`:""}
-        <div class="history-actions"><button class="btn primary small checkin-history-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">Check In / Open Same RO</button><button class="btn secondary small send-history-dashboard" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">Send to Technician Dashboard</button><button class="btn secondary small reopen-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">Open Repair Order</button><button class="btn ghost small print-history-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">View Report</button><button class="btn secondary small view-history-photos" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">View Photos</button></div>
+        <div class="history-actions"><button class="btn primary small create-history-appointment" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">Create Appointment</button><button class="btn primary small checkin-history-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">Check In / Open Same RO</button><button class="btn secondary small send-history-dashboard" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">Send to Technician Dashboard</button><button class="btn secondary small reopen-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">Open Repair Order</button><button class="btn ghost small print-history-record" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">View Report</button><button class="btn secondary small view-history-photos" type="button" data-record-id="${escapeHtml(record.checkInId||"")}">View Photos</button></div>
       </div>`;
     }).join("");
   }
@@ -3321,6 +3338,23 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     jobClock={state:"finished",activeStartedAt:null,pauseStartedAt:null,activeMs:Number(record.workOrder?.activeMilliseconds)||0,pausedMs:Number(record.workOrder?.pausedMilliseconds)||0,timeline:Array.isArray(record.workOrder?.timeline)?record.workOrder.timeline:[]};
     updateEstimateTotals(); updateAuthorizationBadge(); updateJobClockUI(); renderTimeline(); buildSummary(); saveDraft(); showScreen("workorder");
     const status=document.getElementById("submitStatus"); if(status){status.className="status warn";status.textContent=`Reopened ${record.checkInId}. Saving will update this record without creating a duplicate.`;}
+  }
+
+  function createAppointmentFromCustomerHistory(recordId){
+    const record=loadCustomerHistory().find(item=>item.checkInId===recordId);
+    if(!record){ alert("That saved customer record could not be found on this device."); return; }
+    const vehicle=[record.vehicle?.year,record.vehicle?.make,record.vehicle?.model].filter(Boolean).join(" ").trim();
+    setValue("appointmentEditId","");
+    setValue("appointmentCustomer",record.customer?.name||"");
+    setValue("appointmentPhone",record.customer?.phone||"");
+    setValue("appointmentVehicle",vehicle);
+    setValue("appointmentConcern",record.concern||"");
+    setValue("appointmentNotes",`Created from customer history. Same prior RO: ${record.repairOrder||"Not recorded"}.`);
+    if(!document.getElementById("appointmentDate")?.value) setValue("appointmentDate",new Date().toISOString().slice(0,10));
+    showScreen("schedule");
+    const status=document.getElementById("appointmentStatusMessage");
+    if(status){status.className="status ok";status.textContent=`${record.customer?.name||"Customer"} was loaded from Customer History. Select the date and tap Continue or Save Appointment.`;}
+    setTimeout(()=>document.getElementById("appointmentDate")?.scrollIntoView({behavior:"smooth",block:"center"}),180);
   }
 
   function checkInFromCustomerHistory(recordId){
@@ -3853,6 +3887,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   }
 
 document.addEventListener("click",e=>{
+    const createAppt=e.target.closest(".create-history-appointment"); if(createAppt){createAppointmentFromCustomerHistory(createAppt.dataset.recordId);return;}
     const checkin=e.target.closest(".checkin-history-record"); if(checkin){checkInFromCustomerHistory(checkin.dataset.recordId);return;}
     const sendDashboard=e.target.closest(".send-history-dashboard"); if(sendDashboard){sendHistoryRecordToDashboard(sendDashboard.dataset.recordId);return;}
     const reopen=e.target.closest(".reopen-record"); if(reopen){reopenCompletedRecord(reopen.dataset.recordId);return;}
@@ -4805,7 +4840,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
       {screen:'home',target:'[data-go="schedule"]',title:'Open Appointments',detail:'Tap Appointments & Morning Briefing from the home screen.',action:'click'},
       {screen:'schedule',target:'#appointmentCustomer',title:'Enter the customer',detail:'Type a test customer name. Oliver will verify that the field is not empty.',check:el=>el.value.trim().length>0},
       {screen:'schedule',target:'#appointmentVehicle',title:'Enter the vehicle',detail:'Enter year, make, and model.',check:el=>el.value.trim().length>0},
-      {screen:'schedule',target:'#appointmentDate',title:'Choose the appointment date',detail:'Select today or a future shop date.',check:el=>!!el.value},
+      {screen:'schedule',target:'#appointmentDate',title:'Choose the appointment date',detail:'Select today or a future shop date. On iPhone, Oliver advances automatically as soon as you choose the date.',check:el=>!!el.value,autoAdvanceOnChange:true},
       {screen:'schedule',target:'#appointmentTime',title:'Choose the appointment time',detail:'Select the planned arrival time.',check:el=>!!el.value},
       {screen:'schedule',target:'#appointmentConcern',title:'Enter the concern',detail:'Enter the customer complaint or requested repair.',check:el=>el.value.trim().length>0},
       {screen:'schedule',target:'#checkAppointmentConflict',title:'Check the schedule',detail:'Tap Check Schedule. Oliver will look for overlapping appointments.',action:'click'},
@@ -4863,12 +4898,20 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
         }
       }
     };
-    ['input','change','blur'].forEach(type=>el.addEventListener(type,evaluate));
+    const onChange=()=>{
+      evaluate();
+      if(step.autoAdvanceOnChange && step.check(el)){
+        $('oliverGuideStatus').textContent='Date selected. Oliver is continuing to the next step.';
+        setTimeout(()=>{if(token===renderToken&&steps[index]===step)advance()},250);
+      }
+    };
+    ['input','blur'].forEach(type=>el.addEventListener(type,evaluate));
+    el.addEventListener('change',onChange);
     el.addEventListener('keydown',onKey);
-    fieldCleanup=()=>{['input','change','blur'].forEach(type=>el.removeEventListener(type,evaluate));el.removeEventListener('keydown',onKey)};
+    fieldCleanup=()=>{['input','blur'].forEach(type=>el.removeEventListener(type,evaluate));el.removeEventListener('change',onChange);el.removeEventListener('keydown',onKey)};
     evaluate();
   }
-  function render(){removeHighlight();const token=++renderToken;const step=steps[index];if(!step)return finish();goScreen(step.screen);setTimeout(()=>{if(token!==renderToken)return;const el=locate(step);$('oliverGuideProgress').textContent='Step '+(index+1)+' of '+steps.length+' • '+tourName;$('oliverGuideInstruction').textContent=step.title;$('oliverGuideDetail').textContent=step.detail;$('oliverGuideStatus').textContent=step.optional?'This is a visual verification step. Continue after confirming the screen looks correct.':step.check?'Complete the highlighted field. Oliver will wait until you press Enter or tap Verify & Continue.':'Complete the highlighted action.';$('oliverGuideBack').disabled=index===0;if(el){highlighted=el;el.classList.add('oliver-highlight');el.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>{if(token===renderToken)positionLabel(el,step)},350);if(step.action==='click'){const clickHandler=()=>autoAdvance(token,step);el.addEventListener('click',clickHandler,{once:true});fieldCleanup=()=>el.removeEventListener('click',clickHandler)}else watchCompletedField(el,step,token);}else{$('oliverGuideStatus').textContent='Oliver could not find this control on the current screen. You may skip forward or stop the test.';}},180);}
+  function render(){removeHighlight();const token=++renderToken;const step=steps[index];if(!step)return finish();goScreen(step.screen);setTimeout(()=>{if(token!==renderToken)return;const el=locate(step);$('oliverGuideProgress').textContent='Step '+(index+1)+' of '+steps.length+' • '+tourName;$('oliverGuideInstruction').textContent=step.title;$('oliverGuideDetail').textContent=step.detail;$('oliverGuideStatus').textContent=step.optional?'This is a visual verification step. Continue after confirming the screen looks correct.':step.autoAdvanceOnChange?'Choose the highlighted date. Oliver will continue automatically after selection.':step.check?'Complete the highlighted field, then tap Verify & Continue.':'Complete the highlighted action.';$('oliverGuideBack').disabled=index===0;if(el){highlighted=el;el.classList.add('oliver-highlight');el.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>{if(token===renderToken)positionLabel(el,step)},350);if(step.action==='click'){const clickHandler=()=>autoAdvance(token,step);el.addEventListener('click',clickHandler,{once:true});fieldCleanup=()=>el.removeEventListener('click',clickHandler)}else watchCompletedField(el,step,token);}else{$('oliverGuideStatus').textContent='Oliver could not find this control on the current screen. You may skip forward or stop the test.';}},180);}
   function advance(){clearFieldWatcher();if(index<steps.length-1){index++;render()}else finish()}
   function autoAdvance(token,step){
     if(typeof step.waitFor==='function'){
@@ -4889,7 +4932,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   }
   function verify(){const step=steps[index],el=locate(step);if(step.check&&!step.optional){if(!el||!step.check(el)){$('oliverGuideStatus').textContent='This step is not complete yet. Enter the requested information in the highlighted field.';el?.focus();return}}if(index<steps.length-1){index++;render()}else finish()}
   function finish(){removeHighlight();const history=JSON.parse(localStorage.getItem(GUIDE_KEY)||'[]');history.push({tour:tourName,completedAt:new Date().toISOString(),steps:steps.length});localStorage.setItem(GUIDE_KEY,JSON.stringify(history.slice(-25)));$('oliverGuideProgress').textContent='Test completed';$('oliverGuideInstruction').textContent='Oliver completed the guided walkthrough.';$('oliverGuideDetail').textContent='The completed test was recorded on this device. You can close Oliver or start another test.';$('oliverGuideStatus').textContent='All guided steps completed.';$('oliverGuideVerify').disabled=true;$('oliverGuideBack').disabled=true;}
-  function start(name){tourName=name;steps=tours[name];index=0;$('oliverGuideVerify').disabled=false;stepbox.classList.remove('hidden');panel.classList.remove('hidden');panel.classList.add('guiding');render()}
+  function start(name){if(name==='appointment'){const a=$('appointmentCustomer'),c=$('customerName');if(a&&c&&!a.value.trim()&&c.value.trim())a.value=c.value.trim();const p=$('appointmentPhone'),cp=$('phone');if(p&&cp&&!p.value.trim()&&cp.value.trim())p.value=cp.value.trim();}tourName=name;steps=tours[name];index=0;$('oliverGuideVerify').disabled=false;stepbox.classList.remove('hidden');panel.classList.remove('hidden');panel.classList.add('guiding');render()}
   function parseCommand(){const q=$('oliverGuideCommand').value.toLowerCase();if(q.includes('workboard')||q.includes('repair order'))start('workboard');else if(q.includes('complete')||q.includes('full')||q.includes('everything'))start('full');else start('appointment')}
   function speakGuideText(text){
     if(!('speechSynthesis' in window)){
