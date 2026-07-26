@@ -343,7 +343,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   .schedule-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.schedule-list{max-height:620px;overflow:auto;padding-right:2px}
   @media(max-width:760px){.briefing-grid,.schedule-summary{grid-template-columns:1fr 1fr}.schedule-two{grid-template-columns:1fr}.appointment-head{display:block}.appointment-time{margin-top:5px}.appointment-actions .btn{flex:1 1 45%}}
 
-  /* v8.2.1 Technician Dashboard & Daily Command Center */
+  /* v8.2.2 Inherited Technician Dashboard & Daily Command Center */
   .command-hero{border:1px solid #315476;background:linear-gradient(135deg,#0b1d31,#102944);border-radius:18px;padding:18px;margin-bottom:14px}
   .command-metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin:13px 0}
   .command-metric{border:1px solid var(--line);border-radius:13px;padding:11px;background:#081321;text-align:center}.command-metric strong{display:block;font-size:22px}.command-metric span{font-size:11px;color:var(--muted)}
@@ -378,7 +378,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.2.2 adds the Live Repair Order Workboard with actionable status lanes, customer-approval tracking, parts blockers, promised-time warnings, and timestamped stage changes. Every verified Version 8.2.1 workflow is preserved.</div>
+    <div id="portalLoginStatus" class="status">Version 8.2.2 adds the Live Repair Order Workboard with actionable status lanes, customer-approval tracking, parts blockers, promised-time warnings, and timestamped stage changes. Every verified prior-version workflow is preserved.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -450,7 +450,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <section id="schedule" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="schedule-hero">
-    <div class="eyebrow">Version 8.2.1</div>
+    <div class="eyebrow">Version 8.2.2</div>
     <h1>Appointment Confirmation & Check-In</h1>
     <p id="morningGreeting">Good morning. Your shop schedule and unfinished follow-ups are ready.</p>
     <div class="briefing-grid">
@@ -1483,7 +1483,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.2.2 • Live Repair Order Workboard • Approval tracking • Parts blockers • Promised-time warnings • Version 8.2.1 preserved</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.2.2 • Live Repair Order Workboard • Approval tracking • Parts blockers • Promised-time warnings • Previous workflows preserved</div>
 </div>
 
 <script>
@@ -4511,7 +4511,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     document.querySelectorAll('[data-go="schedule"]').forEach(b=>b.addEventListener('click',()=>setTimeout(renderAll,80)));blankAppointment();blankFollowup();renderAll();
   })();
 
-  // v8.2.1 Technician Dashboard & Daily Command Center
+  // v8.2.2 Inherited Technician Dashboard & Daily Command Center
   (()=>{
     const APPT='nitros_v818_appointments',FOLLOW='nitros_v818_followups',JOBS='nitros_portal_v8_assigned_jobs',PARTS='nitros_v817_parts_requests',HISTORY='nitros_prototype_customer_history_v070';
     const el=id=>document.getElementById(id),read=(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d}},esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
