@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.2.3 — Oliver Guided Test Assistant</title>
+<title>Nitros Mobile Technician Portal v8.2.3 Revision D — Oliver Guided Test Assistant</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -375,7 +375,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.2.3 — Oliver Guided Test Assistant</div>
+  <div class="sub">Mobile Technician Portal v8.2.3 Revision D — Oliver Guided Test Assistant</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -389,7 +389,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.2.3 adds the Oliver Guided Test Assistant. Tap Oliver for a screen-by-screen test that highlights each required control, verifies your entry, and records completed test steps. Every verified prior-version workflow is preserved.</div>
+    <div id="portalLoginStatus" class="status">Version 8.2.3 Revision D fixes Convert to RO routing and preserves explicit guided-field confirmation and preserves the Oliver Guided Test Assistant. Tap Oliver for a screen-by-screen test that highlights each required control, verifies your entry, and records completed test steps. Every verified prior-version workflow is preserved.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -1494,7 +1494,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.2.3 • Oliver Guided Test Assistant • Screen-by-screen highlighting • Step verification • Previous workflows preserved</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.2.3 Revision D • Oliver Guided Test Assistant • Screen-by-screen highlighting • Step verification • Previous workflows preserved</div>
 </div>
 
 <script>
@@ -4493,7 +4493,45 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     function saveFollowup(){const task=el('followupTask')?.value.trim(),date=el('followupDueDate')?.value;if(!task){setMsg('followupStatusMessage','Enter the task or reminder.','status bad');el('followupTask')?.focus();return}if(!date){setMsg('followupStatusMessage','Select the date this follow-up is due.','status bad');return}const list=read(FOLLOW_KEY),id=el('followupEditId')?.value||`FOLLOW-${Date.now()}`,old=list.find(x=>x.id===id)||{},item={...old,id,customer:el('followupCustomer')?.value.trim()||'',vehicle:el('followupVehicle')?.value.trim()||'',date,time:el('followupDueTime')?.value||'',priority:el('followupPriority')?.value||'normal',category:el('followupCategory')?.value||'Shop Task',task,notes:el('followupNotes')?.value.trim()||'',completed:old.completed||false,createdAt:old.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};write(FOLLOW_KEY,[...list.filter(x=>x.id!==id),item]);blankFollowup();setMsg('followupStatusMessage','Follow-up saved. It will remain visible until marked completed.','status ok')}
     function editAppointment(id){const x=read(APPT_KEY).find(a=>a.id===id);if(!x)return;el('appointmentEditId').value=x.id;el('appointmentCustomer').value=x.customer||'';el('appointmentPhone').value=x.phone||'';el('appointmentVehicle').value=x.vehicle||'';el('appointmentDate').value=x.date||'';el('appointmentTime').value=x.time||'';if(el('appointmentDuration'))el('appointmentDuration').value=String(x.duration||60);el('appointmentArrival').value=x.arrival||'Drop-off';el('appointmentStatus').value=x.status||'Scheduled';el('appointmentPriority').value=x.priority||'normal';if(el('appointmentConfirmationMethod'))el('appointmentConfirmationMethod').value=x.confirmationMethod||'';if(el('appointmentPromisedTime'))el('appointmentPromisedTime').value=x.promisedTime||'';if(el('appointmentKeys'))el('appointmentKeys').value=x.keys||'';if(el('appointmentTransportation'))el('appointmentTransportation').value=x.transportation||'';el('appointmentConcern').value=x.concern||'';el('appointmentInspections').value=x.inspections||'';el('appointmentNotes').value=x.notes||'';if(el('appointmentCheckinNotes'))el('appointmentCheckinNotes').value=x.checkinNotes||'';el('appointmentCustomer').scrollIntoView({behavior:'smooth',block:'center'});setMsg('appointmentStatusMessage','Editing existing appointment. Save to apply changes.','status warn')}
     function editFollowup(id){const x=read(FOLLOW_KEY).find(a=>a.id===id);if(!x)return;el('followupEditId').value=x.id;el('followupCustomer').value=x.customer||'';el('followupVehicle').value=x.vehicle||'';el('followupDueDate').value=x.date||'';el('followupDueTime').value=x.time||'';el('followupPriority').value=x.priority||'normal';el('followupCategory').value=x.category||'Shop Task';el('followupTask').value=x.task||'';el('followupNotes').value=x.notes||'';el('followupCustomer').scrollIntoView({behavior:'smooth',block:'center'});setMsg('followupStatusMessage','Editing existing follow-up. Save to apply changes.','status warn')}
-    function convertToRO(id){const x=read(APPT_KEY).find(a=>a.id===id);if(!x)return;const map={customerName:x.customer,vehicleDescription:x.vehicle,customerConcern:x.concern,additionalRequestedInspections:x.inspections,appointmentNotes:x.notes,appointmentId:x.id,appointmentDate:x.date,appointmentTime:x.time,appointmentStatus:x.status,appointmentConfirmationMethod:x.confirmationMethod||'',appointmentPromisedTime:x.promisedTime||'',appointmentKeys:x.keys||'',appointmentTransportation:x.transportation||'',appointmentCheckinNotes:x.checkinNotes||''};let draft={};try{draft=JSON.parse(localStorage.getItem('nitros_prototype_v073_active_draft')||'{}')}catch(e){}draft={...draft,fields:{...(draft.fields||{}),...map},appointmentSource:x};localStorage.setItem('nitros_prototype_v073_active_draft',JSON.stringify(draft));localStorage.setItem('nitros_current_draft',JSON.stringify(draft));write(APPT_KEY,read(APPT_KEY).map(a=>a.id===id?{...a,status:'Repair Order Created',updatedAt:new Date().toISOString()}:a));setMsg('appointmentStatusMessage',`${x.customer}'s appointment was prepared as a repair-order draft. Open New Walk-In / Check-In to review it.`,'status ok')}
+    function convertToRO(id){
+      const x=read(APPT_KEY).find(a=>a.id===id);
+      if(!x)return;
+      const advisorParts=[
+        x.inspections?`Additional requested inspections: ${x.inspections}`:'',
+        x.notes?`Appointment notes: ${x.notes}`:'',
+        x.confirmationMethod?`Confirmed by: ${x.confirmationMethod}`:'',
+        x.promisedTime?`Promised completion: ${x.promisedTime}`:'',
+        x.keys?`Keys: ${x.keys}`:'',
+        x.transportation?`Transportation: ${x.transportation}`:'',
+        x.checkinNotes?`Check-in notes: ${x.checkinNotes}`:''
+      ].filter(Boolean).join('\n');
+      const map={
+        customerName:x.customer||'',
+        phone:x.phone||'',
+        concern:x.concern||'',
+        advisorNotes:advisorParts,
+        arrivalMethod:x.arrival==='Waiting'?'Waiting appointment':(x.arrival||'Customer drove in'),
+        appointmentId:x.id,
+        appointmentDate:x.date,
+        appointmentTime:x.time,
+        appointmentStatus:'Repair Order Created'
+      };
+      let draft={};
+      try{draft=JSON.parse(localStorage.getItem('nitros_prototype_v073_active_draft')||'{}')}catch(e){}
+      draft={...draft,screen:'customer',fields:{...(draft.fields||{}),...map},appointmentSource:x,savedAt:new Date().toISOString()};
+      localStorage.setItem('nitros_prototype_v073_active_draft',JSON.stringify(draft));
+      localStorage.setItem('nitros_current_draft',JSON.stringify(draft));
+      write(APPT_KEY,read(APPT_KEY).map(a=>a.id===id?{...a,status:'Repair Order Created',updatedAt:new Date().toISOString()}:a));
+      if(typeof restoreDraft==='function')restoreDraft(false);
+      if(typeof showScreen==='function')showScreen('customer');
+      setTimeout(()=>{
+        const customer=document.getElementById('customerName');
+        customer?.scrollIntoView({behavior:'smooth',block:'center'});
+        customer?.focus();
+      },250);
+      setMsg('appointmentStatusMessage',`${x.customer}'s appointment was converted to a repair-order draft and opened for review.`,'status ok');
+      document.dispatchEvent(new CustomEvent('nitros:appointment-converted',{detail:{appointmentId:id,customer:x.customer}}));
+    }
     const workflow=['Scheduled','Confirmed','Customer Arrived','Vehicle Checked In','Repair Order Created'];
     function statusIndex(status){const i=workflow.indexOf(status);return i<0?0:i}
     function workflowHtml(status){const current=statusIndex(status);return `<div class="workflow-strip">${workflow.map((x,i)=>`<span class="workflow-step ${i===current?'active':i<current?'past':''}">${esc(x.replace('Customer ','').replace('Vehicle ',''))}</span>`).join('')}</div>`}
@@ -4589,12 +4627,13 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 8.2.3 • Screen-by-screen testing with highlighted controls</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 8.2.3 Revision A • Screen-by-screen testing with highlighted controls</div></div></div>
       <button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button>
     </div>
     <div class="oliver-guide-command">
       <input id="oliverGuideCommand" placeholder="Say or type: Oliver, take me through an appointment test">
-      <button id="oliverGuideListen" class="btn secondary" type="button">🎤 Speak</button>
+      <button id="oliverGuideListen" class="btn secondary" type="button">🎤 Voice Command</button>
+      <button id="oliverGuideRead" class="btn ghost" type="button">🔊 Read Step Aloud</button>
     </div>
     <div class="oliver-guide-tours">
       <button class="oliver-guide-tour" data-tour="appointment" type="button"><strong>Appointment & Check-In</strong><span>Create, confirm, arrive, check in, and convert to RO.</span></button>
@@ -4618,7 +4657,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   const GUIDE_KEY='nitros_v823_guided_test_history';
   const $=id=>document.getElementById(id);
   const panel=$('oliverGuidePanel'), stepbox=$('oliverGuideStepbox'), label=$('oliverHighlightLabel');
-  let tourName='', steps=[], index=0, highlighted=null;
+  let tourName='', steps=[], index=0, highlighted=null, fieldCleanup=null, advanceTimer=null, renderToken=0;
   const tours={
     appointment:[
       {screen:'home',target:'[data-go="schedule"]',title:'Open Appointments',detail:'Tap Appointments & Morning Briefing from the home screen.',action:'click'},
@@ -4629,7 +4668,11 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
       {screen:'schedule',target:'#appointmentConcern',title:'Enter the concern',detail:'Enter the customer complaint or requested repair.',check:el=>el.value.trim().length>0},
       {screen:'schedule',target:'#checkAppointmentConflict',title:'Check the schedule',detail:'Tap Check Schedule. Oliver will look for overlapping appointments.',action:'click'},
       {screen:'schedule',target:'#saveAppointment',title:'Save the appointment',detail:'Tap Save Appointment. The entry should appear in the schedule.',action:'click'},
-      {screen:'schedule',target:'#appointmentList, #todayAppointments, .appointment-list',title:'Review the saved appointment',detail:'Confirm the appointment appears in the schedule. Use the appointment card controls to Confirm, Mark Arrived, Check In, and Convert to RO.',optional:true}
+      {screen:'schedule',target:'[data-appt-confirm]',title:'Confirm the appointment',detail:'Tap Confirm. Oliver will wait for the appointment card to update.',action:'click'},
+      {screen:'schedule',target:'[data-appt-arrive]',title:'Mark the customer arrived',detail:'Tap Mark Arrived.',action:'click'},
+      {screen:'schedule',target:'[data-appt-checkin]',title:'Check in the vehicle',detail:'Tap Check In Vehicle.',action:'click'},
+      {screen:'schedule',target:'[data-appt-ro]',title:'Convert the appointment to a repair order',detail:'Tap Convert to RO. Oliver will wait until the Customer Check-In screen opens and the repair-order draft is populated.',action:'click',waitFor:()=>activeScreen()==='customer'&&((document.getElementById('customerName')?.value||'').trim().length>0)},
+      {screen:'customer',target:'#customerName',title:'Verify the repair-order draft opened',detail:'Confirm the customer name is populated on the Customer Check-In screen. Press Enter or tap Verify & Continue after reviewing it.',check:el=>el.value.trim().length>0}
     ],
     workboard:[
       {screen:'home',target:'[data-go="dashboard"]',title:'Open the Technician Dashboard',detail:'Tap Technician Dashboard.',action:'click'},
@@ -4654,16 +4697,71 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     ]
   };
   function activeScreen(){return document.querySelector('.screen.active')?.id||''}
-  function removeHighlight(){if(highlighted){highlighted.classList.remove('oliver-highlight');highlighted=null}label.classList.add('hidden');}
+  function clearFieldWatcher(){if(fieldCleanup){fieldCleanup();fieldCleanup=null}if(advanceTimer){clearTimeout(advanceTimer);advanceTimer=null}}
+  function removeHighlight(){clearFieldWatcher();if(highlighted){highlighted.classList.remove('oliver-highlight');highlighted=null}label.classList.add('hidden');}
   function locate(step){return document.querySelector(step.target)}
   function positionLabel(el,step){const r=el.getBoundingClientRect();label.innerHTML='<strong>'+step.title+'</strong>'+step.detail;label.classList.remove('hidden');const top=Math.min(window.innerHeight-label.offsetHeight-12,Math.max(10,r.bottom+10));const left=Math.min(window.innerWidth-label.offsetWidth-10,Math.max(10,r.left));label.style.top=top+'px';label.style.left=left+'px';}
   function goScreen(id){if(activeScreen()===id)return; if(typeof window.showScreen==='function')window.showScreen(id); else {document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x.id===id));}}
-  function render(){removeHighlight();const step=steps[index];if(!step)return finish();goScreen(step.screen);setTimeout(()=>{const el=locate(step);$('oliverGuideProgress').textContent='Step '+(index+1)+' of '+steps.length+' • '+tourName;$('oliverGuideInstruction').textContent=step.title;$('oliverGuideDetail').textContent=step.detail;$('oliverGuideStatus').textContent=step.optional?'This is a visual verification step. Continue after confirming the screen looks correct.':'Complete the highlighted action, then tap Verify & Continue.';$('oliverGuideBack').disabled=index===0;if(el){highlighted=el;el.classList.add('oliver-highlight');el.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>positionLabel(el,step),350);if(step.action==='click'){el.addEventListener('click',autoAdvance,{once:true});}}else{$('oliverGuideStatus').textContent='Oliver could not find this control on the current screen. You may skip forward or stop the test.';}},180);}
-  function autoAdvance(){setTimeout(()=>{if(index<steps.length-1){index++;render()}else finish()},500)}
+  function watchCompletedField(el,step,token){
+    if(!step.check||step.optional)return;
+    const evaluate=()=>{
+      if(token!==renderToken||steps[index]!==step)return;
+      const complete=step.check(el);
+      $('oliverGuideStatus').textContent=complete
+        ? 'Entry is ready. Press Enter or tap Verify & Continue when you are finished.'
+        : 'Enter the requested information in the highlighted field. Oliver will wait for your confirmation.';
+    };
+    const onKey=e=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        if(step.check(el)) advance();
+        else {
+          $('oliverGuideStatus').textContent='This step is not complete yet. Finish the highlighted field, then press Enter or tap Verify & Continue.';
+          el.focus();
+        }
+      }
+    };
+    ['input','change','blur'].forEach(type=>el.addEventListener(type,evaluate));
+    el.addEventListener('keydown',onKey);
+    fieldCleanup=()=>{['input','change','blur'].forEach(type=>el.removeEventListener(type,evaluate));el.removeEventListener('keydown',onKey)};
+    evaluate();
+  }
+  function render(){removeHighlight();const token=++renderToken;const step=steps[index];if(!step)return finish();goScreen(step.screen);setTimeout(()=>{if(token!==renderToken)return;const el=locate(step);$('oliverGuideProgress').textContent='Step '+(index+1)+' of '+steps.length+' • '+tourName;$('oliverGuideInstruction').textContent=step.title;$('oliverGuideDetail').textContent=step.detail;$('oliverGuideStatus').textContent=step.optional?'This is a visual verification step. Continue after confirming the screen looks correct.':step.check?'Complete the highlighted field. Oliver will wait until you press Enter or tap Verify & Continue.':'Complete the highlighted action.';$('oliverGuideBack').disabled=index===0;if(el){highlighted=el;el.classList.add('oliver-highlight');el.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>{if(token===renderToken)positionLabel(el,step)},350);if(step.action==='click'){const clickHandler=()=>autoAdvance(token,step);el.addEventListener('click',clickHandler,{once:true});fieldCleanup=()=>el.removeEventListener('click',clickHandler)}else watchCompletedField(el,step,token);}else{$('oliverGuideStatus').textContent='Oliver could not find this control on the current screen. You may skip forward or stop the test.';}},180);}
+  function advance(){clearFieldWatcher();if(index<steps.length-1){index++;render()}else finish()}
+  function autoAdvance(token,step){
+    if(typeof step.waitFor==='function'){
+      const started=Date.now();
+      const poll=()=>{
+        if(token!==renderToken||steps[index]!==step)return;
+        if(step.waitFor()){advance();return;}
+        if(Date.now()-started>5000){
+          $('oliverGuideStatus').textContent='The action was selected, but Oliver is still waiting for the next screen to open. Tap the highlighted control again or use Verify & Continue.';
+          return;
+        }
+        setTimeout(poll,150);
+      };
+      setTimeout(poll,120);
+      return;
+    }
+    setTimeout(()=>{if(token===renderToken&&steps[index]===step)advance()},650)
+  }
   function verify(){const step=steps[index],el=locate(step);if(step.check&&!step.optional){if(!el||!step.check(el)){$('oliverGuideStatus').textContent='This step is not complete yet. Enter the requested information in the highlighted field.';el?.focus();return}}if(index<steps.length-1){index++;render()}else finish()}
   function finish(){removeHighlight();const history=JSON.parse(localStorage.getItem(GUIDE_KEY)||'[]');history.push({tour:tourName,completedAt:new Date().toISOString(),steps:steps.length});localStorage.setItem(GUIDE_KEY,JSON.stringify(history.slice(-25)));$('oliverGuideProgress').textContent='Test completed';$('oliverGuideInstruction').textContent='Oliver completed the guided walkthrough.';$('oliverGuideDetail').textContent='The completed test was recorded on this device. You can close Oliver or start another test.';$('oliverGuideStatus').textContent='All guided steps completed.';$('oliverGuideVerify').disabled=true;$('oliverGuideBack').disabled=true;}
   function start(name){tourName=name;steps=tours[name];index=0;$('oliverGuideVerify').disabled=false;stepbox.classList.remove('hidden');panel.classList.remove('hidden');panel.classList.add('guiding');render()}
   function parseCommand(){const q=$('oliverGuideCommand').value.toLowerCase();if(q.includes('workboard')||q.includes('repair order'))start('workboard');else if(q.includes('complete')||q.includes('full')||q.includes('everything'))start('full');else start('appointment')}
+  function speakGuideText(text){
+    if(!('speechSynthesis' in window)){
+      $('oliverGuideStatus').textContent='Spoken instructions are not supported by this browser.';
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance=new SpeechSynthesisUtterance(text);
+    utterance.lang='en-US';
+    utterance.rate=0.92;
+    utterance.onstart=()=>{$('oliverGuideStatus').textContent='Oliver is reading the current instruction aloud.'};
+    utterance.onerror=()=>{$('oliverGuideStatus').textContent='The browser could not play the spoken instruction. The written instruction remains available.'};
+    window.speechSynthesis.speak(utterance);
+  }
   $('oliverGuideLaunch').addEventListener('click',()=>{panel.classList.remove('hidden');panel.classList.remove('guiding')});
   $('oliverGuideClose').addEventListener('click',()=>{panel.classList.add('hidden');panel.classList.remove('guiding');removeHighlight()});
   $('oliverGuideStop').addEventListener('click',()=>{panel.classList.add('hidden');panel.classList.remove('guiding');removeHighlight()});
@@ -4671,7 +4769,26 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   $('oliverGuideBack').addEventListener('click',()=>{if(index>0){index--;render()}});
   document.querySelectorAll('[data-tour]').forEach(b=>b.addEventListener('click',()=>start(b.dataset.tour)));
   $('oliverGuideCommand').addEventListener('keydown',e=>{if(e.key==='Enter')parseCommand()});
-  $('oliverGuideListen').addEventListener('click',()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){$('oliverGuideStatus').textContent='Voice recognition is unavailable here. Type the request and press Enter.';return}const r=new SR();r.lang='en-US';r.interimResults=false;r.onstart=()=>{$('oliverGuideCommand').value='Listening…'};r.onerror=()=>{$('oliverGuideCommand').value='';$('oliverGuideStatus').textContent='Voice recognition stopped. Type the request instead.'};r.onresult=e=>{$('oliverGuideCommand').value=e.results[0][0].transcript;parseCommand()};r.start()});
+  $('oliverGuideListen').addEventListener('click',()=>{
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){
+      $('oliverGuideStatus').textContent='Voice-command recognition is unavailable in this browser or local-file mode. Choose a guided-test button or type the request and press Enter.';
+      speakGuideText('Voice command is unavailable here. Choose Appointment and Check-In, Live Workboard, or Complete Portal Test.');
+      return;
+    }
+    const r=new SR();
+    r.lang='en-US';r.interimResults=false;r.continuous=false;
+    r.onstart=()=>{$('oliverGuideCommand').value='';$('oliverGuideCommand').placeholder='Listening…';$('oliverGuideStatus').textContent='Oliver is listening. Say appointment test, workboard test, or complete portal test.'};
+    r.onerror=e=>{$('oliverGuideCommand').placeholder='Type: take me through a guided test';$('oliverGuideStatus').textContent='Voice command could not start ('+(e.error||'browser restriction')+'). Type the request and press Enter, or choose a test button.'};
+    r.onend=()=>{$('oliverGuideCommand').placeholder='Type: take me through a guided test'};
+    r.onresult=e=>{$('oliverGuideCommand').value=e.results[0][0].transcript;parseCommand()};
+    try{r.start()}catch(e){$('oliverGuideStatus').textContent='Voice command is already active or blocked by the browser. Type the request and press Enter.'}
+  });
+  $('oliverGuideRead').addEventListener('click',()=>{
+    const title=$('oliverGuideInstruction').textContent||'Oliver Guided Test Assistant';
+    const detail=$('oliverGuideDetail').textContent||'Choose a guided test to begin.';
+    speakGuideText(title+'. '+detail);
+  });
   window.addEventListener('resize',()=>{if(highlighted&&steps[index])positionLabel(highlighted,steps[index])});
 })();
 </script>
