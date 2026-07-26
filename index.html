@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.2.4 — Movable Floating Oliver Guide</title>
+<title>Nitros Mobile Technician Portal v8.2.6 — Unified Oliver Hub Voice Intelligence</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -344,7 +343,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   .schedule-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.schedule-list{max-height:620px;overflow:auto;padding-right:2px}
   @media(max-width:760px){.briefing-grid,.schedule-summary{grid-template-columns:1fr 1fr}.schedule-two{grid-template-columns:1fr}.appointment-head{display:block}.appointment-time{margin-top:5px}.appointment-actions .btn{flex:1 1 45%}}
 
-  /* v8.2.4 Inherited Technician Dashboard & Daily Command Center */
+  /* v8.2.6 Inherited Technician Dashboard & Daily Command Center */
   .command-hero{border:1px solid #315476;background:linear-gradient(135deg,#0b1d31,#102944);border-radius:18px;padding:18px;margin-bottom:14px}
   .command-metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin:13px 0}
   .command-metric{border:1px solid var(--line);border-radius:13px;padding:11px;background:#081321;text-align:center}.command-metric strong{display:block;font-size:22px}.command-metric span{font-size:11px;color:var(--muted)}
@@ -356,11 +355,11 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   @media(max-width:900px){.command-metrics{grid-template-columns:repeat(3,1fr)}.command-columns{grid-template-columns:1fr}.shop-status-grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:600px){.command-metrics{grid-template-columns:repeat(2,1fr)}.shop-status-grid,.command-actions{grid-template-columns:1fr 1fr}.command-item-head{display:block}}
 
-  /* v8.2.4 Live Repair Order Workboard */
+  /* v8.2.6 Live Repair Order Workboard */
   .workboard-shell{margin-top:18px;border-top:1px solid var(--line);padding-top:18px}.workboard-toolbar{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:9px;align-items:end}.workboard-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:12px 0}.workboard-lanes{display:grid;grid-template-columns:repeat(4,minmax(230px,1fr));gap:10px;overflow-x:auto;padding-bottom:8px}.workboard-lane{border:1px solid var(--line);border-radius:14px;background:#07111d;min-height:170px;padding:10px}.workboard-lane h4{margin:0 0 9px;display:flex;justify-content:space-between;gap:8px}.workboard-count{border:1px solid var(--line);border-radius:999px;padding:2px 7px;font-size:11px;color:var(--muted)}.workboard-card{border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:10px;background:#0a1726;margin-bottom:9px}.workboard-card.at-risk{border-left-color:var(--warn)}.workboard-card.overdue{border-left-color:var(--bad)}.workboard-card.clear{border-left-color:var(--ok)}.workboard-card-title{font-weight:900}.workboard-card-meta{font-size:11px;color:var(--muted);margin-top:4px}.workboard-card-text{font-size:12px;margin-top:6px}.workboard-card-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.workboard-card-actions .btn{padding:7px 9px;font-size:11px}.workboard-editor{margin-top:14px;border:1px solid #315476;border-radius:15px;padding:13px;background:#081321}.workboard-audit{max-height:180px;overflow:auto;border:1px dashed var(--line);border-radius:11px;padding:9px;margin-top:10px}.workboard-audit div{font-size:11px;color:var(--muted);padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}.workboard-audit div:last-child{border-bottom:0}.deadline-badge{display:inline-block;border-radius:999px;border:1px solid var(--line);padding:3px 7px;font-size:10px;font-weight:900;margin-top:6px}.deadline-badge.ok{color:#79e2b3}.deadline-badge.risk{color:#ffd089}.deadline-badge.late{color:#ff9aa0}.blocker-badge{display:inline-block;border-radius:999px;border:1px solid #8c6a22;padding:3px 7px;font-size:10px;color:#ffd089;margin:6px 4px 0 0}@media(max-width:900px){.workboard-toolbar{grid-template-columns:1fr 1fr}.workboard-summary{grid-template-columns:1fr 1fr}.workboard-lanes{grid-template-columns:repeat(2,minmax(250px,1fr))}}@media(max-width:600px){.workboard-toolbar{grid-template-columns:1fr}.workboard-lanes{grid-template-columns:1fr;overflow:visible}.workboard-summary{grid-template-columns:1fr 1fr}}
 
 
-  /* v8.2.4 Oliver Guided Test Assistant */
+  /* v8.2.6 Oliver Guided Test Assistant */
   .oliver-guide-launch{position:fixed;right:18px;bottom:18px;z-index:9995;border:2px solid #71c8ff;background:#09223a;color:#fff;border-radius:999px;padding:12px 16px;font-weight:900;box-shadow:0 8px 30px rgba(0,0,0,.45);display:flex;align-items:center;gap:8px;touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab}.oliver-guide-launch.dragging{cursor:grabbing;transform:none!important;opacity:.96}.oliver-guide-launch:hover{transform:translateY(-1px)}
   .oliver-guide-panel{position:fixed;inset:0;z-index:9998;background:rgba(1,7,14,.78);display:flex;align-items:center;justify-content:center;padding:14px}.oliver-guide-panel.hidden{display:none}.oliver-guide-panel.guiding{background:transparent;pointer-events:none;padding:0}.oliver-guide-panel.guiding .oliver-guide-dialog{pointer-events:auto;position:fixed;top:78px;right:14px;left:auto;bottom:auto;width:min(430px,calc(100% - 28px));max-height:58vh}.oliver-guide-dialog{width:min(720px,100%);max-height:88vh;overflow:auto;border:1px solid #42749e;background:#071522;border-radius:18px;padding:16px;box-shadow:0 18px 60px rgba(0,0,0,.6);touch-action:none}.oliver-guide-dialog.drag-positioned{position:fixed!important;right:auto!important;bottom:auto!important}.oliver-guide-dialog.minimized{width:min(330px,calc(100% - 28px))!important;max-height:none!important;overflow:hidden}.oliver-guide-dialog.minimized .oliver-guide-command,.oliver-guide-dialog.minimized .oliver-guide-tours,.oliver-guide-dialog.minimized .oliver-guide-stepbox{display:none!important}
   .oliver-guide-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;cursor:move;user-select:none}.oliver-guide-head button,.oliver-guide-head input{cursor:pointer}.oliver-guide-avatar{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#0c3656;border:2px solid #71c8ff;font-size:25px;flex:none}.oliver-guide-title{font-weight:900;font-size:20px}.oliver-guide-sub{font-size:12px;color:var(--muted);margin-top:3px}.oliver-guide-head-actions{display:flex;gap:7px;flex:none}.oliver-guide-close{border:1px solid var(--line);background:transparent;color:#fff;border-radius:10px;padding:8px 10px}.oliver-guide-drag-note{font-size:10px;color:#91d4ff;margin-top:4px;font-weight:800}
@@ -371,7 +370,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   @media(max-width:650px){.oliver-guide-tours{grid-template-columns:1fr}.oliver-guide-command{grid-template-columns:1fr}.oliver-guide-actions{grid-template-columns:1fr}.oliver-guide-launch{right:10px;bottom:10px;padding:11px 13px}.oliver-guide-dialog{max-height:91vh}.oliver-guide-panel.guiding .oliver-guide-dialog{top:64px;right:8px;width:calc(100% - 16px);max-height:62vh}}
 
 
-  /* v8.2.4 Oliver Smart Repair Assistant */
+  /* v8.2.6 Oliver Smart Repair Assistant */
   .smart-oliver-launch{position:fixed;right:16px;bottom:86px;z-index:12000;border:1px solid #ff9d28;background:#111d2d;color:#fff;border-radius:999px;padding:12px 16px;font-weight:800;box-shadow:0 12px 32px rgba(0,0,0,.45);cursor:pointer}
   .smart-oliver-panel{position:fixed;inset:0;z-index:12020;pointer-events:none}
   .smart-oliver-dialog{position:absolute;right:18px;bottom:88px;width:min(440px,calc(100vw - 24px));max-height:min(78vh,720px);overflow:auto;background:#0b1421;border:1px solid #ff9d28;border-radius:18px;box-shadow:0 18px 54px rgba(0,0,0,.62);pointer-events:auto;color:#fff}
@@ -384,12 +383,26 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   @media(max-width:520px){.smart-tabs{grid-template-columns:1fr 1fr}.smart-oliver-dialog{right:8px;bottom:78px;width:calc(100vw - 16px)}}
 
 </style>
+
+<style id="v825OliverHubStyles">
+#oliverGuideLaunch,#smartOliverLaunch{display:none!important}
+.oliver-hub-launch{position:fixed;right:14px;bottom:82px;z-index:13000;width:58px;height:58px;border-radius:50%;border:2px solid #ff9d28;background:linear-gradient(145deg,#16263b,#0b1421);color:#fff;font-weight:900;font-size:24px;box-shadow:0 12px 34px rgba(0,0,0,.55);display:grid;place-items:center;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.oliver-hub-launch.listening{animation:v825Pulse 1s infinite;box-shadow:0 0 0 8px rgba(255,157,40,.16),0 12px 34px rgba(0,0,0,.55)}
+.oliver-hub-launch.speaking{animation:v825Speak .65s infinite alternate}
+@keyframes v825Pulse{50%{transform:scale(1.08)}}@keyframes v825Speak{to{box-shadow:0 0 0 12px rgba(255,157,40,.12),0 12px 34px rgba(0,0,0,.55)}}
+.oliver-hub-shell{position:fixed;inset:0;z-index:13020;background:rgba(2,7,13,.62);display:flex;align-items:flex-end;justify-content:center;padding:12px;backdrop-filter:blur(4px)}
+.oliver-hub-shell.hidden{display:none!important}.oliver-hub-card{width:min(520px,100%);max-height:88vh;overflow:auto;border:1px solid #ff9d28;border-radius:22px;background:#0b1421;color:#fff;box-shadow:0 22px 70px rgba(0,0,0,.72)}
+.oliver-hub-head{position:sticky;top:0;z-index:2;background:#111d2d;border-bottom:1px solid rgba(255,157,40,.35);padding:15px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}.oliver-hub-title{font-size:1.18rem;font-weight:900}.oliver-mode-pill{display:inline-flex;align-items:center;gap:6px;margin-top:5px;padding:5px 9px;border-radius:999px;background:#1b3049;color:#ffd59c;font-size:.79rem;font-weight:800}
+.oliver-hub-close{border:1px solid #71839b;background:#142236;color:#fff;border-radius:10px;padding:8px 11px;font-weight:800}.oliver-hub-body{padding:14px 16px 18px}.oliver-hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.oliver-hub-choice{border:1px solid #31465f;background:#111d2d;color:#fff;border-radius:16px;padding:15px;text-align:left;min-height:112px}.oliver-hub-choice strong{display:block;font-size:1rem;margin-bottom:7px}.oliver-hub-choice span{display:block;color:#b7c5d8;font-size:.84rem;line-height:1.35}.oliver-hub-choice.primary{border-color:#ff9d28}.oliver-voice-box{margin-top:13px;padding:13px;border:1px solid #2f465f;border-radius:16px;background:#0e1a2a}.oliver-voice-row{display:grid;grid-template-columns:1fr auto;gap:8px}.oliver-voice-input{width:100%;min-height:48px;border:1px solid #3b516b;border-radius:12px;background:#08111d;color:#fff;padding:11px;font:inherit}.oliver-voice-btn{border:1px solid #ff9d28;background:#ff9d28;color:#101820;border-radius:12px;padding:10px 13px;font-weight:900}.oliver-transcript{margin-top:10px;max-height:190px;overflow:auto;border-radius:12px;background:#07101b;padding:10px;font-size:.88rem;line-height:1.4}.oliver-line{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.07)}.oliver-line:last-child{border-bottom:0}.oliver-line.user strong{color:#8fd3ff}.oliver-line.oliver strong{color:#ffbd66}.oliver-hub-footer{margin-top:11px;color:#93a7bf;font-size:.76rem;line-height:1.35}.oliver-hub-settings{margin-top:12px;display:none}.oliver-hub-settings.open{display:block}.oliver-setting-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08)}.oliver-setting-row select{background:#07101b;color:#fff;border:1px solid #3b516b;border-radius:9px;padding:8px}
+@media(max-width:520px){.oliver-hub-grid{grid-template-columns:1fr}.oliver-hub-choice{min-height:88px}.oliver-hub-shell{padding:8px}.oliver-hub-card{max-height:92vh}.oliver-hub-launch{width:54px;height:54px;bottom:76px;right:10px}}
+</style>
+
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.2.4 — Movable Floating Oliver Guide</div>
+  <div class="sub">Mobile Technician Portal v8.2.6 — Unified Oliver Hub Voice Intelligence</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -403,7 +416,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.2.4 adds a movable, floating, minimizable Oliver Guided Test Assistant while preserving Convert to RO routing and explicit guided-field confirmation. Tap Oliver for a screen-by-screen test that highlights each required control, verifies your entry, and records completed test steps. Every verified prior-version workflow is preserved.</div>
+    <div id="portalLoginStatus" class="status">Version 8.2.6 unifies Oliver guidance, diagnostic assistance, repair intelligence, voice input, and spoken responses into one movable Oliver Hub while preserving Convert to RO routing, guided-field confirmation, and all verified prior-version workflows.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -475,7 +488,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <section id="schedule" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="schedule-hero">
-    <div class="eyebrow">Version 8.2.4</div>
+    <div class="eyebrow">Version 8.2.6</div>
     <h1>Appointment Confirmation & Check-In</h1>
     <p id="morningGreeting">Good morning. Your shop schedule and unfinished follow-ups are ready.</p>
     <div class="briefing-grid">
@@ -566,7 +579,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 8.2.4</div><h1>Technician Dashboard & Live Repair Order Workboard</h1>
+    <div class="eyebrow">Version 8.2.6</div><h1>Technician Dashboard & Live Repair Order Workboard</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -619,7 +632,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 8.2.4</div>
+      <div class="eyebrow">Version 8.2.6</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1508,7 +1521,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.2.4 • Oliver Smart Repair Assistant • Movable guided testing • Diagnostic copilot • Repair notes • Completeness review • Timeline</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.2.6 • Oliver Smart Repair Assistant • Movable guided testing • Diagnostic copilot • Repair notes • Completeness review • Timeline</div>
 </div>
 
 <script>
@@ -4565,16 +4578,16 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     function parseTime(text){const m=text.match(/(?:at\s*)?(1[0-2]|0?\d)(?::([0-5]\d))?\s*(a\.?m\.?|p\.?m\.?)?/i);if(!m)return '08:00';let h=+m[1],min=m[2]||'00',amp=(m[3]||'').toLowerCase();if(amp.startsWith('p')&&h<12)h+=12;if(amp.startsWith('a')&&h===12)h=0;return `${String(h).padStart(2,'0')}:${min}`}
     function oliverParse(){const text=el('oliverScheduleInput')?.value.trim();if(!text){el('oliverScheduleResponse').textContent='Tell me what you would like scheduled or remembered.';return}const low=text.toLowerCase(),isFollow=/remind|don't forget|order|call back|follow up|follow-up/.test(low);if(isFollow){blankFollowup();el('followupDueDate').value=parseDate(text);el('followupDueTime').value=parseTime(text);el('followupTask').value=text.replace(/^oliver[, ]*/i,'').trim();if(/order/.test(low))el('followupCategory').value='Order Parts';if(/urgent|safety|first thing/.test(low))el('followupPriority').value=/urgent|safety/.test(low)?'urgent':'high';const kia=text.match(/([A-Z][a-z]+)'?s?\s+(Kia Soul|[A-Z][a-z]+\s+[A-Z][a-z]+)/);if(kia){el('followupCustomer').value=kia[1];el('followupVehicle').value=kia[2]}el('oliverScheduleResponse').textContent='I prepared a shop follow-up below. Review the due date, customer, vehicle, vendors, and task, then tap Save Follow-Up.';el('followupCustomer').scrollIntoView({behavior:'smooth',block:'center'})}else{blankAppointment();el('appointmentDate').value=parseDate(text);el('appointmentTime').value=parseTime(text);const name=text.match(/(?:schedule|book|add)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i);if(name)el('appointmentCustomer').value=name[1];const veh=text.match(/(?:with|bringing|in|the)\s+(?:the\s+)?((?:19|20)\d{2}\s+[^,.]+|[A-Z][a-z]+\s+(?:Soul|Cougar|Truck|Buick|Kia|Ford|Chevy|Toyota|Honda|Jeep))/i);if(veh)el('appointmentVehicle').value=veh[1].trim();el('appointmentConcern').value=text.replace(/^oliver[, ]*/i,'').trim();if(/wait/.test(low))el('appointmentArrival').value='Waiting';else if(/tow/.test(low))el('appointmentArrival').value='Tow-in';else if(/key drop/.test(low))el('appointmentArrival').value='Key drop';const draft=currentDraft(),hits=showConflict(draft);el('oliverScheduleResponse').textContent=hits.length?`I prepared the appointment, but I found ${hits.length} schedule conflict${hits.length===1?'':'s'}. Review the highlighted schedule warning before saving.`:'I prepared the appointment and checked the schedule. Review the details, then tap Save Appointment.';el('appointmentCustomer').scrollIntoView({behavior:'smooth',block:'center'})}}
     function listen(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){el('oliverScheduleResponse').textContent='Voice recognition is not available in this browser. You can still type or use the phone keyboard microphone.';return}const r=new SR();r.lang='en-US';r.interimResults=false;r.onstart=()=>el('oliverScheduleResponse').textContent='Listening…';r.onerror=e=>el('oliverScheduleResponse').textContent=`Voice recognition stopped: ${e.error}. You can type the instruction instead.`;r.onresult=e=>{el('oliverScheduleInput').value=e.results[0][0].transcript;el('oliverScheduleResponse').textContent='I heard your instruction. Tap Have Oliver Prepare It.'};r.start()}
-    function download(){const payload={schema:'nitros-schedule-package',version:'8.2.3',createdAt:new Date().toISOString(),appointments:read(APPT_KEY),followups:read(FOLLOW_KEY)},blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`Nitros_v8.2.4_Schedule_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setMsg('scheduleTransferStatus','Schedule and follow-ups exported successfully.','status ok')}
+    function download(){const payload={schema:'nitros-schedule-package',version:'8.2.6',createdAt:new Date().toISOString(),appointments:read(APPT_KEY),followups:read(FOLLOW_KEY)},blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`Nitros_v8.2.6_Schedule_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setMsg('scheduleTransferStatus','Schedule and follow-ups exported successfully.','status ok')}
     async function importData(file){const d=JSON.parse(await file.text());if(d?.schema!=='nitros-schedule-package')throw new Error('Unsupported file');const am=new Map(read(APPT_KEY).map(x=>[x.id,x]));(d.appointments||[]).forEach(x=>x?.id&&am.set(x.id,{...am.get(x.id),...x}));const fm=new Map(read(FOLLOW_KEY).map(x=>[x.id,x]));(d.followups||[]).forEach(x=>x?.id&&fm.set(x.id,{...fm.get(x.id),...x}));localStorage.setItem(APPT_KEY,JSON.stringify([...am.values()]));localStorage.setItem(FOLLOW_KEY,JSON.stringify([...fm.values()]));renderAll();setMsg('scheduleTransferStatus','Schedule package imported and merged without deleting existing records.','status ok')}
-    el('saveAppointment')?.addEventListener('click',saveAppointment);el('checkAppointmentConflict')?.addEventListener('click',()=>showConflict());el('createLinkedFollowup')?.addEventListener('click',linkedFollowup);el('oliverNextJob')?.addEventListener('click',whatsNext);el('oliverReadBriefing')?.addEventListener('click',()=>speak(el('morningBriefingText')?.textContent||'No morning briefing is available.'));el('clearAppointment')?.addEventListener('click',blankAppointment);el('saveFollowup')?.addEventListener('click',saveFollowup);el('clearFollowup')?.addEventListener('click',blankFollowup);el('oliverParseSchedule')?.addEventListener('click',oliverParse);el('oliverListenSchedule')?.addEventListener('click',listen);el('exportScheduleData')?.addEventListener('click',download);el('importScheduleData')?.addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{await importData(f)}catch(err){setMsg('scheduleTransferStatus','That file is not a valid Nitros v8.2.4 schedule package.','status bad')}finally{e.target.value=''}});
+    el('saveAppointment')?.addEventListener('click',saveAppointment);el('checkAppointmentConflict')?.addEventListener('click',()=>showConflict());el('createLinkedFollowup')?.addEventListener('click',linkedFollowup);el('oliverNextJob')?.addEventListener('click',whatsNext);el('oliverReadBriefing')?.addEventListener('click',()=>speak(el('morningBriefingText')?.textContent||'No morning briefing is available.'));el('clearAppointment')?.addEventListener('click',blankAppointment);el('saveFollowup')?.addEventListener('click',saveFollowup);el('clearFollowup')?.addEventListener('click',blankFollowup);el('oliverParseSchedule')?.addEventListener('click',oliverParse);el('oliverListenSchedule')?.addEventListener('click',listen);el('exportScheduleData')?.addEventListener('click',download);el('importScheduleData')?.addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{await importData(f)}catch(err){setMsg('scheduleTransferStatus','That file is not a valid Nitros v8.2.6 schedule package.','status bad')}finally{e.target.value=''}});
     document.querySelectorAll('[data-schedule-view]').forEach(b=>b.addEventListener('click',()=>{view=b.dataset.scheduleView;document.querySelectorAll('[data-schedule-view]').forEach(x=>x.classList.toggle('active',x===b));renderAppointments()}));
     el('appointmentList')?.addEventListener('click',e=>{const ro=e.target.closest('[data-appt-ro]')?.dataset.apptRo,edit=e.target.closest('[data-appt-edit]')?.dataset.apptEdit,confirmId=e.target.closest('[data-appt-confirm]')?.dataset.apptConfirm,arrive=e.target.closest('[data-appt-arrive]')?.dataset.apptArrive,checkin=e.target.closest('[data-appt-checkin]')?.dataset.apptCheckin,del=e.target.closest('[data-appt-delete]')?.dataset.apptDelete;if(ro)convertToRO(ro);if(edit)editAppointment(edit);if(confirmId)updateAppointmentStatus(confirmId,'Confirmed');if(arrive)updateAppointmentStatus(arrive,'Customer Arrived');if(checkin)updateAppointmentStatus(checkin,'Vehicle Checked In');if(del&&confirm('Delete this appointment?'))write(APPT_KEY,read(APPT_KEY).filter(x=>x.id!==del))});
     el('followupList')?.addEventListener('click',e=>{const done=e.target.closest('[data-follow-done]')?.dataset.followDone,edit=e.target.closest('[data-follow-edit]')?.dataset.followEdit,snooze=e.target.closest('[data-follow-snooze]')?.dataset.followSnooze,del=e.target.closest('[data-follow-delete]')?.dataset.followDelete;if(done)write(FOLLOW_KEY,read(FOLLOW_KEY).map(x=>x.id===done?{...x,completed:!x.completed,updatedAt:new Date().toISOString()}:x));if(edit)editFollowup(edit);if(snooze){const d=new Date();d.setDate(d.getDate()+1);write(FOLLOW_KEY,read(FOLLOW_KEY).map(x=>x.id===snooze?{...x,date:isoDate(d),completed:false,updatedAt:new Date().toISOString()}:x))}if(del&&confirm('Delete this follow-up?'))write(FOLLOW_KEY,read(FOLLOW_KEY).filter(x=>x.id!==del))});
     document.querySelectorAll('[data-go="schedule"]').forEach(b=>b.addEventListener('click',()=>setTimeout(renderAll,80)));blankAppointment();blankFollowup();renderAll();
   })();
 
-  // v8.2.4 Inherited Technician Dashboard & Daily Command Center
+  // v8.2.6 Inherited Technician Dashboard & Daily Command Center
   (()=>{
     const APPT='nitros_v818_appointments',FOLLOW='nitros_v818_followups',JOBS='nitros_portal_v8_assigned_jobs',PARTS='nitros_v817_parts_requests',HISTORY='nitros_prototype_customer_history_v070';
     const el=id=>document.getElementById(id),read=(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d}},esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -4601,7 +4614,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     el('commandRefresh')?.addEventListener('click',render);el('commandReadBriefing')?.addEventListener('click',()=>speak(el('commandBriefingText')?.textContent||'No briefing is available.'));document.querySelectorAll('[data-go="dashboard"]').forEach(b=>b.addEventListener('click',()=>setTimeout(render,80)));window.addEventListener('storage',render);setTimeout(render,200);
   })();
 
-  // v8.2.4 Live Repair Order Workboard
+  // v8.2.6 Live Repair Order Workboard
   (()=>{
     const KEY='nitros_v822_workboard', APPT='nitros_v818_appointments', JOBS='nitros_portal_v8_assigned_jobs', TECH='nitros_portal_v8_technician';
     const stages=['Waiting Diagnosis','Diagnosing','Waiting Approval','Waiting Parts','Ready to Repair','Repair in Progress','Verification / Road Test','Ready for Pickup'];
@@ -4643,7 +4656,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v8.2.4 • Active repair copilot</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v8.2.6 • Active repair copilot</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -4679,7 +4692,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 8.2.4 Revision A • Drag the button or the open guide anywhere</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 8.2.6 • Drag the button or the open guide anywhere</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -4915,7 +4928,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 })();
 
 
-// v8.2.4 Oliver Smart Repair Assistant
+// v8.2.6 Oliver Smart Repair Assistant
 (()=>{
   const $=id=>document.getElementById(id), KEY='nitros_v824_oliver_repair_timeline';
   const panel=$('smartOliverPanel'), dialog=$('smartOliverDialog'), head=$('smartOliverHead');
@@ -4965,6 +4978,83 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   head.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;const r=dialog.getBoundingClientRect();drag=true;dx=e.clientX-r.left;dy=e.clientY-r.top;head.setPointerCapture?.(e.pointerId)});head.addEventListener('pointermove',e=>{if(drag)pos(e.clientX-dx,e.clientY-dy)});head.addEventListener('pointerup',e=>{drag=false;head.releasePointerCapture?.(e.pointerId)});
   $('smartOliverMin').addEventListener('click',()=>{const m=dialog.classList.toggle('minimized');$('smartOliverMin').textContent=m?'Expand':'Minimize'});
   window.addEventListener('resize',()=>{if(dialog.classList.contains('drag-positioned')){const r=dialog.getBoundingClientRect();pos(r.left,r.top)}});
+})();
+</script>
+
+
+<button id="unifiedOliverLaunch" class="oliver-hub-launch" type="button" aria-label="Open Oliver Hub" title="Oliver">O</button>
+<div id="unifiedOliverHub" class="oliver-hub-shell hidden" role="dialog" aria-modal="true" aria-labelledby="unifiedOliverTitle">
+  <section class="oliver-hub-card">
+    <header class="oliver-hub-head">
+      <div><div id="unifiedOliverTitle" class="oliver-hub-title">Oliver Hub</div><div id="unifiedOliverMode" class="oliver-mode-pill">🔧 Oliver — Technician</div></div>
+      <button id="unifiedOliverClose" class="oliver-hub-close" type="button">Close</button>
+    </header>
+    <div class="oliver-hub-body">
+      <div class="oliver-hub-grid">
+        <button id="oliverHubLearn" class="oliver-hub-choice primary" type="button"><strong>🎓 Learn the Software</strong><span>Open the guided component walkthrough for appointments, check-in, workboard, inspections, and the complete portal.</span></button>
+        <button id="oliverHubRepair" class="oliver-hub-choice primary" type="button"><strong>🔧 Repair Assistant</strong><span>Ask diagnostic questions, document findings, review completeness, and continue the active repair conversation.</span></button>
+        <button id="oliverHubNati" class="oliver-hub-choice" type="button"><strong>📚 NATI Academy</strong><span>Training lessons, DRC methodology, case studies, wiring exercises, and diagnostic instruction.</span></button>
+        <button id="oliverHubSettingsButton" class="oliver-hub-choice" type="button"><strong>⚙️ Oliver Settings</strong><span>Voice behavior, response mode, active personality, and spoken-response controls.</span></button>
+      </div>
+      <div class="oliver-voice-box">
+        <div class="oliver-voice-row"><textarea id="oliverHubInput" class="oliver-voice-input" rows="2" placeholder="Say or type: Oliver, show me how to input this customer"></textarea><button id="oliverHubMic" class="oliver-voice-btn" type="button">🎙️ Talk</button></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><button id="oliverHubSend" class="btn primary" type="button">Ask Oliver</button><button id="oliverHubReadLast" class="btn ghost" type="button">🔊 Read Last Reply</button></div>
+        <div id="oliverHubTranscript" class="oliver-transcript"><div class="oliver-line oliver"><strong>Oliver:</strong> I’m ready. I will answer aloud and keep the same response here in writing.</div></div>
+      </div>
+      <div id="oliverHubSettings" class="oliver-hub-settings">
+        <div class="oliver-setting-row"><span>Preferred mode</span><select id="oliverPreferredMode"><option value="auto">Automatic by screen</option><option value="instructor">Instructor</option><option value="technician">Technician</option><option value="office">Office</option><option value="founder">Founder</option></select></div>
+        <div class="oliver-setting-row"><span>Spoken replies</span><select id="oliverSpokenReplies"><option value="on">On</option><option value="off">Off</option></select></div>
+        <div class="oliver-setting-row"><span>Wake phrase</span><strong>Oliver</strong></div>
+      </div>
+      <div class="oliver-hub-footer">Voice recognition depends on browser permissions. When continuous wake-word listening is restricted, tap Talk or use the phone keyboard microphone. Technical pinouts and wire colors must be verified against loaded repair information before testing.</div>
+    </div>
+  </section>
+</div>
+
+
+<script id="v825OliverHubScript">
+(()=>{
+  const $=id=>document.getElementById(id);
+  const launch=$('unifiedOliverLaunch'),hub=$('unifiedOliverHub'),modeEl=$('unifiedOliverMode'),input=$('oliverHubInput'),transcript=$('oliverHubTranscript');
+  if(!launch||!hub)return;
+  const POS='nitros_v825_unified_oliver_position',SET='nitros_v825_oliver_settings',CHAT='nitros_v825_oliver_transcript';
+  let lastReply='',dragging=false,moved=false,startX=0,startY=0,baseL=0,baseT=0;
+  const modeMap={instructor:'🎓 Oliver — Instructor',technician:'🔧 Oliver — Technician',office:'🏢 Oliver — Office',founder:'👨‍💼 Oliver — Founder'};
+  function activeScreen(){return document.querySelector('.screen.active')?.id||document.querySelector('[data-screen].active')?.dataset.screen||''}
+  function autoMode(){const s=activeScreen().toLowerCase();if(/schedule|appointment|invoice|customer|office|payment/.test(s))return'office';if(/training|nati|lesson|academy/.test(s))return'instructor';if(/founder|development|admin/.test(s))return'founder';return'technician'}
+  function settings(){try{return Object.assign({mode:'auto',spoken:'on'},JSON.parse(localStorage.getItem(SET)||'{}'))}catch{return{mode:'auto',spoken:'on'}}}
+  function currentMode(){const x=settings();return x.mode==='auto'?autoMode():x.mode}
+  function refreshMode(){modeEl.textContent=modeMap[currentMode()]||modeMap.technician}
+  function openHub(){refreshMode();hub.classList.remove('hidden');input.focus()}
+  function closeHub(){hub.classList.add('hidden')}
+  function line(who,text){const d=document.createElement('div');d.className='oliver-line '+(who==='You'?'user':'oliver');const st=document.createElement('strong');st.textContent=who+':';d.append(st,document.createTextNode(' '+text));transcript.appendChild(d);transcript.scrollTop=transcript.scrollHeight;saveChat()}
+  function saveChat(){localStorage.setItem(CHAT,transcript.innerHTML)}
+  function loadChat(){const h=localStorage.getItem(CHAT);if(h)transcript.innerHTML=h}
+  function speak(text){lastReply=text;if(settings().spoken==='off'||!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.94;u.onstart=()=>launch.classList.add('speaking');u.onend=()=>launch.classList.remove('speaking');u.onerror=()=>launch.classList.remove('speaking');speechSynthesis.speak(u)}
+  function reply(text){line('Oliver',text);speak(text)}
+  function routeCommand(raw){const text=raw.trim();if(!text)return;line('You',text);const q=text.replace(/^oliver[,:]?\s*/i,'').toLowerCase(),mode=currentMode();
+    if(/show me how|walk me through|guided|learn the software|input this customer|check.?in/.test(q)){reply('I am opening Instructor Mode and the guided software walkthrough. Choose the workflow you want, and I will wait for each confirmation.');closeHub();setTimeout(()=>{$('oliverGuideLaunch')?.click()},120);return}
+    if(/repair assistant|diagnos|next test|what.*next|wire|pinout|connector|color code|voltage|pressure|code/.test(q)){reply('I am opening Technician Mode for the active repair order. I will separate verified information, technician-recorded findings, and recommendations.');closeHub();setTimeout(()=>{$('smartOliverLaunch')?.click()},120);return}
+    if(/nati|academy|lesson|teach me|case study|drc/.test(q)){reply('NATI Academy is prepared as the training branch of Oliver. This build establishes the hub entry point; connected NATI lessons will be added as the curriculum integration is implemented.');return}
+    if(/schedule|appointment|customer|invoice|estimate|payment/.test(q)){reply('Office Mode is active. I can guide the current office workflow and keep the instructions on screen. For detailed entry guidance, say “Oliver, show me how.”');return}
+    const intro=mode==='office'?'Office Mode is active. ':mode==='instructor'?'Instructor Mode is active. ':mode==='founder'?'Founder Mode is active. ':'Technician Mode is active. ';
+    reply(intro+'I heard your request. This Phase 1 build preserves the spoken and written conversation and routes you to the correct Oliver component. Vehicle-specific technical answers require the repair order and verified service information to be loaded.');
+  }
+  launch.addEventListener('pointerdown',e=>{dragging=true;moved=false;launch.setPointerCapture?.(e.pointerId);const r=launch.getBoundingClientRect();startX=e.clientX;startY=e.clientY;baseL=r.left;baseT=r.top;launch.style.left=r.left+'px';launch.style.top=r.top+'px';launch.style.right='auto';launch.style.bottom='auto';e.preventDefault()});
+  launch.addEventListener('pointermove',e=>{if(!dragging)return;const dx=e.clientX-startX,dy=e.clientY-startY;if(Math.abs(dx)+Math.abs(dy)>5)moved=true;const maxX=innerWidth-launch.offsetWidth,maxY=innerHeight-launch.offsetHeight;launch.style.left=Math.max(0,Math.min(maxX,baseL+dx))+'px';launch.style.top=Math.max(0,Math.min(maxY,baseT+dy))+'px';e.preventDefault()});
+  function endDrag(e){if(!dragging)return;dragging=false;try{launch.releasePointerCapture?.(e.pointerId)}catch{}localStorage.setItem(POS,JSON.stringify({left:parseFloat(launch.style.left)||0,top:parseFloat(launch.style.top)||0}));setTimeout(()=>moved=false,60)}
+  launch.addEventListener('pointerup',e=>{const was=moved;endDrag(e);if(!was)openHub()});launch.addEventListener('pointercancel',endDrag);
+  try{const p=JSON.parse(localStorage.getItem(POS)||'null');if(p){launch.style.left=Math.max(0,Math.min(innerWidth-58,p.left))+'px';launch.style.top=Math.max(0,Math.min(innerHeight-58,p.top))+'px';launch.style.right='auto';launch.style.bottom='auto'}}catch{}
+  $('unifiedOliverClose').addEventListener('click',closeHub);hub.addEventListener('click',e=>{if(e.target===hub)closeHub()});
+  $('oliverHubLearn').addEventListener('click',()=>{closeHub();$('oliverGuideLaunch')?.click()});$('oliverHubRepair').addEventListener('click',()=>{closeHub();$('smartOliverLaunch')?.click()});
+  $('oliverHubNati').addEventListener('click',()=>reply('NATI Academy is now centralized in the Oliver Hub. The next curriculum-connected phase will open lessons, case studies, diagrams, and DRC instruction from this entry point.'));
+  $('oliverHubSettingsButton').addEventListener('click',()=>$('oliverHubSettings').classList.toggle('open'));
+  $('oliverHubSend').addEventListener('click',()=>{const q=input.value;input.value='';routeCommand(q)});input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('oliverHubSend').click()}});
+  $('oliverHubReadLast').addEventListener('click',()=>{if(lastReply)speak(lastReply);else reply('There is no previous reply to read yet.')});
+  const pref=$('oliverPreferredMode'),spoken=$('oliverSpokenReplies'),st=settings();pref.value=st.mode;spoken.value=st.spoken;function saveSettings(){localStorage.setItem(SET,JSON.stringify({mode:pref.value,spoken:spoken.value}));refreshMode()}pref.addEventListener('change',saveSettings);spoken.addEventListener('change',saveSettings);
+  $('oliverHubMic').addEventListener('click',()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){reply('Voice recognition is unavailable in this browser or local-file mode. Use the phone keyboard microphone or type the command.');return}const r=new SR();r.lang='en-US';r.interimResults=false;r.continuous=false;r.onstart=()=>{launch.classList.add('listening');$('oliverHubMic').textContent='Listening…'};r.onend=()=>{launch.classList.remove('listening');$('oliverHubMic').textContent='🎙️ Talk'};r.onerror=e=>reply('Voice recognition stopped because of '+(e.error||'a browser restriction')+'. You can still type the command.');r.onresult=e=>{const t=e.results[0][0].transcript;input.value=t;routeCommand(t);input.value=''};try{r.start()}catch{reply('The microphone is already active or blocked by the browser.')}});
+  document.addEventListener('click',e=>{if(e.target.closest('[data-screen],.nav-btn,.bottom-nav button'))setTimeout(refreshMode,80)});window.addEventListener('resize',()=>{const r=launch.getBoundingClientRect();launch.style.left=Math.max(0,Math.min(innerWidth-r.width,r.left))+'px';launch.style.top=Math.max(0,Math.min(innerHeight-r.height,r.top))+'px'});
+  loadChat();refreshMode();
 })();
 </script>
 
