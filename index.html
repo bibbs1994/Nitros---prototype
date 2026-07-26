@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.1.3</title>
+<title>Nitros Mobile Technician Portal v8.1.4</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -253,13 +253,31 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   .command-badges{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.command-badge{padding:5px 9px;border-radius:999px;border:1px solid var(--line);font-size:11px;font-weight:800}.command-badge.good{color:#79e2b3}.command-badge.warn{color:#ffd089}.command-badge.bad{color:#ff9aa0}
   .command-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.favorite-star{font-size:22px;background:none;border:0;color:#ffd089;padding:0 4px}.command-empty{padding:18px;border:1px dashed var(--line);border-radius:14px;color:var(--muted);text-align:center}
   @media(max-width:700px){.command-controls{grid-template-columns:1fr}.command-actions{grid-template-columns:1fr 1fr}.command-head{align-items:center}}
+
+
+  /* v8.1.4 Office Update Center */
+  .office-update-center{margin-top:20px;border:1px solid var(--line);border-radius:18px;padding:16px;background:rgba(255,255,255,.025)}
+  .office-update-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .office-update-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
+  .office-queue{display:grid;gap:10px;margin-top:14px}
+  .office-update-item{border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:14px;padding:13px;background:#081321}
+  .office-update-item.pending-response{border-left-color:var(--warn)}.office-update-item.sent{border-left-color:var(--ok);opacity:.82}
+  .office-update-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .office-update-title{font-weight:800}.office-update-time{font-size:11px;color:var(--muted);white-space:nowrap}
+  .office-update-note{margin-top:7px;color:#dbe4f0;white-space:pre-wrap;word-break:break-word}
+  .office-update-meta{font-size:12px;color:var(--muted);margin-top:7px}
+  .office-update-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .sync-badge{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-size:12px;font-weight:800}
+  .sync-badge.pending{color:#ffd089}.sync-badge.ready{color:#79e2b3}
+  @media(max-width:700px){.office-update-grid,.office-update-actions{grid-template-columns:1fr}.office-update-head{display:block}.office-update-time{margin-top:4px}}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.1.3 — Repair Order Command Center</div>
+  <div class="sub">Mobile Technician Portal v8.1.4 — Office Update Center</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -273,7 +291,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.1.3 adds the Repair Order Command Center with favorites, recent repairs, status control, priority sorting, elapsed time, and completion indicators.</div>
+    <div id="portalLoginStatus" class="status">Version 8.1.4 adds the Office Update Center with technician notes, response flags, promised-time tracking, a durable outbound queue, and repair-order sync packages while preserving the Repair Order Command Center.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -344,7 +362,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 8.1.3</div><h1>Repair Order Command Center</h1>
+    <div class="eyebrow">Version 8.1.4</div><h1>Repair Order Command Center</h1>
     <p>One-screen view of the active repair, labor clock, evidence, required items, and current workflow stage.</p>
     <div class="productivity-grid">
       <div class="productivity-card"><strong id="dashActiveJobs">0</strong><span>Active assigned jobs</span></div>
@@ -369,6 +387,19 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
         <div class="field"><label for="activeRepairPriority">Active priority</label><select id="activeRepairPriority"><option value="normal">Normal</option><option value="high">High Priority</option><option value="customer">Customer Waiting</option></select></div>
       </div>
       <div class="grid two"><button id="saveActiveCommandState" class="btn primary" type="button">Save Active Status</button><button id="refreshCommandCenter" class="btn secondary" type="button">Refresh Command Center</button></div>
+    </div>
+    <div class="office-update-center">
+      <div class="eyebrow">Version 8.1.4</div>
+      <div class="office-update-head"><div><h3>Office Update Center</h3><p style="margin-top:4px">Record a technician update against the active repair order. Updates remain safely queued on this device until exported or connected to the office cloud service.</p></div><span id="officeSyncBadge" class="sync-badge ready">0 queued</span></div>
+      <div class="office-update-grid">
+        <div class="field"><label for="officeUpdateType">Update type</label><select id="officeUpdateType"><option>General Technician Update</option><option>Diagnosis Complete</option><option>Authorization Needed</option><option>Waiting for Parts</option><option>Customer Contact Needed</option><option>Road Test Update</option><option>Quality Control Update</option><option>Ready for Delivery</option></select></div>
+        <div class="field"><label for="officePromisedTime">Expected next update / promised time</label><input id="officePromisedTime" type="datetime-local"></div>
+      </div>
+      <div class="field"><label for="officeUpdateNote">Technician note to office</label><textarea id="officeUpdateNote" rows="4" placeholder="What was found, what is needed, and what should happen next..."></textarea></div>
+      <label style="display:flex;align-items:center;gap:10px;margin-top:8px"><input id="officeNeedsResponse" type="checkbox" style="width:auto"> Office response required before work continues</label>
+      <div class="office-update-actions"><button id="queueOfficeUpdate" class="btn primary small" type="button">Queue Office Update</button><button id="exportOfficeSync" class="btn secondary small" type="button">Export Sync Package</button><label class="btn ghost small" style="text-align:center">Import Sync Package<input id="importOfficeSync" type="file" accept="application/json,.json" hidden></label></div>
+      <div id="officeUpdateStatus" class="status">No office updates are queued for the active repair order.</div>
+      <div id="officeUpdateQueue" class="office-queue"></div>
     </div>
     <div class="command-section"><h3>⭐ Pinned Repair Orders</h3><div id="pinnedRepairOrders" class="command-list"></div></div>
     <div class="command-section"><h3>Recently Opened</h3><div id="recentRepairOrders" class="command-list"></div></div>
@@ -1109,7 +1140,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.1.3 • Repair Order Command Center • Complete Evidence Timeline preserved • Local device storage</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.1.4 • Office Update Center • Repair Order Command Center preserved • Local-first sync queue</div>
 </div>
 
 <script>
@@ -3931,6 +3962,66 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     document.getElementById('refreshCommandCenter')?.addEventListener('click',render);document.getElementById('commandSort')?.addEventListener('change',render);
     ['pinnedRepairOrders','recentRepairOrders','allCommandRepairOrders'].forEach(id=>document.getElementById(id)?.addEventListener('click',e=>{const fav=e.target.closest('[data-command-favorite]'),open=e.target.closest('[data-command-open]'),status=e.target.closest('[data-command-status]'),priority=e.target.closest('[data-command-priority]');if(fav){const item=findItem(fav.dataset.commandFavorite),all=state();all[item.id]={...itemState(item),favorite:!itemState(item).favorite};saveState(all);render()}if(open)openItem(findItem(open.dataset.commandOpen));if(status){const item=findItem(status.dataset.commandStatus),opts=['Assigned','In Progress','Waiting for Parts','Waiting for Customer','Road Test Required','Ready for Delivery','Completed'],cur=itemState(item).status||item.status,next=opts[(opts.indexOf(cur)+1)%opts.length],all=state();all[item.id]={...itemState(item),status:next};saveState(all);render()}if(priority){const item=findItem(priority.dataset.commandPriority),opts=['normal','high','customer'],cur=itemState(item).priority||'normal',next=opts[(opts.indexOf(cur)+1)%opts.length],all=state();all[item.id]={...itemState(item),priority:next};saveState(all);render()}}));
     const originalPortalShowScreen=window.portalShowScreen||portalShowScreen;document.querySelectorAll('[data-go="dashboard"]').forEach(b=>b.addEventListener('click',()=>setTimeout(render,50)));document.getElementById('dashResumeJob')?.addEventListener('click',()=>{const item=sources().find(x=>x.type==='active');if(item)markRecent(item)});window.addEventListener('DOMContentLoaded',()=>setTimeout(render,150));setInterval(()=>{if(document.getElementById('dashboard')?.classList.contains('active'))render()},10000);
+  })();
+
+
+  // v8.1.4 Office Update Center — durable local queue and portable sync packages.
+  (()=>{
+    const QUEUE_KEY='nitros_v814_office_update_queue';
+    const DRAFT_KEY_V814='nitros_prototype_v073_active_draft';
+    const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const read=(k,f)=>{try{return JSON.parse(localStorage.getItem(k)||'null')??f}catch(e){return f}};
+    const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+    function activeIdentity(){
+      const draft=read(DRAFT_KEY_V814,{}),f=draft.fields||{},v=draft.selectedVehicle||{};
+      const value=id=>document.getElementById(id)?.value?.trim()||'';
+      return {
+        ro:value('roNumber')||value('workOrderNumber')||f.roNumber||f.workOrderNumber||'RO pending',
+        vin:value('vinInput')||v.vin||f.vinInput||'VIN pending',
+        vehicle:[value('vehicleYear')||v.year||f.vehicleYear,value('vehicleMake')||v.make||f.vehicleMake,value('vehicleModel')||v.model||f.vehicleModel].filter(Boolean).join(' ')||f.jobVehicle||'Vehicle pending',
+        customer:value('customerName')||f.customerName||f.jobCustomer||'Customer pending',
+        technician:value('technicianName')||value('portalTechName')||localStorage.getItem('nitros_portal_tech_name')||'Technician',
+        repairStatus:value('repairStatus')||f.repairStatus||'In Progress'
+      };
+    }
+    function queue(){return read(QUEUE_KEY,[])}
+    function save(items){write(QUEUE_KEY,items);render()}
+    function fmtDate(value){const d=new Date(value);return Number.isNaN(d.getTime())?'Not recorded':d.toLocaleString()}
+    function render(){
+      const items=queue(),box=document.getElementById('officeUpdateQueue'),badge=document.getElementById('officeSyncBadge'),status=document.getElementById('officeUpdateStatus');
+      if(badge){badge.textContent=`${items.filter(x=>x.syncState!=='exported').length} queued`;badge.className=`sync-badge ${items.some(x=>x.syncState!=='exported')?'pending':'ready'}`}
+      if(!box)return;
+      box.innerHTML=items.length?items.slice().reverse().map(item=>`<article class="office-update-item ${item.needsResponse?'pending-response':''} ${item.syncState==='exported'?'sent':''}"><div class="office-update-head"><div><div class="office-update-title">${esc(item.type)}</div><div class="office-update-meta">${esc(item.vehicle)} • ${esc(item.ro)} • ${esc(item.technician)}</div></div><div class="office-update-time">${esc(fmtDate(item.createdAt))}</div></div><div class="office-update-note">${esc(item.note)}</div><div class="office-update-meta">Repair status: ${esc(item.repairStatus)}${item.promisedTime?` • Expected: ${esc(fmtDate(item.promisedTime))}`:''}${item.needsResponse?' • OFFICE RESPONSE REQUIRED':''} • ${item.syncState==='exported'?'Exported':'Queued locally'}</div><div class="office-update-buttons"><button class="btn secondary small" data-office-exported="${esc(item.id)}" type="button">${item.syncState==='exported'?'Mark Queued':'Mark Exported'}</button><button class="btn ghost small" data-office-delete="${esc(item.id)}" type="button">Remove Update</button></div></article>`).join(''):'<div class="command-empty">No office updates have been recorded for this repair order.</div>';
+      if(status){const pending=items.filter(x=>x.syncState!=='exported').length;status.className=items.length?'status ok':'status';status.textContent=items.length?`${items.length} total update${items.length===1?'':'s'} stored; ${pending} waiting to be exported or cloud-synchronized.`:'No office updates are queued for the active repair order.'}
+    }
+    document.getElementById('queueOfficeUpdate')?.addEventListener('click',()=>{
+      const note=document.getElementById('officeUpdateNote')?.value.trim()||'',status=document.getElementById('officeUpdateStatus');
+      if(!note){if(status){status.className='status warn';status.textContent='Enter a technician note before queuing the office update.'}return}
+      const id=activeIdentity(),items=queue();
+      items.push({id:`office-update-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,createdAt:new Date().toISOString(),type:document.getElementById('officeUpdateType')?.value||'General Technician Update',note,promisedTime:document.getElementById('officePromisedTime')?.value||'',needsResponse:!!document.getElementById('officeNeedsResponse')?.checked,syncState:'queued',...id});
+      save(items);document.getElementById('officeUpdateNote').value='';document.getElementById('officePromisedTime').value='';document.getElementById('officeNeedsResponse').checked=false;
+      if(status){status.className='status ok';status.textContent='Office update queued and preserved on this device.'}
+    });
+    document.getElementById('officeUpdateQueue')?.addEventListener('click',e=>{
+      const exported=e.target.closest('[data-office-exported]'),del=e.target.closest('[data-office-delete]'),items=queue();
+      if(exported){const item=items.find(x=>x.id===exported.dataset.officeExported);if(item)item.syncState=item.syncState==='exported'?'queued':'exported';save(items)}
+      if(del)save(items.filter(x=>x.id!==del.dataset.officeDelete));
+    });
+    document.getElementById('exportOfficeSync')?.addEventListener('click',()=>{
+      const items=queue(),status=document.getElementById('officeUpdateStatus');
+      if(!items.length){if(status){status.className='status warn';status.textContent='There are no office updates to export.'}return}
+      const packageData={schema:'nitros-mobile-office-sync',version:'8.1.4',exportedAt:new Date().toISOString(),device:navigator.userAgent,activeRepair:activeIdentity(),updates:items};
+      const blob=new Blob([JSON.stringify(packageData,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+      const ro=activeIdentity().ro.replace(/[^a-z0-9_-]+/gi,'_');a.href=url;a.download=`Nitros_RO_${ro}_Office_Sync_${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+      save(items.map(x=>({...x,syncState:'exported',exportedAt:new Date().toISOString()})));
+      if(status){status.className='status ok';status.textContent='Sync package exported. It can be retained as a backup or imported on another Nitros device.'}
+    });
+    document.getElementById('importOfficeSync')?.addEventListener('change',async e=>{
+      const file=e.target.files?.[0],status=document.getElementById('officeUpdateStatus');if(!file)return;
+      try{const data=JSON.parse(await file.text());if(data?.schema!=='nitros-mobile-office-sync'||!Array.isArray(data.updates))throw new Error('Unsupported package');const existing=queue(),ids=new Set(existing.map(x=>x.id)),merged=[...existing,...data.updates.filter(x=>x?.id&&!ids.has(x.id))];save(merged);if(status){status.className='status ok';status.textContent=`Imported ${merged.length-existing.length} new office update${merged.length-existing.length===1?'':'s'} from the sync package.`}}catch(err){if(status){status.className='status bad';status.textContent='That file is not a valid Nitros Version 8.1.4 office sync package.'}}finally{e.target.value=''}
+    });
+    document.querySelectorAll('[data-go="dashboard"]').forEach(b=>b.addEventListener('click',()=>setTimeout(render,80)));
+    window.addEventListener('DOMContentLoaded',()=>setTimeout(render,160));render();
   })();
 
 </script>
