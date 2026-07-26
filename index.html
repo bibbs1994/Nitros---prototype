@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.2.6 — Unified Oliver Hub Voice Intelligence</title>
+<title>Nitros Mobile Technician Portal v8.2.6 — Movable Floating Oliver Guide</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -402,7 +402,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.2.6 — Unified Oliver Hub Voice Intelligence</div>
+  <div class="sub">Mobile Technician Portal v8.2.6 — Movable Floating Oliver Guide</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -416,7 +416,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.2.6 unifies Oliver guidance, diagnostic assistance, repair intelligence, voice input, and spoken responses into one movable Oliver Hub while preserving Convert to RO routing, guided-field confirmation, and all verified prior-version workflows.</div>
+    <div id="portalLoginStatus" class="status">Version 8.2.6 adds a movable, floating, minimizable Oliver Guided Test Assistant while preserving Convert to RO routing and explicit guided-field confirmation. Tap Oliver for a screen-by-screen test that highlights each required control, verifies your entry, and records completed test steps. Every verified prior-version workflow is preserved.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -3908,6 +3908,60 @@ document.getElementById("validationList")?.addEventListener("click",e=>{
     });
   });
 
+
+  // v8.2.6 Check-In ↔ Technician Dashboard linkage.
+  // Upserts the completed intake into the live workboard using the exact same repair-order number.
+  function syncCompletedCheckInToTechnicianDashboard(payload){
+    const WORKBOARD_KEY="nitros_v822_workboard";
+    let items=[];
+    try{items=JSON.parse(localStorage.getItem(WORKBOARD_KEY)||"[]");if(!Array.isArray(items))items=[];}catch(error){items=[];}
+    const sourceId=`checkin:${payload.checkInId}`;
+    const ro=String(payload.repairOrder||payload.workOrder?.workOrderNumber||"").trim();
+    const vehicle=[payload.vehicle?.year,payload.vehicle?.make,payload.vehicle?.model].filter(Boolean).join(" ")||"Vehicle";
+    const technician=payload.workOrder?.assignedTechnician||payload.technicianInspection?.technician||portalProfile()?.name||"Technician";
+    const repairStatus=String(payload.workOrder?.repairStatus||"").toLowerCase();
+    let stage="Waiting Diagnosis";
+    if(repairStatus.includes("diagnos")&&!repairStatus.includes("not"))stage="Diagnosing";
+    else if(repairStatus.includes("approval"))stage="Waiting Approval";
+    else if(repairStatus.includes("part"))stage="Waiting Parts";
+    else if(repairStatus.includes("repair")||repairStatus.includes("progress"))stage="Repair in Progress";
+    else if(repairStatus.includes("road")||repairStatus.includes("verif"))stage="Verification / Road Test";
+    else if(repairStatus.includes("pickup")||repairStatus.includes("delivery")||repairStatus.includes("complete"))stage="Ready for Pickup";
+    const now=new Date().toISOString();
+    const existingIndex=items.findIndex(item=>item.sourceId===sourceId||(ro&&String(item.ro||"").trim()===ro));
+    const existing=existingIndex>=0?items[existingIndex]:{};
+    const audit=Array.isArray(existing.audit)?existing.audit:[];
+    audit.unshift({at:now,by:technician,action:existingIndex>=0?"Updated from completed check-in":"Created from completed check-in",detail:`Same repair order preserved: ${ro||"RO pending"}`});
+    const record={
+      ...existing,
+      id:existing.id||`wb_checkin_${payload.checkInId}`,
+      sourceId,
+      checkInId:payload.checkInId,
+      customer:payload.customer?.name||"Customer",
+      vehicle,
+      vin:payload.vehicle?.vin||"",
+      ro,
+      technician,
+      stage,
+      priority:existing.priority||"normal",
+      concern:payload.concern||"",
+      instructions:[payload.advisorNotes,payload.inspectionNotes].filter(Boolean).join("\n"),
+      approval:existing.approval||payload.estimate?.authorization?.status||"Not Prepared",
+      approvalMethod:existing.approvalMethod||payload.estimate?.authorization?.method||"",
+      approvedAmount:existing.approvedAmount||"",
+      promisedAt:existing.promisedAt||"",
+      partsStatus:existing.partsStatus||"No Parts Required",
+      roadTest:payload.workOrder?.roadTestVerification?.status||existing.roadTest||"Not Required",
+      createdAt:existing.createdAt||now,
+      updatedAt:now,
+      audit
+    };
+    if(existingIndex>=0)items[existingIndex]=record;else items.push(record);
+    localStorage.setItem(WORKBOARD_KEY,JSON.stringify(items));
+    window.dispatchEvent(new CustomEvent("nitros-workboard-change",{detail:{source:"completed-checkin",checkInId:payload.checkInId,repairOrder:ro}}));
+    return record;
+  }
+
 document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     const s=document.getElementById("submitStatus");
     const missing=renderValidationCenter();
@@ -4042,10 +4096,11 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
     localStorage.setItem("nitros_prototype_v070_last_checkin",JSON.stringify(payload));
     saveCustomerHistoryRecord(payload);
+    const dashboardRecord=syncCompletedCheckInToTechnicianDashboard(payload);
     s.className="status ok";
     const wasEdit=Boolean(editingCheckInId);
     lastSavedRecordId=payload.checkInId;
-    s.textContent=`Inspection report ${payload.checkInId} ${wasEdit?"updated":"saved"} successfully. It is stored in Customer History and can be reopened immediately.`;
+    s.textContent=`Inspection report ${payload.checkInId} ${wasEdit?"updated":"saved"} successfully. Repair order ${dashboardRecord.ro||payload.repairOrder} is now linked to Customer History and the Technician Dashboard.`;
     document.getElementById("postSaveActions")?.classList.remove("hidden");
     editingCheckInId=null;
     localStorage.removeItem(DRAFT_KEY);
@@ -4578,7 +4633,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     function parseTime(text){const m=text.match(/(?:at\s*)?(1[0-2]|0?\d)(?::([0-5]\d))?\s*(a\.?m\.?|p\.?m\.?)?/i);if(!m)return '08:00';let h=+m[1],min=m[2]||'00',amp=(m[3]||'').toLowerCase();if(amp.startsWith('p')&&h<12)h+=12;if(amp.startsWith('a')&&h===12)h=0;return `${String(h).padStart(2,'0')}:${min}`}
     function oliverParse(){const text=el('oliverScheduleInput')?.value.trim();if(!text){el('oliverScheduleResponse').textContent='Tell me what you would like scheduled or remembered.';return}const low=text.toLowerCase(),isFollow=/remind|don't forget|order|call back|follow up|follow-up/.test(low);if(isFollow){blankFollowup();el('followupDueDate').value=parseDate(text);el('followupDueTime').value=parseTime(text);el('followupTask').value=text.replace(/^oliver[, ]*/i,'').trim();if(/order/.test(low))el('followupCategory').value='Order Parts';if(/urgent|safety|first thing/.test(low))el('followupPriority').value=/urgent|safety/.test(low)?'urgent':'high';const kia=text.match(/([A-Z][a-z]+)'?s?\s+(Kia Soul|[A-Z][a-z]+\s+[A-Z][a-z]+)/);if(kia){el('followupCustomer').value=kia[1];el('followupVehicle').value=kia[2]}el('oliverScheduleResponse').textContent='I prepared a shop follow-up below. Review the due date, customer, vehicle, vendors, and task, then tap Save Follow-Up.';el('followupCustomer').scrollIntoView({behavior:'smooth',block:'center'})}else{blankAppointment();el('appointmentDate').value=parseDate(text);el('appointmentTime').value=parseTime(text);const name=text.match(/(?:schedule|book|add)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i);if(name)el('appointmentCustomer').value=name[1];const veh=text.match(/(?:with|bringing|in|the)\s+(?:the\s+)?((?:19|20)\d{2}\s+[^,.]+|[A-Z][a-z]+\s+(?:Soul|Cougar|Truck|Buick|Kia|Ford|Chevy|Toyota|Honda|Jeep))/i);if(veh)el('appointmentVehicle').value=veh[1].trim();el('appointmentConcern').value=text.replace(/^oliver[, ]*/i,'').trim();if(/wait/.test(low))el('appointmentArrival').value='Waiting';else if(/tow/.test(low))el('appointmentArrival').value='Tow-in';else if(/key drop/.test(low))el('appointmentArrival').value='Key drop';const draft=currentDraft(),hits=showConflict(draft);el('oliverScheduleResponse').textContent=hits.length?`I prepared the appointment, but I found ${hits.length} schedule conflict${hits.length===1?'':'s'}. Review the highlighted schedule warning before saving.`:'I prepared the appointment and checked the schedule. Review the details, then tap Save Appointment.';el('appointmentCustomer').scrollIntoView({behavior:'smooth',block:'center'})}}
     function listen(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){el('oliverScheduleResponse').textContent='Voice recognition is not available in this browser. You can still type or use the phone keyboard microphone.';return}const r=new SR();r.lang='en-US';r.interimResults=false;r.onstart=()=>el('oliverScheduleResponse').textContent='Listening…';r.onerror=e=>el('oliverScheduleResponse').textContent=`Voice recognition stopped: ${e.error}. You can type the instruction instead.`;r.onresult=e=>{el('oliverScheduleInput').value=e.results[0][0].transcript;el('oliverScheduleResponse').textContent='I heard your instruction. Tap Have Oliver Prepare It.'};r.start()}
-    function download(){const payload={schema:'nitros-schedule-package',version:'8.2.6',createdAt:new Date().toISOString(),appointments:read(APPT_KEY),followups:read(FOLLOW_KEY)},blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`Nitros_v8.2.6_Schedule_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setMsg('scheduleTransferStatus','Schedule and follow-ups exported successfully.','status ok')}
+    function download(){const payload={schema:'nitros-schedule-package',version:'8.2.3',createdAt:new Date().toISOString(),appointments:read(APPT_KEY),followups:read(FOLLOW_KEY)},blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`Nitros_v8.2.6_Schedule_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setMsg('scheduleTransferStatus','Schedule and follow-ups exported successfully.','status ok')}
     async function importData(file){const d=JSON.parse(await file.text());if(d?.schema!=='nitros-schedule-package')throw new Error('Unsupported file');const am=new Map(read(APPT_KEY).map(x=>[x.id,x]));(d.appointments||[]).forEach(x=>x?.id&&am.set(x.id,{...am.get(x.id),...x}));const fm=new Map(read(FOLLOW_KEY).map(x=>[x.id,x]));(d.followups||[]).forEach(x=>x?.id&&fm.set(x.id,{...fm.get(x.id),...x}));localStorage.setItem(APPT_KEY,JSON.stringify([...am.values()]));localStorage.setItem(FOLLOW_KEY,JSON.stringify([...fm.values()]));renderAll();setMsg('scheduleTransferStatus','Schedule package imported and merged without deleting existing records.','status ok')}
     el('saveAppointment')?.addEventListener('click',saveAppointment);el('checkAppointmentConflict')?.addEventListener('click',()=>showConflict());el('createLinkedFollowup')?.addEventListener('click',linkedFollowup);el('oliverNextJob')?.addEventListener('click',whatsNext);el('oliverReadBriefing')?.addEventListener('click',()=>speak(el('morningBriefingText')?.textContent||'No morning briefing is available.'));el('clearAppointment')?.addEventListener('click',blankAppointment);el('saveFollowup')?.addEventListener('click',saveFollowup);el('clearFollowup')?.addEventListener('click',blankFollowup);el('oliverParseSchedule')?.addEventListener('click',oliverParse);el('oliverListenSchedule')?.addEventListener('click',listen);el('exportScheduleData')?.addEventListener('click',download);el('importScheduleData')?.addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{await importData(f)}catch(err){setMsg('scheduleTransferStatus','That file is not a valid Nitros v8.2.6 schedule package.','status bad')}finally{e.target.value=''}});
     document.querySelectorAll('[data-schedule-view]').forEach(b=>b.addEventListener('click',()=>{view=b.dataset.scheduleView;document.querySelectorAll('[data-schedule-view]').forEach(x=>x.classList.toggle('active',x===b));renderAppointments()}));
