@@ -395,6 +395,9 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 .oliver-hub-head{position:sticky;top:0;z-index:2;background:#111d2d;border-bottom:1px solid rgba(255,157,40,.35);padding:15px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}.oliver-hub-title{font-size:1.18rem;font-weight:900}.oliver-mode-pill{display:inline-flex;align-items:center;gap:6px;margin-top:5px;padding:5px 9px;border-radius:999px;background:#1b3049;color:#ffd59c;font-size:.79rem;font-weight:800}
 .oliver-hub-close{border:1px solid #71839b;background:#142236;color:#fff;border-radius:10px;padding:8px 11px;font-weight:800}.oliver-hub-body{padding:14px 16px 18px}.oliver-hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.oliver-hub-choice{border:1px solid #31465f;background:#111d2d;color:#fff;border-radius:16px;padding:15px;text-align:left;min-height:112px}.oliver-hub-choice strong{display:block;font-size:1rem;margin-bottom:7px}.oliver-hub-choice span{display:block;color:#b7c5d8;font-size:.84rem;line-height:1.35}.oliver-hub-choice.primary{border-color:#ff9d28}.oliver-voice-box{margin-top:13px;padding:13px;border:1px solid #2f465f;border-radius:16px;background:#0e1a2a}.oliver-voice-row{display:grid;grid-template-columns:1fr auto;gap:8px}.oliver-voice-input{width:100%;min-height:48px;border:1px solid #3b516b;border-radius:12px;background:#08111d;color:#fff;padding:11px;font:inherit}.oliver-voice-btn{border:1px solid #ff9d28;background:#ff9d28;color:#101820;border-radius:12px;padding:10px 13px;font-weight:900}.oliver-transcript{margin-top:10px;max-height:190px;overflow:auto;border-radius:12px;background:#07101b;padding:10px;font-size:.88rem;line-height:1.4}.oliver-line{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.07)}.oliver-line:last-child{border-bottom:0}.oliver-line.user strong{color:#8fd3ff}.oliver-line.oliver strong{color:#ffbd66}.oliver-hub-footer{margin-top:11px;color:#93a7bf;font-size:.76rem;line-height:1.35}.oliver-hub-settings{margin-top:12px;display:none}.oliver-hub-settings.open{display:block}.oliver-setting-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08)}.oliver-setting-row select{background:#07101b;color:#fff;border:1px solid #3b516b;border-radius:9px;padding:8px}
 @media(max-width:520px){.oliver-hub-grid{grid-template-columns:1fr}.oliver-hub-choice{min-height:88px}.oliver-hub-shell{padding:8px}.oliver-hub-card{max-height:92vh}.oliver-hub-launch{width:54px;height:54px;bottom:76px;right:10px}}
+<style id="v826cGuideMobileFix">
+.oliver-guide-actions{position:sticky;bottom:0;z-index:4;background:#071522;padding:10px 0 2px;margin-top:12px;border-top:1px solid rgba(255,255,255,.08)}
+@media(max-width:650px){.oliver-guide-actions{grid-template-columns:1fr 1fr}.oliver-guide-actions #oliverGuideStop{grid-column:1/-1}.oliver-guide-panel.guiding .oliver-guide-dialog{max-height:72vh}}
 </style>
 
 </head>
@@ -4834,11 +4837,11 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   const GUIDE_KEY='nitros_v823_guided_test_history';
   const $=id=>document.getElementById(id);
   const panel=$('oliverGuidePanel'), dialog=panel.querySelector('.oliver-guide-dialog'), guideHead=panel.querySelector('.oliver-guide-head'), stepbox=$('oliverGuideStepbox'), label=$('oliverHighlightLabel');
-  let tourName='', steps=[], index=0, highlighted=null, fieldCleanup=null, advanceTimer=null, renderToken=0;
+  let tourName='', steps=[], index=0, highlighted=null, fieldCleanup=null, advanceTimer=null, inputAdvanceTimer=null, renderToken=0;
   const tours={
     appointment:[
       {screen:'home',target:'[data-go="schedule"]',title:'Open Appointments',detail:'Tap Appointments & Morning Briefing from the home screen.',action:'click'},
-      {screen:'schedule',target:'#appointmentCustomer',title:'Enter the customer',detail:'Type a test customer name. Oliver will verify that the field is not empty.',check:el=>el.value.trim().length>0},
+      {screen:'schedule',target:'#appointmentCustomer',title:'Enter the customer',detail:'Enter the customer name. Oliver will recognize the completed name automatically, or tap the visible Next button.',check:el=>el.value.trim().length>1,autoAdvanceOnInput:true,nextLabel:'Next: Vehicle'},
       {screen:'schedule',target:'#appointmentVehicle',title:'Enter the vehicle',detail:'Enter year, make, and model.',check:el=>el.value.trim().length>0},
       {screen:'schedule',target:'#appointmentDate',title:'Choose the appointment date',detail:'Select today or a future shop date. On iPhone, Oliver advances automatically as soon as you choose the date.',check:el=>!!el.value,autoAdvanceOnChange:true},
       {screen:'schedule',target:'#appointmentTime',title:'Choose the appointment time',detail:'Select the planned arrival time.',check:el=>!!el.value},
@@ -4874,7 +4877,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     ]
   };
   function activeScreen(){return document.querySelector('.screen.active')?.id||''}
-  function clearFieldWatcher(){if(fieldCleanup){fieldCleanup();fieldCleanup=null}if(advanceTimer){clearTimeout(advanceTimer);advanceTimer=null}}
+  function clearFieldWatcher(){if(fieldCleanup){fieldCleanup();fieldCleanup=null}if(advanceTimer){clearTimeout(advanceTimer);advanceTimer=null}if(inputAdvanceTimer){clearTimeout(inputAdvanceTimer);inputAdvanceTimer=null}}
   function removeHighlight(){clearFieldWatcher();if(highlighted){highlighted.classList.remove('oliver-highlight');highlighted=null}label.classList.add('hidden');}
   function locate(step){return document.querySelector(step.target)}
   function positionLabel(el,step){const r=el.getBoundingClientRect();label.innerHTML='<strong>'+step.title+'</strong>'+step.detail;label.classList.remove('hidden');const top=Math.min(window.innerHeight-label.offsetHeight-12,Math.max(10,r.bottom+10));const left=Math.min(window.innerWidth-label.offsetWidth-10,Math.max(10,r.left));label.style.top=top+'px';label.style.left=left+'px';}
@@ -4898,6 +4901,18 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
         }
       }
     };
+    const onInput=()=>{
+      evaluate();
+      if(step.autoAdvanceOnInput){
+        if(inputAdvanceTimer)clearTimeout(inputAdvanceTimer);
+        if(step.check(el)){
+          $('oliverGuideStatus').textContent='Customer name recognized. Oliver will continue automatically, or tap Next now.';
+          inputAdvanceTimer=setTimeout(()=>{
+            if(token===renderToken&&steps[index]===step&&step.check(el))advance();
+          },900);
+        }
+      }
+    };
     const onChange=()=>{
       evaluate();
       if(step.autoAdvanceOnChange && step.check(el)){
@@ -4905,13 +4920,18 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
         setTimeout(()=>{if(token===renderToken&&steps[index]===step)advance()},250);
       }
     };
-    ['input','blur'].forEach(type=>el.addEventListener(type,evaluate));
+    el.addEventListener('input',onInput);
+    el.addEventListener('blur',evaluate);
     el.addEventListener('change',onChange);
     el.addEventListener('keydown',onKey);
-    fieldCleanup=()=>{['input','blur'].forEach(type=>el.removeEventListener(type,evaluate));el.removeEventListener('change',onChange);el.removeEventListener('keydown',onKey)};
+    fieldCleanup=()=>{el.removeEventListener('input',onInput);el.removeEventListener('blur',evaluate);el.removeEventListener('change',onChange);el.removeEventListener('keydown',onKey)};
     evaluate();
+    if(step.autoAdvanceOnInput && step.check(el)){
+      $('oliverGuideStatus').textContent='Customer name already loaded. Tap Next, or Oliver will continue automatically.';
+      inputAdvanceTimer=setTimeout(()=>{if(token===renderToken&&steps[index]===step&&step.check(el))advance()},900);
+    }
   }
-  function render(){removeHighlight();const token=++renderToken;const step=steps[index];if(!step)return finish();goScreen(step.screen);setTimeout(()=>{if(token!==renderToken)return;const el=locate(step);$('oliverGuideProgress').textContent='Step '+(index+1)+' of '+steps.length+' • '+tourName;$('oliverGuideInstruction').textContent=step.title;$('oliverGuideDetail').textContent=step.detail;$('oliverGuideStatus').textContent=step.optional?'This is a visual verification step. Continue after confirming the screen looks correct.':step.autoAdvanceOnChange?'Choose the highlighted date. Oliver will continue automatically after selection.':step.check?'Complete the highlighted field, then tap Verify & Continue.':'Complete the highlighted action.';$('oliverGuideBack').disabled=index===0;if(el){highlighted=el;el.classList.add('oliver-highlight');el.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>{if(token===renderToken)positionLabel(el,step)},350);if(step.action==='click'){const clickHandler=()=>autoAdvance(token,step);el.addEventListener('click',clickHandler,{once:true});fieldCleanup=()=>el.removeEventListener('click',clickHandler)}else watchCompletedField(el,step,token);}else{$('oliverGuideStatus').textContent='Oliver could not find this control on the current screen. You may skip forward or stop the test.';}},180);}
+  function render(){removeHighlight();const token=++renderToken;const step=steps[index];if(!step)return finish();goScreen(step.screen);setTimeout(()=>{if(token!==renderToken)return;const el=locate(step);$('oliverGuideProgress').textContent='Step '+(index+1)+' of '+steps.length+' • '+tourName;$('oliverGuideInstruction').textContent=step.title;$('oliverGuideDetail').textContent=step.detail;$('oliverGuideStatus').textContent=step.optional?'This is a visual verification step. Continue after confirming the screen looks correct.':step.autoAdvanceOnChange?'Choose the highlighted date. Oliver will continue automatically after selection.':step.check?'Complete the highlighted field, then tap Verify & Continue.':'Complete the highlighted action.';$('oliverGuideBack').disabled=index===0;$('oliverGuideVerify').textContent=step.nextLabel||'Verify & Continue';if(el){highlighted=el;el.classList.add('oliver-highlight');el.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>{if(token===renderToken)positionLabel(el,step)},350);if(step.action==='click'){const clickHandler=()=>autoAdvance(token,step);el.addEventListener('click',clickHandler,{once:true});fieldCleanup=()=>el.removeEventListener('click',clickHandler)}else watchCompletedField(el,step,token);}else{$('oliverGuideStatus').textContent='Oliver could not find this control on the current screen. You may skip forward or stop the test.';}},180);}
   function advance(){clearFieldWatcher();if(index<steps.length-1){index++;render()}else finish()}
   function autoAdvance(token,step){
     if(typeof step.waitFor==='function'){
@@ -4931,7 +4951,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     setTimeout(()=>{if(token===renderToken&&steps[index]===step)advance()},650)
   }
   function verify(){const step=steps[index],el=locate(step);if(step.check&&!step.optional){if(!el||!step.check(el)){$('oliverGuideStatus').textContent='This step is not complete yet. Enter the requested information in the highlighted field.';el?.focus();return}}if(index<steps.length-1){index++;render()}else finish()}
-  function finish(){removeHighlight();const history=JSON.parse(localStorage.getItem(GUIDE_KEY)||'[]');history.push({tour:tourName,completedAt:new Date().toISOString(),steps:steps.length});localStorage.setItem(GUIDE_KEY,JSON.stringify(history.slice(-25)));$('oliverGuideProgress').textContent='Test completed';$('oliverGuideInstruction').textContent='Oliver completed the guided walkthrough.';$('oliverGuideDetail').textContent='The completed test was recorded on this device. You can close Oliver or start another test.';$('oliverGuideStatus').textContent='All guided steps completed.';$('oliverGuideVerify').disabled=true;$('oliverGuideBack').disabled=true;}
+  function finish(){removeHighlight();const history=JSON.parse(localStorage.getItem(GUIDE_KEY)||'[]');history.push({tour:tourName,completedAt:new Date().toISOString(),steps:steps.length});localStorage.setItem(GUIDE_KEY,JSON.stringify(history.slice(-25)));$('oliverGuideProgress').textContent='Test completed';$('oliverGuideInstruction').textContent='Oliver completed the guided walkthrough.';$('oliverGuideDetail').textContent='The completed test was recorded on this device. You can close Oliver or start another test.';$('oliverGuideStatus').textContent='All guided steps completed.';$('oliverGuideVerify').textContent='Verify & Continue';$('oliverGuideVerify').disabled=true;$('oliverGuideBack').disabled=true;}
   function start(name){if(name==='appointment'){const a=$('appointmentCustomer'),c=$('customerName');if(a&&c&&!a.value.trim()&&c.value.trim())a.value=c.value.trim();const p=$('appointmentPhone'),cp=$('phone');if(p&&cp&&!p.value.trim()&&cp.value.trim())p.value=cp.value.trim();}tourName=name;steps=tours[name];index=0;$('oliverGuideVerify').disabled=false;stepbox.classList.remove('hidden');panel.classList.remove('hidden');panel.classList.add('guiding');render()}
   function parseCommand(){const q=$('oliverGuideCommand').value.toLowerCase();if(q.includes('workboard')||q.includes('repair order'))start('workboard');else if(q.includes('complete')||q.includes('full')||q.includes('everything'))start('full');else start('appointment')}
   function speakGuideText(text){
