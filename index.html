@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.3.0 — Oliver Guided Diagnostics</title>
+<title>Nitros Mobile Technician Portal v8.3.1 — Oliver Guided Diagnostics</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -417,7 +417,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.3.0 — Oliver Guided Diagnostics</div>
+  <div class="sub">Mobile Technician Portal v8.3.1 — Oliver Guided Diagnostics</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -431,7 +431,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.3.0 activates Oliver as the technician diagnostic copilot. Open the Oliver Hub from any screen, choose Repair Assistant, and use the active repair context to verify the complaint, review scan information, select the next-best test, record evidence, and verify the repair. The complete validated v8.2.9 intake, walk-around, Convert to RO, and Technician Dashboard workflow is preserved.</div>
+    <div id="portalLoginStatus" class="status">Version 8.3.1 activates Oliver as the technician diagnostic copilot. Open the Oliver Hub from any screen, choose Repair Assistant, and use the active repair context to verify the complaint, review scan information, select the next-best test, record evidence, and verify the repair. The complete validated v8.2.9 intake, walk-around, Convert to RO, and Technician Dashboard workflow is preserved.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -1554,7 +1554,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.3.0 • Oliver guided diagnostics • Evidence-based testing • Repair timeline • Preserved v8.2.9 workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v8.3.1 • Oliver guided diagnostics • Evidence-based testing • Repair timeline • Preserved v8.2.9 workflow</div>
 </div>
 
 <script>
@@ -4901,7 +4901,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v8.3.0 • Active diagnostic copilot</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v8.3.1 • Active diagnostic copilot</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5516,6 +5516,112 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     event.stopImmediatePropagation();
     convertAndOpenDashboard(button.getAttribute('data-appt-ro'));
   },true);
+})();
+</script>
+
+
+<script id="v831DiagnosticStartFix">
+(()=>{
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+  const readValue=id=>($(id)?.value||'').trim();
+  const TIMELINE_KEY='nitros_v824_oliver_repair_timeline';
+
+  function identity(){
+    const customer=readValue('customerName')||readValue('appointmentCustomer')||'Customer not entered';
+    const vehicle=[readValue('vehicleYear'),readValue('vehicleMake'),readValue('vehicleModel')].filter(Boolean).join(' ')||readValue('appointmentVehicle')||'Vehicle not entered';
+    const ro=readValue('roNumber')||readValue('workOrderNumber')||'RO pending';
+    return {customer,vehicle,ro,key:[ro,customer,vehicle].join('|')};
+  }
+  function addTimeline(type,detail){
+    try{
+      const i=identity();
+      const all=JSON.parse(localStorage.getItem(TIMELINE_KEY)||'[]');
+      all.push({id:Date.now()+'_'+Math.random().toString(36).slice(2,7),key:i.key,type,detail,at:new Date().toISOString(),technician:readValue('technicianName')||readValue('assignedTechnician')||'Technician'});
+      localStorage.setItem(TIMELINE_KEY,JSON.stringify(all.slice(-300)));
+    }catch(err){console.warn('Oliver timeline save failed',err)}
+  }
+  function activeText(){
+    return [
+      readValue('customerConcern'),readValue('concern'),readValue('appointmentConcern'),
+      readValue('dtcCodes'),readValue('scanResults'),readValue('smartDiagResult'),
+      readValue('smartOliverQuestion'),readValue('internalTechnicianNotes')
+    ].filter(Boolean).join(' ');
+  }
+  function concernText(){return readValue('customerConcern')||readValue('concern')||readValue('appointmentConcern')||'Customer concern not entered.'}
+  function scanText(){return readValue('dtcCodes')||readValue('scanResults')||'Not entered yet.'}
+
+  function buildSteps(){
+    const text=activeText().toLowerCase();
+    const observation=readValue('smartDiagResult');
+    let steps=[];
+    if(/won.?t start|will not start|no.?crank|starter|relay|terminal 30|30.*12\s*v/.test(text)){
+      steps=[
+        'Step 1 — Confirm the exact symptom: no crank, crank-no-start, single click, rapid clicking, or intermittent operation. Verify battery state of charge and battery-terminal integrity first.',
+        'Step 2 — Terminal 30 has battery voltage. Next, command CRANK and verify whether starter-relay terminal 85/86 receives both the control power and control ground required to energize the relay.',
+        'Step 3 — With the transmission secured in Park or Neutral and the vehicle safely prepared, jump relay terminal 30 to terminal 87. Record whether the starter cranks.',
+        'Step 4 — If jumping 30 to 87 produces no crank, test voltage at relay terminal 87 and at the starter-solenoid S terminal while the jumper is installed. This determines whether the load circuit is open between the relay and starter.',
+        'Step 5 — If proper voltage reaches the starter-solenoid S terminal but the starter does not operate, verify starter B+ power and perform loaded voltage-drop tests on the positive and ground sides before condemning the starter.',
+        'Step 6 — If the starter cranks when 30 and 87 are jumped, diagnose the relay-control side: ignition request, park/neutral or clutch input, immobilizer authorization, PCM/TIPM command, relay coil power, and relay coil ground.',
+        'Step 7 — Record every measured voltage, test location, operating condition, and pass/fail conclusion. Repair only the verified fault, then repeat the original test and confirm normal starting operation.'
+      ];
+    }else if(/misfire|p030[0-9]/.test(text)){
+      steps=['Step 1 — Verify the misfire and operating conditions.','Step 2 — Save all DTCs, freeze-frame data, and misfire counters.','Step 3 — Identify the affected cylinder and compare ignition, fuel, and mechanical evidence.','Step 4 — Perform the least intrusive swap or circuit test that can prove the fault.','Step 5 — Verify injector command and mechanical integrity before replacing parts.','Step 6 — Record results and repeat the failed test after repair.'];
+    }else if(/evap|p044|p045/.test(text)){
+      steps=['Step 1 — Verify the EVAP concern and fuel level.','Step 2 — Save DTCs and freeze-frame data.','Step 3 — Command purge and vent valves and verify actual sealing response.','Step 4 — Smoke-test at controlled pressure and isolate the leak path.','Step 5 — Record the verified leak or control fault.','Step 6 — Repair, rerun the sealing test, and confirm monitor readiness when appropriate.'];
+    }else{
+      steps=['Step 1 — Verify the customer concern and record the exact operating conditions.','Step 2 — Perform a complete vehicle scan and save all current, pending, history, and network DTCs.','Step 3 — Review freeze-frame and relevant live data.','Step 4 — Obtain the wiring diagram and specifications for the affected system.','Step 5 — Choose the least intrusive test that divides the system and produces a measurable pass/fail result.','Step 6 — Record the measurement, specification, tool, location, and conclusion.','Step 7 — Repair only the verified fault and complete final verification.'];
+    }
+    return {steps,observation};
+  }
+
+  let steps=[],index=-1;
+  function render(){
+    const box=$('smartDiagnosticStep');
+    if(!box)return;
+    const step=steps[index]||'Oliver could not load the next diagnostic step.';
+    box.textContent=step+'\n\nConcern: '+concernText()+'\nDTC / scan information: '+scanText();
+    box.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+  function startGuide(e){
+    if(e){e.preventDefault();e.stopImmediatePropagation()}
+    const button=$('smartDiagStart'),box=$('smartDiagnosticStep');
+    if(!button||!box)return;
+    const original=button.textContent;
+    button.disabled=true;button.textContent='Building Guide…';
+    try{
+      const built=buildSteps();steps=built.steps;index=0;render();
+      addTimeline('Diagnostic guide started',(built.observation?'Initial observation: '+built.observation+'\n':'')+steps[0]);
+      button.textContent='Guide Started';
+      setTimeout(()=>{button.disabled=false;button.textContent=original},450);
+    }catch(err){
+      console.error('Oliver diagnostic start failed',err);
+      box.textContent='Oliver could not start the diagnostic guide because of an internal error. The error was recorded. Close and reopen Oliver, then try again.';
+      addTimeline('Diagnostic guide error',String(err&&err.message||err));
+      button.disabled=false;button.textContent=original;
+    }
+  }
+  function nextGuide(e){
+    if(!steps.length){startGuide(e);return}
+    if(e){e.preventDefault();e.stopImmediatePropagation()}
+    addTimeline('Diagnostic step completed',steps[index]||'Diagnostic step');
+    if(index<steps.length-1)index++;
+    render();
+  }
+  function previousGuide(e){if(e){e.preventDefault();e.stopImmediatePropagation()}if(!steps.length)return;index=Math.max(0,index-1);render()}
+  function resetGuide(e){if(e){e.preventDefault();e.stopImmediatePropagation()}steps=[];index=-1;const box=$('smartDiagnosticStep');if(box)box.textContent='Start a guided diagnostic sequence based on the current concern and measured observation.'}
+
+  function wire(){
+    const start=$('smartDiagStart');
+    if(!start)return;
+    start.addEventListener('click',startGuide,true);
+    $('smartDiagComplete')?.addEventListener('click',nextGuide,true);
+    $('smartDiagBack')?.addEventListener('click',previousGuide,true);
+    $('smartDiagReset')?.addEventListener('click',resetGuide,true);
+    start.dataset.v831Wired='true';
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});else wire();
 })();
 </script>
 
