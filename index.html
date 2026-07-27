@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.1.2 — Dashboard VIN Scan Optimization</title>
+<title>Nitros Mobile Technician Portal v10.1.3 — VIN Tag Close-Up OCR</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -442,7 +442,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.1.2 — Dashboard VIN Scan Optimization</div>
+  <div class="sub">Mobile Technician Portal v10.1.3 — VIN Tag Close-Up OCR</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -456,7 +456,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.1.2 preserves the validated intake, walk-around, customer matching, repair-order routing, and Oliver diagnostic workflow while adding an optimized dashboard VIN scanner for windshield glare, small barcodes, and printed VIN text.</div>
+    <div id="portalLoginStatus" class="status">Version 10.1.3 preserves the validated intake, walk-around, customer matching, repair-order routing, and Oliver diagnostic workflow while adding an optimized dashboard VIN scanner for windshield glare, small barcodes, and printed VIN text.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -930,7 +930,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
       <div class="grid two" style="margin-top:12px">
         <button id="smartReadFrame" class="btn primary small">Smart Read Current View</button>
         <button id="scanFrame" class="btn secondary small">Scan Barcode</button>
-        <button id="readDashVin" class="btn secondary small">Read Printed Dash VIN</button>
+        <button id="readDashVin" class="btn secondary small">Read VIN Tag Close-Up</button>
         <button id="dashboardTorch" class="btn secondary small" type="button">🔦 Light Off</button>
         <button id="dashboardFocus" class="btn secondary small" type="button">◎ Refocus VIN</button>
         <button id="stopCamera" class="btn ghost small">Close Camera</button>
@@ -943,11 +943,11 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
       <div class="vin-capture-choice vin-capture-choice-four" aria-label="VIN capture method">
         <button id="vinChoiceDashboard" class="btn primary" type="button">🚘 Dashboard VIN Scan</button>
         <button id="vinChoiceBarcode" class="btn secondary" type="button">▥ Door-Jamb Barcode</button>
-        <button id="vinChoicePhoto" class="btn secondary" type="button">📷 Printed VIN Photo</button>
+        <button id="vinChoicePhoto" class="btn secondary" type="button">📷 VIN Tag Close-Up Photo</button>
         <button id="vinChoiceManual" class="btn ghost" type="button">⌨ Manual VIN Entry</button>
       </div>
       <div id="dashboardVinHelp" class="capture-note">
-        <strong>Dashboard VIN Scan:</strong> hold the phone close to the lower windshield, place only the VIN plate inside the orange box, angle the phone slightly to remove reflections, then tap the VIN area to refocus. The scanner tries the barcode first and printed 17-character VIN text second.
+        <strong>Dashboard VIN Scan:</strong> hold the phone close to the lower windshield and place only the VIN tag inside the orange box. For Toyota-style printed tags, use <strong>Read VIN Tag Close-Up</strong>; it captures multiple frames and compares grayscale, high-contrast, dark-threshold, light-threshold, and inverted versions before accepting the 17 characters.
       </div>
       <input id="vinInput" maxlength="17" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done" placeholder="17-character VIN, or DEMO1–DEMO4">
     </div>
@@ -1590,7 +1590,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.1.2 • Dashboard VIN scan optimization • Oliver guided diagnostics • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.1.3 • Dashboard VIN scan optimization • Oliver guided diagnostics • Evidence-based workflow</div>
 </div>
 
 <script>
@@ -2107,7 +2107,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
   }
 
   let lastDecodeDebug={
-    version:"10.1.2", rawInput:"", cleanedVin:"", vinLength:0, formatValid:false, checkDigitValid:false,
+    version:"10.1.3", rawInput:"", cleanedVin:"", vinLength:0, formatValid:false, checkDigitValid:false,
     endpoint:"", httpStatus:"Not requested", elapsedMs:0, error:"", warningCodes:[], returnedFields:[], missingFields:[], rawResponse:null
   };
 
@@ -2142,7 +2142,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 
   async function identifyVehicle(){
     const code=vinInput.value.trim().toUpperCase();
-    lastDecodeDebug={version:"10.1.2",rawInput:code,cleanedVin:"",vinLength:0,formatValid:false,checkDigitValid:false,endpoint:"",httpStatus:"Not requested",elapsedMs:0,error:"",warningCodes:[],returnedFields:[],missingFields:[],rawResponse:null};
+    lastDecodeDebug={version:"10.1.3",rawInput:code,cleanedVin:"",vinLength:0,formatValid:false,checkDigitValid:false,endpoint:"",httpStatus:"Not requested",elapsedMs:0,error:"",warningCodes:[],returnedFields:[],missingFields:[],rawResponse:null};
     updateDecoderDebug();
     if(vehicles[code]){
       selectedVehicle=vehicles[code];
@@ -2621,44 +2621,144 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     return tesseractPromise;
   }
 
-  function prepareVinOcrCanvas(source){
+  function prepareVinOcrCanvases(source){
     const sw=source.videoWidth||source.naturalWidth||source.width;
     const sh=source.videoHeight||source.naturalHeight||source.height;
-    if(!sw||!sh) return null;
-    const cropX=Math.round(sw*0.04), cropY=Math.round(sh*0.28), cropW=Math.round(sw*0.92), cropH=Math.round(sh*0.44);
-    const canvas=document.createElement("canvas");
-    canvas.width=Math.min(2200,cropW*2);canvas.height=Math.min(700,cropH*2);
-    const ctx=canvas.getContext("2d",{willReadFrequently:true});
-    ctx.drawImage(source,cropX,cropY,cropW,cropH,0,0,canvas.width,canvas.height);
-    const image=ctx.getImageData(0,0,canvas.width,canvas.height);const d=image.data;
-    for(let i=0;i<d.length;i+=4){
-      const gray=Math.max(0,Math.min(255,(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]-105)*2.15+128));
-      const value=gray>148?255:0;d[i]=d[i+1]=d[i+2]=value;
-    }
-    ctx.putImageData(image,0,0);return canvas;
+    if(!sw||!sh) return [];
+
+    // VIN tags are long and narrow. Crop tightly enough to reject dashboard texture,
+    // while retaining a little vertical room for tilted or raised characters.
+    const cropX=Math.round(sw*0.025), cropY=Math.round(sh*0.32);
+    const cropW=Math.round(sw*0.95), cropH=Math.round(sh*0.34);
+    const targetW=Math.min(3000,Math.max(1800,cropW*2.5));
+    const targetH=Math.min(850,Math.max(420,cropH*2.5));
+
+    const base=document.createElement("canvas");
+    base.width=targetW;base.height=targetH;
+    const bctx=base.getContext("2d",{willReadFrequently:true});
+    bctx.imageSmoothingEnabled=true;
+    bctx.imageSmoothingQuality="high";
+    bctx.drawImage(source,cropX,cropY,cropW,cropH,0,0,targetW,targetH);
+
+    const makeVariant=(mode)=>{
+      const canvas=document.createElement("canvas");
+      canvas.width=base.width;canvas.height=base.height;
+      const ctx=canvas.getContext("2d",{willReadFrequently:true});
+      ctx.drawImage(base,0,0);
+      const image=ctx.getImageData(0,0,canvas.width,canvas.height),d=image.data;
+      for(let i=0;i<d.length;i+=4){
+        const lum=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+        let value;
+        if(mode==="contrast") value=Math.max(0,Math.min(255,(lum-118)*2.35+128));
+        else if(mode==="dark") value=lum>128?255:0;
+        else if(mode==="light") value=lum>164?255:0;
+        else if(mode==="inverse") value=255-(lum>145?255:0);
+        else value=Math.max(0,Math.min(255,(lum-105)*1.8+128));
+        d[i]=d[i+1]=d[i+2]=value;
+      }
+      ctx.putImageData(image,0,0);
+      return canvas;
+    };
+    return ["gray","contrast","dark","light","inverse"].map(makeVariant);
   }
 
-  async function recognizeVinText(source,label="dash VIN"){
+  function normalizeVinOcrText(raw){
+    return String(raw||"").toUpperCase()
+      .replace(/[|!]/g,"1")
+      .replace(/[‐‑‒–—_.,:;\/\\\s]/g,"")
+      .replace(/[^A-Z0-9]/g,"");
+  }
+
+  function vinCandidatesFromOcr(raw){
+    const compact=normalizeVinOcrText(raw);
+    const candidates=new Set();
+    const add=v=>{
+      v=String(v||"").replace(/[IOQ]/g,c=>({I:"1",O:"0",Q:"0"}[c]));
+      if(v.length===17 && /^[A-HJ-NPR-Z0-9]{17}$/.test(v)) candidates.add(v);
+    };
+    (compact.match(/[A-Z0-9]{17}/g)||[]).forEach(add);
+    for(let i=0;i<=compact.length-17;i++) add(compact.slice(i,i+17));
+    const flexible=extractVinFlexible(String(raw||""));
+    if(flexible) add(flexible);
+    return [...candidates].sort((a,b)=>
+      Number(vinCheckDigitValid(b))-Number(vinCheckDigitValid(a))
+    );
+  }
+
+  async function recognizeVinText(source,label="VIN tag"){
     const ready=await ensureTesseract();
     if(!ready) throw new Error("VIN text reader unavailable");
-    const canvas=prepareVinOcrCanvas(source);if(!canvas) throw new Error("image unavailable");
-    identifyStatus.className="status";identifyStatus.textContent=`Reading ${label}. Hold steady while the printed characters are analyzed…`;
-    const result=await window.Tesseract.recognize(canvas,"eng",{logger:()=>{}});
-    const raw=String(result?.data?.text||"").toUpperCase().replace(/[\s\-_.:]/g,"");
-    const candidates=raw.match(/[A-HJ-NPR-Z0-9]{17}/g)||[];
-    const vin=candidates.find(v=>v.length===17)||extractVin(raw);
-    if(vin.length!==17) throw new Error("no complete VIN text found");
-    pendingVin=vin;pendingVinCount=1;pendingVinAt=Date.now();
-    return acceptScannedValue(vin,`${label} text reader`);
+    const canvases=prepareVinOcrCanvases(source);
+    if(!canvases.length) throw new Error("image unavailable");
+
+    identifyStatus.className="status";
+    identifyStatus.textContent=`Reading ${label}. Comparing multiple close-up contrast versions…`;
+
+    const all=[];
+    for(let i=0;i<canvases.length;i++){
+      const result=await window.Tesseract.recognize(canvases[i],"eng",{
+        logger:()=>{},
+        tessedit_char_whitelist:"ABCDEFGHJKLMNPRSTUVWXYZ0123456789",
+        tessedit_pageseg_mode:"7",
+        preserve_interword_spaces:"0"
+      });
+      const confidence=Number(result?.data?.confidence||0);
+      vinCandidatesFromOcr(result?.data?.text||"").forEach(vin=>all.push({vin,confidence,variant:i}));
+      const words=result?.data?.words||[];
+      for(const word of words){
+        vinCandidatesFromOcr(word?.text||"").forEach(vin=>all.push({
+          vin,
+          confidence:Number(word?.confidence||confidence),
+          variant:i
+        }));
+      }
+    }
+
+    if(!all.length) throw new Error("no complete VIN text found");
+
+    const grouped=new Map();
+    for(const item of all){
+      const prior=grouped.get(item.vin)||{vin:item.vin,hits:0,best:0,valid:vinCheckDigitValid(item.vin)};
+      prior.hits++;prior.best=Math.max(prior.best,item.confidence);
+      grouped.set(item.vin,prior);
+    }
+    const ranked=[...grouped.values()].sort((a,b)=>
+      Number(b.valid)-Number(a.valid) || b.hits-a.hits || b.best-a.best
+    );
+    const winner=ranked[0];
+    if(!winner?.vin || winner.vin.length!==17) throw new Error("no complete VIN text found");
+
+    pendingVin=winner.vin;pendingVinCount=Math.max(1,winner.hits);pendingVinAt=Date.now();
+    identifyStatus.className=winner.valid?"status ok":"status warn";
+    identifyStatus.textContent=winner.valid
+      ? `VIN tag read successfully: ${winner.vin}. Check-digit validation passed.`
+      : `Possible VIN found: ${winner.vin}. Verify the highlighted 17 characters before accepting.`;
+    return acceptScannedValue(winner.vin,`${label} multi-pass text reader`);
   }
 
   async function readDashVinFromCamera(){
-    if(!stream||video.readyState<2){identifyStatus.className="status warn";identifyStatus.textContent="Open the camera and center the printed dash VIN first.";return;}
+    if(!stream||video.readyState<2){
+      identifyStatus.className="status warn";
+      identifyStatus.textContent="Open the camera and fill the orange box with only the 17-character VIN tag.";
+      return;
+    }
     try{
       pendingVin="";pendingVinCount=0;
-      const first=await recognizeVinText(video,"windshield VIN");
-      if(!first){pendingVinCount=1;pendingVinAt=Date.now();await recognizeVinText(video,"windshield VIN");}
-    }catch(error){identifyStatus.className="status warn";identifyStatus.textContent="The printed dash VIN was not clear enough to confirm. Move closer, reduce windshield glare, tap the VIN area to focus, and try again—or take a VIN photo.";}
+      identifyStatus.className="status";
+      identifyStatus.textContent="Hold the phone still. Capturing three close-up VIN-tag frames…";
+      const results=[];
+      for(let pass=0;pass<3;pass++){
+        try{
+          results.push(await recognizeVinText(video,`VIN tag pass ${pass+1}`));
+          if(results[results.length-1]) return;
+        }catch(e){}
+        await new Promise(resolve=>setTimeout(resolve,420));
+      }
+      throw new Error("VIN not confirmed");
+    }catch(error){
+      identifyStatus.className="status warn";
+      identifyStatus.textContent="The VIN tag still was not clear enough. Fill the box with only the 17 characters, angle the phone away from glare, tap the tag to refocus, and try the close-up photo button.";
+    }
   }
 
   async function openCamera(){
@@ -4937,7 +5037,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.1.2 • Dashboard VIN scan optimization</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.1.3 • VIN tag close-up OCR</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -4975,7 +5075,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.1.2 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.1.3 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -5688,7 +5788,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.1.2</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.1.3</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -5779,9 +5879,9 @@ function setZoom(z){zoom=Math.max(.25,Math.min(5,z));const img=$('diagViewerImag
 $('diagSend').addEventListener('click',()=>handle(input.value));input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handle(input.value)}});$('diagExit').addEventListener('click',closeMode);$('diagSpeakToggle').addEventListener('click',()=>{speakOn=!speakOn;$('diagSpeakToggle').innerHTML=speakOn?'🔊 <span class="label">Voice On</span>':'🔇 <span class="label">Voice Off</span>';if(!speakOn)speechSynthesis?.cancel()});$('diagReadLast').addEventListener('click',()=>speak(lastOliver));document.querySelectorAll('[data-diag-quick]').forEach(b=>b.addEventListener('click',()=>handle(b.dataset.diagQuick)));
 $('diagFreezeFrame')?.addEventListener('click',()=>{input.value='Freeze frame: code status = ; fuel level = %; RPM = ; vehicle speed = ; coolant temperature = ; calculated load = ; FTP sensor = .';input.focus()});$('diagVoiceSelect')?.addEventListener('change',e=>{selectedVoiceName=e.target.value;localStorage.setItem('nitrosOliverVoice',selectedVoiceName);speak('Oliver voice selected.')});if('speechSynthesis'in window){speechSynthesis.onvoiceschanged=populateVoiceSelect;setTimeout(populateVoiceSelect,250)}
 $('diagLoadImage').addEventListener('click',()=>$('diagImageInput').click());$('diagImageInput').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{loadedImage=r.result;zoom=1;remember('Scan graph/photo attached: '+f.name,'attachment');$('diagViewerTitle').textContent=f.name||'Scan Graph / Photo';openViewer();renderImage();addMessage('oliver','The image is attached. Tell me the PID, operating condition, and the part of the graph you want interpreted.')};r.readAsDataURL(f)});$('diagOpenViewer').addEventListener('click',openViewer);$('diagViewerClose').addEventListener('click',()=>$('diagViewer').classList.remove('active'));$('diagZoomIn').addEventListener('click',()=>setZoom(zoom+.25));$('diagZoomOut').addEventListener('click',()=>setZoom(zoom-.25));$('diagZoomReset').addEventListener('click',()=>setZoom(1));
-$('diagExportNotes').addEventListener('click',()=>{const note=S.evidence.map(x=>`[${new Date(x.at).toLocaleString()}] ${x.stage} — ${x.kind}: ${x.text}`).join('\n');const n=$('internalTechnicianNotes');if(n){n.value=[n.value,'=== Oliver v10.1.2 Diagnostic Evidence ===',note].filter(Boolean).join('\n');addMessage('oliver','Diagnostic evidence was copied into Technician Notes.')}else addMessage('oliver','The evidence remains in this diagnostic session because Technician Notes is unavailable on this screen.')});
+$('diagExportNotes').addEventListener('click',()=>{const note=S.evidence.map(x=>`[${new Date(x.at).toLocaleString()}] ${x.stage} — ${x.kind}: ${x.text}`).join('\n');const n=$('internalTechnicianNotes');if(n){n.value=[n.value,'=== Oliver v10.1.3 Diagnostic Evidence ===',note].filter(Boolean).join('\n');addMessage('oliver','Diagnostic evidence was copied into Technician Notes.')}else addMessage('oliver','The evidence remains in this diagnostic session because Technician Notes is unavailable on this screen.')});
 if(SpeechRecognition){recognition=new SpeechRecognition();recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-US';recognition.onstart=()=>$('diagMic').classList.add('listening');recognition.onend=()=>$('diagMic').classList.remove('listening');recognition.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;if(e.results[e.results.length-1].isFinal)handle(t);else input.value=t};$('diagMic').addEventListener('click',()=>{try{recognition.start()}catch(_){recognition.stop()}})}else $('diagMic').addEventListener('click',()=>addMessage('oliver','Voice recognition is unavailable in this browser. Type the result; spoken responses can still work.'));
-$('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);$('oliverHubRepair')?.addEventListener('click',()=>setTimeout(openMode,80));const startBtn=$('smartDiagStart');if(startBtn){startBtn.textContent='Open Oliver v10.1.2 Diagnostic Engine';startBtn.style.fontSize='16px'}window.openOliverDiagnosticMode=openMode;
+$('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);$('oliverHubRepair')?.addEventListener('click',()=>setTimeout(openMode,80));const startBtn=$('smartDiagStart');if(startBtn){startBtn.textContent='Open Oliver v10.1.3 Diagnostic Engine';startBtn.style.fontSize='16px'}window.openOliverDiagnosticMode=openMode;
 })();
 </script>
 
