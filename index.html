@@ -412,6 +412,20 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 @media(max-width:650px){.oliver-guide-actions{grid-template-columns:1fr 1fr}.oliver-guide-actions #oliverGuideStop{grid-column:1/-1}.oliver-guide-panel.guiding .oliver-guide-dialog{max-height:72vh}}
 </style>
 
+
+<style id="v1011-stability-patch">
+:root{--nitros-visual-height:100dvh}
+html{scroll-behavior:auto!important}
+body.keyboard-active{overscroll-behavior-y:contain}
+input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
+.screen{padding-bottom:max(130px,calc(110px + env(safe-area-inset-bottom)))}
+.btn.primary,.btn.secondary,.btn.ghost{touch-action:manipulation}
+.oliver-guide,.oliver-hub-panel{max-height:calc(var(--nitros-visual-height) - 18px);overflow:auto;padding-bottom:max(18px,env(safe-area-inset-bottom))}
+.oliver-guide-actions,.oliver-hub-actions,.wizard-actions,.form-actions{position:sticky;bottom:0;z-index:20;background:linear-gradient(180deg,rgba(7,16,27,0),#07101b 28%);padding-top:22px;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.workboard-card{cursor:pointer;touch-action:manipulation}.workboard-card:focus{outline:2px solid var(--accent);outline-offset:2px}
+.vin-capture-choice{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0}.vin-capture-choice .btn{min-height:54px}
+@media(max-width:600px){.vin-capture-choice{grid-template-columns:1fr}.oliver-guide,.oliver-hub-panel{max-height:calc(var(--nitros-visual-height) - 8px)}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -913,7 +927,12 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 
     <div class="field" style="margin-top:17px">
       <label for="vinInput">VIN or demo code</label>
-      <input id="vinInput" maxlength="17" autocomplete="off" autocapitalize="characters" placeholder="17-character VIN, or DEMO1–DEMO4">
+      <div class="vin-capture-choice" aria-label="VIN capture method">
+        <button id="vinChoiceBarcode" class="btn secondary" type="button">▥ Scan VIN Barcode</button>
+        <button id="vinChoicePhoto" class="btn primary" type="button">📷 Photograph Printed VIN</button>
+        <button id="vinChoiceManual" class="btn ghost" type="button">⌨ Enter VIN Manually</button>
+      </div>
+      <input id="vinInput" maxlength="17" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done" placeholder="17-character VIN, or DEMO1–DEMO4">
     </div>
     <button id="identifyVehicle" class="btn primary">Identify Vehicle</button>
     <div id="identifyStatus" class="status">Ready for camera scan or manual VIN entry.</div>
@@ -4880,7 +4899,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     function render(){const all=importActive(),list=filtered(all);el('wbTotal').textContent=all.length;el('wbApproval').textContent=all.filter(x=>x.stage==='Waiting Approval').length;el('wbParts').textContent=all.filter(partsBlocked).length;el('wbRisk').textContent=all.filter(x=>['risk','overdue'].includes(deadlineState(x))).length;
       el('workboardLanes').innerHTML=stages.map(stage=>{const cards=list.filter(x=>x.stage===stage);return `<section class="workboard-lane"><h4>${esc(stage)} <span class="workboard-count">${cards.length}</span></h4>${cards.length?cards.map(cardHtml).join(''):'<div class="command-empty">No vehicles in this stage.</div>'}</section>`}).join('');
       el('workboardStatus').textContent=`${all.length} active repair order${all.length===1?'':'s'} on the workboard. ${all.filter(partsBlocked).length} parts blocker${all.filter(partsBlocked).length===1?'':'s'} and ${all.filter(x=>x.stage==='Waiting Approval').length} waiting approval.`}
-    function cardHtml(x){const dl=deadlineState(x),tone=dl==='overdue'?'overdue':dl==='risk'?'at-risk':x.stage==='Ready for Pickup'?'clear':'';const blockers=[];if(partsBlocked(x))blockers.push(`Parts: ${x.partsStatus}`);if(x.stage==='Waiting Approval')blockers.push(`Approval: ${x.approval}`);return `<article class="workboard-card ${tone}"><div class="workboard-card-title">${esc(x.customer)} — ${esc(x.vehicle)}</div><div class="workboard-card-meta">${esc(x.ro?`RO ${x.ro}`:'RO not assigned')} • ${esc(x.technician||'Unassigned')} • ${esc(x.priority||'normal')}</div><div class="workboard-card-text">${esc(x.concern||'No concern entered')}</div><span class="deadline-badge ${dl==='overdue'?'late':dl==='risk'?'risk':'ok'}">${esc(deadlineText(x))}</span>${blockers.map(b=>`<span class="blocker-badge">${esc(b)}</span>`).join('')}<div class="workboard-card-actions"><button class="btn secondary" data-wb-edit="${x.id}" type="button">Open</button><button class="btn primary" data-wb-next="${x.id}" type="button">Next Stage</button>${x.stage==='Waiting Approval'?`<button class="btn ghost" data-wb-approve="${x.id}" type="button">Approve</button>`:''}${partsBlocked(x)?`<button class="btn ghost" data-wb-parts="${x.id}" type="button">Parts Received</button>`:''}</div></article>`}
+    function cardHtml(x){const dl=deadlineState(x),tone=dl==='overdue'?'overdue':dl==='risk'?'at-risk':x.stage==='Ready for Pickup'?'clear':'';const blockers=[];if(partsBlocked(x))blockers.push(`Parts: ${x.partsStatus}`);if(x.stage==='Waiting Approval')blockers.push(`Approval: ${x.approval}`);return `<article class="workboard-card ${tone}" data-wb-open-card="${x.id}" tabindex="0" role="button" aria-label="Open repair order ${esc(x.ro||x.customer||x.vehicle)}"><div class="workboard-card-title">${esc(x.customer)} — ${esc(x.vehicle)}</div><div class="workboard-card-meta">${esc(x.ro?`RO ${x.ro}`:'RO not assigned')} • ${esc(x.technician||'Unassigned')} • ${esc(x.priority||'normal')}</div><div class="workboard-card-text">${esc(x.concern||'No concern entered')}</div><span class="deadline-badge ${dl==='overdue'?'late':dl==='risk'?'risk':'ok'}">${esc(deadlineText(x))}</span>${blockers.map(b=>`<span class="blocker-badge">${esc(b)}</span>`).join('')}<div class="workboard-card-actions"><button class="btn secondary" data-wb-edit="${x.id}" type="button">Open</button><button class="btn primary" data-wb-next="${x.id}" type="button">Next Stage</button>${x.stage==='Waiting Approval'?`<button class="btn ghost" data-wb-approve="${x.id}" type="button">Approve</button>`:''}${partsBlocked(x)?`<button class="btn ghost" data-wb-parts="${x.id}" type="button">Parts Received</button>`:''}</div></article>`}
     function stageOptions(){el('workboardStage').innerHTML=stages.map(s=>`<option>${s}</option>`).join('')}
     function openEditor(id){const x=id?read(KEY).find(v=>v.id===id):{id:uid(),customer:'',vehicle:'',ro:'',technician:techName(),stage:'Waiting Diagnosis',priority:'normal',concern:'',instructions:'',approval:'Not Prepared',approvalMethod:'',approvedAmount:'',promisedAt:'',partsStatus:'No Parts Required',roadTest:'Not Required',createdAt:now(),audit:[]};if(!x)return;el('workboardEditor').classList.remove('hidden');el('workboardEditId').value=x.id;el('workboardEditorTitle').textContent=x.customer||'New Active Repair Order';['Customer','Vehicle','Ro','Technician','Stage','Priority','Approval','ApprovalMethod','ApprovedAmount','Promised','PartsStatus','RoadTest','Concern','Instructions'].forEach(k=>{const node=el('workboard'+k),prop={Ro:'ro',Promised:'promisedAt',ApprovedAmount:'approvedAmount',PartsStatus:'partsStatus',RoadTest:'roadTest',ApprovalMethod:'approvalMethod'}[k]||k.charAt(0).toLowerCase()+k.slice(1);if(node)node.value=x[prop]??''});el('workboardAudit').innerHTML=(x.audit||[]).length?x.audit.map(a=>`<div><strong>${esc(a.action)}</strong> — ${esc(new Date(a.at).toLocaleString())} by ${esc(a.by)}${a.detail?`<br>${esc(a.detail)}`:''}</div>`).join(''):'<div>No stage changes recorded yet.</div>';el('workboardEditor').scrollIntoView({behavior:'smooth',block:'start'})}
     function collect(){return {id:el('workboardEditId').value||uid(),customer:el('workboardCustomer').value.trim(),vehicle:el('workboardVehicle').value.trim(),ro:el('workboardRo').value.trim(),technician:el('workboardTechnician').value.trim(),stage:el('workboardStage').value,priority:el('workboardPriority').value,approval:el('workboardApproval').value,approvalMethod:el('workboardApprovalMethod').value,approvedAmount:el('workboardApprovedAmount').value,promisedAt:el('workboardPromised').value,partsStatus:el('workboardPartsStatus').value,roadTest:el('workboardRoadTest').value,concern:el('workboardConcern').value.trim(),instructions:el('workboardInstructions').value.trim()}}
@@ -4901,7 +4920,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.1 • State memory + iPhone voice</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.1.1 • Workflow, VIN capture, and input stability</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5652,7 +5671,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.1.0</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.1.1</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -5743,9 +5762,78 @@ function setZoom(z){zoom=Math.max(.25,Math.min(5,z));const img=$('diagViewerImag
 $('diagSend').addEventListener('click',()=>handle(input.value));input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handle(input.value)}});$('diagExit').addEventListener('click',closeMode);$('diagSpeakToggle').addEventListener('click',()=>{speakOn=!speakOn;$('diagSpeakToggle').innerHTML=speakOn?'🔊 <span class="label">Voice On</span>':'🔇 <span class="label">Voice Off</span>';if(!speakOn)speechSynthesis?.cancel()});$('diagReadLast').addEventListener('click',()=>speak(lastOliver));document.querySelectorAll('[data-diag-quick]').forEach(b=>b.addEventListener('click',()=>handle(b.dataset.diagQuick)));
 $('diagFreezeFrame')?.addEventListener('click',()=>{input.value='Freeze frame: code status = ; fuel level = %; RPM = ; vehicle speed = ; coolant temperature = ; calculated load = ; FTP sensor = .';input.focus()});$('diagVoiceSelect')?.addEventListener('change',e=>{selectedVoiceName=e.target.value;localStorage.setItem('nitrosOliverVoice',selectedVoiceName);speak('Oliver voice selected.')});if('speechSynthesis'in window){speechSynthesis.onvoiceschanged=populateVoiceSelect;setTimeout(populateVoiceSelect,250)}
 $('diagLoadImage').addEventListener('click',()=>$('diagImageInput').click());$('diagImageInput').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{loadedImage=r.result;zoom=1;remember('Scan graph/photo attached: '+f.name,'attachment');$('diagViewerTitle').textContent=f.name||'Scan Graph / Photo';openViewer();renderImage();addMessage('oliver','The image is attached. Tell me the PID, operating condition, and the part of the graph you want interpreted.')};r.readAsDataURL(f)});$('diagOpenViewer').addEventListener('click',openViewer);$('diagViewerClose').addEventListener('click',()=>$('diagViewer').classList.remove('active'));$('diagZoomIn').addEventListener('click',()=>setZoom(zoom+.25));$('diagZoomOut').addEventListener('click',()=>setZoom(zoom-.25));$('diagZoomReset').addEventListener('click',()=>setZoom(1));
-$('diagExportNotes').addEventListener('click',()=>{const note=S.evidence.map(x=>`[${new Date(x.at).toLocaleString()}] ${x.stage} — ${x.kind}: ${x.text}`).join('\n');const n=$('internalTechnicianNotes');if(n){n.value=[n.value,'=== Oliver v10.1 Diagnostic Evidence ===',note].filter(Boolean).join('\n');addMessage('oliver','Diagnostic evidence was copied into Technician Notes.')}else addMessage('oliver','The evidence remains in this diagnostic session because Technician Notes is unavailable on this screen.')});
+$('diagExportNotes').addEventListener('click',()=>{const note=S.evidence.map(x=>`[${new Date(x.at).toLocaleString()}] ${x.stage} — ${x.kind}: ${x.text}`).join('\n');const n=$('internalTechnicianNotes');if(n){n.value=[n.value,'=== Oliver v10.1.1 Diagnostic Evidence ===',note].filter(Boolean).join('\n');addMessage('oliver','Diagnostic evidence was copied into Technician Notes.')}else addMessage('oliver','The evidence remains in this diagnostic session because Technician Notes is unavailable on this screen.')});
 if(SpeechRecognition){recognition=new SpeechRecognition();recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-US';recognition.onstart=()=>$('diagMic').classList.add('listening');recognition.onend=()=>$('diagMic').classList.remove('listening');recognition.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;if(e.results[e.results.length-1].isFinal)handle(t);else input.value=t};$('diagMic').addEventListener('click',()=>{try{recognition.start()}catch(_){recognition.stop()}})}else $('diagMic').addEventListener('click',()=>addMessage('oliver','Voice recognition is unavailable in this browser. Type the result; spoken responses can still work.'));
-$('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);$('oliverHubRepair')?.addEventListener('click',()=>setTimeout(openMode,80));const startBtn=$('smartDiagStart');if(startBtn){startBtn.textContent='Open Oliver v10.1 Diagnostic Engine';startBtn.style.fontSize='16px'}window.openOliverDiagnosticMode=openMode;
+$('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);$('oliverHubRepair')?.addEventListener('click',()=>setTimeout(openMode,80));const startBtn=$('smartDiagStart');if(startBtn){startBtn.textContent='Open Oliver v10.1.1 Diagnostic Engine';startBtn.style.fontSize='16px'}window.openOliverDiagnosticMode=openMode;
+})();
+</script>
+
+
+<script id="v1011-runtime-patch">
+(()=>{
+  const $=id=>document.getElementById(id);
+  // Keep the layout tied to the visible iPhone viewport without forcing scroll on each keypress.
+  const updateViewport=()=>{
+    const h=window.visualViewport?.height||window.innerHeight;
+    document.documentElement.style.setProperty('--nitros-visual-height',`${Math.round(h)}px`);
+  };
+  updateViewport();
+  window.visualViewport?.addEventListener('resize',updateViewport,{passive:true});
+  window.addEventListener('orientationchange',()=>setTimeout(updateViewport,150),{passive:true});
+
+  let activeField=null;
+  document.addEventListener('focusin',e=>{
+    if(e.target.matches('input,textarea,select')){activeField=e.target;document.body.classList.add('keyboard-active');}
+  },true);
+  document.addEventListener('focusout',e=>{
+    if(e.target===activeField){activeField=null;setTimeout(()=>document.body.classList.remove('keyboard-active'),120);}
+  },true);
+  // Suppress programmatic smooth scrolling while a technician is actively typing.
+  const nativeScroll=Element.prototype.scrollIntoView;
+  Element.prototype.scrollIntoView=function(options){
+    if(activeField && (this===activeField || this.contains?.(activeField))) return;
+    return nativeScroll.call(this,options);
+  };
+
+  // VIN capture routes: barcode/live camera, printed-label photo OCR, or stable manual entry.
+  $('vinChoiceBarcode')?.addEventListener('click',()=>{ $('startCamera')?.click(); });
+  $('vinChoicePhoto')?.addEventListener('click',()=>{
+    const photoButton=[...document.querySelectorAll('button,label')].find(el=>/Scan VIN Photo/i.test(el.textContent||''));
+    if(photoButton) photoButton.click(); else $('vinPhotoInput')?.click();
+  });
+  $('vinChoiceManual')?.addEventListener('click',()=>{
+    const input=$('vinInput'); if(!input)return; input.focus({preventScroll:true}); input.select?.();
+  });
+  $('vinInput')?.addEventListener('input',e=>{
+    const start=e.target.selectionStart;
+    const clean=e.target.value.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g,'').slice(0,17);
+    if(clean!==e.target.value){e.target.value=clean;try{e.target.setSelectionRange(Math.min(start,clean.length),Math.min(start,clean.length));}catch(_){}}
+  });
+
+  // Make the complete repair-order card open, while preserving its action buttons.
+  const lanes=$('workboardLanes');
+  lanes?.addEventListener('click',e=>{
+    if(e.target.closest('button,a,input,select,textarea,label'))return;
+    const card=e.target.closest('[data-wb-open-card]');
+    if(card) card.querySelector('[data-wb-edit]')?.click();
+  });
+  lanes?.addEventListener('keydown',e=>{
+    if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-wb-open-card]')){e.preventDefault();e.target.querySelector('[data-wb-edit]')?.click();}
+  });
+
+  // Replace repeated empty decoder placeholders with one clear summary line.
+  const cleanVehicleDetails=()=>{
+    const box=$('vehicleDetails');if(!box)return;
+    const cells=[...box.children];let missing=0;
+    for(let i=0;i<cells.length;i+=2){
+      const value=cells[i+1];if(value && /^(Not returned|Decode unavailable)$/i.test(value.textContent.trim())){missing++;cells[i].hidden=true;value.hidden=true;}
+    }
+    let note=$('vehicleDecodeMissingSummary');
+    if(!note){note=document.createElement('div');note.id='vehicleDecodeMissingSummary';note.className='status';box.after(note);}
+    note.hidden=!missing;note.textContent=missing?`${missing} optional vehicle detail${missing===1?' was':'s were'} not supplied by the VIN decoder. You can enter any needed details below.`:'';
+  };
+  const vehicleBox=$('vehicleDetails');if(vehicleBox)new MutationObserver(cleanVehicleDetails).observe(vehicleBox,{childList:true,subtree:true,characterData:true});
+  cleanVehicleDetails();
 })();
 </script>
 
