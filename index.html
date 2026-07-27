@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.1.4 — VIN Verification Gate</title>
+<title>Nitros Mobile Technician Portal v10.1.5 — VIN Tag Extraction Refinement</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -442,7 +442,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.1.4 — VIN Verification Gate</div>
+  <div class="sub">Mobile Technician Portal v10.1.5 — VIN Tag Extraction Refinement</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -2627,43 +2627,50 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     const sh=source.videoHeight||source.naturalHeight||source.height;
     if(!sw||!sh) return [];
 
-    // VIN tags are long and narrow. Crop tightly enough to reject dashboard texture,
-    // while retaining a little vertical room for tilted or raised characters.
-    const cropX=Math.round(sw*0.025), cropY=Math.round(sh*0.32);
-    const cropW=Math.round(sw*0.95), cropH=Math.round(sh*0.34);
-    const targetW=Math.min(3000,Math.max(1800,cropW*2.5));
-    const targetH=Math.min(850,Math.max(420,cropH*2.5));
+    // Build several overlapping horizontal crops. Toyota and other certification labels
+    // often place the VIN above or below the visual center, so one fixed crop can miss it.
+    const bands=[
+      {y:.20,h:.28,name:"upper"},
+      {y:.30,h:.32,name:"center"},
+      {y:.42,h:.28,name:"lower"}
+    ];
+    const variants=[];
+    for(const band of bands){
+      const cropX=Math.round(sw*.02), cropY=Math.round(sh*band.y);
+      const cropW=Math.round(sw*.96), cropH=Math.min(sh-cropY,Math.round(sh*band.h));
+      const targetW=Math.min(3200,Math.max(1900,Math.round(cropW*2.7)));
+      const targetH=Math.min(900,Math.max(380,Math.round(cropH*2.7)));
+      const base=document.createElement("canvas");
+      base.width=targetW;base.height=targetH;
+      const bctx=base.getContext("2d",{willReadFrequently:true});
+      bctx.imageSmoothingEnabled=true;bctx.imageSmoothingQuality="high";
+      bctx.drawImage(source,cropX,cropY,cropW,cropH,0,0,targetW,targetH);
 
-    const base=document.createElement("canvas");
-    base.width=targetW;base.height=targetH;
-    const bctx=base.getContext("2d",{willReadFrequently:true});
-    bctx.imageSmoothingEnabled=true;
-    bctx.imageSmoothingQuality="high";
-    bctx.drawImage(source,cropX,cropY,cropW,cropH,0,0,targetW,targetH);
-
-    const makeVariant=(mode)=>{
-      const canvas=document.createElement("canvas");
-      canvas.width=base.width;canvas.height=base.height;
-      const ctx=canvas.getContext("2d",{willReadFrequently:true});
-      ctx.drawImage(base,0,0);
-      const image=ctx.getImageData(0,0,canvas.width,canvas.height),d=image.data;
-      for(let i=0;i<d.length;i+=4){
-        const lum=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
-        let value;
-        if(mode==="contrast") value=Math.max(0,Math.min(255,(lum-118)*2.35+128));
-        else if(mode==="dark") value=lum>128?255:0;
-        else if(mode==="light") value=lum>164?255:0;
-        else if(mode==="inverse") value=255-(lum>145?255:0);
-        else value=Math.max(0,Math.min(255,(lum-105)*1.8+128));
-        d[i]=d[i+1]=d[i+2]=value;
-      }
-      ctx.putImageData(image,0,0);
-      return canvas;
-    };
-    return ["gray","contrast","dark","light","inverse"].map(makeVariant);
+      const makeVariant=(mode)=>{
+        const canvas=document.createElement("canvas");
+        canvas.width=base.width;canvas.height=base.height;
+        canvas.dataset.vinBand=band.name;canvas.dataset.vinMode=mode;
+        const ctx=canvas.getContext("2d",{willReadFrequently:true});
+        ctx.drawImage(base,0,0);
+        const image=ctx.getImageData(0,0,canvas.width,canvas.height),d=image.data;
+        for(let i=0;i<d.length;i+=4){
+          const lum=.299*d[i]+.587*d[i+1]+.114*d[i+2];
+          let value;
+          if(mode==="contrast") value=Math.max(0,Math.min(255,(lum-118)*2.45+128));
+          else if(mode==="dark") value=lum>126?255:0;
+          else if(mode==="light") value=lum>168?255:0;
+          else value=Math.max(0,Math.min(255,(lum-108)*1.9+128));
+          d[i]=d[i+1]=d[i+2]=value;
+        }
+        ctx.putImageData(image,0,0);
+        return canvas;
+      };
+      ["gray","contrast","dark","light"].forEach(mode=>variants.push(makeVariant(mode)));
+    }
+    return variants;
   }
 
-  function normalizeVinOcrText(raw){
+  function normalizeVinLine(raw){
     return String(raw||"").toUpperCase()
       .replace(/[|!]/g,"1")
       .replace(/[‐‑‒–—_.,:;\/\\\s]/g,"")
@@ -2671,19 +2678,39 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
   }
 
   function vinCandidatesFromOcr(raw){
-    const compact=normalizeVinOcrText(raw);
-    const candidates=new Set();
-    const add=v=>{
-      v=String(v||"").replace(/[IOQ]/g,c=>({I:"1",O:"0",Q:"0"}[c]));
-      if(v.length===17 && /^[A-HJ-NPR-Z0-9]{17}$/.test(v)) candidates.add(v);
+    const candidates=new Map();
+    const add=(value,sourceWeight=0)=>{
+      let v=String(value||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+      if(v.length!==17) return;
+      // OCR commonly substitutes I/O/Q even though those letters are excluded from VINs.
+      v=v.replace(/[IOQ]/g,c=>({I:"1",O:"0",Q:"0"}[c]));
+      if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(v)) return;
+      const valid=vinCheckDigitValid(v);
+      const alpha=(v.match(/[A-Z]/g)||[]).length;
+      const numeric=(v.match(/[0-9]/g)||[]).length;
+      // Reject obvious prose fragments while preserving legitimate VIN mixes.
+      if(alpha<3||numeric<3) return;
+      const score=(valid?1000:0)+sourceWeight;
+      const prior=candidates.get(v);
+      if(!prior||score>prior.score)candidates.set(v,{vin:v,score,valid});
     };
-    (compact.match(/[A-Z0-9]{17}/g)||[]).forEach(add);
-    for(let i=0;i<=compact.length-17;i++) add(compact.slice(i,i+17));
+
+    const lines=String(raw||"").toUpperCase().split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    for(const line of lines){
+      const compact=normalizeVinLine(line);
+      const nearVin=/\bVIN\b|VEHICLE\s+IDENTIFICATION|IDENTIFICATION\s*(NO|NUMBER)/.test(line);
+      if(compact.length===17) add(compact,nearVin?180:90);
+      // Only slide windows inside a short line. Never concatenate an entire label paragraph,
+      // which was producing random 17-character strings from unrelated certification text.
+      if(compact.length>17&&compact.length<=28){
+        for(let i=0;i+17<=compact.length;i++) add(compact.slice(i,i+17),nearVin?150:40);
+      }
+      const separated=line.match(/(?:[A-Z0-9][\s.\-]*){17}/g)||[];
+      separated.forEach(x=>add(normalizeVinLine(x),nearVin?170:70));
+    }
     const flexible=extractVinFlexible(String(raw||""));
-    if(flexible) add(flexible);
-    return [...candidates].sort((a,b)=>
-      Number(vinCheckDigitValid(b))-Number(vinCheckDigitValid(a))
-    );
+    if(flexible)add(flexible,120);
+    return [...candidates.values()].sort((a,b)=>b.score-a.score).map(x=>x.vin);
   }
 
   async function recognizeVinText(source,label="VIN tag"){
@@ -2693,51 +2720,51 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     if(!canvases.length) throw new Error("image unavailable");
 
     identifyStatus.className="status";
-    identifyStatus.textContent=`Reading ${label}. Comparing multiple close-up contrast versions…`;
+    identifyStatus.textContent=`Reading ${label}. Isolating VIN-length text from multiple close-up bands…`;
 
     const all=[];
     const rawReads=[];
     for(let i=0;i<canvases.length;i++){
-      const result=await window.Tesseract.recognize(canvases[i],"eng",{
+      const canvas=canvases[i];
+      const result=await window.Tesseract.recognize(canvas,"eng",{
         logger:()=>{},
         tessedit_char_whitelist:"ABCDEFGHJKLMNPRSTUVWXYZ0123456789",
         tessedit_pageseg_mode:"7",
-        preserve_interword_spaces:"0"
+        preserve_interword_spaces:"1"
       });
       const rawText=String(result?.data?.text||"").trim();
       const confidence=Number(result?.data?.confidence||0);
-      if(rawText) rawReads.push(`Pass ${i+1} (${Math.round(confidence)}%): ${rawText}`);
-      vinCandidatesFromOcr(rawText).forEach(vin=>all.push({vin,confidence,variant:i}));
+      const band=canvas.dataset.vinBand||"band", mode=canvas.dataset.vinMode||"view";
+      if(rawText) rawReads.push(`${band}/${mode} (${Math.round(confidence)}%): ${rawText}`);
+      vinCandidatesFromOcr(rawText).forEach(vin=>all.push({vin,confidence,variant:i,band,mode}));
+      for(const line of String(rawText||"").split(/\r?\n/)){
+        vinCandidatesFromOcr(line).forEach(vin=>all.push({vin,confidence:confidence+4,variant:i,band,mode}));
+      }
       const words=result?.data?.words||[];
       for(const word of words){
         vinCandidatesFromOcr(word?.text||"").forEach(vin=>all.push({
-          vin,
-          confidence:Number(word?.confidence||confidence),
-          variant:i
+          vin,confidence:Number(word?.confidence||confidence)+2,variant:i,band,mode
         }));
       }
     }
 
     if(!all.length) throw new Error("no complete VIN text found");
-
     const grouped=new Map();
     for(const item of all){
-      const prior=grouped.get(item.vin)||{vin:item.vin,hits:0,best:0,valid:vinCheckDigitValid(item.vin)};
-      prior.hits++;prior.best=Math.max(prior.best,item.confidence);
+      const prior=grouped.get(item.vin)||{vin:item.vin,hits:0,best:0,valid:vinCheckDigitValid(item.vin),bands:new Set()};
+      prior.hits++;prior.best=Math.max(prior.best,item.confidence);prior.bands.add(item.band);
       grouped.set(item.vin,prior);
     }
     const ranked=[...grouped.values()].sort((a,b)=>
-      Number(b.valid)-Number(a.valid) || b.hits-a.hits || b.best-a.best
+      Number(b.valid)-Number(a.valid) || b.bands.size-a.bands.size || b.hits-a.hits || b.best-a.best
     );
     const winner=ranked[0];
-    if(!winner?.vin || winner.vin.length!==17) throw new Error("no complete VIN text found");
+    if(!winner?.vin||winner.vin.length!==17) throw new Error("no complete VIN text found");
 
-    // Critical safety gate: OCR never goes directly to NHTSA or a vehicle record.
-    // The technician must compare and confirm the 17 characters first.
-    const candidates=ranked.slice(0,8).map(x=>x.vin);
+    const candidates=ranked.slice(0,6).map(x=>x.vin);
     showOcrDiagnostic({
-      label:`${label} — multi-pass OCR`,
-      text:rawReads.join("\n")||winner.vin,
+      label:`${label} — filtered multi-band OCR`,
+      text:rawReads.slice(0,12).join("\n")||winner.vin,
       confidence:winner.best,
       candidates,
       selected:winner.vin
@@ -2745,8 +2772,8 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     pendingVin="";pendingVinCount=0;pendingVinAt=0;
     identifyStatus.className=winner.valid?"status warn":"status bad";
     identifyStatus.textContent=winner.valid
-      ? `OCR suggests ${winner.vin}. Check digit passes, but compare every character with the physical VIN tag, then press Confirm and Decode.`
-      : `OCR suggests ${winner.vin}, but the check digit fails. Correct the highlighted VIN from the physical tag before decoding.`;
+      ? `VIN candidate ${winner.vin} passed the check digit. Compare all 17 characters with the physical tag, then press Confirm and Decode.`
+      : `A 17-character candidate was found, but its check digit failed. Correct it from the physical tag or scan again before decoding.`;
     document.getElementById("ocrVinEdit")?.focus({preventScroll:true});
     return true;
   }
@@ -5058,7 +5085,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.1.4 • VIN verification gate</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.1.5 • VIN tag extraction refinement</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
