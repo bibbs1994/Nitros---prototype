@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.1.3 — VIN Tag Close-Up OCR</title>
+<title>Nitros Mobile Technician Portal v10.1.4 — VIN Verification Gate</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -442,7 +442,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.1.3 — VIN Tag Close-Up OCR</div>
+  <div class="sub">Mobile Technician Portal v10.1.4 — VIN Verification Gate</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -456,7 +456,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.1.3 preserves the validated intake, walk-around, customer matching, repair-order routing, and Oliver diagnostic workflow while adding an optimized dashboard VIN scanner for windshield glare, small barcodes, and printed VIN text.</div>
+    <div id="portalLoginStatus" class="status">Version 10.1.4 preserves the validated intake, walk-around, customer matching, repair-order routing, and Oliver diagnostic workflow while adding a VIN verification gate that prevents OCR or barcode results from decoding until the technician confirms all 17 characters and the check digit passes.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -907,7 +907,8 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
           <div>OCR confidence</div><div id="ocrConfidence">0%</div>
         </div>
         <div class="field">
-          <label for="ocrVinEdit">Detected VIN — confirm or correct before decoding</label>
+          <label for="ocrVinEdit">Detected VIN — compare every character with the tag before decoding</label>
+          <div class="status warn" style="margin:8px 0 10px">OCR is a suggestion only. The app will not decode or create a vehicle record until you confirm a 17-character VIN with a valid check digit.</div>
           <input id="ocrVinEdit" maxlength="17" autocomplete="off" autocapitalize="characters" placeholder="17-character VIN">
         </div>
         <div class="debug-actions">
@@ -2107,7 +2108,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
   }
 
   let lastDecodeDebug={
-    version:"10.1.3", rawInput:"", cleanedVin:"", vinLength:0, formatValid:false, checkDigitValid:false,
+    version:"10.1.4", rawInput:"", cleanedVin:"", vinLength:0, formatValid:false, checkDigitValid:false,
     endpoint:"", httpStatus:"Not requested", elapsedMs:0, error:"", warningCodes:[], returnedFields:[], missingFields:[], rawResponse:null
   };
 
@@ -2142,7 +2143,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 
   async function identifyVehicle(){
     const code=vinInput.value.trim().toUpperCase();
-    lastDecodeDebug={version:"10.1.3",rawInput:code,cleanedVin:"",vinLength:0,formatValid:false,checkDigitValid:false,endpoint:"",httpStatus:"Not requested",elapsedMs:0,error:"",warningCodes:[],returnedFields:[],missingFields:[],rawResponse:null};
+    lastDecodeDebug={version:"10.1.4",rawInput:code,cleanedVin:"",vinLength:0,formatValid:false,checkDigitValid:false,endpoint:"",httpStatus:"Not requested",elapsedMs:0,error:"",warningCodes:[],returnedFields:[],missingFields:[],rawResponse:null};
     updateDecoderDebug();
     if(vehicles[code]){
       selectedVehicle=vehicles[code];
@@ -2695,6 +2696,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     identifyStatus.textContent=`Reading ${label}. Comparing multiple close-up contrast versions…`;
 
     const all=[];
+    const rawReads=[];
     for(let i=0;i<canvases.length;i++){
       const result=await window.Tesseract.recognize(canvases[i],"eng",{
         logger:()=>{},
@@ -2702,8 +2704,10 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
         tessedit_pageseg_mode:"7",
         preserve_interword_spaces:"0"
       });
+      const rawText=String(result?.data?.text||"").trim();
       const confidence=Number(result?.data?.confidence||0);
-      vinCandidatesFromOcr(result?.data?.text||"").forEach(vin=>all.push({vin,confidence,variant:i}));
+      if(rawText) rawReads.push(`Pass ${i+1} (${Math.round(confidence)}%): ${rawText}`);
+      vinCandidatesFromOcr(rawText).forEach(vin=>all.push({vin,confidence,variant:i}));
       const words=result?.data?.words||[];
       for(const word of words){
         vinCandidatesFromOcr(word?.text||"").forEach(vin=>all.push({
@@ -2728,12 +2732,23 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     const winner=ranked[0];
     if(!winner?.vin || winner.vin.length!==17) throw new Error("no complete VIN text found");
 
-    pendingVin=winner.vin;pendingVinCount=Math.max(1,winner.hits);pendingVinAt=Date.now();
-    identifyStatus.className=winner.valid?"status ok":"status warn";
+    // Critical safety gate: OCR never goes directly to NHTSA or a vehicle record.
+    // The technician must compare and confirm the 17 characters first.
+    const candidates=ranked.slice(0,8).map(x=>x.vin);
+    showOcrDiagnostic({
+      label:`${label} — multi-pass OCR`,
+      text:rawReads.join("\n")||winner.vin,
+      confidence:winner.best,
+      candidates,
+      selected:winner.vin
+    });
+    pendingVin="";pendingVinCount=0;pendingVinAt=0;
+    identifyStatus.className=winner.valid?"status warn":"status bad";
     identifyStatus.textContent=winner.valid
-      ? `VIN tag read successfully: ${winner.vin}. Check-digit validation passed.`
-      : `Possible VIN found: ${winner.vin}. Verify the highlighted 17 characters before accepting.`;
-    return acceptScannedValue(winner.vin,`${label} multi-pass text reader`);
+      ? `OCR suggests ${winner.vin}. Check digit passes, but compare every character with the physical VIN tag, then press Confirm and Decode.`
+      : `OCR suggests ${winner.vin}, but the check digit fails. Correct the highlighted VIN from the physical tag before decoding.`;
+    document.getElementById("ocrVinEdit")?.focus({preventScroll:true});
+    return true;
   }
 
   async function readDashVinFromCamera(){
@@ -2885,8 +2900,15 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     const value=extractVin(raw);
     if(value.length!==17) return false;
 
-    // Require two matching reads close together. This prevents a single unstable
-    // camera frame or nearby sticker from being accepted as the vehicle VIN.
+    // Never decode a malformed or check-digit-failing VIN from a scan.
+    if(!/^[A-HJ-NPR-Z0-9]{17}$/.test(value) || !vinCheckDigitValid(value)){
+      showOcrDiagnostic({label:`${source} — verification required`,text:String(raw||value),confidence:0,candidates:[value],selected:value});
+      identifyStatus.className="status bad";
+      identifyStatus.textContent=`Scan produced ${value}, but it failed VIN validation. Compare it with the physical tag and correct it before decoding.`;
+      return false;
+    }
+
+    // Barcode/live scans still require two matching reads before presenting confirmation.
     if(value!==pendingVin || now-pendingVinAt>1600){
       pendingVin=value;
       pendingVinCount=1;
@@ -2901,15 +2923,14 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     pendingVinAt=now;
     if(pendingVinCount<2 || now-lastScanAt<350) return false;
     lastScanAt=now;
-    vinInput.value=value;
     if(scanGuide){scanGuide.classList.remove("confirming");scanGuide.classList.add("found");}
     try{navigator.vibrate && navigator.vibrate([80,50,120]);}catch(e){}
-    identifyStatus.className="status ok";
-    identifyStatus.textContent=`VIN confirmed by ${source}. Decoding vehicle…`;
-    setTimeout(()=>{
-      stopCamera();
-      identifyVehicle();
-    },350);
+
+    // Even a valid barcode is shown for technician confirmation before decode.
+    showOcrDiagnostic({label:`${source} — two matching reads`,text:value,confidence:99,candidates:[value],selected:value});
+    identifyStatus.className="status warn";
+    identifyStatus.textContent=`VIN read twice as ${value}. Compare it with the physical tag, then press Confirm and Decode.`;
+    stopCamera();
     return true;
   }
 
@@ -5037,7 +5058,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.1.3 • VIN tag close-up OCR</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.1.4 • VIN verification gate</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5075,7 +5096,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.1.3 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.1.4 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
