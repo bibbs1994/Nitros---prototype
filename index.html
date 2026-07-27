@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.1.5 — VIN Tag Extraction Refinement</title>
+<title>Nitros Mobile Technician Portal v10.1.6 — Dashboard VIN Camera Launch Fix</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -442,7 +442,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.1.5 — VIN Tag Extraction Refinement</div>
+  <div class="sub">Mobile Technician Portal v10.1.6 — Dashboard VIN Camera Launch Fix</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -5085,7 +5085,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.1.5 • VIN tag extraction refinement</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.1.6 • dashboard VIN camera launch fix</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -6051,16 +6051,39 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
   }
 
   async function openDashboardScanner(){
+    // The proven Door-Jamb route opens the camera through the visible startCamera
+    // button. Use that same route here because openCamera is scoped inside the
+    // original scanner module on some iPhone/Safari builds and is not global.
     try{ if(typeof stopCamera==="function") stopCamera(); }catch(e){}
     setDashboardGuide();
+
+    let launched=false;
     if(typeof openCamera==="function"){
-      await openCamera();
-      setDashboardGuide();
-      await optimizeDashboardCamera();
-      if(typeof identifyStatus!=="undefined" && identifyStatus){
-        identifyStatus.className="status ok";
-        identifyStatus.textContent="Dashboard VIN mode active. Move close, angle away from glare, place only the VIN plate in the orange box, and tap the VIN plate to focus.";
+      try{ await openCamera(); launched=true; }catch(e){}
+    }
+    if(!launched){
+      const launchButton=$("startCamera");
+      if(launchButton){
+        launchButton.click();
+        launched=true;
       }
+    }
+
+    // Allow getUserMedia to attach the rear-camera stream before applying the
+    // dashboard guide and close-focus constraints.
+    for(let i=0;i<20;i++){
+      const video=$("camera");
+      if((typeof stream!=="undefined" && stream) || (video && video.srcObject)) break;
+      await new Promise(resolve=>setTimeout(resolve,100));
+    }
+    setDashboardGuide();
+    await optimizeDashboardCamera();
+    const status=$("identifyStatus");
+    if(status){
+      status.className=launched?"status ok":"status warn";
+      status.textContent=launched
+        ? "Dashboard VIN camera active. Move close, angle away from glare, place only the VIN plate in the orange box, and tap the VIN plate to focus."
+        : "The camera could not be started. Check Safari camera permission and tap Dashboard VIN Scan again.";
     }
   }
 
