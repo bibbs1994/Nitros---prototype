@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v9.0 — Oliver Guided Diagnostics</title>
+<title>Nitros Mobile Technician Portal v9.0.2 — Oliver Diagnostic Stabilization</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -417,7 +417,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v9.0 — Oliver Guided Diagnostics</div>
+  <div class="sub">Mobile Technician Portal v9.0.2 — Oliver Diagnostic Stabilization</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -431,7 +431,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 9.0 activates Oliver as the technician diagnostic copilot. Open the Oliver Hub from any screen, choose Repair Assistant, and use the active repair context to verify the complaint, review scan information, select the next-best test, record evidence, and verify the repair. The complete validated v8.2.9 intake, walk-around, Convert to RO, and Technician Dashboard workflow is preserved.</div>
+    <div id="portalLoginStatus" class="status">Version 9.0.2 stabilizes Oliver as the technician diagnostic copilot. Open the Oliver Hub from any screen, choose Repair Assistant, and use the active repair context to verify the complaint, review scan information, select the next-best test, record evidence, and verify the repair. The complete validated v8.2.9 intake, walk-around, Convert to RO, and Technician Dashboard workflow is preserved.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -5652,7 +5652,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v9.0.1</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v9.0.2</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -5684,11 +5684,25 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 (()=>{'use strict';
 const $=id=>document.getElementById(id), val=id=>($(id)?.value||'').trim();
 const mode=$('oliverDiagnosticMode'),chat=$('diagChat'),input=$('diagInput');
-let speakOn=true,lastOliver='',evidence=[],stage='intake',caseType='general',lastQuestion='',loadedImage='',zoom=1,selectedVoiceName='male-preferred';
+let speakOn=true,lastOliver='',evidence=[],stage='intake',caseType='general',lastQuestion='',loadedImage='',zoom=1,selectedVoiceName=localStorage.getItem('nitros_oliver_voice')||'male-preferred';
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition; let recognition=null;
 function context(){
- const vehicle=[val('vehicleYear'),val('vehicleMake'),val('vehicleModel'),val('vehicleEngine')||val('engineSize')].filter(Boolean).join(' ')||val('appointmentVehicle')||'Vehicle not entered';
- return {vehicle,ro:val('roNumber')||val('workOrderNumber')||'RO pending',concern:val('customerConcern')||val('concern')||val('appointmentConcern')||'Concern not entered',dtcs:val('dtcCodes')||val('scanResults')||'Not entered yet.'};
+ const read=(key,fallback=null)=>{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback}catch(_){return fallback}};
+ const draft=read('nitros_prototype_v073_active_draft',{})||{}, f=draft.fields||{}, sv=draft.selectedVehicle||{};
+ const jobs=read('nitros_portal_v8_assigned_jobs',[])||[];
+ const activeJob=jobs.find(j=>String(j.status||'').toLowerCase()!=='complete' && String(j.status||'').toLowerCase()!=='removed')||{};
+ const first=(...xs)=>xs.find(x=>String(x??'').trim())||'';
+ const year=first(val('vehicleYear'),f.vehicleYear,sv.year,activeJob.year);
+ const make=first(val('vehicleMake'),f.vehicleMake,sv.make,activeJob.make);
+ const model=first(val('vehicleModel'),f.vehicleModel,sv.model,activeJob.model);
+ const engine=first(val('vehicleEngine'),val('engineSize'),f.vehicleEngine,f.engineSize,sv.engine,sv.engineSize,activeJob.engine,activeJob.engineSize,activeJob.vehicleEngine);
+ const jobVehicle=first(activeJob.vehicle,activeJob.vehicleDescription,activeJob.jobVehicle,val('appointmentVehicle'));
+ const vehicle=[year,make,model,engine].filter(Boolean).join(' ')||jobVehicle||'Vehicle context pending';
+ const ro=first(val('roNumber'),val('workOrderNumber'),f.roNumber,f.workOrderNumber,activeJob.ro,activeJob.roNumber,activeJob.jobRo,'RO pending');
+ const concern=first(val('customerConcern'),val('concern'),val('appointmentConcern'),f.customerConcern,f.concern,f.appointmentConcern,activeJob.concern,activeJob.jobConcern,activeJob.assignedWork,'Concern not entered');
+ const dtcs=first(val('dtcCodes'),val('scanResults'),f.dtcCodes,f.scanResults,activeJob.dtcs,activeJob.scanResults,'Not entered yet.');
+ const vin=first(val('vinInput'),f.vinInput,sv.vin,activeJob.vin,'VIN pending');
+ return {vehicle,engine,vin,ro,concern,dtcs};
 }
 function detectType(text){text=text.toLowerCase();if(/p0456|p0442|small leak|evap/.test(text))return'evap';if(/no.?crank|starter|relay|terminal 30/.test(text))return'nocrank';if(/misfire|p030/.test(text))return'misfire';return'general'}
 function esc(s){return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
@@ -5697,7 +5711,7 @@ function availableVoices(){return ('speechSynthesis' in window)?(speechSynthesis
 function pickVoice(){const voices=availableVoices();if(selectedVoiceName&&selectedVoiceName!=='male-preferred'){const exact=voices.find(v=>v.name===selectedVoiceName);if(exact)return exact}const male=/Aaron|Daniel|Alex|Fred|Tom|Reed|Rocko|Eddy|Evan|Nathan|Ralph|Bruce|Lee|Oliver|Male/i;return voices.find(v=>/^en-US/i.test(v.lang)&&male.test(v.name))||voices.find(v=>/^en/i.test(v.lang)&&male.test(v.name))||voices.find(v=>/^en-US/i.test(v.lang))||voices.find(v=>/^en/i.test(v.lang))||null}
 function populateVoiceSelect(){const sel=$('diagVoiceSelect');if(!sel)return;const voices=availableVoices().filter(v=>/^en/i.test(v.lang));const current=sel.value||selectedVoiceName;sel.innerHTML='<option value="male-preferred">Male voice (preferred)</option>'+voices.map(v=>`<option value="${esc(v.name)}">${esc(v.name)} — ${esc(v.lang)}</option>`).join('');sel.value=[...sel.options].some(o=>o.value===current)?current:'male-preferred';selectedVoiceName=sel.value}
 function speak(text){if(!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text.replace(/P0(\d)(\d)(\d)/gi,'P zero $1 $2 $3'));u.rate=.94;u.pitch=.82;u.voice=pickVoice();speechSynthesis.speak(u)}
-function updateSide(){const c=context();$('diagContextLine').textContent=`${c.ro} • ${c.vehicle} • ${c.concern}`;$('diagVehicle').textContent=`${c.vehicle}\n${c.ro}`;$('diagConcern').textContent=c.concern;$('diagDtcs').textContent=c.dtcs;$('diagEvidenceCount').textContent=`${evidence.length} recorded result${evidence.length===1?'':'s'}`}
+function updateSide(){const c=context();$('diagContextLine').textContent=`${c.ro} • ${c.vehicle} • ${c.concern}`;$('diagVehicle').textContent=`${c.vehicle}\n${c.vin}\n${c.ro}`;$('diagConcern').textContent=c.concern;$('diagDtcs').textContent=c.dtcs;$('diagEvidenceCount').textContent=`${evidence.length} recorded result${evidence.length===1?'':'s'}`}
 function testCard(title,why,procedure,pass,fail){return `<div class="test-card"><strong>${esc(title)}</strong><div style="margin-top:6px"><b>Why:</b> ${esc(why)}</div><div style="margin-top:7px"><b>How:</b> ${esc(procedure)}</div><div class="criteria"><div class="diag-pass"><b>PASS</b><br>${esc(pass)}</div><div class="diag-fail"><b>FAIL</b><br>${esc(fail)}</div></div></div>`}
 function begin(){updateSide();const c=context();caseType=detectType([c.concern,c.dtcs,val('internalTechnicianNotes')].join(' '));stage='intake';chat.innerHTML='';addMessage('oliver',`I have ${c.vehicle}, ${c.ro}. The concern is: ${c.concern}. Scan information: ${c.dtcs}. I am entering full-screen Diagnostic Mode. I will ask for one measured result at a time and change the next test from your answer.`);nextPrompt('')}
 function nextPrompt(answer){const a=answer.toLowerCase();
@@ -5726,8 +5740,8 @@ function nextPrompt(answer){const a=answer.toLowerCase();
  addMessage('oliver','I recorded that observation. Include the tool used, test points, operating condition, measured value, specification, and whether it repeated.');
 }
 function handle(text){text=text.trim();if(!text)return;addMessage('tech',text);input.value='';if(/read that again/i.test(text)){speak(lastOliver);return}if(/wiring diagram|connector|pinout|fuse layout/i.test(text)){openViewer();addMessage('oliver','The full-screen technical viewer is open. Load the wiring diagram or connector image, then pinch or use the zoom controls. The diagnostic conversation remains saved underneath.');return}if(/record.*evidence/i.test(text)){evidence.push({at:new Date().toISOString(),stage,text});updateSide();addMessage('oliver','Recorded as diagnostic evidence.');return}evidence.push({at:new Date().toISOString(),stage,text});updateSide();nextPrompt(text)}
-function openMode(){mode.classList.add('active');document.body.style.overflow='hidden';populateVoiceSelect();begin()}
-function closeMode(){mode.classList.remove('active');document.body.style.overflow='';speechSynthesis?.cancel()}
+async function openMode(){mode.classList.add('active');document.body.style.overflow='hidden';populateVoiceSelect();begin();try{const target=mode;if(target.requestFullscreen)await target.requestFullscreen();else if(target.webkitRequestFullscreen)target.webkitRequestFullscreen();}catch(_){/* CSS full-screen fallback remains active, especially on iPhone */}}
+async function closeMode(){mode.classList.remove('active');document.body.style.overflow='';speechSynthesis?.cancel();try{if(document.fullscreenElement&&document.exitFullscreen)await document.exitFullscreen();else if(document.webkitFullscreenElement&&document.webkitExitFullscreen)document.webkitExitFullscreen()}catch(_){}}
 function openViewer(){const v=$('diagViewer');v.classList.add('active');if(loadedImage)renderImage()}
 function renderImage(){const st=$('diagViewerStage');st.innerHTML=`<img id="diagViewerImage" src="${loadedImage}" alt="Loaded technical diagram">`;const img=$('diagViewerImage');img.style.transform=`scale(${zoom})`;}
 function setZoom(z){zoom=Math.max(.25,Math.min(5,z));const img=$('diagViewerImage');if(img)img.style.transform=`scale(${zoom})`;$('diagZoomReset').textContent=Math.round(zoom*100)+'%'}
@@ -5735,11 +5749,11 @@ $('diagSend').addEventListener('click',()=>handle(input.value));input.addEventLi
 $('diagExit').addEventListener('click',closeMode);$('diagSpeakToggle').addEventListener('click',()=>{speakOn=!speakOn;$('diagSpeakToggle').innerHTML=speakOn?'🔊 <span class="label">Voice On</span>':'🔇 <span class="label">Voice Off</span>';if(!speakOn)speechSynthesis?.cancel()});
 $('diagReadLast').addEventListener('click',()=>speak(lastOliver));document.querySelectorAll('[data-diag-quick]').forEach(b=>b.addEventListener('click',()=>handle(b.dataset.diagQuick)));
 $('diagFreezeFrame')?.addEventListener('click',()=>{input.value='Freeze frame: code status = ; fuel level = %; RPM = ; vehicle speed = ; coolant temperature = ; ambient temperature = ; calculated load = ; FTP sensor = .';input.focus();addMessage('oliver','Fill in whatever freeze-frame values your scan tool shows. You do not need every field. You can also tap the microphone and say the values out loud.')});
-$('diagVoiceSelect')?.addEventListener('change',e=>{selectedVoiceName=e.target.value;speak('Oliver male voice selected.');});
+$('diagVoiceSelect')?.addEventListener('change',e=>{selectedVoiceName=e.target.value;localStorage.setItem('nitros_oliver_voice',selectedVoiceName);speak('Oliver male voice selected.');});
 if('speechSynthesis' in window){speechSynthesis.onvoiceschanged=populateVoiceSelect;setTimeout(populateVoiceSelect,250)}
 $('diagLoadImage').addEventListener('click',()=>$('diagImageInput').click());$('diagImageInput').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{loadedImage=r.result;zoom=1;evidence.push({at:new Date().toISOString(),stage,text:'Scan graph/photo attached: '+f.name});updateSide();$('diagViewerTitle').textContent=f.name||'Scan Graph / Photo';openViewer();renderImage();addMessage('oliver','The scan graph or photo is attached to this diagnostic session. Tell me what PID is shown, the operating condition, and what part of the graph you want interpreted.')};r.readAsDataURL(f)});$('diagOpenViewer').addEventListener('click',openViewer);$('diagViewerClose').addEventListener('click',()=>$('diagViewer').classList.remove('active'));$('diagZoomIn').addEventListener('click',()=>setZoom(zoom+.25));$('diagZoomOut').addEventListener('click',()=>setZoom(zoom-.25));$('diagZoomReset').addEventListener('click',()=>setZoom(1));
-$('diagExportNotes').addEventListener('click',()=>{const note=evidence.map(x=>`[${new Date(x.at).toLocaleString()}] ${x.stage}: ${x.text}`).join('\n');const n=$('internalTechnicianNotes');if(n){n.value=[n.value,'=== Oliver v9.0.1 Diagnostic Evidence ===',note].filter(Boolean).join('\n');addMessage('oliver','Diagnostic evidence was copied into Technician Notes.')}else addMessage('oliver','Technician Notes field is not available on this screen, but the evidence remains in this diagnostic session.')});
-if(SpeechRecognition){recognition=new SpeechRecognition();recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-US';recognition.onstart=()=>$('diagMic').classList.add('listening');recognition.onend=()=>$('diagMic').classList.remove('listening');recognition.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;if(e.results[e.results.length-1].isFinal)handle(t);else input.value=t};$('diagMic').addEventListener('click',()=>{try{recognition.start()}catch(e){recognition.stop()}})}else{$('diagMic').addEventListener('click',()=>addMessage('oliver','Voice recognition is not supported by this browser. You can still type, and spoken Oliver responses will work when speech synthesis is available.'))}
+$('diagExportNotes').addEventListener('click',()=>{const note=evidence.map(x=>`[${new Date(x.at).toLocaleString()}] ${x.stage}: ${x.text}`).join('\n');const n=$('internalTechnicianNotes');if(n){n.value=[n.value,'=== Oliver v9.0.2 Diagnostic Evidence ===',note].filter(Boolean).join('\n');addMessage('oliver','Diagnostic evidence was copied into Technician Notes.')}else addMessage('oliver','Technician Notes field is not available on this screen, but the evidence remains in this diagnostic session.')});
+if(SpeechRecognition){recognition=new SpeechRecognition();recognition.continuous=true;recognition.interimResults=true;recognition.lang='en-US';recognition.onstart=()=>$('diagMic').classList.add('listening');recognition.onend=()=>{$('diagMic').classList.remove('listening');};recognition.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;if(e.results[e.results.length-1].isFinal)handle(t);else input.value=t};$('diagMic').addEventListener('click',()=>{try{recognition.start()}catch(e){recognition.stop()}})}else{$('diagMic').addEventListener('click',()=>addMessage('oliver','Voice recognition is not supported by this browser. You can still type, and spoken Oliver responses will work when speech synthesis is available.'))}
 // Route every diagnostic start into the full-screen workspace.
 $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);
 $('oliverHubRepair')?.addEventListener('click',()=>setTimeout(openMode,80));
