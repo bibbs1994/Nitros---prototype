@@ -5652,7 +5652,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v9.0.2</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v9.0.3</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -5694,11 +5694,11 @@ function detectType(text){text=text.toLowerCase();if(/p0456|p0442|small leak|eva
 function esc(s){return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
 function addMessage(who,text,html=''){const d=document.createElement('div');d.className='diag-message '+(who==='tech'?'tech':'');d.innerHTML=`<div class="speaker">${who==='tech'?'Technician':'Oliver'}</div>${html||esc(text)}`;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;if(who!=='tech'){lastOliver=text;if(speakOn)speak(text)}}
 function availableVoices(){return ('speechSynthesis' in window)?(speechSynthesis.getVoices?.()||[]):[]}
-function voiceScore(v){const n=(v.name||'').toLowerCase(),l=(v.lang||'').toLowerCase();let score=0;if(l==='en-us')score+=60;else if(l.startsWith('en'))score+=35;if(/premium|enhanced|natural|neural/.test(n))score+=80;if(/aaron|daniel|alex|fred|tom|reed|rocko|eddy|evan|nathan|ralph|bruce|lee|oliver|guy|davis/.test(n))score+=45;if(/compact|espeak|festival|robot/.test(n))score-=80;return score}
+function voiceScore(v){const n=(v.name||'').toLowerCase(),l=(v.lang||'').toLowerCase();let score=0;if(l==='en-us')score+=60;else if(l.startsWith('en'))score+=35;if(/premium|enhanced|natural|neural|online/.test(n))score+=100;if(/microsoft guy|microsoft davis|microsoft tony|microsoft brian|microsoft ryan/.test(n))score+=70;if(/aaron|daniel|alex|fred|tom|reed|rocko|eddy|evan|nathan|ralph|bruce|lee|oliver|guy|davis/.test(n))score+=45;if(/compact|espeak|festival|robot/.test(n))score-=80;return score}
 function pickVoice(){const voices=availableVoices();if(selectedVoiceName&&selectedVoiceName!=='natural-male'){const exact=voices.find(v=>v.name===selectedVoiceName);if(exact)return exact}return voices.filter(v=>/^en/i.test(v.lang)).sort((a,b)=>voiceScore(b)-voiceScore(a))[0]||null}
 function populateVoiceSelect(){const sel=$('diagVoiceSelect');if(!sel)return;const voices=availableVoices().filter(v=>/^en/i.test(v.lang)).sort((a,b)=>voiceScore(b)-voiceScore(a));const current=sel.value||selectedVoiceName;sel.innerHTML='<option value="natural-male">Best natural male voice</option>'+voices.map(v=>`<option value="${esc(v.name)}">${esc(v.name)} — ${esc(v.lang)}</option>`).join('');sel.value=[...sel.options].some(o=>o.value===current)?current:'natural-male';selectedVoiceName=sel.value}
 function speechText(text){return text.replace(/P0(\d)(\d)(\d)/gi,'P zero $1 $2 $3').replace(/\bKOEO\b/g,'key on, engine off').replace(/\bDTCs?\b/g,'trouble codes').replace(/\bRPM\b/g,'R P M').replace(/\s+/g,' ').trim()}
-function speak(text){if(!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(speechText(text));u.rate=1.03;u.pitch=.98;u.volume=1;u.voice=pickVoice();speechSynthesis.speak(u)}
+function speak(text){if(!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(speechText(text));u.rate=.96;u.pitch=1.0;u.volume=1;u.voice=pickVoice();speechSynthesis.speak(u)}
 function updateSide(){const c=context();$('diagContextLine').textContent=`${c.ro} • ${c.vehicle} • ${c.concern}`;$('diagVehicle').textContent=`${c.vehicle}\n${c.ro}`;$('diagConcern').textContent=c.concern;$('diagDtcs').textContent=c.dtcs;$('diagEvidenceCount').textContent=`${evidence.length} recorded result${evidence.length===1?'':'s'}`}
 function testCard(title,why,procedure,pass,fail){return `<div class="test-card"><strong>${esc(title)}</strong><div style="margin-top:6px"><b>Why:</b> ${esc(why)}</div><div style="margin-top:7px"><b>How:</b> ${esc(procedure)}</div><div class="criteria"><div class="diag-pass"><b>PASS</b><br>${esc(pass)}</div><div class="diag-fail"><b>FAIL</b><br>${esc(fail)}</div></div></div>`}
 function setTest(question,why='',procedure='',pass='',fail=''){lastQuestion=question;lastWhy=why;lastProcedure=procedure;lastPass=pass;lastFail=fail}
@@ -5729,10 +5729,32 @@ function nextPrompt(answer){const a=answer.toLowerCase();
   if(stage==='mf-data'){stage='mf-divide';$('diagState').textContent='Misfire — divide ignition, fuel, mechanical';return addMessage('oliver','Identify the affected cylinder. Tell me whether the misfire follows an ignition-component swap. If not, provide injector command evidence and relative compression or compression readings before replacing parts.');}
  }
  if(stage==='intake'){stage='general-data';setTest('the first system-dividing measurement','we need one objective result that eliminates part of the system before choosing the next test','Describe the exact symptom and operating condition, list codes and freeze-frame data, and give the first measurement already made. Stop there.');$('diagState').textContent='General diagnosis — establish evidence';return addMessage('oliver','Describe the exact symptom, operating conditions, all DTCs and freeze-frame data, and the first measurement you already made. I will choose the least intrusive test that divides the system.');}
- stage='general-followup';setTest('the next dividing test','we need to separate an electrical, mechanical, fuel, or control problem before replacing anything','Tell me what system you are testing and the exact reading you just obtained. I will use that result to choose the next physical test.');addMessage('oliver','I have that result. Now tell me what system or component you were testing and the exact measurement. Then I will give you the next physical test—not another generic checklist.');
+ if(stage==='general-data'){
+   stage='general-followup';
+   setTest('one system-specific measurement','the named component and test method determine the expected value and the correct next branch','Name the component, where the meter or gauge is connected, the operating condition, and the reading. Stop there.');
+   return addMessage('oliver','I need the component, test connection, operating condition, and actual reading. For example: purge valve canister side, warm idle, purge commanded zero percent, zero inches of vacuum.');
+ }
+ // Never repeat the same generic prompt indefinitely. Hold position and restate the active test once.
+ return repeatNextTest();
+}
+function routeTechnicianIntent(text){
+ const t=text.toLowerCase();
+ // Dynamically recover when the RO/concern fields are empty but the technician names the system.
+ if(/purge valve|purge solenoid|purge vacuum/.test(t)){
+   caseType='evap';stage='evap-purge-live';
+   setTest('purge-valve sealing and command response','vacuum on the canister side with purge commanded off proves the valve is leaking, while a controlled rise with command proves it can respond','Warm engine at idle. Connect the vacuum gauge to the EVAP/canister side of the purge valve—not the intake-manifold supply side. Command purge to 0 percent. It should remain essentially at zero vacuum. Then command about 20 to 30 percent and watch for a smooth increase. Stop and report both readings.','Near zero vacuum at 0 percent command, then a smooth increase when commanded open.','Vacuum present at 0 percent means the purge valve is leaking; no response when commanded open indicates a stuck valve, blocked line, missing manifold vacuum, or control problem.');
+   $('diagState').textContent='EVAP — purge valve sealing and response';
+   addMessage('oliver','Put the gauge on the EVAP or canister side of the purge valve. With the engine warm and idling, command purge to zero percent. You should have essentially zero vacuum there. Then command roughly twenty to thirty percent; vacuum should rise smoothly. Stop and tell me the zero-command reading and the commanded reading. Do not judge the intake-manifold side—it will normally have manifold vacuum.');
+   return true;
+ }
+ if(/where should i start|where do i start|what should i check first/.test(t) && /evap|p0456|small leak/.test([t,context().concern,context().dtcs].join(' ').toLowerCase())){
+   caseType='evap';stage='intake';nextPrompt('');return true;
+ }
+ return false;
 }
 function handle(text){text=text.trim();if(!text)return;addMessage('tech',text);input.value='';
- if(/voice|robotic|sounds horrible|male voice|female voice/i.test(text)){addMessage('oliver','Understood. I will not treat that as diagnostic evidence. Choose Best natural male voice in the voice menu. I also changed my speech pacing and pitch to sound more conversational.');return}
+ if(/voice|robotic|sounds horrible|male voice|female voice/i.test(text)){addMessage('oliver','Understood. I will not record that as diagnostic evidence. I slowed the speech slightly and prioritized Windows natural online male voices when they are installed.');return}
+ if(routeTechnicianIntent(text))return;
  if(/^(why|why that|why do i do that)[?.! ]*$/i.test(text)){explainCurrentTest();return}
  if(/what.*test next|where.*stop|what next|repeat the test/i.test(text)){repeatNextTest();return}
  if(/read that again|say that again/i.test(text)){speak(lastOliver);return}
@@ -5751,7 +5773,7 @@ $('diagFreezeFrame')?.addEventListener('click',()=>{input.value='Freeze frame: c
 $('diagVoiceSelect')?.addEventListener('change',e=>{selectedVoiceName=e.target.value;speak('Oliver male voice selected.');});
 if('speechSynthesis' in window){speechSynthesis.onvoiceschanged=populateVoiceSelect;setTimeout(populateVoiceSelect,250)}
 $('diagLoadImage').addEventListener('click',()=>$('diagImageInput').click());$('diagImageInput').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{loadedImage=r.result;zoom=1;evidence.push({at:new Date().toISOString(),stage,text:'Scan graph/photo attached: '+f.name});updateSide();$('diagViewerTitle').textContent=f.name||'Scan Graph / Photo';openViewer();renderImage();addMessage('oliver','The scan graph or photo is attached to this diagnostic session. Tell me what PID is shown, the operating condition, and what part of the graph you want interpreted.')};r.readAsDataURL(f)});$('diagOpenViewer').addEventListener('click',openViewer);$('diagViewerClose').addEventListener('click',()=>$('diagViewer').classList.remove('active'));$('diagZoomIn').addEventListener('click',()=>setZoom(zoom+.25));$('diagZoomOut').addEventListener('click',()=>setZoom(zoom-.25));$('diagZoomReset').addEventListener('click',()=>setZoom(1));
-$('diagExportNotes').addEventListener('click',()=>{const note=evidence.map(x=>`[${new Date(x.at).toLocaleString()}] ${x.stage}: ${x.text}`).join('\n');const n=$('internalTechnicianNotes');if(n){n.value=[n.value,'=== Oliver v9.0.2 Conversational Diagnostic Evidence ===',note].filter(Boolean).join('\n');addMessage('oliver','Diagnostic evidence was copied into Technician Notes.')}else addMessage('oliver','Technician Notes field is not available on this screen, but the evidence remains in this diagnostic session.')});
+$('diagExportNotes').addEventListener('click',()=>{const note=evidence.map(x=>`[${new Date(x.at).toLocaleString()}] ${x.stage}: ${x.text}`).join('\n');const n=$('internalTechnicianNotes');if(n){n.value=[n.value,'=== Oliver v9.0.3 Conversational Diagnostic Evidence ===',note].filter(Boolean).join('\n');addMessage('oliver','Diagnostic evidence was copied into Technician Notes.')}else addMessage('oliver','Technician Notes field is not available on this screen, but the evidence remains in this diagnostic session.')});
 if(SpeechRecognition){recognition=new SpeechRecognition();recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-US';recognition.onstart=()=>$('diagMic').classList.add('listening');recognition.onend=()=>$('diagMic').classList.remove('listening');recognition.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;if(e.results[e.results.length-1].isFinal)handle(t);else input.value=t};$('diagMic').addEventListener('click',()=>{try{recognition.start()}catch(e){recognition.stop()}})}else{$('diagMic').addEventListener('click',()=>addMessage('oliver','Voice recognition is not supported by this browser. You can still type, and spoken Oliver responses will work when speech synthesis is available.'))}
 // Route every diagnostic start into the full-screen workspace.
 $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);
