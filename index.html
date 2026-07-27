@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v8.3.2 — Oliver Guided Diagnostics</title>
+<title>Nitros Mobile Technician Portal v9.0 — Oliver Guided Diagnostics</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -417,7 +417,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v8.3.2 — Oliver Guided Diagnostics</div>
+  <div class="sub">Mobile Technician Portal v9.0 — Oliver Guided Diagnostics</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -431,7 +431,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 8.3.1 activates Oliver as the technician diagnostic copilot. Open the Oliver Hub from any screen, choose Repair Assistant, and use the active repair context to verify the complaint, review scan information, select the next-best test, record evidence, and verify the repair. The complete validated v8.2.9 intake, walk-around, Convert to RO, and Technician Dashboard workflow is preserved.</div>
+    <div id="portalLoginStatus" class="status">Version 9.0 activates Oliver as the technician diagnostic copilot. Open the Oliver Hub from any screen, choose Repair Assistant, and use the active repair context to verify the complaint, review scan information, select the next-best test, record evidence, and verify the repair. The complete validated v8.2.9 intake, walk-around, Convert to RO, and Technician Dashboard workflow is preserved.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -1554,7 +1554,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v8.3.2 • Oliver guided diagnostics • Evidence-based testing • Repair timeline • Preserved v8.2.9 workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v9.0 • Oliver guided diagnostics • Evidence-based testing • Repair timeline • Preserved v8.2.9 workflow</div>
 </div>
 
 <script>
@@ -4901,7 +4901,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v8.3.2 • Active diagnostic copilot</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v9.0 • Active diagnostic copilot</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -4939,7 +4939,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 8.2.6 • Drag the button or the open guide anywhere</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 9.0 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -5626,67 +5626,120 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 </script>
 
 
-<script id="v832OliverVehicleContextFix">
-(()=>{
-  'use strict';
-  const $=id=>document.getElementById(id);
-  const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch(_){return fallback}};
-  const clean=v=>String(v??'').trim();
-  function ensureHidden(id){
-    let node=$(id);
-    if(!node){node=document.createElement('input');node.type='hidden';node.id=id;node.setAttribute('data-v832-context','true');document.body.appendChild(node)}
-    return node;
+<style id="v90DiagnosticModeStyles">
+:root{--diag-bg:#04101b;--diag-panel:#081b2b;--diag-line:#295273;--diag-blue:#72c8ff;--diag-text:#f4f9fd;--diag-muted:#afc3d3;--diag-good:#55d68b;--diag-warn:#ffc862;--diag-bad:#ff7878}
+#oliverDiagnosticMode{position:fixed;inset:0;z-index:10050;background:var(--diag-bg);color:var(--diag-text);display:none;flex-direction:column;overflow:hidden}
+#oliverDiagnosticMode.active{display:flex}
+.diag-topbar{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--diag-line);background:#061725;flex:none}
+.diag-topbar-main{min-width:0;flex:1}.diag-title{font-size:20px;font-weight:900}.diag-context{font-size:13px;color:var(--diag-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.diag-top-actions{display:flex;gap:8px}.diag-icon-btn{border:1px solid var(--diag-line);background:#0b263b;color:#fff;border-radius:12px;padding:10px 12px;font-weight:800;min-height:44px}
+.diag-body{display:grid;grid-template-columns:minmax(0,1fr) 330px;min-height:0;flex:1}
+.diag-main{display:flex;flex-direction:column;min-width:0;min-height:0}.diag-chat{flex:1;overflow:auto;padding:16px;scroll-behavior:smooth}
+.diag-message{max-width:900px;border:1px solid var(--diag-line);background:var(--diag-panel);border-radius:16px;padding:14px 15px;margin:0 auto 12px;line-height:1.48;font-size:17px;white-space:pre-wrap}
+.diag-message.tech{background:#102b3f;border-color:#3e718f}.diag-message .speaker{font-size:12px;color:var(--diag-blue);font-weight:900;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.diag-message .test-card{margin-top:10px;border-left:4px solid var(--diag-blue);padding:10px 12px;background:#061521;border-radius:8px}.diag-message .criteria{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.diag-pass,.diag-fail{padding:9px;border-radius:9px;font-size:14px}.diag-pass{background:rgba(85,214,139,.11);border:1px solid rgba(85,214,139,.45)}.diag-fail{background:rgba(255,120,120,.10);border:1px solid rgba(255,120,120,.45)}
+.diag-composer{border-top:1px solid var(--diag-line);padding:10px 12px;background:#061725;flex:none}.diag-compose-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:end}
+#diagMic{width:58px;height:58px;border-radius:50%;font-size:25px;border:2px solid var(--diag-blue);background:#0b3654;color:#fff}#diagMic.listening{animation:diagPulse 1s infinite;background:#7a2430}@keyframes diagPulse{50%{transform:scale(1.08)}}
+#diagInput{min-height:58px;max-height:130px;resize:vertical;border:1px solid var(--diag-line);background:#03101a;color:#fff;border-radius:14px;padding:11px 12px;font-size:17px;width:100%}
+#diagSend{min-height:58px;border:0;border-radius:14px;background:var(--diag-blue);color:#001421;font-weight:900;padding:0 18px}.diag-quick{display:flex;gap:7px;overflow:auto;padding-top:8px}.diag-quick button{white-space:nowrap;border:1px solid var(--diag-line);background:#0b263b;color:#fff;border-radius:999px;padding:8px 11px}
+.diag-side{border-left:1px solid var(--diag-line);background:#061522;overflow:auto;padding:12px}.diag-side h3{margin:4px 0 10px}.diag-card{border:1px solid var(--diag-line);border-radius:13px;padding:11px;margin-bottom:10px;background:#081b2b}.diag-card-label{font-size:11px;text-transform:uppercase;color:var(--diag-blue);font-weight:900}.diag-card-value{font-size:15px;margin-top:4px;white-space:pre-wrap}.diag-status{display:inline-block;margin-top:6px;border-radius:999px;padding:5px 8px;background:#11344d;color:#d9f1ff;font-size:12px;font-weight:800}
+.diag-tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.diag-tool-grid button,.diag-wide-btn{border:1px solid var(--diag-line);background:#0b263b;color:#fff;border-radius:10px;padding:10px;font-weight:800}.diag-wide-btn{width:100%;margin-top:7px}
+#diagViewer{position:fixed;inset:0;z-index:10060;background:#02070c;display:none;flex-direction:column}#diagViewer.active{display:flex}.diag-viewer-head{display:flex;align-items:center;padding:10px;border-bottom:1px solid #36576e;gap:8px}.diag-viewer-head strong{flex:1}.diag-viewer-stage{flex:1;overflow:auto;display:grid;place-items:center;touch-action:none}.diag-viewer-stage img{max-width:none;transform-origin:center;transition:transform .08s;user-select:none;-webkit-user-drag:none}.diag-viewer-controls{display:flex;gap:8px;padding:10px;justify-content:center;border-top:1px solid #36576e}.diag-viewer-controls button{font-size:18px;padding:9px 16px;border-radius:10px;border:1px solid #41657d;background:#0a2233;color:#fff}
+.diag-hidden{display:none!important}
+@media(max-width:800px){.diag-body{display:block;overflow:auto}.diag-main{min-height:calc(100vh - 66px)}.diag-side{border-left:0;border-top:1px solid var(--diag-line);padding-bottom:90px}.diag-message{font-size:18px}.diag-message .criteria{grid-template-columns:1fr}.diag-topbar{align-items:flex-start}.diag-top-actions .label{display:none}.diag-compose-row{grid-template-columns:auto minmax(0,1fr)}#diagSend{grid-column:1/-1;min-height:48px}.diag-context{white-space:normal;max-height:36px}.diag-tool-grid{grid-template-columns:1fr 1fr}}
+@media(min-width:801px){#oliverDiagnosticMode{font-size:16px}}
+</style>
+
+<section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
+  <header class="diag-topbar">
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v9.0</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button">✕ <span class="label">Return to RO</span></button></div>
+  </header>
+  <div class="diag-body">
+    <main class="diag-main">
+      <div id="diagChat" class="diag-chat" aria-live="polite"></div>
+      <div class="diag-composer">
+        <div class="diag-compose-row"><button id="diagMic" type="button" aria-label="Talk to Oliver">🎙️</button><textarea id="diagInput" placeholder="Talk or type a measurement, observation, or question…"></textarea><button id="diagSend" type="button">Send to Oliver</button></div>
+        <div class="diag-quick"><button type="button" data-diag-quick="Read that again">Read that again</button><button type="button" data-diag-quick="Why are we doing this test?">Why this test?</button><button type="button" data-diag-quick="Show me the wiring diagram">Wiring diagram</button><button type="button" data-diag-quick="Record this as evidence">Record evidence</button><button type="button" data-diag-quick="What is my next test?">Next test</button></div>
+      </div>
+    </main>
+    <aside class="diag-side">
+      <h3>Active Case</h3>
+      <div class="diag-card"><div class="diag-card-label">Vehicle / RO</div><div id="diagVehicle" class="diag-card-value"></div></div>
+      <div class="diag-card"><div class="diag-card-label">Customer Concern</div><div id="diagConcern" class="diag-card-value"></div></div>
+      <div class="diag-card"><div class="diag-card-label">DTC / Scan Information</div><div id="diagDtcs" class="diag-card-value"></div></div>
+      <div class="diag-card"><div class="diag-card-label">Current Diagnostic State</div><div id="diagState" class="diag-card-value">Awaiting first technician response.</div></div>
+      <div class="diag-card"><div class="diag-card-label">Technical Viewer</div><div class="diag-tool-grid"><button id="diagLoadImage" type="button">Load Diagram</button><button id="diagOpenViewer" type="button">Open Viewer</button></div><input id="diagImageInput" class="diag-hidden" type="file" accept="image/*"><button id="diagReadLast" class="diag-wide-btn" type="button">🔊 Read Last Response</button></div>
+      <div class="diag-card"><div class="diag-card-label">Evidence</div><div id="diagEvidenceCount" class="diag-card-value">0 recorded results</div><button id="diagExportNotes" class="diag-wide-btn" type="button">Copy Summary to Technician Notes</button></div>
+    </aside>
+  </div>
+</section>
+<div id="diagViewer" aria-label="Full-screen technical image viewer">
+  <div class="diag-viewer-head"><strong id="diagViewerTitle">Technical Diagram</strong><button id="diagViewerClose" class="diag-icon-btn" type="button">Close</button></div>
+  <div id="diagViewerStage" class="diag-viewer-stage"><div style="color:#a9bfd0;text-align:center;padding:30px">Load a wiring diagram, connector view, fuse layout, waveform, or technical image.</div></div>
+  <div class="diag-viewer-controls"><button id="diagZoomOut" type="button">−</button><button id="diagZoomReset" type="button">100%</button><button id="diagZoomIn" type="button">+</button></div>
+</div>
+
+<script id="v90FullScreenDiagnosticMode">
+(()=>{'use strict';
+const $=id=>document.getElementById(id), val=id=>($(id)?.value||'').trim();
+const mode=$('oliverDiagnosticMode'),chat=$('diagChat'),input=$('diagInput');
+let speakOn=true,lastOliver='',evidence=[],stage='intake',caseType='general',lastQuestion='',loadedImage='',zoom=1;
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition; let recognition=null;
+function context(){
+ const vehicle=[val('vehicleYear'),val('vehicleMake'),val('vehicleModel'),val('vehicleEngine')||val('engineSize')].filter(Boolean).join(' ')||val('appointmentVehicle')||'Vehicle not entered';
+ return {vehicle,ro:val('roNumber')||val('workOrderNumber')||'RO pending',concern:val('customerConcern')||val('concern')||val('appointmentConcern')||'Concern not entered',dtcs:val('dtcCodes')||val('scanResults')||'Not entered yet.'};
+}
+function detectType(text){text=text.toLowerCase();if(/p0456|p0442|small leak|evap/.test(text))return'evap';if(/no.?crank|starter|relay|terminal 30/.test(text))return'nocrank';if(/misfire|p030/.test(text))return'misfire';return'general'}
+function esc(s){return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
+function addMessage(who,text,html=''){const d=document.createElement('div');d.className='diag-message '+(who==='tech'?'tech':'');d.innerHTML=`<div class="speaker">${who==='tech'?'Technician':'Oliver'}</div>${html||esc(text)}`;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;if(who!=='tech'){lastOliver=text;if(speakOn)speak(text)}}
+function speak(text){if(!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text.replace(/P0(\d)(\d)(\d)/gi,'P zero $1 $2 $3'));u.rate=.96;u.pitch=1;speechSynthesis.speak(u)}
+function updateSide(){const c=context();$('diagContextLine').textContent=`${c.ro} • ${c.vehicle} • ${c.concern}`;$('diagVehicle').textContent=`${c.vehicle}\n${c.ro}`;$('diagConcern').textContent=c.concern;$('diagDtcs').textContent=c.dtcs;$('diagEvidenceCount').textContent=`${evidence.length} recorded result${evidence.length===1?'':'s'}`}
+function testCard(title,why,procedure,pass,fail){return `<div class="test-card"><strong>${esc(title)}</strong><div style="margin-top:6px"><b>Why:</b> ${esc(why)}</div><div style="margin-top:7px"><b>How:</b> ${esc(procedure)}</div><div class="criteria"><div class="diag-pass"><b>PASS</b><br>${esc(pass)}</div><div class="diag-fail"><b>FAIL</b><br>${esc(fail)}</div></div></div>`}
+function begin(){updateSide();const c=context();caseType=detectType([c.concern,c.dtcs,val('internalTechnicianNotes')].join(' '));stage='intake';chat.innerHTML='';addMessage('oliver',`I have ${c.vehicle}, ${c.ro}. The concern is: ${c.concern}. Scan information: ${c.dtcs}. I am entering full-screen Diagnostic Mode. I will ask for one measured result at a time and change the next test from your answer.`);nextPrompt('')}
+function nextPrompt(answer){const a=answer.toLowerCase();
+ if(caseType==='evap'){
+  if(stage==='intake'){stage='evap-code';lastQuestion='code status';$('diagState').textContent='EVAP — establish code status and companion codes';return addMessage('oliver','Before smoke testing, tell me whether P0456 is current, pending, or history; list every companion EVAP code; and give me the freeze-frame fuel level if available.');}
+  if(stage==='evap-code'){stage='evap-baseline';lastQuestion='baseline data';$('diagState').textContent='EVAP — baseline sensor and command check';return addMessage('oliver','Good. Now give me KOEO fuel-tank-pressure sensor data, either voltage or pressure, and tell me whether it changes smoothly when the fuel cap is opened. Also confirm whether your scan tool can command the purge and vent valves.');}
+  if(stage==='evap-baseline'){stage='evap-vent';lastQuestion='vent sealing';$('diagState').textContent='EVAP — vent valve sealing test';return addMessage('oliver','Perform the vent-valve sealing test.',testCard('Vent valve sealing test','A P0456 can be caused by a valve that commands closed electrically but does not seal mechanically.','Use regulated EVAP smoke pressure. Command the vent valve CLOSED with the scan tool. Observe smoke at the vent outlet and monitor tank pressure/vacuum response. Do not use unregulated shop air.','No smoke at the vent outlet and the system builds/holds pressure or vacuum.','Smoke continues from the vent outlet, or the system will not build pressure with the vent commanded closed.'))}
+  if(stage==='evap-vent'){
+    if(/smoke|leak|doesn.?t seal|will not seal|releases|fail/.test(a)){stage='evap-vent-confirm';lastQuestion='vent isolation';$('diagState').textContent='EVAP — confirm vent valve failure';return addMessage('oliver','The result points toward a vent valve sealing fault, but isolate it before condemning the valve.',testCard('Vent valve isolation confirmation','This separates a leaking valve from a leak in the hose, canister, or filler-neck path near the valve.','Disconnect the canister-side hose from the vent valve. Apply regulated smoke to the valve inlet while it is commanded CLOSED. Watch the vent outlet itself.','No smoke exits the valve: inspect the hose, canister connection, and surrounding plumbing.','Smoke exits directly through the commanded-closed valve: the vent valve is mechanically leaking.'))}
+    stage='evap-purge';lastQuestion='purge sealing';$('diagState').textContent='EVAP — purge valve sealing test';return addMessage('oliver','The vent side appears to seal. Check the purge valve next.',testCard('Purge valve sealing test','An uncommanded purge leak can create a small-leak code and distort smoke-test results.','Engine off. Purge command at 0%. Disconnect the intake-side connection as appropriate and apply regulated smoke to the EVAP side. Check whether smoke passes through toward the intake.','No smoke passes with purge commanded OFF.','Smoke passes through with purge commanded OFF: purge valve is leaking.'));
   }
-  function draftVehicle(){
-    const draft=read('nitros_prototype_v073_active_draft',{})||read('nitros_current_draft',{})||{};
-    const fields=draft.fields||{};
-    const vehicle=draft.selectedVehicle||{};
-    return {
-      year:clean(vehicle.year||fields.vehicleYear), make:clean(vehicle.make||fields.vehicleMake), model:clean(vehicle.model||fields.vehicleModel),
-      engine:clean(vehicle.engine||vehicle.engineSize||fields.engine||fields.engineSize), vin:clean(vehicle.vin||fields.vinInput),
-      customer:clean(fields.customerName||fields.jobCustomer), concern:clean(fields.customerConcern||fields.concern||fields.jobConcern),
-      ro:clean(fields.roNumber||fields.workOrderNumber||fields.jobRo)
-    };
-  }
-  function workboardVehicle(){
-    const items=read('nitros_v828_live_workboard',[]);
-    const activeId=localStorage.getItem('nitros_active_workboard_id');
-    const activeRo=localStorage.getItem('nitros_active_repair_order');
-    const item=(Array.isArray(items)?items:[]).find(x=>String(x.id)===String(activeId)||clean(x.ro||x.repairOrder)===clean(activeRo))||{};
-    const raw=item.vehicle||{};
-    const text=typeof raw==='string'?raw:'';
-    return {
-      year:clean(raw.year),make:clean(raw.make),model:clean(raw.model||text),engine:clean(raw.engine||raw.engineSize||item.engine),vin:clean(raw.vin||item.vin),
-      customer:clean(item.customer),concern:clean(item.concern),ro:clean(item.ro||item.repairOrder)
-    };
-  }
-  function resolve(){
-    let live={};
-    try{if(typeof selectedVehicle!=='undefined'&&selectedVehicle)live=selectedVehicle}catch(_){}
-    const draft=draftVehicle(), board=workboardVehicle();
-    return {
-      year:clean(live.year||draft.year||board.year),make:clean(live.make||draft.make||board.make),model:clean(live.model||draft.model||board.model),
-      engine:clean(live.engine||live.engineSize||draft.engine||board.engine),vin:clean(live.vin||draft.vin||board.vin),
-      customer:clean($('customerName')?.value||draft.customer||board.customer), concern:clean($('customerConcern')?.value||$('concern')?.value||draft.concern||board.concern),
-      ro:clean($('roNumber')?.value||$('workOrderNumber')?.value||draft.ro||board.ro)
-    };
-  }
-  function sync(){
-    const v=resolve();
-    ensureHidden('vehicleYear').value=v.year;ensureHidden('vehicleMake').value=v.make;ensureHidden('vehicleModel').value=v.model;
-    ensureHidden('vehicleEngine').value=v.engine;ensureHidden('engineSize').value=v.engine;ensureHidden('activeVehicleVin').value=v.vin;
-    const label=[v.year,v.make,v.model].filter(Boolean).join(' ');
-    const dash=$('dashVehicle');if(dash&&label)dash.textContent=label+(v.engine?' • '+v.engine:'');
-    const identity=$('smartOliverIdentity');if(identity&&label)identity.textContent=`Active context: ${v.customer||'Customer not entered'} • ${label}${v.engine?' • '+v.engine:''} • ${v.ro||'RO pending'}`;
-    return v;
-  }
-  document.addEventListener('click',e=>{
-    if(e.target.closest?.('#oliverHubRepair,#smartOliverLaunch,#smartDiagStart,.oliver-hub-launch'))sync();
-  },true);
-  document.addEventListener('nitros:repair-order-created',sync);
-  window.addEventListener('nitros-workboard-change',sync);
-  window.nitrosSyncOliverVehicleContext=sync;
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
+  if(stage==='evap-vent-confirm'){stage='evap-conclusion';$('diagState').textContent='EVAP — evidence review';return addMessage('oliver',/smoke|leak|fail/.test(a)?'That directly verifies a leaking vent valve. Record the command state, smoke source, and whether leakage was continuous or released after a delay. Replace only after checking the connector and confirming the valve received the commanded state. Then rerun the exact sealing test.':'The isolated valve held. Do not replace it. Inspect the vent plumbing, canister nipple, dust intrusion, filler-neck path, and any hose disturbed during testing. Tell me exactly where smoke appears.');}
+  if(stage==='evap-purge'){stage='evap-leaksearch';$('diagState').textContent='EVAP — physical leak localization';return addMessage('oliver',/smoke|leak|fail/.test(a)?'The purge valve is not sealing with zero command. Verify electrical command is truly off, then isolate and repeat once. If smoke still passes directly through the valve, the purge valve is verified leaking.':'Both control valves appear to seal. Continue with a low-pressure smoke inspection of the cap seal, filler neck, tank seams, canister, service port, and every vapor line. Tell me the first exact location where smoke appears.');}
+  return addMessage('oliver','I have recorded that. Give me the exact measured result, location, operating condition, and whether the result repeated. I will use that evidence to choose the next test.');
+ }
+ if(caseType==='nocrank'){
+  if(stage==='intake'){stage='nc-symptom';$('diagState').textContent='No-crank — define symptom and battery condition';return addMessage('oliver','Confirm: no crank, single click, repeated clicks, or intermittent? Give me battery open-circuit voltage and voltage while holding START.');}
+  if(stage==='nc-symptom'){stage='nc-load';$('diagState').textContent='No-crank — load-side relay test';return addMessage('oliver','Now report relay terminal 30 voltage and what happens when 30 is jumped to 87. Also measure terminal 87 voltage during the jumper test.');}
+  if(stage==='nc-load'){stage='nc-starter';$('diagState').textContent='No-crank — starter circuit verification';return addMessage('oliver',/no crank|nothing|doesn.?t/.test(a)?'Because jumping 30 to 87 does not crank, stay on the load side. Measure voltage at the starter S terminal during the jumper, then perform loaded positive- and ground-side voltage-drop tests. Tell me all three readings.':'The starter and load path can operate. Diagnose the relay-control side: coil power, PCM/BCM ground command, park-neutral input, immobilizer authorization, and crank request. Tell me terminal 85 and 86 readings during START.');}
+ }
+ if(caseType==='misfire'){
+  if(stage==='intake'){stage='mf-data';$('diagState').textContent='Misfire — identify cylinder and conditions';return addMessage('oliver','Give me all DTCs, freeze-frame RPM/load/coolant temperature, and the cylinder-specific misfire counters at idle and 2,000 RPM.');}
+  if(stage==='mf-data'){stage='mf-divide';$('diagState').textContent='Misfire — divide ignition, fuel, mechanical';return addMessage('oliver','Identify the affected cylinder. Tell me whether the misfire follows an ignition-component swap. If not, provide injector command evidence and relative compression or compression readings before replacing parts.');}
+ }
+ if(stage==='intake'){stage='general-data';$('diagState').textContent='General diagnosis — establish evidence';return addMessage('oliver','Describe the exact symptom, operating conditions, all DTCs and freeze-frame data, and the first measurement you already made. I will choose the least intrusive test that divides the system.');}
+ addMessage('oliver','I recorded that observation. Include the tool used, test points, operating condition, measured value, specification, and whether it repeated.');
+}
+function handle(text){text=text.trim();if(!text)return;addMessage('tech',text);input.value='';if(/read that again/i.test(text)){speak(lastOliver);return}if(/wiring diagram|connector|pinout|fuse layout/i.test(text)){openViewer();addMessage('oliver','The full-screen technical viewer is open. Load the wiring diagram or connector image, then pinch or use the zoom controls. The diagnostic conversation remains saved underneath.');return}if(/record.*evidence/i.test(text)){evidence.push({at:new Date().toISOString(),stage,text});updateSide();addMessage('oliver','Recorded as diagnostic evidence.');return}evidence.push({at:new Date().toISOString(),stage,text});updateSide();nextPrompt(text)}
+function openMode(){mode.classList.add('active');document.body.style.overflow='hidden';begin()}
+function closeMode(){mode.classList.remove('active');document.body.style.overflow='';speechSynthesis?.cancel()}
+function openViewer(){const v=$('diagViewer');v.classList.add('active');if(loadedImage)renderImage()}
+function renderImage(){const st=$('diagViewerStage');st.innerHTML=`<img id="diagViewerImage" src="${loadedImage}" alt="Loaded technical diagram">`;const img=$('diagViewerImage');img.style.transform=`scale(${zoom})`;}
+function setZoom(z){zoom=Math.max(.25,Math.min(5,z));const img=$('diagViewerImage');if(img)img.style.transform=`scale(${zoom})`;$('diagZoomReset').textContent=Math.round(zoom*100)+'%'}
+$('diagSend').addEventListener('click',()=>handle(input.value));input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handle(input.value)}});
+$('diagExit').addEventListener('click',closeMode);$('diagSpeakToggle').addEventListener('click',()=>{speakOn=!speakOn;$('diagSpeakToggle').innerHTML=speakOn?'🔊 <span class="label">Voice On</span>':'🔇 <span class="label">Voice Off</span>';if(!speakOn)speechSynthesis?.cancel()});
+$('diagReadLast').addEventListener('click',()=>speak(lastOliver));document.querySelectorAll('[data-diag-quick]').forEach(b=>b.addEventListener('click',()=>handle(b.dataset.diagQuick)));
+$('diagLoadImage').addEventListener('click',()=>$('diagImageInput').click());$('diagImageInput').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{loadedImage=r.result;zoom=1;openViewer();renderImage()};r.readAsDataURL(f)});$('diagOpenViewer').addEventListener('click',openViewer);$('diagViewerClose').addEventListener('click',()=>$('diagViewer').classList.remove('active'));$('diagZoomIn').addEventListener('click',()=>setZoom(zoom+.25));$('diagZoomOut').addEventListener('click',()=>setZoom(zoom-.25));$('diagZoomReset').addEventListener('click',()=>setZoom(1));
+$('diagExportNotes').addEventListener('click',()=>{const note=evidence.map(x=>`[${new Date(x.at).toLocaleString()}] ${x.stage}: ${x.text}`).join('\n');const n=$('internalTechnicianNotes');if(n){n.value=[n.value,'=== Oliver v9.0 Diagnostic Evidence ===',note].filter(Boolean).join('\n');addMessage('oliver','Diagnostic evidence was copied into Technician Notes.')}else addMessage('oliver','Technician Notes field is not available on this screen, but the evidence remains in this diagnostic session.')});
+if(SpeechRecognition){recognition=new SpeechRecognition();recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-US';recognition.onstart=()=>$('diagMic').classList.add('listening');recognition.onend=()=>$('diagMic').classList.remove('listening');recognition.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;if(e.results[e.results.length-1].isFinal)handle(t);else input.value=t};$('diagMic').addEventListener('click',()=>{try{recognition.start()}catch(e){recognition.stop()}})}else{$('diagMic').addEventListener('click',()=>addMessage('oliver','Voice recognition is not supported by this browser. You can still type, and spoken Oliver responses will work when speech synthesis is available.'))}
+// Route every diagnostic start into the full-screen workspace.
+$('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);
+$('oliverHubRepair')?.addEventListener('click',()=>setTimeout(openMode,80));
+// Add explicit button in compact Diagnostic tab.
+const start=$('smartDiagStart');if(start){start.textContent='Open Full-Screen Diagnostic Mode';start.style.fontSize='16px'}
+window.openOliverDiagnosticMode=openMode;
 })();
 </script>
 
