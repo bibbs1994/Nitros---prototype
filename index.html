@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.2.6 — Dashboard Free Scroll Fix</title>
+<title>Nitros Mobile Technician Portal v10.2.7 — Repair Order Top Landing Fix</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -442,7 +442,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.2.6 — Dashboard Free Scroll Fix</div>
+  <div class="sub">Mobile Technician Portal v10.2.7 — Repair Order Top Landing Fix</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -456,7 +456,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.2.6 preserves the validated intake, walk-around, customer matching, repair-order routing, and Oliver diagnostic workflow while adding a VIN verification gate that prevents OCR or barcode results from decoding until the technician confirms all 17 characters and the check digit passes.</div>
+    <div id="portalLoginStatus" class="status">Version 10.2.7 preserves the validated intake, walk-around, customer matching, repair-order routing, and Oliver diagnostic workflow while adding a VIN verification gate that prevents OCR or barcode results from decoding until the technician confirms all 17 characters and the check digit passes.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -619,7 +619,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.2.6</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.2.7</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -686,7 +686,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.2.6</div>
+      <div class="eyebrow">Version 10.2.7</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -5133,7 +5133,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.2.6 • dashboard free-scroll fix</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.2.7 • repair-order top landing fix</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5171,7 +5171,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.2.6 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.2.7 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6294,6 +6294,69 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
     if(event.target.closest?.('[data-active-open],[data-active-resume],[data-wb-edit],[data-wb-open-card]')){setTimeout(ensureControls,0)}
   });
   ensureControls();
+})();
+</script>
+
+
+
+<style id="v1027RepairOrderTopLandingStyles">
+#workorder{overflow-anchor:none;scroll-margin-top:0}
+#workorder input,#workorder textarea,#workorder select{overflow-anchor:none}
+</style>
+<script id="v1027RepairOrderTopLandingScript">
+(()=>{
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const value=id=>$(id)?.value?.trim?.()||'';
+  const setValue=(id,val)=>{const el=$(id);if(el&&val!==undefined&&val!==null&&String(val)!=='')el.value=String(val)};
+  try{history.scrollRestoration='manual'}catch(_){}
+
+  function hardTop(){
+    const active=document.activeElement;
+    if(active&&/^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)) active.blur();
+    document.documentElement.scrollTop=0;
+    document.body.scrollTop=0;
+    window.scrollTo(0,0);
+    const screen=$('workorder');
+    if(screen){screen.scrollTop=0;screen.style.overflowAnchor='none'}
+  }
+
+  function populateAndOpen(){
+    const id=value('workboardEditId');
+    if(!id) throw new Error('No active repair order is selected.');
+    setValue('workOrderNumber',value('workboardRo'));
+    setValue('assignedTechnician',value('workboardTechnician'));
+    setValue('customerName',value('workboardCustomer'));
+    setValue('concern',value('workboardConcern'));
+    setValue('internalTechnicianNotes',value('workboardInstructions'));
+    const stage=value('workboardStage');
+    const stageMap={'Waiting Diagnosis':'Diagnosing','Waiting Approval':'Waiting on Approval','Waiting for Parts':'Waiting on Parts','Ready to Repair':'Repairing','In Repair':'Repairing','Quality Control':'Quality Check','Ready for Pickup':'Ready for Pickup'};
+    setValue('repairStatus',stageMap[stage]||stage||'Assigned');
+    const vehicle=value('workboardVehicle');
+    if(vehicle){
+      const parts=vehicle.split(/\s+/);const year=/^(19|20)\d{2}$/.test(parts[0]||'')?parts.shift():'';
+      window.selectedVehicle={year,make:parts.shift()||'',model:parts.join(' '),vin:'',plate:''};
+    }
+    hardTop();
+    if(typeof showScreen!=='function') throw new Error('The normal repair-order navigation function is unavailable.');
+    showScreen('workorder');
+    hardTop();
+    requestAnimationFrame(()=>{hardTop();requestAnimationFrame(hardTop)});
+  }
+
+  document.addEventListener('click',event=>{
+    const btn=event.target.closest?.('#techOpenRepairOrderV1026');
+    if(!btn)return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const error=$('activeJobOpenErrorV1026');
+    if(error){error.textContent='';error.classList.remove('show')}
+    try{populateAndOpen()}
+    catch(err){
+      console.error('[v10.2.7 repair-order top landing]',err);
+      if(error){error.textContent='Repair order could not open: '+(err?.message||String(err));error.classList.add('show')}
+    }
+  },true);
 })();
 </script>
 
