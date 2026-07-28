@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.1.7 — Active Jobs Dashboard</title>
+<title>Nitros Mobile Technician Portal v10.1.8 — Repair Status Tracker Sync</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -442,7 +442,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.1.6 — Dashboard VIN Camera Launch Fix</div>
+  <div class="sub">Mobile Technician Portal v10.1.8 — Repair Status Tracker Sync</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -619,7 +619,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.1.7</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.1.8</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -686,7 +686,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.1.7</div>
+      <div class="eyebrow">Version 10.1.8</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -4578,7 +4578,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
   // v8.1.3 Technician Productivity Dashboard and Quick Actions.
   (()=>{
-    const FLOW=["Assigned","Diagnosing","Waiting on Approval","Waiting on Parts","Repairing","Road Test","Quality Check","Complete"];
+    const FLOW=["Assigned","Waiting Diagnosis","Diagnosing","Waiting Approval","Waiting Parts","Ready to Repair","Repair in Progress","Verification / Road Test","Ready for Pickup"];
     const DRAFT_KEY="nitros_prototype_v073_active_draft", HISTORY_KEY="nitros_prototype_customer_history_v070", JOBS_KEY="nitros_portal_v8_assigned_jobs";
     const toolbar=document.getElementById("quickToolbar"), searchModal=document.getElementById("globalSearchModal"), voiceModal=document.getElementById("voiceNoteModal"), light=document.getElementById("flashlightScreen");
     const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -4587,12 +4587,42 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     function updateToolbar(){toolbar?.classList.toggle('visible',!['login'].includes(activeScreen()))}
     new MutationObserver(updateToolbar).observe(document.querySelector('.app'),{subtree:true,attributes:true,attributeFilter:['class']});updateToolbar();
     function go(id){document.querySelector(`[data-go="${id}"]`)?.click() || (typeof portalShowScreen==='function'&&portalShowScreen(id))}
-    function currentStatus(){return document.getElementById('repairStatus')?.value||read(DRAFT_KEY,{})?.repairStatus||'Assigned'}
-    function renderTrack(target){if(!target)return;let status=currentStatus(),idx=FLOW.indexOf(status);if(status==='Paused')idx=Math.max(0,FLOW.indexOf('Repairing'));if(status==='Ready for Pickup')idx=FLOW.length-1;target.innerHTML=FLOW.map((x,i)=>`<div class="status-step ${i<idx?'complete':i===idx?'current':''}">${esc(x)}</div>`).join('')}
+    function normalizeTrackerStatus(value=''){
+      const x=String(value||'').trim().toLowerCase();
+      if(!x)return 'Assigned';
+      if(x.includes('pickup')||x.includes('delivery')||x.includes('complete'))return 'Ready for Pickup';
+      if(x.includes('road')||x.includes('verification')||x.includes('quality'))return 'Verification / Road Test';
+      if(x.includes('repair in progress')||x==='repairing'||x.includes('in progress')||x.includes('started'))return 'Repair in Progress';
+      if(x.includes('ready to repair')||x.includes('all parts received'))return 'Ready to Repair';
+      if(x.includes('part'))return 'Waiting Parts';
+      if(x.includes('approval')||x.includes('customer'))return 'Waiting Approval';
+      if(x.includes('diagnos'))return x.includes('waiting')?'Waiting Diagnosis':'Diagnosing';
+      if(x.includes('assign'))return 'Assigned';
+      return 'Assigned';
+    }
+    function currentWorkboardRecord(){
+      const items=read('nitros_v822_workboard',[]);
+      if(!Array.isArray(items)||!items.length)return null;
+      const selectedId=document.getElementById('workboardEditId')?.value;
+      return items.find(item=>item.id===selectedId)||items.slice().sort((a,b)=>new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0))[0]||null;
+    }
+    function currentStatus(){
+      const workboard=currentWorkboardRecord();
+      if(workboard?.stage)return normalizeTrackerStatus(workboard.stage);
+      return normalizeTrackerStatus(document.getElementById('repairStatus')?.value||read(DRAFT_KEY,{})?.repairStatus||'Assigned');
+    }
+    function renderTrack(target){
+      if(!target)return;
+      const status=currentStatus();
+      const idx=Math.max(0,FLOW.indexOf(status));
+      target.innerHTML=FLOW.map((x,i)=>`<div class="status-step ${i<idx?'complete':i===idx?'current':''}">${i<idx?'✓ ':i===idx?'● ':''}${esc(x)}</div>`).join('');
+      const active=target.querySelector('.status-step.current');
+      if(active)requestAnimationFrame(()=>active.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}));
+    }
     function missingRequired(){const ids=['vinInput','customerName','roNumber','photoFrontLeft','photoFrontRight','photoRearLeft','photoRearRight'];return ids.reduce((n,id)=>{const e=document.getElementById(id);return n+(!e||((e.type==='file'?!e.files?.length:!e.value?.trim()))?1:0)},0)}
     async function evidenceCount(){try{const db=await new Promise((res,rej)=>{const r=indexedDB.open('nitros_photo_evidence_v1',1);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});return await new Promise((res,rej)=>{const tx=db.transaction('photos','readonly'),r=tx.objectStore('photos').getAll();r.onsuccess=()=>res((r.result||[]).filter(x=>x.recordId==='active-draft').length);r.onerror=()=>rej(r.error);tx.oncomplete=()=>db.close()})}catch(e){return 0}}
     async function refreshDashboard(){const draft=read(DRAFT_KEY,{}),jobs=read(JOBS_KEY,[]),vehicle=[document.getElementById('vehicleYear')?.value,draft.vehicleYear,document.getElementById('vehicleMake')?.value,draft.vehicleMake,document.getElementById('vehicleModel')?.value,draft.vehicleModel].filter(Boolean);document.getElementById('dashActiveJobs').textContent=jobs.filter(j=>!['Complete','Removed'].includes(j.status)).length;document.getElementById('dashElapsed').textContent=document.getElementById('liveJobTime')?.textContent||'00:00:00';document.getElementById('dashEvidence').textContent=await evidenceCount();document.getElementById('dashMissing').textContent=missingRequired();document.getElementById('dashVehicle').textContent=vehicle.length? [...new Set(vehicle)].join(' '):'No active vehicle selected';const vin=document.getElementById('vinInput')?.value||draft.vinInput||'VIN pending',ro=document.getElementById('roNumber')?.value||draft.roNumber||document.getElementById('workOrderNumber')?.value||'RO pending';document.getElementById('dashIdentity').textContent=`${vin} • ${ro} • Status: ${currentStatus()}`;renderTrack(document.getElementById('dashboardStatusTrack'));renderTrack(document.getElementById('workOrderStatusTrack'))}
-    document.querySelectorAll('[data-go="dashboard"]').forEach(b=>b.addEventListener('click',()=>setTimeout(refreshDashboard,0)));document.getElementById('repairStatus')?.addEventListener('change',()=>{renderTrack(document.getElementById('workOrderStatusTrack'));refreshDashboard()});setInterval(()=>{if(activeScreen()==='dashboard')refreshDashboard()},1000);renderTrack(document.getElementById('workOrderStatusTrack'));
+    document.querySelectorAll('[data-go="dashboard"]').forEach(b=>b.addEventListener('click',()=>setTimeout(refreshDashboard,0)));document.getElementById('repairStatus')?.addEventListener('change',()=>{renderTrack(document.getElementById('workOrderStatusTrack'));refreshDashboard()});window.addEventListener('nitros-workboard-change',()=>setTimeout(refreshDashboard,0));setInterval(()=>{if(activeScreen()==='dashboard')refreshDashboard()},1000);renderTrack(document.getElementById('workOrderStatusTrack'));
     document.getElementById('dashResumeJob')?.addEventListener('click',()=>go('workorder'));document.getElementById('dashOpenTimeline')?.addEventListener('click',()=>document.getElementById('openCompleteTimeline')?.click());document.getElementById('dashGlobalSearch')?.addEventListener('click',()=>openSearch());document.getElementById('dashAssignedJobs')?.addEventListener('click',()=>go('jobs'));
     function openSearch(){searchModal.classList.remove('hidden');setTimeout(()=>document.getElementById('globalSearchInput')?.focus(),50)}
     document.getElementById('quickSearch')?.addEventListener('click',openSearch);document.getElementById('closeGlobalSearch')?.addEventListener('click',()=>searchModal.classList.add('hidden'));
@@ -5099,7 +5129,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.1.6 • dashboard VIN camera launch fix</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.1.8 • repair status tracker sync</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
