@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.2.2 — Active Job Stable Open & Exit Fix</title>
+<title>Nitros Mobile Technician Portal v10.2.3 — Active Job Touch, Scroll & Repair Order Fix</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -442,7 +442,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.2.2 — Active Job Stable Open & Exit Fix</div>
+  <div class="sub">Mobile Technician Portal v10.2.3 — Active Job Touch, Scroll & Repair Order Fix</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -456,7 +456,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.2.2 preserves the validated intake, walk-around, customer matching, repair-order routing, and Oliver diagnostic workflow while adding a VIN verification gate that prevents OCR or barcode results from decoding until the technician confirms all 17 characters and the check digit passes.</div>
+    <div id="portalLoginStatus" class="status">Version 10.2.3 preserves the validated intake, walk-around, customer matching, repair-order routing, and Oliver diagnostic workflow while adding a VIN verification gate that prevents OCR or barcode results from decoding until the technician confirms all 17 characters and the check digit passes.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -619,7 +619,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.2.2</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.2.3</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -686,7 +686,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.2.2</div>
+      <div class="eyebrow">Version 10.2.3</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -5209,7 +5209,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.2.2 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.2.3 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6442,11 +6442,11 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
       if(a==='parts')$('workboardPartsStatus')?.scrollIntoView({behavior:'smooth',block:'center'});
       if(a==='timer'){if(!goScreen('workorder'))clickFirst(['#bottomTimer','#clockStart','#jobClockStart'])}
     }));
-    setTimeout(()=>box.scrollIntoView({behavior:'smooth',block:'start'}),40);
+    // v10.2.3: opening position is handled once by the stable-open controller.
   }
   const observer=new MutationObserver(()=>setTimeout(renderWorkspace,0));
   const editor=$('workboardEditor');
-  if(editor)observer.observe(editor,{attributes:true,attributeFilter:['class'],subtree:true,childList:true});
+  if(editor)observer.observe(editor,{attributes:true,attributeFilter:['class']});
   document.addEventListener('click',e=>{
     if(e.target.closest('[data-wb-edit],[data-wb-open-card],[data-active-open],[data-active-resume]'))setTimeout(renderWorkspace,120);
   });
@@ -6560,6 +6560,141 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
     }
     return native.call(this,options);
   };
+})();
+</script>
+
+
+<style id="v1023ActiveJobTouchScrollRepairOrderStyles">
+html.active-job-workspace-open,
+body.active-job-workspace-open{
+  overflow-y:auto!important;
+  overscroll-behavior-y:auto!important;
+  touch-action:pan-y!important;
+  position:static!important;
+  height:auto!important;
+}
+#workboardEditor.active-job-editor-v1023{
+  overflow:visible!important;
+  touch-action:pan-y!important;
+  max-height:none!important;
+  height:auto!important;
+}
+#techWorkspaceV1021{
+  touch-action:pan-y!important;
+  overflow:visible!important;
+}
+#techOpenRepairOrderV1023{
+  margin-top:10px;
+  min-height:58px;
+  position:relative;
+  z-index:2;
+}
+.tech-workspace-v1021 .tech-primary-action{
+  margin-bottom:0;
+}
+</style>
+
+<script id="v1023ActiveJobTouchScrollRepairOrderScript">
+(()=>{
+  'use strict';
+  const $=id=>document.getElementById(id);
+  let lastInstalledFor='';
+
+  function releaseTouchAndScrollLocks(){
+    const editor=$('workboardEditor');
+    document.documentElement.classList.add('active-job-workspace-open');
+    document.body.classList.add('active-job-workspace-open');
+    if(editor) editor.classList.add('active-job-editor-v1023');
+
+    // Clear stale inline locks left by full-screen tools or overlays.
+    document.documentElement.style.removeProperty('overflow');
+    document.documentElement.style.removeProperty('position');
+    document.documentElement.style.removeProperty('height');
+    document.documentElement.style.removeProperty('touch-action');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('position');
+    document.body.style.removeProperty('height');
+    document.body.style.removeProperty('touch-action');
+  }
+
+  function removeWorkspaceClasses(){
+    document.documentElement.classList.remove('active-job-workspace-open');
+    document.body.classList.remove('active-job-workspace-open');
+    $('workboardEditor')?.classList.remove('active-job-editor-v1023');
+  }
+
+  function openRepairOrder(){
+    releaseTouchAndScrollLocks();
+    if(typeof window.showScreen==='function'){
+      window.showScreen('workorder');
+    }else{
+      document.querySelector('[data-go="workorder"]')?.click();
+    }
+    requestAnimationFrame(()=>{
+      releaseTouchAndScrollLocks();
+      window.scrollTo({top:0,left:0,behavior:'auto'});
+    });
+  }
+
+  function installRepairOrderButton(){
+    const editor=$('workboardEditor');
+    const workspace=$('techWorkspaceV1021');
+    if(!editor||editor.classList.contains('hidden')||!workspace)return;
+
+    releaseTouchAndScrollLocks();
+
+    const recordId=$('workboardEditId')?.value||'active';
+    let button=$('techOpenRepairOrderV1023');
+    if(!button){
+      button=document.createElement('button');
+      button.id='techOpenRepairOrderV1023';
+      button.className='btn primary';
+      button.type='button';
+      button.textContent='Continue to Repair Order';
+      const primary=$('techContinueV1021');
+      if(primary) primary.insertAdjacentElement('afterend',button);
+      else workspace.appendChild(button);
+      button.addEventListener('click',openRepairOrder);
+    }
+    lastInstalledFor=recordId;
+  }
+
+  function activeJobOpened(){
+    lastInstalledFor='';
+    setTimeout(installRepairOrderButton,80);
+    setTimeout(installRepairOrderButton,180);
+  }
+
+  document.addEventListener('click',event=>{
+    if(event.target.closest('[data-active-open],[data-active-resume],[data-wb-edit],[data-wb-open-card]')){
+      activeJobOpened();
+    }
+    if(event.target.closest('#techBackActiveJobsV1022,#techCloseDashboardV1022')){
+      removeWorkspaceClasses();
+    }
+  },true);
+
+  const editor=$('workboardEditor');
+  if(editor){
+    new MutationObserver(()=>{
+      if(editor.classList.contains('hidden')){
+        removeWorkspaceClasses();
+      }else{
+        installRepairOrderButton();
+      }
+    }).observe(editor,{attributes:true,attributeFilter:['class']});
+  }
+
+  window.addEventListener('pageshow',()=>{
+    if(editor&&!editor.classList.contains('hidden')) installRepairOrderButton();
+  });
+
+  // Guard against stale overlay locks after returning from diagnostics/evidence.
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden&&editor&&!editor.classList.contains('hidden')){
+      releaseTouchAndScrollLocks();
+    }
+  });
 })();
 </script>
 
