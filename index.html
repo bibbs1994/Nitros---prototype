@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.2.5 — Active Job Render Diagnostics</title>
+<title>Nitros Mobile Technician Portal v10.2.6 — Dashboard Free Scroll Fix</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -443,7 +442,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.2.5 — Active Job Render Diagnostics</div>
+  <div class="sub">Mobile Technician Portal v10.2.6 — Dashboard Free Scroll Fix</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -457,7 +456,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.2.3 preserves the validated intake, walk-around, customer matching, repair-order routing, and Oliver diagnostic workflow while adding a VIN verification gate that prevents OCR or barcode results from decoding until the technician confirms all 17 characters and the check digit passes.</div>
+    <div id="portalLoginStatus" class="status">Version 10.2.6 preserves the validated intake, walk-around, customer matching, repair-order routing, and Oliver diagnostic workflow while adding a VIN verification gate that prevents OCR or barcode results from decoding until the technician confirms all 17 characters and the check digit passes.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -620,7 +619,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.2.3</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.2.6</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -687,7 +686,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.2.3</div>
+      <div class="eyebrow">Version 10.2.6</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1606,7 +1605,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.2.1 • Dashboard VIN scan optimization • Oliver guided diagnostics • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.2.6 • Dashboard VIN scan optimization • Oliver guided diagnostics • Evidence-based workflow</div>
 </div>
 
 <script>
@@ -1749,37 +1748,6 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     return {savedAt:new Date().toISOString(),screen:currentScreenId,selectedVehicle,editingCheckInId,fields,checks,estimateLines,jobClock};
   }
 
-  function syncActiveDraftToWorkboard(draft){
-    try{
-      const WORKBOARD_KEY="nitros_v822_workboard";
-      let items=JSON.parse(localStorage.getItem(WORKBOARD_KEY)||"[]");
-      if(!Array.isArray(items)) items=[];
-      const f=draft?.fields||{};
-      const hasVehicle=Boolean(draft?.selectedVehicle?.vin||f.vinInput||f.vehicleYear||f.vehicleMake||f.vehicleModel);
-      const clock=draft?.jobClock||{};
-      const hasActiveJob=hasVehicle && ["running","paused"].includes(clock.state);
-      const index=items.findIndex(x=>x?.sourceId==="active-draft");
-      if(!hasActiveJob){
-        if(index>=0){items.splice(index,1);localStorage.setItem(WORKBOARD_KEY,JSON.stringify(items));window.dispatchEvent(new CustomEvent("nitros-workboard-change",{detail:{source:"active-draft-removed"}}));}
-        return;
-      }
-      const vehicle=[draft.selectedVehicle?.year||f.vehicleYear,draft.selectedVehicle?.make||f.vehicleMake,draft.selectedVehicle?.model||f.vehicleModel].filter(Boolean).join(" ")||draft.selectedVehicle?.vin||f.vinInput||"Vehicle in progress";
-      const now=new Date().toISOString();
-      const activeMs=Number(clock.activeMs||0)+(clock.state==="running"&&clock.activeStartedAt?Math.max(0,Date.now()-Number(clock.activeStartedAt)):0);
-      const pausedMs=Number(clock.pausedMs||0)+(clock.state==="paused"&&clock.pauseStartedAt?Math.max(0,Date.now()-Number(clock.pauseStartedAt)):0);
-      const record={
-        ...(index>=0?items[index]:{}),id:"wb_active_draft",sourceId:"active-draft",customer:f.customerName||f.name||"Walk-in customer",vehicle,vin:draft.selectedVehicle?.vin||f.vinInput||"",ro:f.roNumber||f.workOrderNumber||"",technician:f.assignedTechnician||f.technicianName||"Unassigned",concern:f.customerConcern||f.concern||"Repair order in progress",stage:clock.state==="paused"?(f.repairStatus||"Paused"):"Repair in Progress",status:f.repairStatus||"In Progress",priority:"normal",partsStatus:"Parts not entered",approval:"Approval not prepared",elapsed:activeMs,pausedMs,clockState:clock.state,createdAt:index>=0?(items[index].createdAt||now):now,updatedAt:now
-      };
-      if(index>=0)items[index]=record;else items.unshift(record);
-      localStorage.setItem(WORKBOARD_KEY,JSON.stringify(items));
-      window.dispatchEvent(new CustomEvent("nitros-workboard-change",{detail:{source:"active-draft",id:record.id}}));
-    }catch(error){console.warn("Active draft workboard sync failed:",error);}
-  }
-
-  function removeActiveDraftFromWorkboard(){
-    try{const key="nitros_v822_workboard";const items=JSON.parse(localStorage.getItem(key)||"[]");const next=Array.isArray(items)?items.filter(x=>x?.sourceId!=="active-draft"):[];localStorage.setItem(key,JSON.stringify(next));window.dispatchEvent(new CustomEvent("nitros-workboard-change",{detail:{source:"active-draft-removed"}}));}catch(error){}
-  }
-
   function setSaveStatus(state,message){
     const indicator=document.getElementById("saveIndicator");
     const label=document.getElementById("saveIndicatorText");
@@ -1805,9 +1773,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 
   function saveDraft(){
     try{
-      const activeDraft=collectDraft();
-      localStorage.setItem(DRAFT_KEY,JSON.stringify(activeDraft));
-      syncActiveDraftToWorkboard(activeDraft);
+      localStorage.setItem(DRAFT_KEY,JSON.stringify(collectDraft()));
       refreshDraftPanel();
       refreshConnectionSaveStatus();
     }catch(error){
@@ -1847,7 +1813,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
       document.getElementById("estimateRows").innerHTML="";
       draft.estimateLines.forEach(createEstimateRow);
     }
-    if(draft.jobClock) jobClock={...jobClock,...draft.jobClock};
+    if(draft.jobClock) jobClock={...jobClock,...draft.jobClock,activeStartedAt:null,pauseStartedAt:null};
     if(selectedVehicle) renderVehicle();
     updateEstimateTotals(); updateAuthorizationBadge(); updateJobClockUI(); renderTimeline();
     if(goToSavedScreen) showScreen(draft.screen||"customer",false);
@@ -1858,7 +1824,6 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     stopCamera();
     clearTimeout(draftSaveTimer);
     localStorage.removeItem(DRAFT_KEY);
-    removeActiveDraftFromWorkboard();
     clearPhotoRecord(ACTIVE_PHOTO_RECORD).then(()=>{activePhotoEvidence={};renderActivePhotoEvidence();});
 
     selectedVehicle=null;
@@ -3449,7 +3414,6 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     document.getElementById("repairStatus").value="In Progress";
     addTimelineEvent("Job started",document.getElementById("assignedTechnician").value.trim()||"Technician not entered");
     updateJobClockUI();
-    saveDraft();
   }
 
   function pauseJobClock(){
@@ -3465,7 +3429,6 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
       reason==="Waiting on Customer Approval" ? "Waiting on Approval" : "Paused";
     addTimelineEvent(`Paused — ${reason}`,note);
     updateJobClockUI();
-    saveDraft();
   }
 
   function resumeJobClock(){
@@ -3477,7 +3440,6 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     document.getElementById("repairStatus").value="In Progress";
     addTimelineEvent("Job resumed");
     updateJobClockUI();
-    saveDraft();
   }
 
   function finishJobClock(){
@@ -3493,7 +3455,6 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     document.getElementById("repairStatus").value="Complete";
     addTimelineEvent("Job completed",getLaborComparisonText());
     updateJobClockUI();
-    saveDraft();
   }
 
 
@@ -5172,7 +5133,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.2.2 • stable active-job open and exit fix</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.2.6 • dashboard free-scroll fix</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5210,7 +5171,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.2.5 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.2.6 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -5923,7 +5884,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.2.1</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.2.6</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -6014,9 +5975,9 @@ function setZoom(z){zoom=Math.max(.25,Math.min(5,z));const img=$('diagViewerImag
 $('diagSend').addEventListener('click',()=>handle(input.value));input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handle(input.value)}});$('diagExit').addEventListener('click',closeMode);$('diagSpeakToggle').addEventListener('click',()=>{speakOn=!speakOn;$('diagSpeakToggle').innerHTML=speakOn?'🔊 <span class="label">Voice On</span>':'🔇 <span class="label">Voice Off</span>';if(!speakOn)speechSynthesis?.cancel()});$('diagReadLast').addEventListener('click',()=>speak(lastOliver));document.querySelectorAll('[data-diag-quick]').forEach(b=>b.addEventListener('click',()=>handle(b.dataset.diagQuick)));
 $('diagFreezeFrame')?.addEventListener('click',()=>{input.value='Freeze frame: code status = ; fuel level = %; RPM = ; vehicle speed = ; coolant temperature = ; calculated load = ; FTP sensor = .';input.focus()});$('diagVoiceSelect')?.addEventListener('change',e=>{selectedVoiceName=e.target.value;localStorage.setItem('nitrosOliverVoice',selectedVoiceName);speak('Oliver voice selected.')});if('speechSynthesis'in window){speechSynthesis.onvoiceschanged=populateVoiceSelect;setTimeout(populateVoiceSelect,250)}
 $('diagLoadImage').addEventListener('click',()=>$('diagImageInput').click());$('diagImageInput').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{loadedImage=r.result;zoom=1;remember('Scan graph/photo attached: '+f.name,'attachment');$('diagViewerTitle').textContent=f.name||'Scan Graph / Photo';openViewer();renderImage();addMessage('oliver','The image is attached. Tell me the PID, operating condition, and the part of the graph you want interpreted.')};r.readAsDataURL(f)});$('diagOpenViewer').addEventListener('click',openViewer);$('diagViewerClose').addEventListener('click',()=>$('diagViewer').classList.remove('active'));$('diagZoomIn').addEventListener('click',()=>setZoom(zoom+.25));$('diagZoomOut').addEventListener('click',()=>setZoom(zoom-.25));$('diagZoomReset').addEventListener('click',()=>setZoom(1));
-$('diagExportNotes').addEventListener('click',()=>{const note=S.evidence.map(x=>`[${new Date(x.at).toLocaleString()}] ${x.stage} — ${x.kind}: ${x.text}`).join('\n');const n=$('internalTechnicianNotes');if(n){n.value=[n.value,'=== Oliver v10.2.1 Diagnostic Evidence ===',note].filter(Boolean).join('\n');addMessage('oliver','Diagnostic evidence was copied into Technician Notes.')}else addMessage('oliver','The evidence remains in this diagnostic session because Technician Notes is unavailable on this screen.')});
+$('diagExportNotes').addEventListener('click',()=>{const note=S.evidence.map(x=>`[${new Date(x.at).toLocaleString()}] ${x.stage} — ${x.kind}: ${x.text}`).join('\n');const n=$('internalTechnicianNotes');if(n){n.value=[n.value,'=== Oliver v10.2.6 Diagnostic Evidence ===',note].filter(Boolean).join('\n');addMessage('oliver','Diagnostic evidence was copied into Technician Notes.')}else addMessage('oliver','The evidence remains in this diagnostic session because Technician Notes is unavailable on this screen.')});
 if(SpeechRecognition){recognition=new SpeechRecognition();recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-US';recognition.onstart=()=>$('diagMic').classList.add('listening');recognition.onend=()=>$('diagMic').classList.remove('listening');recognition.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;if(e.results[e.results.length-1].isFinal)handle(t);else input.value=t};$('diagMic').addEventListener('click',()=>{try{recognition.start()}catch(_){recognition.stop()}})}else $('diagMic').addEventListener('click',()=>addMessage('oliver','Voice recognition is unavailable in this browser. Type the result; spoken responses can still work.'));
-$('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);$('oliverHubRepair')?.addEventListener('click',()=>setTimeout(openMode,80));const startBtn=$('smartDiagStart');if(startBtn){startBtn.textContent='Open Oliver v10.2.1 Diagnostic Engine';startBtn.style.fontSize='16px'}window.openOliverDiagnosticMode=openMode;
+$('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);$('oliverHubRepair')?.addEventListener('click',()=>setTimeout(openMode,80));const startBtn=$('smartDiagStart');if(startBtn){startBtn.textContent='Open Oliver v10.2.6 Diagnostic Engine';startBtn.style.fontSize='16px'}window.openOliverDiagnosticMode=openMode;
 })();
 </script>
 
@@ -6270,606 +6231,69 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
   function visible(list){const me=techName(); if(filter==='mine'&&me)return list.filter(x=>String(x.technician||'').toLowerCase().includes(me)); if(filter==='waiting')return list.filter(waiting); if(filter==='priority')return list.filter(x=>['high','customer'].includes(x.priority)); return list}
   function card(x){const tone=x.stage==='Ready for Pickup'?'ready':x.priority==='customer'?'customer':x.priority==='high'?'high':'';return `<article class="active-job-focus-card ${tone}" tabindex="0" role="button" data-active-open="${esc(x.id)}"><div class="active-job-focus-head"><div><div class="active-job-focus-title">${esc(x.customer||'Customer')} — ${esc(x.vehicle||'Vehicle')}</div><div class="active-job-focus-meta">${esc(x.technician||'Unassigned')} • ${esc(x.stage||'Intake / Check-In')}</div></div><div class="active-job-focus-ro">${esc(x.ro?'RO '+x.ro:'RO pending')}</div></div><div class="active-job-focus-concern">${esc(x.concern||'No customer concern entered.')}</div><div class="active-job-focus-badges"><span class="active-job-focus-badge">${esc(x.priority==='customer'?'Customer Waiting':x.priority==='high'?'High Priority':'Normal Priority')}</span><span class="active-job-focus-badge">${esc(x.partsStatus||'Parts not entered')}</span><span class="active-job-focus-badge">${esc(x.approval||'Approval not prepared')}</span></div><div class="active-job-focus-actions"><button class="btn primary" type="button" data-active-resume="${esc(x.id)}">Open / Resume</button><button class="btn secondary" type="button" data-active-next="${esc(x.id)}">Update Status</button></div></article>`}
   function render(){const all=jobs(),list=visible(all),box=$('activeJobsFocusList'),status=$('activeJobsFocusStatus');if(!box)return;box.innerHTML=list.length?list.map(card).join(''):'<div class="command-empty">No active repair orders match this view.</div>';if(status){status.className='status'+(all.length?' ok':'');status.textContent=all.length?`${all.length} active repair order${all.length===1?'':'s'} available. Tap any vehicle to open the exact linked workboard record.`:'No active repair orders are currently stored on this device.';}document.querySelectorAll('[data-active-job-filter]').forEach(b=>b.classList.toggle('selected',b.dataset.activeJobFilter===filter));}
-  function openRecord(id,scroll=true){if(id==='wb_active_draft'){if(typeof restoreDraft==='function'&&restoreDraft(false)){if(typeof showScreen==='function')showScreen('workorder');setTimeout(()=>document.getElementById('clockBanner')?.scrollIntoView({behavior:'smooth',block:'start'}),100);return true}}const edit=document.querySelector(`[data-wb-edit="${CSS.escape(id)}"]`);if(edit){edit.click();if(scroll)setTimeout(()=>$('workboardEditor')?.scrollIntoView({behavior:'smooth',block:'start'}),80);return true}const card=document.querySelector(`[data-wb-open-card="${CSS.escape(id)}"]`);if(card){card.click();return true}return false}
+  function openRecord(id,scroll=true){const edit=document.querySelector(`[data-wb-edit="${CSS.escape(id)}"]`);if(edit){edit.click();if(scroll)setTimeout(()=>$('workboardEditor')?.scrollIntoView({behavior:'smooth',block:'start'}),80);return true}const card=document.querySelector(`[data-wb-open-card="${CSS.escape(id)}"]`);if(card){card.click();return true}return false}
   function nextStage(id){if(!openRecord(id,false))return;setTimeout(()=>{$('workboardAdvance')?.click();render();$('workboardEditor')?.scrollIntoView({behavior:'smooth',block:'start'})},80)}
   document.addEventListener('click',e=>{const f=e.target.closest('[data-active-job-filter]');if(f){filter=f.dataset.activeJobFilter;render();return}const resume=e.target.closest('[data-active-resume]');if(resume){e.stopPropagation();openRecord(resume.dataset.activeResume);return}const next=e.target.closest('[data-active-next]');if(next){e.stopPropagation();openRecord(next.dataset.activeNext);return}const cardEl=e.target.closest('[data-active-open]');if(cardEl)openRecord(cardEl.dataset.activeOpen)});
   document.addEventListener('keydown',e=>{const cardEl=e.target.closest?.('[data-active-open]');if(cardEl&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openRecord(cardEl.dataset.activeOpen)}});
   $('activeJobsRefresh')?.addEventListener('click',()=>{document.getElementById('workboardRefresh')?.click();setTimeout(render,100)});
-  window.addEventListener('nitros-workboard-change',render);window.addEventListener('storage',render);document.querySelectorAll('[data-go="dashboard"]').forEach(b=>b.addEventListener('click',()=>setTimeout(render,120)));setInterval(()=>{if($('dashboard')?.classList.contains('active'))render()},5000);setTimeout(()=>{try{const d=typeof loadDraft==='function'?loadDraft():null;if(d&&typeof syncActiveDraftToWorkboard==='function')syncActiveDraftToWorkboard(d)}catch(e){}render()},250);setInterval(()=>{try{const d=typeof loadDraft==='function'?loadDraft():null;if(d&&typeof syncActiveDraftToWorkboard==='function'&&['running','paused'].includes(d.jobClock?.state))syncActiveDraftToWorkboard(d)}catch(e){}},15000);
+  window.addEventListener('nitros-workboard-change',render);window.addEventListener('storage',render);document.querySelectorAll('[data-go="dashboard"]').forEach(b=>b.addEventListener('click',()=>setTimeout(render,120)));setInterval(()=>{if($('dashboard')?.classList.contains('active'))render()},5000);setTimeout(render,250);
 })();
 </script>
 
 
-<style id="v1021ActiveJobWorkspaceSafeAreaStyles">
-:root{
-  --nitros-safe-top:max(16px,env(safe-area-inset-top,0px));
-  --nitros-safe-right:max(14px,env(safe-area-inset-right,0px));
-  --nitros-safe-bottom:max(12px,env(safe-area-inset-bottom,0px));
-}
-.photo-fullscreen{padding-top:calc(var(--nitros-safe-top) + 58px)!important;padding-right:var(--nitros-safe-right)!important;padding-bottom:var(--nitros-safe-bottom)!important}
-.photo-fullscreen>button,.photo-fullscreen .photo-fullscreen-close{
-  top:calc(var(--nitros-safe-top) + 8px)!important;
-  right:var(--nitros-safe-right)!important;
-  min-width:48px!important;min-height:48px!important;
-  z-index:4!important;
-}
-#oliverDiagnosticMode .diag-topbar{
-  padding-top:calc(var(--nitros-safe-top) + 8px)!important;
-  padding-right:var(--nitros-safe-right)!important;
-}
-#diagViewer .diag-viewer-head{
-  padding-top:calc(var(--nitros-safe-top) + 8px)!important;
-  padding-right:var(--nitros-safe-right)!important;
-  min-height:calc(54px + var(--nitros-safe-top))!important;
-}
-#diagViewerClose,#diagExit{
-  min-width:48px!important;min-height:48px!important;
-  position:relative!important;z-index:3!important;
-}
-.productivity-modal-card,.photo-modal-card,.smart-evidence-card,.oliver-hub-card{
-  margin-top:calc(var(--nitros-safe-top) + 8px)!important;
-  margin-right:var(--nitros-safe-right)!important;
-  margin-bottom:var(--nitros-safe-bottom)!important;
-}
-.productivity-modal-card .smart-evidence-head,
-.photo-modal-head,.oliver-hub-head{
-  padding-top:max(4px,env(safe-area-inset-top,0px))!important;
-}
-#closeGlobalSearch,#closeVoiceNote,#closeSmartEvidence,#closeCompleteTimeline,
-#closePhotoEvidenceModal,#unifiedOliverClose,.oliver-hub-close,.oliver-guide-close{
-  min-width:48px!important;min-height:48px!important;
-}
-#flashlightScreen{
-  padding-top:calc(var(--nitros-safe-top) + 10px)!important;
-  padding-right:var(--nitros-safe-right)!important;
-}
-#closeFlashlight{min-height:48px!important}
-
-.tech-workspace-v1021{
-  border:1px solid #3b6287;border-radius:18px;
-  background:linear-gradient(180deg,#0d2238,#081523);
-  padding:16px;margin:0 0 18px;
-  box-shadow:0 12px 32px rgba(0,0,0,.22)
-}
-.tech-workspace-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-.tech-workspace-head h3{margin:3px 0 0;font-size:22px}
-.tech-workspace-stage{border:1px solid #ff9d28;background:#2b1b0d;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:900;white-space:nowrap}
-.tech-progress{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:15px 0}
-.tech-progress-step{border:1px solid #314a64;background:#091421;border-radius:10px;padding:8px 5px;text-align:center;font-size:10px;color:#9fb2c5;font-weight:800}
-.tech-progress-step.done{border-color:#3b9363;background:#0d2c20;color:#baf4d0}
-.tech-progress-step.current{border-color:#ff9d28;background:#33200d;color:#fff}
-.tech-primary-action{width:100%;min-height:58px;font-size:18px!important;margin-bottom:10px}
-.tech-quick-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.tech-quick-actions button{min-height:48px}
-.tech-completion-detail{font-size:12px;color:#b7c8d8;margin-top:10px}
-@media(max-width:700px){
-  .tech-workspace-head{display:block}.tech-workspace-stage{display:inline-block;margin-top:9px}
-  .tech-progress{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .tech-quick-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
+<style id="v1026StableActiveJobStyles">
+#techOpenRepairOrderV1026{width:100%;margin:12px 0 4px;min-height:52px;font-weight:800}
+#activeJobOpenErrorV1026{display:none;margin:10px 0;padding:12px;border:1px solid #ff982c;border-radius:12px;background:#25190c;color:#ffe4c2}
+#activeJobOpenErrorV1026.show{display:block}
 </style>
-
-<script id="v1021ActiveJobWorkspaceSafeAreaScript">
+<script id="v1026StableActiveJobScript">
 (()=>{
   'use strict';
   const $=id=>document.getElementById(id);
-  const KEY='nitros_v822_workboard';
-  const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}};
-  const write=v=>{localStorage.setItem(KEY,JSON.stringify(v));window.dispatchEvent(new CustomEvent('nitros-workboard-change'))};
-  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const flow=['Check-In','Walk-Around','Diagnosis','Repair','QC','Complete'];
-  function flowIndex(stage=''){
-    const s=String(stage).toLowerCase();
-    if(s.includes('pickup')||s.includes('complete'))return 5;
-    if(s.includes('verification')||s.includes('road test'))return 4;
-    if(s.includes('repair')||s.includes('parts')||s.includes('approval'))return 3;
-    if(s.includes('diagnos'))return 2;
-    return 1;
+  const value=id=>$(id)?.value?.trim?.()||'';
+  function setValue(id,val){const el=$(id);if(el&&val!==undefined&&val!==null&&String(val)!=='')el.value=String(val)}
+  function ensureControls(){
+    const editor=$('workboardEditor'); if(!editor||$('techOpenRepairOrderV1026')) return;
+    const btn=document.createElement('button');
+    btn.id='techOpenRepairOrderV1026';btn.type='button';btn.className='btn primary';btn.textContent='Continue to Repair Order';
+    const error=document.createElement('div');error.id='activeJobOpenErrorV1026';error.setAttribute('role','alert');
+    const anchor=$('workboardEditorTitle')?.parentElement||editor;
+    anchor.insertAdjacentElement('afterend',btn);btn.insertAdjacentElement('afterend',error);
   }
-  function continueLabel(stage=''){
-    const s=String(stage).toLowerCase();
-    if(s.includes('waiting diagnosis')||s==='diagnosing')return 'Continue Diagnosis with Oliver';
-    if(s.includes('approval'))return 'Continue Estimate / Customer Approval';
-    if(s.includes('parts'))return 'Continue Parts and Repair Planning';
-    if(s.includes('ready to repair')||s.includes('repair in progress'))return 'Continue Repair';
-    if(s.includes('verification')||s.includes('road test'))return 'Continue Quality Control / Road Test';
-    if(s.includes('pickup'))return 'Complete Repair Order';
-    return 'Continue Job';
-  }
-  function currentRecord(){
-    const id=$('workboardEditId')?.value;
-    return read().find(x=>x.id===id)||null;
-  }
-  function clickFirst(selectors){
-    for(const sel of selectors){
-      const el=document.querySelector(sel);
-      if(el){el.click();return true}
-    }
-    return false;
-  }
-  function goScreen(name){
-    if(typeof window.showScreen==='function'){window.showScreen(name);return true}
-    return clickFirst([`[data-go="${name}"]`,`[data-screen="${name}"]`]);
-  }
-  function completeRecord(rec){
-    const items=read(),i=items.findIndex(x=>x.id===rec.id);if(i<0)return;
-    const now=new Date().toISOString(),tech=$('workboardTechnician')?.value||rec.technician||'Technician';
-    items[i]={...items[i],stage:'Completed',completedAt:now,completedBy:tech,updatedAt:now,
-      audit:[{at:now,by:tech,action:'Repair order completed',detail:'Completion status and timestamp recorded.'},...(items[i].audit||[])]};
-    write(items);
-    $('workboardEditor')?.classList.add('hidden');
-    const st=$('workboardStatus');if(st){st.className='status ok';st.textContent=`Repair order completed ${new Date(now).toLocaleString()} by ${tech}. It was removed from Active Jobs.`}
-  }
-  function primaryAction(rec){
-    const s=String(rec.stage||'').toLowerCase();
-    if(s.includes('pickup')){completeRecord(rec);return}
-    if(s.includes('waiting diagnosis')||s==='diagnosing'){
-      if(window.openOliverDiagnosticMode){window.openOliverDiagnosticMode();return}
-      clickFirst(['#smartDiagStart','#smartOliverLaunch']);
-      return;
-    }
-    if(s.includes('verification')||s.includes('road test')){goScreen('inspection');return}
-    if(s.includes('repair')||s.includes('parts')||s.includes('approval')){goScreen('workorder');return}
-    $('workboardStage')?.scrollIntoView({behavior:'smooth',block:'center'});
-  }
-  function renderWorkspace(){
-    const editor=$('workboardEditor'); if(!editor||editor.classList.contains('hidden'))return;
-    const rec=currentRecord();if(!rec)return;
-    let box=$('techWorkspaceV1021');
-    if(!box){
-      box=document.createElement('section');box.id='techWorkspaceV1021';box.className='tech-workspace-v1021';
-      editor.insertBefore(box,editor.firstChild);
-    }
-    const idx=flowIndex(rec.stage);
-    box.innerHTML=`<div class="tech-workspace-head"><div><div class="eyebrow">Technician Workspace</div><h3>${esc(rec.vehicle||'Active Vehicle')} ${rec.ro?`— RO ${esc(rec.ro)}`:''}</h3></div><span class="tech-workspace-stage">${esc(rec.stage||'Active')}</span></div>
-      <div class="tech-progress">${flow.map((x,i)=>`<div class="tech-progress-step ${i<idx?'done':i===idx?'current':''}">${i<idx?'✓ ':i===idx?'▶ ':''}${x}</div>`).join('')}</div>
-      <button id="techContinueV1021" class="btn primary tech-primary-action" type="button">${esc(continueLabel(rec.stage))}</button>
-      <div class="tech-quick-actions">
-        <button class="btn secondary" type="button" data-tech-action="evidence">📷 Evidence</button>
-        <button class="btn secondary" type="button" data-tech-action="oliver">🤖 Oliver Diagnostics</button>
-        <button class="btn secondary" type="button" data-tech-action="notes">📝 Repair Notes</button>
-        <button class="btn secondary" type="button" data-tech-action="office">💬 Message Office</button>
-        <button class="btn secondary" type="button" data-tech-action="parts">📦 Parts / Approval</button>
-        <button class="btn secondary" type="button" data-tech-action="timer">⏱ Labor Timer</button>
-      </div>
-      <div class="tech-completion-detail">Opening an Active Job now restores the linked repair order and puts the technician's next action at the top. Full-screen close controls are positioned below the iPhone safe area.</div>`;
-    $('techContinueV1021')?.addEventListener('click',()=>primaryAction(currentRecord()||rec));
-    box.querySelectorAll('[data-tech-action]').forEach(b=>b.addEventListener('click',()=>{
-      const a=b.dataset.techAction;
-      if(a==='evidence')clickFirst(['#bottomEvidence','#openSmartEvidence','[data-tool="evidence"]','.bottom-nav button:nth-child(2)']);
-      if(a==='oliver'){if(window.openOliverDiagnosticMode)window.openOliverDiagnosticMode();else clickFirst(['#smartDiagStart','#smartOliverLaunch'])}
-      if(a==='notes')$('workboardInstructions')?.scrollIntoView({behavior:'smooth',block:'center'});
-      if(a==='office')clickFirst(['#officeUpdateType','[data-go="messages"]','#messageOffice']);
-      if(a==='parts')$('workboardPartsStatus')?.scrollIntoView({behavior:'smooth',block:'center'});
-      if(a==='timer'){if(!goScreen('workorder'))clickFirst(['#bottomTimer','#clockStart','#jobClockStart'])}
-    }));
-    // v10.2.3: opening position is handled once by the stable-open controller.
-  }
-  const observer=new MutationObserver(()=>setTimeout(renderWorkspace,0));
-  const editor=$('workboardEditor');
-  if(editor)observer.observe(editor,{attributes:true,attributeFilter:['class']});
-  document.addEventListener('click',e=>{
-    if(e.target.closest('[data-wb-edit],[data-wb-open-card],[data-active-open],[data-active-resume]'))setTimeout(renderWorkspace,120);
-  });
-  $('workboardStage')?.addEventListener('change',renderWorkspace);
-  window.addEventListener('nitros-workboard-change',()=>setTimeout(renderWorkspace,80));
-})();
-</script>
-
-
-<style id="v1022ActiveJobStableOpenExitStyles">
-#workboardEditor{scroll-margin-top:18px;padding-bottom:max(190px,calc(155px + env(safe-area-inset-bottom,0px)))}
-.tech-workspace-v1021{scroll-margin-top:18px;position:relative}
-.tech-workspace-exit-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px;position:sticky;top:max(10px,env(safe-area-inset-top,0px));z-index:28;background:linear-gradient(180deg,#0d2238 72%,rgba(13,34,56,.92));padding:4px 0 10px}
-.tech-workspace-exit-row .btn{min-height:48px}
-.tech-workspace-save-note{font-size:11px;color:#9fb2c5;text-align:center;margin:-3px 0 10px}
-@media(max-width:520px){.tech-workspace-exit-row{grid-template-columns:1fr}}
-</style>
-<script id="v1022ActiveJobStableOpenExitScript">
-(()=>{
-  'use strict';
-  const $=id=>document.getElementById(id);
-  let opening=false;
-  let lastRecordId='';
-  let lastRenderKey='';
-  let scrollTimer=0;
-
-  function saveCurrentEditor(){
-    const save=$('workboardSave');
-    if(save) save.click();
-  }
-  function returnToActiveJobs(){
-    saveCurrentEditor();
-    $('workboardEditor')?.classList.add('hidden');
-    if(typeof window.showScreen==='function') window.showScreen('dashboard');
-    else document.querySelector('[data-go="dashboard"]')?.click();
-    requestAnimationFrame(()=>{
-      const target=$('activeJobsFocus')||$('activeJobsFocusTitle')||$('activeJobsFocusList');
-      target?.scrollIntoView({behavior:'auto',block:'start'});
-    });
-  }
-  function closeToDashboard(){
-    saveCurrentEditor();
-    $('workboardEditor')?.classList.add('hidden');
-    if(typeof window.showScreen==='function') window.showScreen('dashboard');
-    else document.querySelector('[data-go="dashboard"]')?.click();
-    requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:'auto'}));
-  }
-  function installExitControls(){
-    const box=$('techWorkspaceV1021');
-    const editor=$('workboardEditor');
-    if(!box||!editor||editor.classList.contains('hidden'))return;
-    if(!box.querySelector('.tech-workspace-exit-row')){
-      const row=document.createElement('div');
-      row.className='tech-workspace-exit-row';
-      row.innerHTML='<button id="techBackActiveJobsV1022" class="btn secondary" type="button">← Back to Active Jobs</button><button id="techCloseDashboardV1022" class="btn secondary" type="button">✕ Close to Dashboard</button>';
-      box.prepend(row);
-      const note=document.createElement('div');
-      note.className='tech-workspace-save-note';
-      note.textContent='The repair order stays saved and can be resumed from Active Jobs.';
-      row.insertAdjacentElement('afterend',note);
-      $('techBackActiveJobsV1022')?.addEventListener('click',returnToActiveJobs);
-      $('techCloseDashboardV1022')?.addEventListener('click',closeToDashboard);
-    }
-  }
-  function stabilizeOpen(){
-    const editor=$('workboardEditor');
-    if(!editor||editor.classList.contains('hidden'))return;
-    const id=$('workboardEditId')?.value||'';
-    const stage=$('workboardStage')?.value||'';
-    const key=id+'|'+stage;
-    installExitControls();
-    if(opening||key===lastRenderKey)return;
-    opening=true;
-    lastRenderKey=key;
-    clearTimeout(scrollTimer);
-    scrollTimer=setTimeout(()=>{
-      const box=$('techWorkspaceV1021');
-      if(box && id!==lastRecordId){
-        lastRecordId=id;
-        box.scrollIntoView({behavior:'auto',block:'start'});
+  function showError(message){ensureControls();const box=$('activeJobOpenErrorV1026');if(box){box.textContent=message;box.classList.add('show')}}
+  function clearError(){const box=$('activeJobOpenErrorV1026');if(box){box.textContent='';box.classList.remove('show')}}
+  function openOnce(){
+    clearError();
+    try{
+      const id=value('workboardEditId');
+      if(!id) throw new Error('No active repair order is selected.');
+      setValue('workOrderNumber',value('workboardRo'));
+      setValue('assignedTechnician',value('workboardTechnician'));
+      setValue('customerName',value('workboardCustomer'));
+      setValue('concern',value('workboardConcern'));
+      setValue('internalTechnicianNotes',value('workboardInstructions'));
+      const stage=value('workboardStage');
+      const stageMap={'Waiting Diagnosis':'Diagnosing','Waiting Approval':'Waiting on Approval','Waiting for Parts':'Waiting on Parts','Ready to Repair':'Repairing','In Repair':'Repairing','Quality Control':'Quality Check','Ready for Pickup':'Ready for Pickup'};
+      setValue('repairStatus',stageMap[stage]||stage||'Assigned');
+      const vehicle=value('workboardVehicle');
+      if(vehicle){
+        const parts=vehicle.split(/\s+/);const year=/^(19|20)\d{2}$/.test(parts[0]||'')?parts.shift():'';
+        window.selectedVehicle={year,make:parts.shift()||'',model:parts.join(' '),vin:'',plate:''};
       }
-      opening=false;
-    },90);
-  }
-
-  // Cancel the v10.2.1 repeated smooth-scroll loop after an Active Job opens.
-  document.addEventListener('click',e=>{
-    if(e.target.closest('[data-active-open],[data-active-resume],[data-wb-edit],[data-wb-open-card]')){
-      lastRenderKey='';
-      lastRecordId='';
-      clearTimeout(scrollTimer);
-      setTimeout(stabilizeOpen,150);
-      setTimeout(stabilizeOpen,350);
+      // One navigation call only. No observers, timers, forced scrolling, or repeated painting.
+      if(typeof showScreen!=='function') throw new Error('The normal repair-order navigation function is unavailable.');
+      showScreen('workorder');
+    }catch(err){
+      console.error('[v10.2.6 stable active-job open]',err);
+      showError('Repair order could not open: '+(err?.message||String(err)));
     }
-  },true);
-
-  const editor=$('workboardEditor');
-  if(editor){
-    new MutationObserver(stabilizeOpen).observe(editor,{attributes:true,attributeFilter:['class']});
   }
-  $('workboardStage')?.addEventListener('change',()=>{lastRenderKey='';setTimeout(stabilizeOpen,30)});
-  window.addEventListener('nitros-workboard-change',()=>setTimeout(stabilizeOpen,100));
-
-  // Replace smooth scroll with one immediate positioning action only while the workspace opens.
-  const native=Element.prototype.scrollIntoView;
-  Element.prototype.scrollIntoView=function(options){
-    if(this.id==='techWorkspaceV1021'){
-      if(opening) return;
-      const opts=(options&&typeof options==='object')?{...options,behavior:'auto'}:{behavior:'auto',block:'start'};
-      return native.call(this,opts);
-    }
-    return native.call(this,options);
-  };
-})();
-</script>
-
-
-<style id="v1023ActiveJobTouchScrollRepairOrderStyles">
-html.active-job-workspace-open,
-body.active-job-workspace-open{
-  overflow-y:auto!important;
-  overscroll-behavior-y:auto!important;
-  touch-action:pan-y!important;
-  position:static!important;
-  height:auto!important;
-}
-#workboardEditor.active-job-editor-v1023{
-  overflow:visible!important;
-  touch-action:pan-y!important;
-  max-height:none!important;
-  height:auto!important;
-}
-#techWorkspaceV1021{
-  touch-action:pan-y!important;
-  overflow:visible!important;
-}
-#techOpenRepairOrderV1023{
-  margin-top:10px;
-  min-height:58px;
-  position:relative;
-  z-index:2;
-}
-.tech-workspace-v1021 .tech-primary-action{
-  margin-bottom:0;
-}
-</style>
-
-<script id="v1023ActiveJobTouchScrollRepairOrderScript">
-(()=>{
-  'use strict';
-  const $=id=>document.getElementById(id);
-  let lastInstalledFor='';
-
-  function releaseTouchAndScrollLocks(){
-    const editor=$('workboardEditor');
-    document.documentElement.classList.add('active-job-workspace-open');
-    document.body.classList.add('active-job-workspace-open');
-    if(editor) editor.classList.add('active-job-editor-v1023');
-
-    // Clear stale inline locks left by full-screen tools or overlays.
-    document.documentElement.style.removeProperty('overflow');
-    document.documentElement.style.removeProperty('position');
-    document.documentElement.style.removeProperty('height');
-    document.documentElement.style.removeProperty('touch-action');
-    document.body.style.removeProperty('overflow');
-    document.body.style.removeProperty('position');
-    document.body.style.removeProperty('height');
-    document.body.style.removeProperty('touch-action');
-  }
-
-  function removeWorkspaceClasses(){
-    document.documentElement.classList.remove('active-job-workspace-open');
-    document.body.classList.remove('active-job-workspace-open');
-    $('workboardEditor')?.classList.remove('active-job-editor-v1023');
-  }
-
-  function openRepairOrder(){
-    releaseTouchAndScrollLocks();
-    if(typeof window.showScreen==='function'){
-      window.showScreen('workorder');
-    }else{
-      document.querySelector('[data-go="workorder"]')?.click();
-    }
-    requestAnimationFrame(()=>{
-      releaseTouchAndScrollLocks();
-      window.scrollTo({top:0,left:0,behavior:'auto'});
-    });
-  }
-
-  function installRepairOrderButton(){
-    const editor=$('workboardEditor');
-    const workspace=$('techWorkspaceV1021');
-    if(!editor||editor.classList.contains('hidden')||!workspace)return;
-
-    releaseTouchAndScrollLocks();
-
-    const recordId=$('workboardEditId')?.value||'active';
-    let button=$('techOpenRepairOrderV1023');
-    if(!button){
-      button=document.createElement('button');
-      button.id='techOpenRepairOrderV1023';
-      button.className='btn primary';
-      button.type='button';
-      button.textContent='Continue to Repair Order';
-      const primary=$('techContinueV1021');
-      if(primary) primary.insertAdjacentElement('afterend',button);
-      else workspace.appendChild(button);
-      button.addEventListener('click',openRepairOrder);
-    }
-    lastInstalledFor=recordId;
-  }
-
-  function activeJobOpened(){
-    lastInstalledFor='';
-    setTimeout(installRepairOrderButton,80);
-    setTimeout(installRepairOrderButton,180);
-  }
-
+  document.addEventListener('DOMContentLoaded',ensureControls,{once:true});
   document.addEventListener('click',event=>{
-    if(event.target.closest('[data-active-open],[data-active-resume],[data-wb-edit],[data-wb-open-card]')){
-      activeJobOpened();
-    }
-    if(event.target.closest('#techBackActiveJobsV1022,#techCloseDashboardV1022')){
-      removeWorkspaceClasses();
-    }
-  },true);
-
-  const editor=$('workboardEditor');
-  if(editor){
-    new MutationObserver(()=>{
-      if(editor.classList.contains('hidden')){
-        removeWorkspaceClasses();
-      }else{
-        installRepairOrderButton();
-      }
-    }).observe(editor,{attributes:true,attributeFilter:['class']});
-  }
-
-  window.addEventListener('pageshow',()=>{
-    if(editor&&!editor.classList.contains('hidden')) installRepairOrderButton();
+    if(event.target.closest?.('#techOpenRepairOrderV1026')){event.preventDefault();openOnce();}
+    if(event.target.closest?.('[data-active-open],[data-active-resume],[data-wb-edit],[data-wb-open-card]')){setTimeout(ensureControls,0)}
   });
-
-  // Guard against stale overlay locks after returning from diagnostics/evidence.
-  document.addEventListener('visibilitychange',()=>{
-    if(!document.hidden&&editor&&!editor.classList.contains('hidden')){
-      releaseTouchAndScrollLocks();
-    }
-  });
-})();
-</script>
-
-
-<style id="v1024ActiveJobRepairOrderRenderStyles">
-/* v10.2.4 — guarantee the selected repair-order screen is visible and scrollable. */
-body.active-repair-order-v1024 main{display:block!important;visibility:visible!important;opacity:1!important;min-height:100vh!important}
-body.active-repair-order-v1024 #workorder.screen.active{display:block!important;visibility:visible!important;opacity:1!important;height:auto!important;min-height:650px!important;overflow:visible!important}
-body.active-repair-order-v1024 #workorder>.card{display:block!important;visibility:visible!important;opacity:1!important}
-#activeRepairOrderRecoveryV1024{margin:0 0 14px;border:1px solid #2f986e;background:#0b2a25;border-radius:14px;padding:12px 14px;color:#d8fff1;font-size:13px;line-height:1.45}
-#activeRepairOrderRecoveryV1024 strong{display:block;font-size:15px;margin-bottom:3px}
-</style>
-<script id="v1024ActiveJobRepairOrderRenderScript">
-(()=>{
-  'use strict';
-  const $=id=>document.getElementById(id);
-  const WORKBOARD_KEY='nitros_v822_workboard';
-  const DRAFT_KEY='nitros_portal_v8_active_draft';
-  const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch(e){return fallback}};
-  const setValue=(id,value)=>{const el=$(id);if(el && value!==undefined && value!==null && String(value)!=='')el.value=String(value)};
-  let selectedRecordId='';
-
-  function recordById(id){return read(WORKBOARD_KEY,[]).find(x=>x&&x.id===id)||null}
-  function selectedRecord(){return recordById(selectedRecordId||$('workboardEditId')?.value||'')}
-
-  function hardShowWorkOrder(){
-    document.querySelectorAll('.screen').forEach(screen=>screen.classList.toggle('active',screen.id==='workorder'));
-    const wo=$('workorder');
-    if(wo){
-      wo.classList.add('active');
-      wo.removeAttribute('hidden');
-      wo.style.removeProperty('display');
-      wo.style.removeProperty('visibility');
-      wo.style.removeProperty('opacity');
-    }
-    document.body.classList.add('active-repair-order-v1024','active-job-workspace-open');
-    document.documentElement.classList.add('active-job-workspace-open');
-    document.body.style.removeProperty('overflow');
-    document.body.style.removeProperty('position');
-    document.documentElement.style.removeProperty('overflow');
-    document.documentElement.style.removeProperty('position');
-  }
-
-  function populateFromRecord(record){
-    if(!record)return;
-    setValue('workOrderNumber',record.ro);
-    setValue('assignedTechnician',record.technician);
-    const stageMap={
-      'Waiting Diagnosis':'Diagnosing','Waiting Approval':'Waiting on Approval','Waiting for Parts':'Waiting on Parts',
-      'Ready to Repair':'Repairing','In Repair':'Repairing','Quality Control':'Quality Check','Ready for Pickup':'Ready for Pickup'
-    };
-    setValue('repairStatus',stageMap[record.stage]||record.stage||'Assigned');
-    setValue('customerName',record.customer);
-    setValue('concern',record.concern);
-    setValue('internalTechnicianNotes',record.instructions);
-    if(record.roadTest)setValue('roadTestStatus',record.roadTest==='Not Required'?'Not Required':record.roadTest);
-    const vehicle=String(record.vehicle||'').trim();
-    if(vehicle && !window.selectedVehicle){
-      const parts=vehicle.split(/\s+/);
-      const year=/^(19|20)\d{2}$/.test(parts[0]||'')?parts.shift():'';
-      window.selectedVehicle={year,make:parts.shift()||'',model:parts.join(' '),vin:record.vin||'',plate:record.plate||''};
-    }
-  }
-
-  function installRecoveryBanner(record){
-    const card=$('workorder')?.querySelector('.card');
-    if(!card)return;
-    let banner=$('activeRepairOrderRecoveryV1024');
-    if(!banner){banner=document.createElement('div');banner.id='activeRepairOrderRecoveryV1024';card.prepend(banner)}
-    const label=record?[record.customer,record.vehicle,record.ro?`RO ${record.ro}`:''].filter(Boolean).join(' — '):'Selected active repair order';
-    banner.innerHTML=`<strong>Active repair order restored</strong>${label}. The repair-order controls are loaded below. Changes remain saved on this device.`;
-  }
-
-  function openSelectedRepairOrder(){
-    const record=selectedRecord();
-    const draft=read(DRAFT_KEY,null);
-    if(record?.id==='wb_active_draft' && draft && typeof window.restoreDraft==='function'){
-      try{window.restoreDraft(false)}catch(e){console.warn('Draft restore fallback:',e)}
-    }
-    populateFromRecord(record);
-    hardShowWorkOrder();
-    if(typeof window.updateJobClockUI==='function')try{window.updateJobClockUI()}catch(e){}
-    if(typeof window.renderTimeline==='function')try{window.renderTimeline()}catch(e){}
-    installRecoveryBanner(record);
-    requestAnimationFrame(()=>{
-      hardShowWorkOrder();
-      window.scrollTo({top:0,left:0,behavior:'auto'});
-      setTimeout(()=>{
-        if(!$('workorder')?.classList.contains('active'))hardShowWorkOrder();
-        $('workorder')?.querySelector('.card')?.scrollIntoView({behavior:'auto',block:'start'});
-      },60);
-    });
-  }
-
-  document.addEventListener('pointerdown',event=>{
-    const hit=event.target.closest?.('[data-active-open],[data-active-resume],[data-wb-edit],[data-wb-open-card]');
-    if(hit) selectedRecordId=hit.dataset.activeOpen||hit.dataset.activeResume||hit.dataset.wbEdit||hit.dataset.wbOpenCard||'';
-  },true);
-  document.addEventListener('click',event=>{
-    const hit=event.target.closest?.('[data-active-open],[data-active-resume],[data-wb-edit],[data-wb-open-card]');
-    if(hit) selectedRecordId=hit.dataset.activeOpen||hit.dataset.activeResume||hit.dataset.wbEdit||hit.dataset.wbOpenCard||selectedRecordId;
-    if(event.target.closest?.('#techOpenRepairOrderV1023')){
-      event.preventDefault();event.stopImmediatePropagation();openSelectedRepairOrder();
-    }
-    if(event.target.closest?.('#techBackActiveJobsV1022,#techCloseDashboardV1022,[data-go="dashboard"]')){
-      document.body.classList.remove('active-repair-order-v1024');
-    }
-  },true);
-
-  // Replace the prior Continue button handler even when it was installed before this patch.
-  const observer=new MutationObserver(()=>{
-    const btn=$('techOpenRepairOrderV1023');
-    if(btn && !btn.dataset.v1024Bound){
-      btn.dataset.v1024Bound='1';
-      btn.textContent='Continue to Repair Order';
-    }
-  });
-  observer.observe(document.body,{childList:true,subtree:true});
-})();
-</script>
-
-
-<style id="v1025RenderDiagnosticStyles">
-#roRenderDiagnosticV1025{display:none;margin:14px 0;padding:16px;border:2px solid #ff982c;border-radius:16px;background:#24190d;color:#fff;position:relative;z-index:2147483000}
-#roRenderDiagnosticV1025.show{display:block!important}
-#roRenderDiagnosticV1025 h3{margin:0 0 8px;color:#ffb35d;font-size:18px}
-#roRenderDiagnosticV1025 pre{white-space:pre-wrap;word-break:break-word;background:#07111f;border:1px solid #38506c;border-radius:10px;padding:10px;max-height:240px;overflow:auto;font-size:11px}
-#roRenderDiagnosticV1025 .diag-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-#roRenderDiagnosticV1025 button{min-height:44px}
-body.active-repair-order-v1025 #workorder{display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;transform:none!important;clip:auto!important;clip-path:none!important;inset:auto!important;min-height:700px!important;height:auto!important;overflow:visible!important}
-body.active-repair-order-v1025 #workorder>.card{display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;transform:none!important;min-height:500px!important;height:auto!important;overflow:visible!important}
-</style>
-<script id="v1025RenderDiagnosticScript">
-(()=>{
- 'use strict';
- const $=id=>document.getElementById(id);
- const log=[]; let selected='';
- const stamp=(step,data)=>{const row={time:new Date().toLocaleTimeString(),step,data:data||''};log.push(row);console.log('[RO v10.2.5]',row);renderPanel();};
- function snapshot(){
-   const wo=$('workorder'), card=wo?.querySelector('.card'), active=[...document.querySelectorAll('.screen.active')].map(x=>x.id);
-   const cs=wo?getComputedStyle(wo):null, cc=card?getComputedStyle(card):null;
-   return {selected,activeScreens:active,workorderExists:!!wo,workorderClass:wo?.className||'',workorderDisplay:cs?.display,workorderVisibility:cs?.visibility,workorderOpacity:cs?.opacity,workorderRect:wo?Math.round(wo.getBoundingClientRect().height):0,cardExists:!!card,cardDisplay:cc?.display,cardVisibility:cc?.visibility,cardRect:card?Math.round(card.getBoundingClientRect().height):0,editorId:$('workboardEditId')?.value||'',bodyClass:document.body.className,scrollY:Math.round(scrollY)};
- }
- function ensurePanel(){
-   let p=$('roRenderDiagnosticV1025'); if(p)return p;
-   p=document.createElement('section');p.id='roRenderDiagnosticV1025';
-   p.innerHTML='<h3>Repair Order Render Diagnostic</h3><div id="roDiagSummaryV1025">Checking renderer…</div><pre id="roDiagDetailsV1025"></pre><div class="diag-actions"><button class="btn primary" id="roDiagRetryV1025" type="button">Reload Repair Order</button><button class="btn secondary" id="roDiagJobsV1025" type="button">Return to Active Jobs</button><button class="btn ghost" id="roDiagCopyV1025" type="button">Copy Debug Info</button></div>';
-   const wo=$('workorder'),card=wo?.querySelector('.card'); (card||wo||document.querySelector('main')||document.body).prepend(p);
-   $('roDiagRetryV1025').onclick=()=>forceOpen('manual retry');
-   $('roDiagJobsV1025').onclick=()=>{document.querySelector('[data-go="dashboard"]')?.click();};
-   $('roDiagCopyV1025').onclick=async()=>{try{await navigator.clipboard.writeText(JSON.stringify({snapshot:snapshot(),log},null,2));$('roDiagSummaryV1025').textContent='Debug information copied.'}catch(e){$('roDiagSummaryV1025').textContent='Copy unavailable. Take a screenshot of this panel.'}};
-   return p;
- }
- function renderPanel(force=false){const p=ensurePanel();if(!p)return;const snap=snapshot();const failed=!snap.workorderExists||!snap.cardExists||snap.workorderRect<100||snap.cardRect<100||snap.workorderDisplay==='none'||snap.workorderVisibility==='hidden';if(force||failed)p.classList.add('show');$('roDiagSummaryV1025').textContent=failed?'The repair-order content did not paint correctly. The details below identify the failure point.':'Repair-order renderer reports a visible content area.';$('roDiagDetailsV1025').textContent=JSON.stringify({snapshot:snap,recentLog:log.slice(-12)},null,2);}
- function hardReset(){
-   document.querySelectorAll('.screen').forEach(x=>{x.classList.remove('active');x.style.display='none'});
-   const wo=$('workorder');if(!wo)throw new Error('Missing #workorder section');
-   wo.classList.add('active');wo.removeAttribute('hidden');Object.assign(wo.style,{display:'block',visibility:'visible',opacity:'1',height:'auto',minHeight:'700px',overflow:'visible',position:'relative',transform:'none'});
-   const card=wo.querySelector('.card');if(!card)throw new Error('Missing repair-order .card');Object.assign(card.style,{display:'block',visibility:'visible',opacity:'1',height:'auto',minHeight:'500px',overflow:'visible',position:'relative',transform:'none'});
-   document.body.classList.add('active-repair-order-v1025','active-repair-order-v1024','active-job-workspace-open');document.documentElement.classList.add('active-job-workspace-open');
-   document.body.style.overflow='auto';document.body.style.position='static';document.documentElement.style.overflow='auto';
- }
- function forceOpen(reason){
-   try{stamp('forceOpen start',reason);hardReset();
-     if(typeof window.updateJobClockUI==='function')try{window.updateJobClockUI()}catch(e){stamp('clock error',e.message)}
-     if(typeof window.renderTimeline==='function')try{window.renderTimeline()}catch(e){stamp('timeline error',e.message)}
-     window.scrollTo(0,0);requestAnimationFrame(()=>{hardReset();stamp('first paint',snapshot());setTimeout(()=>{hardReset();const snap=snapshot();stamp('post-paint check',snap);renderPanel(snap.workorderRect<100||snap.cardRect<100)},250)});
-   }catch(e){stamp('fatal render error',e.stack||e.message);renderPanel(true)}
- }
- window.addEventListener('error',e=>{stamp('window error',`${e.message} @ ${e.filename||''}:${e.lineno||''}`);renderPanel(true)});
- window.addEventListener('unhandledrejection',e=>{stamp('promise rejection',String(e.reason?.stack||e.reason||'unknown'));renderPanel(true)});
- document.addEventListener('pointerdown',e=>{const h=e.target.closest?.('[data-active-open],[data-active-resume],[data-wb-edit],[data-wb-open-card]');if(h){selected=h.dataset.activeOpen||h.dataset.activeResume||h.dataset.wbEdit||h.dataset.wbOpenCard||'';stamp('active job selected',selected)}},true);
- document.addEventListener('click',e=>{const h=e.target.closest?.('[data-active-open],[data-active-resume],[data-wb-edit],[data-wb-open-card]');if(h){selected=h.dataset.activeOpen||h.dataset.activeResume||h.dataset.wbEdit||h.dataset.wbOpenCard||selected;setTimeout(()=>forceOpen('active job click'),120)}if(e.target.closest?.('#techOpenRepairOrderV1023')){e.preventDefault();e.stopImmediatePropagation();forceOpen('continue button')}},true);
- setTimeout(()=>{stamp('diagnostic patch loaded',snapshot())},50);
+  ensureControls();
 })();
 </script>
 
