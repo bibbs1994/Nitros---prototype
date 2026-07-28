@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.2.0 — Dashboard Free Scroll Fix</title>
+<title>Nitros Mobile Technician Portal v10.2.1 — Active Job Workspace & Safe-Area Fix</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -442,7 +442,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.2.0 — Dashboard Free Scroll Fix</div>
+  <div class="sub">Mobile Technician Portal v10.2.1 — Active Job Workspace & Safe-Area Fix</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -456,7 +456,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.2.0 preserves the validated intake, walk-around, customer matching, repair-order routing, and Oliver diagnostic workflow while adding a VIN verification gate that prevents OCR or barcode results from decoding until the technician confirms all 17 characters and the check digit passes.</div>
+    <div id="portalLoginStatus" class="status">Version 10.2.1 preserves the validated intake, walk-around, customer matching, repair-order routing, and Oliver diagnostic workflow while adding a VIN verification gate that prevents OCR or barcode results from decoding until the technician confirms all 17 characters and the check digit passes.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -619,7 +619,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.2.0</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.2.1</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -686,7 +686,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.2.0</div>
+      <div class="eyebrow">Version 10.2.1</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1605,7 +1605,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.2.0 • Dashboard VIN scan optimization • Oliver guided diagnostics • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.2.1 • Dashboard VIN scan optimization • Oliver guided diagnostics • Evidence-based workflow</div>
 </div>
 
 <script>
@@ -5171,7 +5171,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.2.0 • dashboard free-scroll fix</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.2.1 • active-job workspace and safe-area fix</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5209,7 +5209,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.2.0 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.2.1 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -5922,7 +5922,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.2.0</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.2.1</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -6013,9 +6013,9 @@ function setZoom(z){zoom=Math.max(.25,Math.min(5,z));const img=$('diagViewerImag
 $('diagSend').addEventListener('click',()=>handle(input.value));input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handle(input.value)}});$('diagExit').addEventListener('click',closeMode);$('diagSpeakToggle').addEventListener('click',()=>{speakOn=!speakOn;$('diagSpeakToggle').innerHTML=speakOn?'🔊 <span class="label">Voice On</span>':'🔇 <span class="label">Voice Off</span>';if(!speakOn)speechSynthesis?.cancel()});$('diagReadLast').addEventListener('click',()=>speak(lastOliver));document.querySelectorAll('[data-diag-quick]').forEach(b=>b.addEventListener('click',()=>handle(b.dataset.diagQuick)));
 $('diagFreezeFrame')?.addEventListener('click',()=>{input.value='Freeze frame: code status = ; fuel level = %; RPM = ; vehicle speed = ; coolant temperature = ; calculated load = ; FTP sensor = .';input.focus()});$('diagVoiceSelect')?.addEventListener('change',e=>{selectedVoiceName=e.target.value;localStorage.setItem('nitrosOliverVoice',selectedVoiceName);speak('Oliver voice selected.')});if('speechSynthesis'in window){speechSynthesis.onvoiceschanged=populateVoiceSelect;setTimeout(populateVoiceSelect,250)}
 $('diagLoadImage').addEventListener('click',()=>$('diagImageInput').click());$('diagImageInput').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{loadedImage=r.result;zoom=1;remember('Scan graph/photo attached: '+f.name,'attachment');$('diagViewerTitle').textContent=f.name||'Scan Graph / Photo';openViewer();renderImage();addMessage('oliver','The image is attached. Tell me the PID, operating condition, and the part of the graph you want interpreted.')};r.readAsDataURL(f)});$('diagOpenViewer').addEventListener('click',openViewer);$('diagViewerClose').addEventListener('click',()=>$('diagViewer').classList.remove('active'));$('diagZoomIn').addEventListener('click',()=>setZoom(zoom+.25));$('diagZoomOut').addEventListener('click',()=>setZoom(zoom-.25));$('diagZoomReset').addEventListener('click',()=>setZoom(1));
-$('diagExportNotes').addEventListener('click',()=>{const note=S.evidence.map(x=>`[${new Date(x.at).toLocaleString()}] ${x.stage} — ${x.kind}: ${x.text}`).join('\n');const n=$('internalTechnicianNotes');if(n){n.value=[n.value,'=== Oliver v10.2.0 Diagnostic Evidence ===',note].filter(Boolean).join('\n');addMessage('oliver','Diagnostic evidence was copied into Technician Notes.')}else addMessage('oliver','The evidence remains in this diagnostic session because Technician Notes is unavailable on this screen.')});
+$('diagExportNotes').addEventListener('click',()=>{const note=S.evidence.map(x=>`[${new Date(x.at).toLocaleString()}] ${x.stage} — ${x.kind}: ${x.text}`).join('\n');const n=$('internalTechnicianNotes');if(n){n.value=[n.value,'=== Oliver v10.2.1 Diagnostic Evidence ===',note].filter(Boolean).join('\n');addMessage('oliver','Diagnostic evidence was copied into Technician Notes.')}else addMessage('oliver','The evidence remains in this diagnostic session because Technician Notes is unavailable on this screen.')});
 if(SpeechRecognition){recognition=new SpeechRecognition();recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-US';recognition.onstart=()=>$('diagMic').classList.add('listening');recognition.onend=()=>$('diagMic').classList.remove('listening');recognition.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;if(e.results[e.results.length-1].isFinal)handle(t);else input.value=t};$('diagMic').addEventListener('click',()=>{try{recognition.start()}catch(_){recognition.stop()}})}else $('diagMic').addEventListener('click',()=>addMessage('oliver','Voice recognition is unavailable in this browser. Type the result; spoken responses can still work.'));
-$('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);$('oliverHubRepair')?.addEventListener('click',()=>setTimeout(openMode,80));const startBtn=$('smartDiagStart');if(startBtn){startBtn.textContent='Open Oliver v10.2.0 Diagnostic Engine';startBtn.style.fontSize='16px'}window.openOliverDiagnosticMode=openMode;
+$('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);$('oliverHubRepair')?.addEventListener('click',()=>setTimeout(openMode,80));const startBtn=$('smartDiagStart');if(startBtn){startBtn.textContent='Open Oliver v10.2.1 Diagnostic Engine';startBtn.style.fontSize='16px'}window.openOliverDiagnosticMode=openMode;
 })();
 </script>
 
@@ -6275,6 +6275,183 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
   document.addEventListener('keydown',e=>{const cardEl=e.target.closest?.('[data-active-open]');if(cardEl&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openRecord(cardEl.dataset.activeOpen)}});
   $('activeJobsRefresh')?.addEventListener('click',()=>{document.getElementById('workboardRefresh')?.click();setTimeout(render,100)});
   window.addEventListener('nitros-workboard-change',render);window.addEventListener('storage',render);document.querySelectorAll('[data-go="dashboard"]').forEach(b=>b.addEventListener('click',()=>setTimeout(render,120)));setInterval(()=>{if($('dashboard')?.classList.contains('active'))render()},5000);setTimeout(()=>{try{const d=typeof loadDraft==='function'?loadDraft():null;if(d&&typeof syncActiveDraftToWorkboard==='function')syncActiveDraftToWorkboard(d)}catch(e){}render()},250);setInterval(()=>{try{const d=typeof loadDraft==='function'?loadDraft():null;if(d&&typeof syncActiveDraftToWorkboard==='function'&&['running','paused'].includes(d.jobClock?.state))syncActiveDraftToWorkboard(d)}catch(e){}},15000);
+})();
+</script>
+
+
+<style id="v1021ActiveJobWorkspaceSafeAreaStyles">
+:root{
+  --nitros-safe-top:max(16px,env(safe-area-inset-top,0px));
+  --nitros-safe-right:max(14px,env(safe-area-inset-right,0px));
+  --nitros-safe-bottom:max(12px,env(safe-area-inset-bottom,0px));
+}
+.photo-fullscreen{padding-top:calc(var(--nitros-safe-top) + 58px)!important;padding-right:var(--nitros-safe-right)!important;padding-bottom:var(--nitros-safe-bottom)!important}
+.photo-fullscreen>button,.photo-fullscreen .photo-fullscreen-close{
+  top:calc(var(--nitros-safe-top) + 8px)!important;
+  right:var(--nitros-safe-right)!important;
+  min-width:48px!important;min-height:48px!important;
+  z-index:4!important;
+}
+#oliverDiagnosticMode .diag-topbar{
+  padding-top:calc(var(--nitros-safe-top) + 8px)!important;
+  padding-right:var(--nitros-safe-right)!important;
+}
+#diagViewer .diag-viewer-head{
+  padding-top:calc(var(--nitros-safe-top) + 8px)!important;
+  padding-right:var(--nitros-safe-right)!important;
+  min-height:calc(54px + var(--nitros-safe-top))!important;
+}
+#diagViewerClose,#diagExit{
+  min-width:48px!important;min-height:48px!important;
+  position:relative!important;z-index:3!important;
+}
+.productivity-modal-card,.photo-modal-card,.smart-evidence-card,.oliver-hub-card{
+  margin-top:calc(var(--nitros-safe-top) + 8px)!important;
+  margin-right:var(--nitros-safe-right)!important;
+  margin-bottom:var(--nitros-safe-bottom)!important;
+}
+.productivity-modal-card .smart-evidence-head,
+.photo-modal-head,.oliver-hub-head{
+  padding-top:max(4px,env(safe-area-inset-top,0px))!important;
+}
+#closeGlobalSearch,#closeVoiceNote,#closeSmartEvidence,#closeCompleteTimeline,
+#closePhotoEvidenceModal,#unifiedOliverClose,.oliver-hub-close,.oliver-guide-close{
+  min-width:48px!important;min-height:48px!important;
+}
+#flashlightScreen{
+  padding-top:calc(var(--nitros-safe-top) + 10px)!important;
+  padding-right:var(--nitros-safe-right)!important;
+}
+#closeFlashlight{min-height:48px!important}
+
+.tech-workspace-v1021{
+  border:1px solid #3b6287;border-radius:18px;
+  background:linear-gradient(180deg,#0d2238,#081523);
+  padding:16px;margin:0 0 18px;
+  box-shadow:0 12px 32px rgba(0,0,0,.22)
+}
+.tech-workspace-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.tech-workspace-head h3{margin:3px 0 0;font-size:22px}
+.tech-workspace-stage{border:1px solid #ff9d28;background:#2b1b0d;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:900;white-space:nowrap}
+.tech-progress{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:15px 0}
+.tech-progress-step{border:1px solid #314a64;background:#091421;border-radius:10px;padding:8px 5px;text-align:center;font-size:10px;color:#9fb2c5;font-weight:800}
+.tech-progress-step.done{border-color:#3b9363;background:#0d2c20;color:#baf4d0}
+.tech-progress-step.current{border-color:#ff9d28;background:#33200d;color:#fff}
+.tech-primary-action{width:100%;min-height:58px;font-size:18px!important;margin-bottom:10px}
+.tech-quick-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tech-quick-actions button{min-height:48px}
+.tech-completion-detail{font-size:12px;color:#b7c8d8;margin-top:10px}
+@media(max-width:700px){
+  .tech-workspace-head{display:block}.tech-workspace-stage{display:inline-block;margin-top:9px}
+  .tech-progress{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .tech-quick-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+</style>
+
+<script id="v1021ActiveJobWorkspaceSafeAreaScript">
+(()=>{
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const KEY='nitros_v822_workboard';
+  const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}};
+  const write=v=>{localStorage.setItem(KEY,JSON.stringify(v));window.dispatchEvent(new CustomEvent('nitros-workboard-change'))};
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const flow=['Check-In','Walk-Around','Diagnosis','Repair','QC','Complete'];
+  function flowIndex(stage=''){
+    const s=String(stage).toLowerCase();
+    if(s.includes('pickup')||s.includes('complete'))return 5;
+    if(s.includes('verification')||s.includes('road test'))return 4;
+    if(s.includes('repair')||s.includes('parts')||s.includes('approval'))return 3;
+    if(s.includes('diagnos'))return 2;
+    return 1;
+  }
+  function continueLabel(stage=''){
+    const s=String(stage).toLowerCase();
+    if(s.includes('waiting diagnosis')||s==='diagnosing')return 'Continue Diagnosis with Oliver';
+    if(s.includes('approval'))return 'Continue Estimate / Customer Approval';
+    if(s.includes('parts'))return 'Continue Parts and Repair Planning';
+    if(s.includes('ready to repair')||s.includes('repair in progress'))return 'Continue Repair';
+    if(s.includes('verification')||s.includes('road test'))return 'Continue Quality Control / Road Test';
+    if(s.includes('pickup'))return 'Complete Repair Order';
+    return 'Continue Job';
+  }
+  function currentRecord(){
+    const id=$('workboardEditId')?.value;
+    return read().find(x=>x.id===id)||null;
+  }
+  function clickFirst(selectors){
+    for(const sel of selectors){
+      const el=document.querySelector(sel);
+      if(el){el.click();return true}
+    }
+    return false;
+  }
+  function goScreen(name){
+    if(typeof window.showScreen==='function'){window.showScreen(name);return true}
+    return clickFirst([`[data-go="${name}"]`,`[data-screen="${name}"]`]);
+  }
+  function completeRecord(rec){
+    const items=read(),i=items.findIndex(x=>x.id===rec.id);if(i<0)return;
+    const now=new Date().toISOString(),tech=$('workboardTechnician')?.value||rec.technician||'Technician';
+    items[i]={...items[i],stage:'Completed',completedAt:now,completedBy:tech,updatedAt:now,
+      audit:[{at:now,by:tech,action:'Repair order completed',detail:'Completion status and timestamp recorded.'},...(items[i].audit||[])]};
+    write(items);
+    $('workboardEditor')?.classList.add('hidden');
+    const st=$('workboardStatus');if(st){st.className='status ok';st.textContent=`Repair order completed ${new Date(now).toLocaleString()} by ${tech}. It was removed from Active Jobs.`}
+  }
+  function primaryAction(rec){
+    const s=String(rec.stage||'').toLowerCase();
+    if(s.includes('pickup')){completeRecord(rec);return}
+    if(s.includes('waiting diagnosis')||s==='diagnosing'){
+      if(window.openOliverDiagnosticMode){window.openOliverDiagnosticMode();return}
+      clickFirst(['#smartDiagStart','#smartOliverLaunch']);
+      return;
+    }
+    if(s.includes('verification')||s.includes('road test')){goScreen('inspection');return}
+    if(s.includes('repair')||s.includes('parts')||s.includes('approval')){goScreen('workorder');return}
+    $('workboardStage')?.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  function renderWorkspace(){
+    const editor=$('workboardEditor'); if(!editor||editor.classList.contains('hidden'))return;
+    const rec=currentRecord();if(!rec)return;
+    let box=$('techWorkspaceV1021');
+    if(!box){
+      box=document.createElement('section');box.id='techWorkspaceV1021';box.className='tech-workspace-v1021';
+      editor.insertBefore(box,editor.firstChild);
+    }
+    const idx=flowIndex(rec.stage);
+    box.innerHTML=`<div class="tech-workspace-head"><div><div class="eyebrow">Technician Workspace</div><h3>${esc(rec.vehicle||'Active Vehicle')} ${rec.ro?`— RO ${esc(rec.ro)}`:''}</h3></div><span class="tech-workspace-stage">${esc(rec.stage||'Active')}</span></div>
+      <div class="tech-progress">${flow.map((x,i)=>`<div class="tech-progress-step ${i<idx?'done':i===idx?'current':''}">${i<idx?'✓ ':i===idx?'▶ ':''}${x}</div>`).join('')}</div>
+      <button id="techContinueV1021" class="btn primary tech-primary-action" type="button">${esc(continueLabel(rec.stage))}</button>
+      <div class="tech-quick-actions">
+        <button class="btn secondary" type="button" data-tech-action="evidence">📷 Evidence</button>
+        <button class="btn secondary" type="button" data-tech-action="oliver">🤖 Oliver Diagnostics</button>
+        <button class="btn secondary" type="button" data-tech-action="notes">📝 Repair Notes</button>
+        <button class="btn secondary" type="button" data-tech-action="office">💬 Message Office</button>
+        <button class="btn secondary" type="button" data-tech-action="parts">📦 Parts / Approval</button>
+        <button class="btn secondary" type="button" data-tech-action="timer">⏱ Labor Timer</button>
+      </div>
+      <div class="tech-completion-detail">Opening an Active Job now restores the linked repair order and puts the technician's next action at the top. Full-screen close controls are positioned below the iPhone safe area.</div>`;
+    $('techContinueV1021')?.addEventListener('click',()=>primaryAction(currentRecord()||rec));
+    box.querySelectorAll('[data-tech-action]').forEach(b=>b.addEventListener('click',()=>{
+      const a=b.dataset.techAction;
+      if(a==='evidence')clickFirst(['#bottomEvidence','#openSmartEvidence','[data-tool="evidence"]','.bottom-nav button:nth-child(2)']);
+      if(a==='oliver'){if(window.openOliverDiagnosticMode)window.openOliverDiagnosticMode();else clickFirst(['#smartDiagStart','#smartOliverLaunch'])}
+      if(a==='notes')$('workboardInstructions')?.scrollIntoView({behavior:'smooth',block:'center'});
+      if(a==='office')clickFirst(['#officeUpdateType','[data-go="messages"]','#messageOffice']);
+      if(a==='parts')$('workboardPartsStatus')?.scrollIntoView({behavior:'smooth',block:'center'});
+      if(a==='timer'){if(!goScreen('workorder'))clickFirst(['#bottomTimer','#clockStart','#jobClockStart'])}
+    }));
+    setTimeout(()=>box.scrollIntoView({behavior:'smooth',block:'start'}),40);
+  }
+  const observer=new MutationObserver(()=>setTimeout(renderWorkspace,0));
+  const editor=$('workboardEditor');
+  if(editor)observer.observe(editor,{attributes:true,attributeFilter:['class'],subtree:true,childList:true});
+  document.addEventListener('click',e=>{
+    if(e.target.closest('[data-wb-edit],[data-wb-open-card],[data-active-open],[data-active-resume]'))setTimeout(renderWorkspace,120);
+  });
+  $('workboardStage')?.addEventListener('change',renderWorkspace);
+  window.addEventListener('nitros-workboard-change',()=>setTimeout(renderWorkspace,80));
 })();
 </script>
 
