@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.2.1 — Active Job Workspace & Safe-Area Fix</title>
+<title>Nitros Mobile Technician Portal v10.2.2 — Active Job Stable Open & Exit Fix</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -442,7 +442,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.2.1 — Active Job Workspace & Safe-Area Fix</div>
+  <div class="sub">Mobile Technician Portal v10.2.2 — Active Job Stable Open & Exit Fix</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -456,7 +456,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.2.1 preserves the validated intake, walk-around, customer matching, repair-order routing, and Oliver diagnostic workflow while adding a VIN verification gate that prevents OCR or barcode results from decoding until the technician confirms all 17 characters and the check digit passes.</div>
+    <div id="portalLoginStatus" class="status">Version 10.2.2 preserves the validated intake, walk-around, customer matching, repair-order routing, and Oliver diagnostic workflow while adding a VIN verification gate that prevents OCR or barcode results from decoding until the technician confirms all 17 characters and the check digit passes.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -619,7 +619,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.2.1</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.2.2</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -686,7 +686,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.2.1</div>
+      <div class="eyebrow">Version 10.2.2</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -5171,7 +5171,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.2.1 • active-job workspace and safe-area fix</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.2.2 • stable active-job open and exit fix</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5209,7 +5209,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.2.1 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.2.2 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6452,6 +6452,114 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
   });
   $('workboardStage')?.addEventListener('change',renderWorkspace);
   window.addEventListener('nitros-workboard-change',()=>setTimeout(renderWorkspace,80));
+})();
+</script>
+
+
+<style id="v1022ActiveJobStableOpenExitStyles">
+#workboardEditor{scroll-margin-top:18px;padding-bottom:max(190px,calc(155px + env(safe-area-inset-bottom,0px)))}
+.tech-workspace-v1021{scroll-margin-top:18px;position:relative}
+.tech-workspace-exit-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px;position:sticky;top:max(10px,env(safe-area-inset-top,0px));z-index:28;background:linear-gradient(180deg,#0d2238 72%,rgba(13,34,56,.92));padding:4px 0 10px}
+.tech-workspace-exit-row .btn{min-height:48px}
+.tech-workspace-save-note{font-size:11px;color:#9fb2c5;text-align:center;margin:-3px 0 10px}
+@media(max-width:520px){.tech-workspace-exit-row{grid-template-columns:1fr}}
+</style>
+<script id="v1022ActiveJobStableOpenExitScript">
+(()=>{
+  'use strict';
+  const $=id=>document.getElementById(id);
+  let opening=false;
+  let lastRecordId='';
+  let lastRenderKey='';
+  let scrollTimer=0;
+
+  function saveCurrentEditor(){
+    const save=$('workboardSave');
+    if(save) save.click();
+  }
+  function returnToActiveJobs(){
+    saveCurrentEditor();
+    $('workboardEditor')?.classList.add('hidden');
+    if(typeof window.showScreen==='function') window.showScreen('dashboard');
+    else document.querySelector('[data-go="dashboard"]')?.click();
+    requestAnimationFrame(()=>{
+      const target=$('activeJobsFocus')||$('activeJobsFocusTitle')||$('activeJobsFocusList');
+      target?.scrollIntoView({behavior:'auto',block:'start'});
+    });
+  }
+  function closeToDashboard(){
+    saveCurrentEditor();
+    $('workboardEditor')?.classList.add('hidden');
+    if(typeof window.showScreen==='function') window.showScreen('dashboard');
+    else document.querySelector('[data-go="dashboard"]')?.click();
+    requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:'auto'}));
+  }
+  function installExitControls(){
+    const box=$('techWorkspaceV1021');
+    const editor=$('workboardEditor');
+    if(!box||!editor||editor.classList.contains('hidden'))return;
+    if(!box.querySelector('.tech-workspace-exit-row')){
+      const row=document.createElement('div');
+      row.className='tech-workspace-exit-row';
+      row.innerHTML='<button id="techBackActiveJobsV1022" class="btn secondary" type="button">← Back to Active Jobs</button><button id="techCloseDashboardV1022" class="btn secondary" type="button">✕ Close to Dashboard</button>';
+      box.prepend(row);
+      const note=document.createElement('div');
+      note.className='tech-workspace-save-note';
+      note.textContent='The repair order stays saved and can be resumed from Active Jobs.';
+      row.insertAdjacentElement('afterend',note);
+      $('techBackActiveJobsV1022')?.addEventListener('click',returnToActiveJobs);
+      $('techCloseDashboardV1022')?.addEventListener('click',closeToDashboard);
+    }
+  }
+  function stabilizeOpen(){
+    const editor=$('workboardEditor');
+    if(!editor||editor.classList.contains('hidden'))return;
+    const id=$('workboardEditId')?.value||'';
+    const stage=$('workboardStage')?.value||'';
+    const key=id+'|'+stage;
+    installExitControls();
+    if(opening||key===lastRenderKey)return;
+    opening=true;
+    lastRenderKey=key;
+    clearTimeout(scrollTimer);
+    scrollTimer=setTimeout(()=>{
+      const box=$('techWorkspaceV1021');
+      if(box && id!==lastRecordId){
+        lastRecordId=id;
+        box.scrollIntoView({behavior:'auto',block:'start'});
+      }
+      opening=false;
+    },90);
+  }
+
+  // Cancel the v10.2.1 repeated smooth-scroll loop after an Active Job opens.
+  document.addEventListener('click',e=>{
+    if(e.target.closest('[data-active-open],[data-active-resume],[data-wb-edit],[data-wb-open-card]')){
+      lastRenderKey='';
+      lastRecordId='';
+      clearTimeout(scrollTimer);
+      setTimeout(stabilizeOpen,150);
+      setTimeout(stabilizeOpen,350);
+    }
+  },true);
+
+  const editor=$('workboardEditor');
+  if(editor){
+    new MutationObserver(stabilizeOpen).observe(editor,{attributes:true,attributeFilter:['class']});
+  }
+  $('workboardStage')?.addEventListener('change',()=>{lastRenderKey='';setTimeout(stabilizeOpen,30)});
+  window.addEventListener('nitros-workboard-change',()=>setTimeout(stabilizeOpen,100));
+
+  // Replace smooth scroll with one immediate positioning action only while the workspace opens.
+  const native=Element.prototype.scrollIntoView;
+  Element.prototype.scrollIntoView=function(options){
+    if(this.id==='techWorkspaceV1021'){
+      if(opening) return;
+      const opts=(options&&typeof options==='object')?{...options,behavior:'auto'}:{behavior:'auto',block:'start'};
+      return native.call(this,opts);
+    }
+    return native.call(this,options);
+  };
 })();
 </script>
 
