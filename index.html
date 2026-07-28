@@ -456,7 +456,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.2.7 preserves the validated intake, walk-around, customer matching, repair-order routing, and Oliver diagnostic workflow while adding a VIN verification gate that prevents OCR or barcode results from decoding until the technician confirms all 17 characters and the check digit passes.</div>
+    <div id="portalLoginStatus" class="status">Version 10.2.9 preserves the validated intake, walk-around, customer matching, repair-order routing, and Oliver diagnostic workflow while adding a VIN verification gate that prevents OCR or barcode results from decoding until the technician confirms all 17 characters and the check digit passes.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -5133,7 +5133,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.2.8 • repair-order top reset fix</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.2.9 • technician assignment handoff fix</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -6359,5 +6359,91 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 })();
 </script>
 
+
+
+<!-- v10.2.9 technician-assignment handoff fix -->
+<datalist id="nitrosTechnicianChoicesV1029"></datalist>
+<script id="v1029TechnicianAssignmentHandoffFix">
+(()=>{
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const readJson=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||'null')??fallback}catch{return fallback}};
+  const profileName=()=>{
+    const profile=readJson('nitros_portal_v8_profile',null);
+    return String(profile?.name||$('portalTechName')?.value||$('technicianName')?.value||'').trim();
+  };
+  function fire(el){
+    if(!el)return;
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+    el.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+  function technicianNames(){
+    const names=new Set();
+    [profileName(),$('technicianName')?.value,$('assignedTechnician')?.value,$('workboardTechnician')?.value]
+      .map(v=>String(v||'').trim()).filter(Boolean).forEach(v=>names.add(v));
+    readJson('nitros_portal_v8_assigned_jobs',[]).forEach(j=>{
+      const v=String(j?.technician||j?.assignedTechnician||'').trim();if(v)names.add(v);
+    });
+    readJson('nitros_v822_workboard',[]).forEach(j=>{
+      const v=String(j?.technician||'').trim();if(v)names.add(v);
+    });
+    return [...names];
+  }
+  function installChoices(){
+    const list=$('nitrosTechnicianChoicesV1029');
+    if(list)list.innerHTML=technicianNames().map(n=>`<option value="${n.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"></option>`).join('');
+    ['assignedTechnician','workboardTechnician','technicianName'].forEach(id=>{
+      const el=$(id);if(el)el.setAttribute('list','nitrosTechnicianChoicesV1029');
+    });
+  }
+  function ensureAssignment(){
+    const tech=profileName();
+    const wb=$('workboardTechnician');
+    const assigned=$('assignedTechnician');
+    const inspection=$('technicianName');
+    if(tech){
+      if(wb&&!wb.value.trim()){wb.value=tech;fire(wb)}
+      if(assigned&&!assigned.value.trim()){assigned.value=tech;fire(assigned)}
+      if(inspection&&!inspection.value.trim()){inspection.value=tech;fire(inspection)}
+    }
+    installChoices();
+    return String(wb?.value||assigned?.value||tech||'').trim();
+  }
+  function persistSelectedWorkboardTechnician(name){
+    const id=$('workboardEditId')?.value?.trim();
+    if(!id||!name)return;
+    const key='nitros_v822_workboard';
+    const all=readJson(key,[]);
+    const item=all.find(x=>String(x?.id)===id);
+    if(item){
+      item.technician=name;
+      item.updatedAt=new Date().toISOString();
+      localStorage.setItem(key,JSON.stringify(all));
+      window.dispatchEvent(new CustomEvent('nitros-workboard-change'));
+    }
+  }
+  function prepareRepairOrder(){
+    const name=ensureAssignment();
+    if(!name)return;
+    const wb=$('workboardTechnician');const assigned=$('assignedTechnician');
+    if(wb){wb.value=name;fire(wb)}
+    if(assigned){assigned.value=name;fire(assigned)}
+    persistSelectedWorkboardTechnician(name);
+  }
+  document.addEventListener('DOMContentLoaded',()=>{ensureAssignment();installChoices()},{once:true});
+  document.addEventListener('focusin',e=>{
+    if(e.target?.id==='assignedTechnician'||e.target?.id==='workboardTechnician')ensureAssignment();
+  });
+  // Capture phase runs before the existing v10.2.6/v10.2.8 button handler.
+  document.addEventListener('click',e=>{
+    if(e.target.closest?.('#techOpenRepairOrderV1026'))prepareRepairOrder();
+  },true);
+  document.addEventListener('click',e=>{
+    if(e.target.closest?.('[data-wb-edit],[data-wb-open-card],[data-active-open],[data-active-resume]')){
+      setTimeout(()=>{ensureAssignment();installChoices()},80);
+    }
+  });
+})();
+</script>
 </body>
 </html>
