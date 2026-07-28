@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.1.6 — Dashboard VIN Camera Launch Fix</title>
+<title>Nitros Mobile Technician Portal v10.1.7 — Active Jobs Dashboard</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -619,7 +619,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 8.2.6</div><h1>Technician Dashboard & Live Repair Order Workboard</h1>
+    <div class="eyebrow">Version 10.1.7</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -653,6 +653,20 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
       <div class="productivity-card"><strong id="dashMissing">0</strong><span>Required items missing</span></div>
     </div>
     <div class="card" style="background:#081321"><div class="eyebrow">Active Repair</div><h3 id="dashVehicle">No active vehicle selected</h3><p id="dashIdentity">Start or resume a repair order to populate this dashboard.</p></div>
+    <section class="active-jobs-focus" aria-labelledby="activeJobsFocusTitle">
+      <div class="active-jobs-focus-head">
+        <div><div class="eyebrow">Technician Active Jobs</div><h3 id="activeJobsFocusTitle">Tap a vehicle to open or resume the repair order</h3></div>
+        <button id="activeJobsRefresh" class="btn secondary small" type="button">Refresh Jobs</button>
+      </div>
+      <div class="active-jobs-filter-row">
+        <button class="active-job-filter selected" type="button" data-active-job-filter="all">All</button>
+        <button class="active-job-filter" type="button" data-active-job-filter="mine">My Jobs</button>
+        <button class="active-job-filter" type="button" data-active-job-filter="waiting">Waiting</button>
+        <button class="active-job-filter" type="button" data-active-job-filter="priority">Priority</button>
+      </div>
+      <div id="activeJobsFocusList" class="active-jobs-focus-list"></div>
+      <div id="activeJobsFocusStatus" class="status">Active jobs are loaded from the same live repair-order workboard below.</div>
+    </section>
     <h3>Repair Status Tracker</h3><div id="dashboardStatusTrack" class="status-track"></div>
     <div class="grid two" style="margin-top:12px">
       <button id="dashResumeJob" class="btn primary" type="button">Resume Active Job</button>
@@ -672,7 +686,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 8.2.6</div>
+      <div class="eyebrow">Version 10.1.7</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -6157,6 +6171,38 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
       }
     },6500);
   });
+})();
+</script>
+
+
+<style id="v1017ActiveJobsStyles">
+.active-jobs-focus{margin:18px 0;border:1px solid #315476;border-radius:18px;padding:16px;background:linear-gradient(180deg,#0b1d31,#081321)}
+.active-jobs-focus-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.active-jobs-focus-head .btn{width:auto}
+.active-jobs-filter-row{display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px}.active-job-filter{flex:0 0 auto;border:1px solid var(--line);background:#081321;color:var(--muted);border-radius:999px;padding:9px 13px;font-weight:800}.active-job-filter.selected{border-color:var(--accent);background:#2a190d;color:#fff}
+.active-jobs-focus-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.active-job-focus-card{border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:16px;padding:14px;background:#081321;cursor:pointer;touch-action:manipulation}.active-job-focus-card.customer{border-left-color:var(--warn)}.active-job-focus-card.high{border-left-color:var(--bad)}.active-job-focus-card.ready{border-left-color:var(--ok)}.active-job-focus-card:focus{outline:3px solid var(--accent);outline-offset:3px}
+.active-job-focus-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.active-job-focus-title{font-size:17px;font-weight:900}.active-job-focus-ro{font-size:12px;font-weight:900;color:#ffd089;white-space:nowrap}.active-job-focus-meta{font-size:12px;color:var(--muted);margin-top:5px}.active-job-focus-concern{font-size:13px;line-height:1.4;margin-top:9px;color:#dbe4f0}.active-job-focus-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.active-job-focus-badge{border:1px solid var(--line);border-radius:999px;padding:4px 7px;font-size:10px;font-weight:900}.active-job-focus-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.active-job-focus-actions .btn{padding:10px 8px;font-size:12px}
+@media(max-width:700px){.active-jobs-focus-head{display:block}.active-jobs-focus-head .btn{width:100%;margin-top:10px}.active-jobs-focus-list{grid-template-columns:1fr}}
+</style>
+
+<script id="v1017ActiveJobsScript">
+(()=>{
+  const KEY='nitros_v822_workboard', TECH='nitros_portal_v8_technician';
+  const $=id=>document.getElementById(id);
+  const read=(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d}};
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  let filter='all';
+  const waiting=x=>['Waiting Approval','Waiting for Parts'].includes(x.stage)||String(x.approval||'').includes('Sent')||String(x.partsStatus||'').match(/Ordered|Transit|Backorder|Needs/i);
+  function jobs(){return read(KEY,[]).filter(x=>x && !['Completed','Removed','Ready for Pickup'].includes(x.stage));}
+  function techName(){const t=read(TECH,{});return String(t.name||t.technician||t.displayName||'').trim().toLowerCase()}
+  function visible(list){const me=techName(); if(filter==='mine'&&me)return list.filter(x=>String(x.technician||'').toLowerCase().includes(me)); if(filter==='waiting')return list.filter(waiting); if(filter==='priority')return list.filter(x=>['high','customer'].includes(x.priority)); return list}
+  function card(x){const tone=x.stage==='Ready for Pickup'?'ready':x.priority==='customer'?'customer':x.priority==='high'?'high':'';return `<article class="active-job-focus-card ${tone}" tabindex="0" role="button" data-active-open="${esc(x.id)}"><div class="active-job-focus-head"><div><div class="active-job-focus-title">${esc(x.customer||'Customer')} — ${esc(x.vehicle||'Vehicle')}</div><div class="active-job-focus-meta">${esc(x.technician||'Unassigned')} • ${esc(x.stage||'Intake / Check-In')}</div></div><div class="active-job-focus-ro">${esc(x.ro?'RO '+x.ro:'RO pending')}</div></div><div class="active-job-focus-concern">${esc(x.concern||'No customer concern entered.')}</div><div class="active-job-focus-badges"><span class="active-job-focus-badge">${esc(x.priority==='customer'?'Customer Waiting':x.priority==='high'?'High Priority':'Normal Priority')}</span><span class="active-job-focus-badge">${esc(x.partsStatus||'Parts not entered')}</span><span class="active-job-focus-badge">${esc(x.approval||'Approval not prepared')}</span></div><div class="active-job-focus-actions"><button class="btn primary" type="button" data-active-resume="${esc(x.id)}">Open / Resume</button><button class="btn secondary" type="button" data-active-next="${esc(x.id)}">Update Status</button></div></article>`}
+  function render(){const all=jobs(),list=visible(all),box=$('activeJobsFocusList'),status=$('activeJobsFocusStatus');if(!box)return;box.innerHTML=list.length?list.map(card).join(''):'<div class="command-empty">No active repair orders match this view.</div>';if(status){status.className='status'+(all.length?' ok':'');status.textContent=all.length?`${all.length} active repair order${all.length===1?'':'s'} available. Tap any vehicle to open the exact linked workboard record.`:'No active repair orders are currently stored on this device.';}document.querySelectorAll('[data-active-job-filter]').forEach(b=>b.classList.toggle('selected',b.dataset.activeJobFilter===filter));}
+  function openRecord(id,scroll=true){const edit=document.querySelector(`[data-wb-edit="${CSS.escape(id)}"]`);if(edit){edit.click();if(scroll)setTimeout(()=>$('workboardEditor')?.scrollIntoView({behavior:'smooth',block:'start'}),80);return true}const card=document.querySelector(`[data-wb-open-card="${CSS.escape(id)}"]`);if(card){card.click();return true}return false}
+  function nextStage(id){if(!openRecord(id,false))return;setTimeout(()=>{$('workboardAdvance')?.click();render();$('workboardEditor')?.scrollIntoView({behavior:'smooth',block:'start'})},80)}
+  document.addEventListener('click',e=>{const f=e.target.closest('[data-active-job-filter]');if(f){filter=f.dataset.activeJobFilter;render();return}const resume=e.target.closest('[data-active-resume]');if(resume){e.stopPropagation();openRecord(resume.dataset.activeResume);return}const next=e.target.closest('[data-active-next]');if(next){e.stopPropagation();openRecord(next.dataset.activeNext);return}const cardEl=e.target.closest('[data-active-open]');if(cardEl)openRecord(cardEl.dataset.activeOpen)});
+  document.addEventListener('keydown',e=>{const cardEl=e.target.closest?.('[data-active-open]');if(cardEl&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openRecord(cardEl.dataset.activeOpen)}});
+  $('activeJobsRefresh')?.addEventListener('click',()=>{document.getElementById('workboardRefresh')?.click();setTimeout(render,100)});
+  window.addEventListener('nitros-workboard-change',render);window.addEventListener('storage',render);document.querySelectorAll('[data-go="dashboard"]').forEach(b=>b.addEventListener('click',()=>setTimeout(render,120)));setInterval(()=>{if($('dashboard')?.classList.contains('active'))render()},5000);setTimeout(render,250);
 })();
 </script>
 
