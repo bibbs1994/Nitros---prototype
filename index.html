@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.2.3 — Active Job Touch, Scroll & Repair Order Fix</title>
+<title>Nitros Mobile Technician Portal v10.2.4 — Active Job Repair Order Render Fix</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -442,7 +442,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.2.3 — Active Job Touch, Scroll & Repair Order Fix</div>
+  <div class="sub">Mobile Technician Portal v10.2.4 — Active Job Repair Order Render Fix</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -5209,7 +5209,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.2.3 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.2.4 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6695,6 +6695,124 @@ body.active-job-workspace-open{
       releaseTouchAndScrollLocks();
     }
   });
+})();
+</script>
+
+
+<style id="v1024ActiveJobRepairOrderRenderStyles">
+/* v10.2.4 — guarantee the selected repair-order screen is visible and scrollable. */
+body.active-repair-order-v1024 main{display:block!important;visibility:visible!important;opacity:1!important;min-height:100vh!important}
+body.active-repair-order-v1024 #workorder.screen.active{display:block!important;visibility:visible!important;opacity:1!important;height:auto!important;min-height:650px!important;overflow:visible!important}
+body.active-repair-order-v1024 #workorder>.card{display:block!important;visibility:visible!important;opacity:1!important}
+#activeRepairOrderRecoveryV1024{margin:0 0 14px;border:1px solid #2f986e;background:#0b2a25;border-radius:14px;padding:12px 14px;color:#d8fff1;font-size:13px;line-height:1.45}
+#activeRepairOrderRecoveryV1024 strong{display:block;font-size:15px;margin-bottom:3px}
+</style>
+<script id="v1024ActiveJobRepairOrderRenderScript">
+(()=>{
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const WORKBOARD_KEY='nitros_v822_workboard';
+  const DRAFT_KEY='nitros_portal_v8_active_draft';
+  const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch(e){return fallback}};
+  const setValue=(id,value)=>{const el=$(id);if(el && value!==undefined && value!==null && String(value)!=='')el.value=String(value)};
+  let selectedRecordId='';
+
+  function recordById(id){return read(WORKBOARD_KEY,[]).find(x=>x&&x.id===id)||null}
+  function selectedRecord(){return recordById(selectedRecordId||$('workboardEditId')?.value||'')}
+
+  function hardShowWorkOrder(){
+    document.querySelectorAll('.screen').forEach(screen=>screen.classList.toggle('active',screen.id==='workorder'));
+    const wo=$('workorder');
+    if(wo){
+      wo.classList.add('active');
+      wo.removeAttribute('hidden');
+      wo.style.removeProperty('display');
+      wo.style.removeProperty('visibility');
+      wo.style.removeProperty('opacity');
+    }
+    document.body.classList.add('active-repair-order-v1024','active-job-workspace-open');
+    document.documentElement.classList.add('active-job-workspace-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('position');
+    document.documentElement.style.removeProperty('overflow');
+    document.documentElement.style.removeProperty('position');
+  }
+
+  function populateFromRecord(record){
+    if(!record)return;
+    setValue('workOrderNumber',record.ro);
+    setValue('assignedTechnician',record.technician);
+    const stageMap={
+      'Waiting Diagnosis':'Diagnosing','Waiting Approval':'Waiting on Approval','Waiting for Parts':'Waiting on Parts',
+      'Ready to Repair':'Repairing','In Repair':'Repairing','Quality Control':'Quality Check','Ready for Pickup':'Ready for Pickup'
+    };
+    setValue('repairStatus',stageMap[record.stage]||record.stage||'Assigned');
+    setValue('customerName',record.customer);
+    setValue('concern',record.concern);
+    setValue('internalTechnicianNotes',record.instructions);
+    if(record.roadTest)setValue('roadTestStatus',record.roadTest==='Not Required'?'Not Required':record.roadTest);
+    const vehicle=String(record.vehicle||'').trim();
+    if(vehicle && !window.selectedVehicle){
+      const parts=vehicle.split(/\s+/);
+      const year=/^(19|20)\d{2}$/.test(parts[0]||'')?parts.shift():'';
+      window.selectedVehicle={year,make:parts.shift()||'',model:parts.join(' '),vin:record.vin||'',plate:record.plate||''};
+    }
+  }
+
+  function installRecoveryBanner(record){
+    const card=$('workorder')?.querySelector('.card');
+    if(!card)return;
+    let banner=$('activeRepairOrderRecoveryV1024');
+    if(!banner){banner=document.createElement('div');banner.id='activeRepairOrderRecoveryV1024';card.prepend(banner)}
+    const label=record?[record.customer,record.vehicle,record.ro?`RO ${record.ro}`:''].filter(Boolean).join(' — '):'Selected active repair order';
+    banner.innerHTML=`<strong>Active repair order restored</strong>${label}. The repair-order controls are loaded below. Changes remain saved on this device.`;
+  }
+
+  function openSelectedRepairOrder(){
+    const record=selectedRecord();
+    const draft=read(DRAFT_KEY,null);
+    if(record?.id==='wb_active_draft' && draft && typeof window.restoreDraft==='function'){
+      try{window.restoreDraft(false)}catch(e){console.warn('Draft restore fallback:',e)}
+    }
+    populateFromRecord(record);
+    hardShowWorkOrder();
+    if(typeof window.updateJobClockUI==='function')try{window.updateJobClockUI()}catch(e){}
+    if(typeof window.renderTimeline==='function')try{window.renderTimeline()}catch(e){}
+    installRecoveryBanner(record);
+    requestAnimationFrame(()=>{
+      hardShowWorkOrder();
+      window.scrollTo({top:0,left:0,behavior:'auto'});
+      setTimeout(()=>{
+        if(!$('workorder')?.classList.contains('active'))hardShowWorkOrder();
+        $('workorder')?.querySelector('.card')?.scrollIntoView({behavior:'auto',block:'start'});
+      },60);
+    });
+  }
+
+  document.addEventListener('pointerdown',event=>{
+    const hit=event.target.closest?.('[data-active-open],[data-active-resume],[data-wb-edit],[data-wb-open-card]');
+    if(hit) selectedRecordId=hit.dataset.activeOpen||hit.dataset.activeResume||hit.dataset.wbEdit||hit.dataset.wbOpenCard||'';
+  },true);
+  document.addEventListener('click',event=>{
+    const hit=event.target.closest?.('[data-active-open],[data-active-resume],[data-wb-edit],[data-wb-open-card]');
+    if(hit) selectedRecordId=hit.dataset.activeOpen||hit.dataset.activeResume||hit.dataset.wbEdit||hit.dataset.wbOpenCard||selectedRecordId;
+    if(event.target.closest?.('#techOpenRepairOrderV1023')){
+      event.preventDefault();event.stopImmediatePropagation();openSelectedRepairOrder();
+    }
+    if(event.target.closest?.('#techBackActiveJobsV1022,#techCloseDashboardV1022,[data-go="dashboard"]')){
+      document.body.classList.remove('active-repair-order-v1024');
+    }
+  },true);
+
+  // Replace the prior Continue button handler even when it was installed before this patch.
+  const observer=new MutationObserver(()=>{
+    const btn=$('techOpenRepairOrderV1023');
+    if(btn && !btn.dataset.v1024Bound){
+      btn.dataset.v1024Bound='1';
+      btn.textContent='Continue to Repair Order';
+    }
+  });
+  observer.observe(document.body,{childList:true,subtree:true});
 })();
 </script>
 
