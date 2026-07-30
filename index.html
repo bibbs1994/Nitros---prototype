@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.5.1 — Oliver Diagnostic Engine v1 Rebuild</title>
+<title>Nitros Mobile Technician Portal v10.5.2 — Technician-First Diagnostic Responses</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -482,7 +482,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.5.1 — Oliver Diagnostic Engine v1 Rebuild</div>
+  <div class="sub">Mobile Technician Portal v10.5.2 — Technician-First Diagnostic Responses</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -496,7 +496,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.5.1 preserves the validated portal workflow and removes the repair-order gate from general diagnostic questions. Oliver can now answer common DTC and diagnostic questions without an active repair order; VIN-specific wiring, pinout, calibration, and OEM procedure details still require verified vehicle information.</div>
+    <div id="portalLoginStatus" class="status">Version 10.5.2 preserves the validated portal workflow and adds technician-first diagnostic replies. Oliver now defines supported DTCs, identifies likely systems, and provides ordered pass/fail testing before requesting optional vehicle details. VIN-specific wiring, pinouts, calibrations, and OEM procedures still require verified vehicle information.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -1645,7 +1645,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.5.1 • Stable Active Jobs handoff • Header safe-area protection • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.5.2 • Stable Active Jobs handoff • Header safe-area protection • Evidence-based workflow</div>
 </div>
 
 <script>
@@ -5173,7 +5173,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.5.1 • diagnostic close-button safe-area and touch stabilization</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.5.2 • diagnostic close-button safe-area and touch stabilization</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5211,7 +5211,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.5.1 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.5.2 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -5573,7 +5573,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   const $=id=>document.getElementById(id);
   const launch=$('unifiedOliverLaunch'),hub=$('unifiedOliverHub'),modeEl=$('unifiedOliverMode'),input=$('oliverHubInput'),transcript=$('oliverHubTranscript');
   if(!launch||!hub)return;
-  const POS='nitros_v826_unified_oliver_position',SET='nitros_v826_oliver_settings',CHAT='nitros_v826_oliver_transcript';
+  const POS='nitros_v826_unified_oliver_position',SET='nitros_v826_oliver_settings',CHAT='nitros_v1052_oliver_transcript';
   let lastReply='',dragging=false,moved=false,startX=0,startY=0,baseL=0,baseT=0;
   const modeMap={instructor:'🎓 Oliver — Instructor',technician:'🔧 Oliver — Technician',office:'🏢 Oliver — Office',founder:'👨‍💼 Oliver — Founder'};
   function activeScreen(){return document.querySelector('.screen.active')?.id||document.querySelector('[data-screen].active')?.dataset.screen||''}
@@ -5617,21 +5617,46 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   }
   function reply(text){line('Oliver',text);speak(text)}
   function generalDiagnosticReply(q){
-    const dtc=(q.match(/\b([pbu c]\s*[- ]?\s*0?\d{3,4})\b/i)||[])[1];
-    const code=dtc?dtc.replace(/[\s-]/g,'').toUpperCase():'';
+    const cleaned=String(q||'').toUpperCase().replace(/\bZERO\b/g,'0').replace(/\bOH\b/g,'0');
+    const raw=(cleaned.match(/\b([PCBU]\s*[- ]?\s*\d{4})\b/i)||[])[1];
+    const spoken=(cleaned.match(/(?:CODE\s+)?\b(\d{3,4})\b/)||[])[1];
+    let code=raw?raw.replace(/[\s-]/g,'').toUpperCase():'';
+    if(!code&&spoken){const digits=spoken.padStart(4,'0');code='P'+digits;}
     if(/^P030[0-8]$/.test(code)){
       const cyl=code==='P0300'?'multiple/random cylinders':`cylinder ${Number(code.slice(-1))}`;
       const title=code==='P0300'?'Random/Multiple Cylinder Misfire Detected':`Cylinder ${Number(code.slice(-1))} Misfire Detected`;
       return `${code} — ${title}.
 
-Start by confirming whether the misfire is current and under what conditions it occurs. Review the misfire counters and freeze-frame data, then inspect the plug, wire or boot, coil connection, and injector connection for ${cyl}.
+Most likely systems are ignition, fuel delivery, air entering that cylinder, or engine mechanical condition. Do not replace a coil or injector from the code alone.
 
-Best first isolation test: swap the easiest movable ignition component from the affected cylinder with a known-good cylinder, clear or reset the counters, and run the engine under the same conditions. If the misfire follows the component, the fault is identified. If it stays on ${cyl}, test injector operation, compression or relative compression, intake leakage near that runner, and the control circuit.
+First tests:
+1. Confirm the misfire counter and freeze-frame conditions.
+2. Inspect the plug, boot, coil connector, and injector connector for ${cyl}.
+3. Perform one controlled A/B swap of the easiest ignition component and repeat the original failure condition.
+4. If the misfire stays on ${cyl}, verify injector command and contribution, then check compression or relative compression and intake leakage near that runner.
 
-Tell me the engine size and whether the misfire is at idle, under load, cold, or hot, and I will narrow the next test. No repair order is required for this general diagnostic guidance.`;
+Pass/fail: if the misfire moves, the swapped component is suspect; if it remains on ${cyl}, continue testing that cylinder's fuel, air, mechanical condition, and control circuits.
+
+Year, make, model, engine, and operating condition will let me narrow the next test. An RO is optional; it is only needed to save the case and attach vehicle-specific information.`;
+    }
+    if(code==='P0340'){
+      return `P0340 — Camshaft Position Sensor “A” Circuit Malfunction.
+
+This code means the ECM is not seeing a valid camshaft-position signal or the signal is not correlating as expected. Common causes include the sensor, connector tension or corrosion, an open or short in the signal/5-volt/ground circuits, incorrect mechanical timing, reluctor damage, or less commonly an ECM fault.
+
+First tests:
+1. Check whether the engine starts, stalls, runs in default mode, or has related crank/cam correlation codes.
+2. Inspect the cam sensor connector and harness where it bends or passes near hot or moving components.
+3. Verify sensor power, ground, and signal with a meter or scope; do not condemn the sensor from the code alone.
+4. Compare cam and crank signals or correlation data before disturbing mechanical timing.
+
+Vehicle information is optional for this preliminary path. It becomes necessary only for the exact sensor location, connector pins, waveform, and OEM thresholds.`;
     }
     if(code){
-      return `${code} is recognized as a diagnostic trouble code request. I can help with general code meaning, likely systems involved, and a test-first diagnostic path without an active repair order. For exact connector pins, wire colors, OEM specifications, relearn procedures, or programming steps, enter or scan the VIN and engine information. Tell me the code again with the year, make, model, engine, and symptom.`;
+      const family=code[0]==='P'?'powertrain':code[0]==='B'?'body':code[0]==='C'?'chassis':'network';
+      return `${code} is a ${family} diagnostic trouble code. I do not have a verified definition for that exact code in this offline build, so I will not invent one.
+
+Use this test-first path now: identify the module that set the code, record current/history status and freeze-frame data, check for related codes, inspect the affected circuit and connectors, and verify powers, grounds, signal integrity, and component operation before replacement. Give me the code description shown by the scan tool plus the symptom, and I will build the next pass/fail test immediately. VIN or RO information is optional unless you need exact OEM pinouts or specifications.`;
     }
     if(/misfire|engine skip|skipping|rough run|rough idle/.test(q)){
       return 'For a misfire or engine skip, begin with a complete scan, freeze-frame data, and cylinder misfire counters. Identify whether it is one cylinder or multiple cylinders and whether it occurs at idle, under load, cold, or hot. Then use a component-swap test where practical before replacing parts. Tell me the year, make, model, engine, DTCs, and operating condition, and I will give you the next measurable test.';
@@ -5953,7 +5978,7 @@ Tell me the engine size and whether the misfire is at idle, under load, cold, or
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.5.1</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.5.2</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -5988,7 +6013,7 @@ const $=id=>document.getElementById(id), val=id=>($(id)?.value||'').trim();
 const shell=$('oliverDiagnosticMode'),chat=$('diagChat'),input=$('diagInput');
 let lastOliver='',busy=false,recognition=null,loadedImage='',zoom=1,activeMode='general';
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-const SESSION_KEY='nitrosOliverV2Session';
+const SESSION_KEY='nitrosOliverV1052Session';
 const ENDPOINT_KEY='nitrosOliverServiceUrl';
 let history=[];
 function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -6002,13 +6027,15 @@ function render(){chat.innerHTML='';if(!history.length){addMessage('assistant','
 function serviceUrl(){return (localStorage.getItem(ENDPOINT_KEY)||'').trim()}
 function isContextRefusal(t){return /(vin[- ]specific|vin specific engine|engine size and (?:an )?(?:ro|repair order)|need(?:s|ed)? (?:the )?(?:vin|repair order|ro)|can only receive confirmation|cannot (?:answer|continue|provide).*?(?:vin|repair order|ro)|requires? .*?(?:vin|repair order|ro))/i.test(t||'')}
 function localGeneralAnswer(text){
- const q=String(text||'').toUpperCase();
- const m=q.match(/\bP03(0[0-9]|1[0-2])\b/);
- if(m){const code='P03'+m[1];if(code==='P0300')return 'P0300 means a random or multiple-cylinder misfire was detected. Start by checking which cylinders are accumulating misfires, then determine whether the condition is common to all cylinders or isolated. Verify fuel quality and pressure, unmetered air, ignition power and grounds, crank/cam correlation, and engine mechanical condition. Use freeze-frame data and misfire counters to identify when the fault occurs. Repair the verified cause, clear the code, and confirm under the same operating conditions.';
- const cyl=parseInt(code.slice(-2),10);return `${code} means a misfire was detected on cylinder ${cyl}. Start by confirming that cylinder ${cyl} is actually accumulating misfires and note whether it occurs at idle, under load, cold, or hot. Inspect the spark plug and coil, verify injector command and contribution, check for a cylinder-specific vacuum or intake leak, and perform compression or relative compression testing if ignition and fuel checks pass. Component swapping should be used only as a controlled A/B test. Repair the verified cause, clear the code, and confirm the misfire counter remains at zero under the original failure conditions. Year, make, model, engine, freeze-frame data, and symptoms will make the next test vehicle-specific, but they are not required for this general answer.`}
- const code=q.match(/\b[PCBU][0-3][0-9A-F]{3}\b/)?.[0];
- if(code)return `${code} is an OBD diagnostic trouble code. General Diagnostics can help without an RO, but this local fallback does not contain a verified definition for that specific code. Confirm the code description with service information, identify the module that set it, review status and freeze-frame data, then test the affected circuit or system before replacing parts. Vehicle and engine details are helpful for exact pinouts and thresholds, not mandatory for a preliminary plan.`;
- return 'General Diagnostics mode does not require a VIN, engine size, or repair order. The connected Oliver service did not provide a usable general answer, so no vehicle-specific claim will be invented. Rephrase the question with the DTC, symptom, measurement, or system you want to diagnose, and Oliver will provide a general test strategy.'
+ const q=String(text||'').toUpperCase().replace(/\bZERO\b/g,'0').replace(/\bOH\b/g,'0');
+ let code=q.match(/\b[PCBU]\d{4}\b/)?.[0]||'';
+ if(!code){const spoken=q.match(/(?:CODE\s+)?\b(\d{3,4})\b/)?.[1];if(spoken)code='P'+spoken.padStart(4,'0')}
+ if(/^P030[0-8]$/.test(code)){if(code==='P0300')return 'P0300 — Random or Multiple-Cylinder Misfire Detected. Confirm which cylinders are counting, record freeze-frame conditions, and determine whether the cause is common to all cylinders. Test fuel quality and pressure, unmetered air, ignition feed and grounds, crank/cam correlation, and engine mechanical condition. Repair only the verified cause, clear the code, and reproduce the original conditions to confirm the counters remain at zero.';
+ const cyl=parseInt(code.slice(-1),10);return `${code} — Cylinder ${cyl} Misfire Detected. Confirm cylinder ${cyl} is accumulating misfires and note whether it happens at idle, under load, cold, or hot. Inspect the plug, boot, coil connector, and injector connector. Perform one controlled ignition-component swap; if the misfire follows, the moved component is suspect. If it stays on cylinder ${cyl}, verify injector command and contribution, check compression or relative compression, inspect for an intake leak at that runner, and test the control circuits. Year, make, model, and engine are optional for this general path and are only needed for exact OEM specifications.`}
+ if(code==='P0340')return 'P0340 — Camshaft Position Sensor A Circuit Malfunction. Inspect the sensor connector and harness, check for related crank/cam codes, verify sensor power, ground, and signal, and compare cam/crank correlation before replacing the sensor or disturbing mechanical timing. Exact pins and waveform thresholds require the vehicle information, but an RO is not required.';
+ if(code){const family=code[0]==='P'?'powertrain':code[0]==='B'?'body':code[0]==='C'?'chassis':'network';return `${code} is a ${family} DTC. This offline fallback does not contain a verified definition for that exact code, so it will not guess. Record the scan-tool description, module, status, freeze-frame data, and related codes. Then verify powers, grounds, connector integrity, signal operation, and the affected system before replacing parts. Send the code description and symptom for a focused pass/fail test. VIN and RO data are optional unless exact OEM information is requested.`}
+ if(/MISFIRE|ROUGH IDLE|ENGINE SKIP/.test(q))return 'Start by identifying whether the misfire is one cylinder or multiple cylinders and when it occurs. Use misfire counters and freeze-frame data, then perform controlled ignition isolation, injector contribution testing, intake-leak testing, and compression or relative-compression testing in that order. Send the affected cylinder, operating condition, and measurements for the next pass/fail test.';
+ return 'Tell me the DTC, symptom, or measurement you are working with. General Diagnostics will provide a test-first answer without requiring a VIN, engine size, or repair order. Vehicle information is only needed for exact OEM pinouts, locations, specifications, programming, or relearn procedures.'
 }
 async function send(text){text=(text||'').trim();if(!text||busy)return;history.push({role:'user',content:text,mode:activeMode});addMessage('user',text);input.value='';save();updateContext();const context=baseContext();
  if(activeMode==='general'&&!serviceUrl()){const reply=localGeneralAnswer(text);history.push({role:'assistant',content:reply,mode:'general'});addMessage('assistant',reply);save();updateContext();return}
@@ -6423,7 +6450,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 
 
-<!-- v10.5.1 completion, assignment and iPhone safe-area stabilization; v10.2.9 handoff logic preserved -->
+<!-- v10.5.2 completion, assignment and iPhone safe-area stabilization; v10.2.9 handoff logic preserved -->
 <datalist id="nitrosTechnicianChoicesV1029"></datalist>
 <script id="v1029TechnicianAssignmentHandoffFix">
 (()=>{
@@ -6509,7 +6536,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 </script>
 
 
-<!-- v10.5.1 diagnostic close-button safe-area and touch stabilization -->
+<!-- v10.5.2 diagnostic close-button safe-area and touch stabilization -->
 <style id="v1031StabilizationStyles">
   :root{--nitros-v1031-safe-bottom:max(14px,env(safe-area-inset-bottom))}
   header{scroll-margin-top:env(safe-area-inset-top)}
@@ -6577,7 +6604,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
       }
     });
     if(changed)write('nitros_portal_v8_assigned_jobs',jobs);
-    window.dispatchEvent(new CustomEvent('nitros-workboard-change',{detail:{source:'v10.5.1-completion-sync',repairOrder:ro,completedAt:at}}));
+    window.dispatchEvent(new CustomEvent('nitros-workboard-change',{detail:{source:'v10.5.2-completion-sync',repairOrder:ro,completedAt:at}}));
   }
 
   function normalizePrimaryBuildLabels(){
@@ -6655,7 +6682,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 })();
 </script>
 <style id="v1041-script-engine-elimination-style">
-/* v10.5.1: legacy guided diagnostic UI is retired and cannot intercept touch events. */
+/* v10.5.2: legacy guided diagnostic UI is retired and cannot intercept touch events. */
 .oliver-guide-panel,.oliver-guide-dialog{display:none!important;pointer-events:none!important}
 #smartDiagComplete,#smartDiagBack,#smartDiagReset,#smartDiagRecord{display:none!important}
 </style>
@@ -6674,12 +6701,12 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
   window.addEventListener('pageshow',apply);
 })();
 </script>
-<!-- v10.5.1 Standalone Diagnostic Mode: missing RO or vehicle data no longer blocks a general diagnostic answer. -->
+<!-- v10.5.2 Standalone Diagnostic Mode: missing RO or vehicle data no longer blocks a general diagnostic answer. -->
 
 
 <style id="v1050-separated-mode-style">
 #diagGeneralMode.active,#diagRoMode.active{background:#72c8ff;color:#001421;border-color:#72c8ff}
 </style>
-<!-- v10.5.1 separates General Diagnostics from RO Assistant and prevents VIN/RO refusal in General mode. -->
+<!-- v10.5.2 separates General Diagnostics from RO Assistant and prevents VIN/RO refusal in General mode. -->
 </body>
 </html>
