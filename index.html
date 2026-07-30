@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.5.0 — Oliver Diagnostic Engine v1 Rebuild</title>
+<title>Nitros Mobile Technician Portal v10.5.1 — Oliver Diagnostic Engine v1 Rebuild</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -482,7 +482,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.5.0 — Oliver Diagnostic Engine v1 Rebuild</div>
+  <div class="sub">Mobile Technician Portal v10.5.1 — Oliver Diagnostic Engine v1 Rebuild</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -496,7 +496,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.3.1 preserves the validated intake, walk-around, customer matching, repair-order routing, technician assignment handoff, and Oliver diagnostic workflow while correcting all primary version labels and protecting the sticky header from the iPhone status area.</div>
+    <div id="portalLoginStatus" class="status">Version 10.5.1 preserves the validated portal workflow and removes the repair-order gate from general diagnostic questions. Oliver can now answer common DTC and diagnostic questions without an active repair order; VIN-specific wiring, pinout, calibration, and OEM procedure details still require verified vehicle information.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -1645,7 +1645,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.5.0 • Stable Active Jobs handoff • Header safe-area protection • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.5.1 • Stable Active Jobs handoff • Header safe-area protection • Evidence-based workflow</div>
 </div>
 
 <script>
@@ -5173,7 +5173,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.5.0 • diagnostic close-button safe-area and touch stabilization</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.5.1 • diagnostic close-button safe-area and touch stabilization</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5211,7 +5211,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.5.0 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.5.1 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -5616,13 +5616,42 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     }catch(error){launch.classList.remove('speaking');}
   }
   function reply(text){line('Oliver',text);speak(text)}
+  function generalDiagnosticReply(q){
+    const dtc=(q.match(/\b([pbu c]\s*[- ]?\s*0?\d{3,4})\b/i)||[])[1];
+    const code=dtc?dtc.replace(/[\s-]/g,'').toUpperCase():'';
+    if(/^P030[0-8]$/.test(code)){
+      const cyl=code==='P0300'?'multiple/random cylinders':`cylinder ${Number(code.slice(-1))}`;
+      const title=code==='P0300'?'Random/Multiple Cylinder Misfire Detected':`Cylinder ${Number(code.slice(-1))} Misfire Detected`;
+      return `${code} — ${title}.
+
+Start by confirming whether the misfire is current and under what conditions it occurs. Review the misfire counters and freeze-frame data, then inspect the plug, wire or boot, coil connection, and injector connection for ${cyl}.
+
+Best first isolation test: swap the easiest movable ignition component from the affected cylinder with a known-good cylinder, clear or reset the counters, and run the engine under the same conditions. If the misfire follows the component, the fault is identified. If it stays on ${cyl}, test injector operation, compression or relative compression, intake leakage near that runner, and the control circuit.
+
+Tell me the engine size and whether the misfire is at idle, under load, cold, or hot, and I will narrow the next test. No repair order is required for this general diagnostic guidance.`;
+    }
+    if(code){
+      return `${code} is recognized as a diagnostic trouble code request. I can help with general code meaning, likely systems involved, and a test-first diagnostic path without an active repair order. For exact connector pins, wire colors, OEM specifications, relearn procedures, or programming steps, enter or scan the VIN and engine information. Tell me the code again with the year, make, model, engine, and symptom.`;
+    }
+    if(/misfire|engine skip|skipping|rough run|rough idle/.test(q)){
+      return 'For a misfire or engine skip, begin with a complete scan, freeze-frame data, and cylinder misfire counters. Identify whether it is one cylinder or multiple cylinders and whether it occurs at idle, under load, cold, or hot. Then use a component-swap test where practical before replacing parts. Tell me the year, make, model, engine, DTCs, and operating condition, and I will give you the next measurable test.';
+    }
+    if(/wire|pinout|connector|color code|wiring diagram/.test(q)){
+      return 'I can help interpret a wiring diagram and plan circuit tests, but exact pin numbers, connector views, wire colors, and OEM specifications require verified year, make, model, engine, and preferably the VIN. You do not need a repair order—enter the vehicle information and the circuit or DTC you are testing.';
+    }
+    if(/diagnos|next test|what.*next|voltage|pressure|code/.test(q)){
+      return 'Technician Mode is active. You can ask a general diagnostic question without an active repair order. Give me the year, make, model, engine, DTC or symptom, and any measurements already taken. I will separate what is verified from what is assumed and recommend the next test with a pass/fail result.';
+    }
+    return '';
+  }
   function routeCommand(raw){const text=raw.trim();if(!text)return;line('You',text);const q=text.replace(/^oliver[,:]?\s*/i,'').toLowerCase(),mode=currentMode();
     if(/show me how|walk me through|guided|learn the software|input this customer|check.?in/.test(q)){reply('I am opening Instructor Mode and the guided software walkthrough. Choose the workflow you want, and I will wait for each confirmation.');closeHub();setTimeout(()=>{$('oliverGuideLaunch')?.click()},120);return}
-    if(/repair assistant|diagnos|next test|what.*next|wire|pinout|connector|color code|voltage|pressure|code/.test(q)){reply('I am opening Technician Mode for the active repair order. I will separate verified information, technician-recorded findings, and recommendations.');closeHub();setTimeout(()=>{$('smartOliverLaunch')?.click()},120);return}
+    if(/repair assistant/.test(q)){reply('I am opening the Repair Assistant. An active repair order adds saved vehicle and case context, but it is no longer required for general diagnostic questions.');closeHub();setTimeout(()=>{$('smartOliverLaunch')?.click()},120);return}
+    const diagnostic=generalDiagnosticReply(q);if(diagnostic){reply(diagnostic);return}
     if(/nati|academy|lesson|teach me|case study|drc/.test(q)){reply('NATI Academy is prepared as the training branch of Oliver. This build establishes the hub entry point; connected NATI lessons will be added as the curriculum integration is implemented.');return}
     if(/schedule|appointment|customer|invoice|estimate|payment/.test(q)){reply('Office Mode is active. I can guide the current office workflow and keep the instructions on screen. For detailed entry guidance, say “Oliver, show me how.”');return}
     const intro=mode==='office'?'Office Mode is active. ':mode==='instructor'?'Instructor Mode is active. ':mode==='founder'?'Founder Mode is active. ':'Technician Mode is active. ';
-    reply(intro+'I heard your request. This Phase 1 build preserves the spoken and written conversation and routes you to the correct Oliver component. Vehicle-specific technical answers require the repair order and verified service information to be loaded.');
+    reply(intro+'Ask me a diagnostic question directly. General DTC and symptom guidance does not require a repair order. Exact VIN-specific wiring, pinouts, specifications, programming, and OEM procedures require verified vehicle information.');
   }
   launch.addEventListener('pointerdown',e=>{dragging=true;moved=false;launch.setPointerCapture?.(e.pointerId);const r=launch.getBoundingClientRect();startX=e.clientX;startY=e.clientY;baseL=r.left;baseT=r.top;launch.style.left=r.left+'px';launch.style.top=r.top+'px';launch.style.right='auto';launch.style.bottom='auto';e.preventDefault()});
   launch.addEventListener('pointermove',e=>{if(!dragging)return;const dx=e.clientX-startX,dy=e.clientY-startY;if(Math.abs(dx)+Math.abs(dy)>5)moved=true;const maxX=innerWidth-launch.offsetWidth,maxY=innerHeight-launch.offsetHeight;launch.style.left=Math.max(0,Math.min(maxX,baseL+dx))+'px';launch.style.top=Math.max(0,Math.min(maxY,baseT+dy))+'px';e.preventDefault()});
@@ -5924,7 +5953,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.5.0</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.5.1</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -6394,7 +6423,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 
 
-<!-- v10.5.0 completion, assignment and iPhone safe-area stabilization; v10.2.9 handoff logic preserved -->
+<!-- v10.5.1 completion, assignment and iPhone safe-area stabilization; v10.2.9 handoff logic preserved -->
 <datalist id="nitrosTechnicianChoicesV1029"></datalist>
 <script id="v1029TechnicianAssignmentHandoffFix">
 (()=>{
@@ -6480,7 +6509,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 </script>
 
 
-<!-- v10.5.0 diagnostic close-button safe-area and touch stabilization -->
+<!-- v10.5.1 diagnostic close-button safe-area and touch stabilization -->
 <style id="v1031StabilizationStyles">
   :root{--nitros-v1031-safe-bottom:max(14px,env(safe-area-inset-bottom))}
   header{scroll-margin-top:env(safe-area-inset-top)}
@@ -6548,7 +6577,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
       }
     });
     if(changed)write('nitros_portal_v8_assigned_jobs',jobs);
-    window.dispatchEvent(new CustomEvent('nitros-workboard-change',{detail:{source:'v10.5.0-completion-sync',repairOrder:ro,completedAt:at}}));
+    window.dispatchEvent(new CustomEvent('nitros-workboard-change',{detail:{source:'v10.5.1-completion-sync',repairOrder:ro,completedAt:at}}));
   }
 
   function normalizePrimaryBuildLabels(){
@@ -6626,7 +6655,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 })();
 </script>
 <style id="v1041-script-engine-elimination-style">
-/* v10.5.0: legacy guided diagnostic UI is retired and cannot intercept touch events. */
+/* v10.5.1: legacy guided diagnostic UI is retired and cannot intercept touch events. */
 .oliver-guide-panel,.oliver-guide-dialog{display:none!important;pointer-events:none!important}
 #smartDiagComplete,#smartDiagBack,#smartDiagReset,#smartDiagRecord{display:none!important}
 </style>
@@ -6645,12 +6674,12 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
   window.addEventListener('pageshow',apply);
 })();
 </script>
-<!-- v10.5.0 Standalone Diagnostic Mode: missing RO or vehicle data no longer blocks a general diagnostic answer. -->
+<!-- v10.5.1 Standalone Diagnostic Mode: missing RO or vehicle data no longer blocks a general diagnostic answer. -->
 
 
 <style id="v1050-separated-mode-style">
 #diagGeneralMode.active,#diagRoMode.active{background:#72c8ff;color:#001421;border-color:#72c8ff}
 </style>
-<!-- v10.5.0 separates General Diagnostics from RO Assistant and prevents VIN/RO refusal in General mode. -->
+<!-- v10.5.1 separates General Diagnostics from RO Assistant and prevents VIN/RO refusal in General mode. -->
 </body>
 </html>
