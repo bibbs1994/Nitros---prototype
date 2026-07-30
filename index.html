@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.4.1 — Oliver Diagnostic Engine v1 Rebuild</title>
+<title>Nitros Mobile Technician Portal v10.4.2 — Oliver Diagnostic Engine v1 Rebuild</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -482,7 +482,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.4.1 — Oliver Diagnostic Engine v1 Rebuild</div>
+  <div class="sub">Mobile Technician Portal v10.4.2 — Oliver Diagnostic Engine v1 Rebuild</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -1645,7 +1645,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.4.1 • Stable Active Jobs handoff • Header safe-area protection • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.4.2 • Stable Active Jobs handoff • Header safe-area protection • Evidence-based workflow</div>
 </div>
 
 <script>
@@ -5173,7 +5173,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.4.1 • diagnostic close-button safe-area and touch stabilization</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.4.2 • diagnostic close-button safe-area and touch stabilization</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5211,7 +5211,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.3.1 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.4.2 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -5924,7 +5924,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.4.1</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.4.2</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -5936,8 +5936,9 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
       </div>
     </main>
     <aside class="diag-side">
-      <h3>Active Case</h3><div class="diag-card"><div class="diag-card-label">Engine</div><div class="diag-card-value">Oliver Diagnostic Engine v1.1 — clean text-first rebuild; secure service connection required for live AI responses.</div></div>
+      <h3>Active Case</h3><div class="diag-card"><div class="diag-card-label">Engine</div><div class="diag-card-value">Oliver Diagnostic Engine v1.2 — clean text-first rebuild; secure service connection required for live AI responses.</div></div>
       <div class="diag-card"><div class="diag-card-label">Vehicle / RO</div><div id="diagVehicle" class="diag-card-value"></div></div>
+      <div class="diag-card"><div class="diag-card-label">Operating Mode</div><div id="diagOperatingMode" class="diag-card-value">Standalone Diagnostic Mode — an active RO is optional.</div></div>
       <div class="diag-card"><div class="diag-card-label">Customer Concern</div><div id="diagConcern" class="diag-card-value"></div></div>
       <div class="diag-card"><div class="diag-card-label">DTC / Scan Information</div><div id="diagDtcs" class="diag-card-value"></div></div>
       <div class="diag-card"><div class="diag-card-label">Current Diagnostic State</div><div id="diagState" class="diag-card-value">Awaiting first technician response.</div></div>
@@ -5963,15 +5964,33 @@ const ENDPOINT_KEY='nitrosOliverServiceUrl';
 let history=[];
 function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function baseContext(){return {vehicle:[val('vehicleYear'),val('vehicleMake'),val('vehicleModel'),val('vehicleEngine')||val('engineSize')].filter(Boolean).join(' ')||val('appointmentVehicle')||'',ro:val('roNumber')||val('workOrderNumber')||'',customer:val('customerName')||val('appointmentCustomer')||'',concern:val('customerConcern')||val('concern')||val('appointmentConcern')||'',dtcs:val('dtcCodes')||val('scanResults')||'',notes:val('internalTechnicianNotes')||''}}
-function updateContext(){const c=baseContext();$('diagContextLine').textContent=[c.vehicle,c.ro&&`RO ${c.ro}`,c.concern].filter(Boolean).join(' • ')||'No repair order selected — standalone diagnostic session';$('diagVehicle').textContent=[c.vehicle,c.ro&&`RO ${c.ro}`].filter(Boolean).join(' • ')||'Not identified';$('diagConcern').textContent=c.concern||'Not entered';$('diagDtcs').textContent=c.dtcs||'None entered';$('diagState').textContent=busy?'Waiting for Oliver response':history.length?'Conversation active':'Ready for technician input'}
+function updateContext(){const c=baseContext();$('diagContextLine').textContent=[c.vehicle,c.ro&&`RO ${c.ro}`,c.concern].filter(Boolean).join(' • ')||'Standalone Diagnostic Mode — repair order not required';$('diagVehicle').textContent=[c.vehicle,c.ro&&`RO ${c.ro}`].filter(Boolean).join(' • ')||'Standalone question — vehicle optional';$('diagConcern').textContent=c.concern||'Not entered';$('diagDtcs').textContent=c.dtcs||'None entered';$('diagOperatingMode')&&($('diagOperatingMode').textContent=c.ro?'Repair-Order Mode — active case context attached':'Standalone Diagnostic Mode — answer general questions without an RO');$('diagState').textContent=busy?'Waiting for Oliver response':history.length?'Conversation active':'Ready for technician input'}
 function addMessage(role,text){const d=document.createElement('div');d.className='diag-message '+(role==='user'?'tech':'');d.innerHTML=`<div class="speaker">${role==='user'?'Technician':'Oliver'}</div>${esc(text)}`;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;if(role==='assistant')lastOliver=text}
 function save(){try{localStorage.setItem(SESSION_KEY,JSON.stringify({history,at:Date.now()}))}catch(_){}}
 function restore(){try{const x=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');history=Array.isArray(x?.history)?x.history:[]}catch(_){history=[]}}
-function render(){chat.innerHTML='';if(!history.length){addMessage('assistant','Oliver Diagnostic Engine v1.1 is ready. This rebuilt module uses a clean conversation session and does not run the old scripted diagnostic tree. Enter the concern, code, test result, or measurement.');return}history.forEach(m=>addMessage(m.role,m.content))}
+function render(){chat.innerHTML='';if(!history.length){addMessage('assistant','Oliver Diagnostic Engine v1.2 is ready. This rebuilt module uses a clean conversation session and does not run the old scripted diagnostic tree. Ask any diagnostic question, enter a DTC, or provide a test result. An RO is optional.');return}history.forEach(m=>addMessage(m.role,m.content))}
 function serviceUrl(){return (localStorage.getItem(ENDPOINT_KEY)||'').trim()}
 async function send(text){text=(text||'').trim();if(!text||busy)return;history.push({role:'user',content:text});addMessage('user',text);input.value='';save();updateContext();const url=serviceUrl();if(!url){const msg='The rebuilt Oliver engine is working, but a live Oliver service is not connected yet. The old canned script has been removed. Configure the secure Oliver service URL before live diagnostic answers can be returned.';history.push({role:'assistant',content:msg});addMessage('assistant',msg);save();updateContext();return}
  busy=true;$('diagSend').disabled=true;$('diagSend').textContent='Thinking…';updateContext();
- try{const payload={version:'1.0',context:baseContext(),messages:history.slice(-30)};const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!r.ok)throw new Error(`Service returned ${r.status}`);const data=await r.json();const reply=String(data.reply||data.message||data.output||'').trim();if(!reply)throw new Error('Service returned no diagnostic response');history.push({role:'assistant',content:reply});addMessage('assistant',reply);save()}catch(err){const msg=`Oliver service connection failed: ${err.message}. Your conversation is preserved; no scripted fallback was used.`;history.push({role:'assistant',content:msg});addMessage('assistant',msg);save()}finally{busy=false;$('diagSend').disabled=false;$('diagSend').textContent='Send to Oliver';updateContext()}}
+ try{const context=baseContext();
+ const standalone=!context.ro;
+ const payload={
+   version:'1.2',
+   operatingMode:standalone?'standalone':'repair-order',
+   context:{...context,standalone},
+   technicianRequest:text,
+   instructions:[
+     'Answer the technician directly even when no repair order, VIN, vehicle, customer, or concern is available.',
+     'In standalone mode, provide general code meaning, likely systems involved, and a disciplined preliminary test plan.',
+     'Ask for year, make, model, engine, symptoms, freeze-frame data, and test results only as helpful follow-up information; never make them prerequisites to answering.',
+     'Do not use a numbered six-step script, do not refuse solely because RO context is missing, and do not pretend vehicle-specific certainty without vehicle data.',
+     'Use diagnose, repair, confirm methodology and distinguish verified facts from assumptions.'
+   ],
+   messages:[
+     {role:'system',content:'You are Oliver, a professional automotive diagnostic assistant. You support both standalone questions and repair-order-linked cases. Missing RO or vehicle context must never block a useful general answer.'},
+     ...history.slice(-30)
+   ]
+ };const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!r.ok)throw new Error(`Service returned ${r.status}`);const data=await r.json();const reply=String(data.reply||data.message||data.output||'').trim();if(!reply)throw new Error('Service returned no diagnostic response');history.push({role:'assistant',content:reply});addMessage('assistant',reply);save()}catch(err){const msg=`Oliver service connection failed: ${err.message}. Your conversation is preserved; no scripted fallback was used.`;history.push({role:'assistant',content:msg});addMessage('assistant',msg);save()}finally{busy=false;$('diagSend').disabled=false;$('diagSend').textContent='Send to Oliver';updateContext()}}
 function closeMode(){mode.classList.remove('active');document.body.style.overflow='';speechSynthesis?.cancel()}
 function openMode(){mode.classList.add('active');document.body.style.overflow='hidden';restore();render();updateContext();setTimeout(()=>input.focus(),80)}
 function speakLast(){if(!lastOliver)return;const u=new SpeechSynthesisUtterance(lastOliver);u.rate=.95;u.pitch=.9;speechSynthesis.cancel();speechSynthesis.speak(u)}
@@ -5984,10 +6003,10 @@ $('diagLoadImage')?.addEventListener('click',()=>$('diagImageInput').click());$(
 function openViewer(){$('diagViewer').classList.add('active');renderImage()}function renderImage(){const st=$('diagViewerStage');st.innerHTML=loadedImage?`<img src="${loadedImage}" style="transform:scale(${zoom})">`:'<div style="color:#a9bfd0;text-align:center;padding:30px">Load a technical image.</div>'}
 $('diagOpenViewer')?.addEventListener('click',openViewer);$('diagViewerClose')?.addEventListener('click',()=>$('diagViewer').classList.remove('active'));$('diagZoomIn')?.addEventListener('click',()=>{zoom+=.25;renderImage()});$('diagZoomOut')?.addEventListener('click',()=>{zoom=Math.max(.25,zoom-.25);renderImage()});$('diagZoomReset')?.addEventListener('click',()=>{zoom=1;renderImage()});
 $('diagExportNotes')?.addEventListener('click',()=>{const n=$('internalTechnicianNotes');const text=history.map(m=>`${m.role==='user'?'TECH':'OLIVER'}: ${m.content}`).join('
-');if(n){n.value=[n.value,'=== Oliver Diagnostic Engine v1.1 Session ===',text].filter(Boolean).join('
+');if(n){n.value=[n.value,'=== Oliver Diagnostic Engine v1.2 Session ===',text].filter(Boolean).join('
 ');n.dispatchEvent(new Event('input',{bubbles:true}));addMessage('assistant','Conversation copied into Technician Notes.')}else addMessage('assistant','Technician Notes are unavailable on this screen. The conversation remains saved on this device.')});
 if(SpeechRecognition){recognition=new SpeechRecognition();recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-US';recognition.onstart=()=>$('diagMic').classList.add('listening');recognition.onend=()=>$('diagMic').classList.remove('listening');recognition.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;input.value=t};$('diagMic').onclick=()=>{try{recognition.start()}catch(_){recognition.stop()}}}else $('diagMic').onclick=()=>{input.placeholder='Voice input unavailable; type your observation here.'};
-$('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);$('oliverHubRepair')?.addEventListener('click',()=>setTimeout(openMode,80));const startBtn=$('smartDiagStart');if(startBtn){startBtn.textContent='Open Oliver Diagnostic Engine v1.1';startBtn.style.fontSize='16px'}window.openOliverDiagnosticMode=openMode;
+$('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);$('oliverHubRepair')?.addEventListener('click',()=>setTimeout(openMode,80));const startBtn=$('smartDiagStart');if(startBtn){startBtn.textContent='Open Oliver Diagnostic Engine v1.2';startBtn.style.fontSize='16px'}window.openOliverDiagnosticMode=openMode;
 })();
 </script>
 
@@ -6371,7 +6390,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 
 
-<!-- v10.4.1 completion, assignment and iPhone safe-area stabilization; v10.2.9 handoff logic preserved -->
+<!-- v10.4.2 completion, assignment and iPhone safe-area stabilization; v10.2.9 handoff logic preserved -->
 <datalist id="nitrosTechnicianChoicesV1029"></datalist>
 <script id="v1029TechnicianAssignmentHandoffFix">
 (()=>{
@@ -6457,7 +6476,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 </script>
 
 
-<!-- v10.4.1 diagnostic close-button safe-area and touch stabilization -->
+<!-- v10.4.2 diagnostic close-button safe-area and touch stabilization -->
 <style id="v1031StabilizationStyles">
   :root{--nitros-v1031-safe-bottom:max(14px,env(safe-area-inset-bottom))}
   header{scroll-margin-top:env(safe-area-inset-top)}
@@ -6525,7 +6544,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
       }
     });
     if(changed)write('nitros_portal_v8_assigned_jobs',jobs);
-    window.dispatchEvent(new CustomEvent('nitros-workboard-change',{detail:{source:'v10.4.1-completion-sync',repairOrder:ro,completedAt:at}}));
+    window.dispatchEvent(new CustomEvent('nitros-workboard-change',{detail:{source:'v10.4.2-completion-sync',repairOrder:ro,completedAt:at}}));
   }
 
   function normalizePrimaryBuildLabels(){
@@ -6581,7 +6600,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
   }
   function wire(){
     closeLegacy();
-    const start=replaceButton('smartDiagStart','Open Oliver Diagnostic Engine v1.1');
+    const start=replaceButton('smartDiagStart','Open Oliver Diagnostic Engine v1.2');
     const repair=replaceButton('oliverHubRepair');
     const launch=replaceButton('smartOliverLaunch');
     [start,repair,launch].filter(Boolean).forEach(btn=>{
@@ -6603,9 +6622,26 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 })();
 </script>
 <style id="v1041-script-engine-elimination-style">
-/* v10.4.1: legacy guided diagnostic UI is retired and cannot intercept touch events. */
+/* v10.4.2: legacy guided diagnostic UI is retired and cannot intercept touch events. */
 .oliver-guide-panel,.oliver-guide-dialog{display:none!important;pointer-events:none!important}
 #smartDiagComplete,#smartDiagBack,#smartDiagReset,#smartDiagRecord{display:none!important}
 </style>
+
+<script id="v1042-standalone-diagnostic-mode">
+(()=>{'use strict';
+  const apply=()=>{
+    const state=document.getElementById('diagState');
+    const input=document.getElementById('diagInput');
+    const start=document.getElementById('smartDiagStart');
+    if(input)input.placeholder='Ask any diagnostic question or enter a DTC. Repair order information is optional…';
+    if(start)start.textContent='Open Oliver Diagnostic Engine v1.2';
+    if(state&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))state.textContent='Standalone diagnostic mode ready — RO optional';
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
+  window.addEventListener('pageshow',apply);
+})();
+</script>
+<!-- v10.4.2 Standalone Diagnostic Mode: missing RO or vehicle data no longer blocks a general diagnostic answer. -->
+
 </body>
 </html>
