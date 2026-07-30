@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.3.1 — Header, Version & Safe-Area Fix</title>
+<title>Nitros Mobile Technician Portal v10.3.2 — Diagnostic Close Button Touch Fix</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -437,12 +437,52 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 @media(max-width:600px){.vin-capture-choice-four{grid-template-columns:1fr}}
 </style>
 
+
+<style id="v1032-diagnostic-close-touch-fix">
+/* Keep the diagnostic controls below iPhone browser/status overlays and make Close unmistakably tappable. */
+#oliverDiagnosticMode .diag-topbar{
+  padding-top:calc(env(safe-area-inset-top, 0px) + 28px);
+  padding-right:max(16px,env(safe-area-inset-right, 0px));
+  position:relative;
+  z-index:100;
+  overflow:visible;
+}
+#oliverDiagnosticMode .diag-top-actions{
+  position:relative;
+  z-index:10020;
+  align-items:flex-start;
+  flex:none;
+}
+#oliverDiagnosticMode #diagExit{
+  position:relative;
+  z-index:10030;
+  width:58px;
+  min-width:58px;
+  height:58px;
+  min-height:58px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  font-size:28px;
+  line-height:1;
+  touch-action:manipulation;
+  pointer-events:auto!important;
+  -webkit-user-select:none;
+  user-select:none;
+  isolation:isolate;
+}
+@media(max-width:800px){
+  #oliverDiagnosticMode .diag-topbar{padding-top:calc(env(safe-area-inset-top, 0px) + 34px)}
+  #oliverDiagnosticMode #diagExit{margin-top:4px;margin-right:2px}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.3.1 — Header, Version & Safe-Area Fix</div>
+  <div class="sub">Mobile Technician Portal v10.3.2 — Diagnostic Close Button Touch Fix</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -1605,7 +1645,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.3.1 • Stable Active Jobs handoff • Header safe-area protection • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.3.2 • Stable Active Jobs handoff • Header safe-area protection • Evidence-based workflow</div>
 </div>
 
 <script>
@@ -5133,7 +5173,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.3.1 • header, version and safe-area fix</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.3.2 • diagnostic close-button safe-area and touch stabilization</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5884,8 +5924,8 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.3.1</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
-    <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button">✕ <span class="label">Return to RO</span></button></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.3.2</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
     <main class="diag-main">
@@ -5972,12 +6012,12 @@ function closeMode(){mode.classList.remove('active');document.body.style.overflo
 function openViewer(){const v=$('diagViewer');v.classList.add('active');if(loadedImage)renderImage()}
 function renderImage(){const st=$('diagViewerStage');st.innerHTML=`<img id="diagViewerImage" src="${loadedImage}" alt="Loaded technical diagram">`;$('diagViewerImage').style.transform=`scale(${zoom})`}
 function setZoom(z){zoom=Math.max(.25,Math.min(5,z));const img=$('diagViewerImage');if(img)img.style.transform=`scale(${zoom})`;$('diagZoomReset').textContent=Math.round(zoom*100)+'%'}
-$('diagSend').addEventListener('click',()=>handle(input.value));input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handle(input.value)}});$('diagExit').addEventListener('click',closeMode);$('diagSpeakToggle').addEventListener('click',()=>{speakOn=!speakOn;$('diagSpeakToggle').innerHTML=speakOn?'🔊 <span class="label">Voice On</span>':'🔇 <span class="label">Voice Off</span>';if(!speakOn)speechSynthesis?.cancel()});$('diagReadLast').addEventListener('click',()=>speak(lastOliver));document.querySelectorAll('[data-diag-quick]').forEach(b=>b.addEventListener('click',()=>handle(b.dataset.diagQuick)));
+$('diagSend').addEventListener('click',()=>handle(input.value));input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handle(input.value)}});$('diagExit').addEventListener('click',closeMode);$('diagExit').addEventListener('pointerup',e=>{e.preventDefault();e.stopPropagation();closeMode()},{passive:false});$('diagExit').addEventListener('touchend',e=>{e.preventDefault();e.stopPropagation();closeMode()},{passive:false});$('diagSpeakToggle').addEventListener('click',()=>{speakOn=!speakOn;$('diagSpeakToggle').innerHTML=speakOn?'🔊 <span class="label">Voice On</span>':'🔇 <span class="label">Voice Off</span>';if(!speakOn)speechSynthesis?.cancel()});$('diagReadLast').addEventListener('click',()=>speak(lastOliver));document.querySelectorAll('[data-diag-quick]').forEach(b=>b.addEventListener('click',()=>handle(b.dataset.diagQuick)));
 $('diagFreezeFrame')?.addEventListener('click',()=>{input.value='Freeze frame: code status = ; fuel level = %; RPM = ; vehicle speed = ; coolant temperature = ; calculated load = ; FTP sensor = .';input.focus()});$('diagVoiceSelect')?.addEventListener('change',e=>{selectedVoiceName=e.target.value;localStorage.setItem('nitrosOliverVoice',selectedVoiceName);speak('Oliver voice selected.')});if('speechSynthesis'in window){speechSynthesis.onvoiceschanged=populateVoiceSelect;setTimeout(populateVoiceSelect,250)}
 $('diagLoadImage').addEventListener('click',()=>$('diagImageInput').click());$('diagImageInput').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{loadedImage=r.result;zoom=1;remember('Scan graph/photo attached: '+f.name,'attachment');$('diagViewerTitle').textContent=f.name||'Scan Graph / Photo';openViewer();renderImage();addMessage('oliver','The image is attached. Tell me the PID, operating condition, and the part of the graph you want interpreted.')};r.readAsDataURL(f)});$('diagOpenViewer').addEventListener('click',openViewer);$('diagViewerClose').addEventListener('click',()=>$('diagViewer').classList.remove('active'));$('diagZoomIn').addEventListener('click',()=>setZoom(zoom+.25));$('diagZoomOut').addEventListener('click',()=>setZoom(zoom-.25));$('diagZoomReset').addEventListener('click',()=>setZoom(1));
-$('diagExportNotes').addEventListener('click',()=>{const note=S.evidence.map(x=>`[${new Date(x.at).toLocaleString()}] ${x.stage} — ${x.kind}: ${x.text}`).join('\n');const n=$('internalTechnicianNotes');if(n){n.value=[n.value,'=== Oliver v10.3.1 Diagnostic Evidence ===',note].filter(Boolean).join('\n');addMessage('oliver','Diagnostic evidence was copied into Technician Notes.')}else addMessage('oliver','The evidence remains in this diagnostic session because Technician Notes is unavailable on this screen.')});
+$('diagExportNotes').addEventListener('click',()=>{const note=S.evidence.map(x=>`[${new Date(x.at).toLocaleString()}] ${x.stage} — ${x.kind}: ${x.text}`).join('\n');const n=$('internalTechnicianNotes');if(n){n.value=[n.value,'=== Oliver v10.3.2 Diagnostic Evidence ===',note].filter(Boolean).join('\n');addMessage('oliver','Diagnostic evidence was copied into Technician Notes.')}else addMessage('oliver','The evidence remains in this diagnostic session because Technician Notes is unavailable on this screen.')});
 if(SpeechRecognition){recognition=new SpeechRecognition();recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-US';recognition.onstart=()=>$('diagMic').classList.add('listening');recognition.onend=()=>$('diagMic').classList.remove('listening');recognition.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;if(e.results[e.results.length-1].isFinal)handle(t);else input.value=t};$('diagMic').addEventListener('click',()=>{try{recognition.start()}catch(_){recognition.stop()}})}else $('diagMic').addEventListener('click',()=>addMessage('oliver','Voice recognition is unavailable in this browser. Type the result; spoken responses can still work.'));
-$('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);$('oliverHubRepair')?.addEventListener('click',()=>setTimeout(openMode,80));const startBtn=$('smartDiagStart');if(startBtn){startBtn.textContent='Open Oliver v10.3.1 Diagnostic Engine';startBtn.style.fontSize='16px'}window.openOliverDiagnosticMode=openMode;
+$('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);$('oliverHubRepair')?.addEventListener('click',()=>setTimeout(openMode,80));const startBtn=$('smartDiagStart');if(startBtn){startBtn.textContent='Open Oliver v10.3.2 Diagnostic Engine';startBtn.style.fontSize='16px'}window.openOliverDiagnosticMode=openMode;
 })();
 </script>
 
@@ -6361,7 +6401,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 
 
-<!-- v10.3.1 header, version and iPhone safe-area fix; v10.2.9 handoff logic preserved -->
+<!-- v10.3.2 completion, assignment and iPhone safe-area stabilization; v10.2.9 handoff logic preserved -->
 <datalist id="nitrosTechnicianChoicesV1029"></datalist>
 <script id="v1029TechnicianAssignmentHandoffFix">
 (()=>{
@@ -6447,110 +6487,101 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 </script>
 
 
-<!-- v10.3.1 Stability, Recovery & Verification Patch -->
-<style id="v1031StabilityStyles">
-  /* Keep Oliver controls below iOS status and browser controls in every display mode. */
-  .oliver-hub-head,
-  .oliver-guide-head,
-  .smart-oliver-head{padding-top:max(15px,calc(10px + env(safe-area-inset-top)))}
-  .oliver-hub-close,
-  #oliverGuideClose,
-  #smartOliverClose{min-width:64px;min-height:44px;position:relative;z-index:6}
-  .oliver-hub-shell{padding-top:max(8px,env(safe-area-inset-top));padding-bottom:max(8px,env(safe-area-inset-bottom))}
-  .oliver-guide-panel,.smart-oliver-panel{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
-  @media(max-width:650px){
-    .oliver-guide-panel.guiding .oliver-guide-dialog{top:calc(58px + env(safe-area-inset-top));max-height:calc(100dvh - 76px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
-    .oliver-hub-card{max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
-  }
-  .v1031-recovery-notice{margin:12px 16px;padding:12px 14px;border:1px solid #39b982;border-radius:14px;background:#0c2a25;color:#d9fff0;font-weight:750}
+<!-- v10.3.2 diagnostic close-button safe-area and touch stabilization -->
+<style id="v1031StabilizationStyles">
+  :root{--nitros-v1031-safe-bottom:max(14px,env(safe-area-inset-bottom))}
+  header{scroll-margin-top:env(safe-area-inset-top)}
+  .quick-toolbar{bottom:var(--nitros-v1031-safe-bottom)}
+  .floating-evidence-btn{bottom:calc(78px + env(safe-area-inset-bottom))}
+  .oliver-hub-launch{bottom:calc(82px + env(safe-area-inset-bottom))}
+  .smart-oliver-launch{bottom:calc(86px + env(safe-area-inset-bottom))}
+  .validation-nav{bottom:var(--nitros-v1031-safe-bottom)}
 </style>
-<script id="v1031StabilityPatch">
+<script id="v1031CompletionAssignmentStabilization">
 (()=>{
   'use strict';
-  const VERSION='10.3.1';
-  const DRAFT='nitros_prototype_v073_active_draft';
-  const RECOVERY='nitros_v1031_recovery_meta';
-  const PHOTO_IDS=['photoFrontLeft','photoFrontRight','photoRearLeft','photoRearRight'];
+  const BUILD='10.3.1';
   const $=id=>document.getElementById(id);
-  const read=(key,fallback=null)=>{try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch{return fallback}};
+  const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||'null');return v??fallback}catch{return fallback}};
   const write=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}};
+  const fire=el=>{if(!el)return;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))};
+  const profileName=()=>String(read('nitros_portal_v8_profile',{})?.name||$('portalTechName')?.value||$('technicianName')?.value||'').trim();
 
-  function enforceDefaults(){
-    const tax=$('taxPercent');
-    if(tax && (!String(tax.value).trim() || Number(tax.value)===0)) tax.value='6.25';
-    if(tax){tax.min='0';tax.max='100';tax.step='0.01';}
-    const labor=$('laborRate');
-    if(labor && !String(labor.value).trim()) labor.value='130';
-  }
-
-  function snapshot(reason){
-    try{
-      if(typeof window.saveDraft==='function') window.saveDraft();
-      else if(typeof saveDraft==='function') saveDraft();
-    }catch{}
-    const draft=read(DRAFT,null);
-    if(!draft) return;
-    write(RECOVERY,{version:VERSION,reason,savedAt:new Date().toISOString(),screen:document.querySelector('.screen.active')?.id||draft.screen||'workorder',timerState:draft.jobClock?.state||'not_started'});
-  }
-
-  function verifyFourCorners(){
-    const missing=PHOTO_IDS.filter(id=>{
-      const input=$(id);
-      if(input?.files?.length) return false;
-      try{return !(typeof hasPhotoEvidence==='function' && hasPhotoEvidence(id))}catch{return true}
+  function preserveTechnicianAssignment(){
+    const name=String($('assignedTechnician')?.value||$('workboardTechnician')?.value||profileName()||'').trim();
+    if(!name)return;
+    ['assignedTechnician','technicianName','workboardTechnician','roadTestTechnician'].forEach(id=>{
+      const el=$(id); if(el&&!String(el.value||'').trim()){el.value=name;fire(el)}
     });
-    return missing;
-  }
-
-  function installPhotoGuard(){
-    const labels={photoFrontLeft:'Front-left',photoFrontRight:'Front-right',photoRearLeft:'Rear-left',photoRearRight:'Rear-right'};
-    document.addEventListener('click',event=>{
-      const button=event.target.closest?.('[data-go="estimate"],#completeAppointmentWalkAround');
-      if(!button) return;
-      const inspectionActive=$('inspection')?.classList.contains('active');
-      if(!inspectionActive && button.id!=='completeAppointmentWalkAround') return;
-      const missing=verifyFourCorners();
-      if(!missing.length) return;
-      event.preventDefault();event.stopImmediatePropagation();
-      const names=missing.map(id=>labels[id]).join(', ');
-      const status=$('walkAroundCompletionStatus')||$('inspectionStatus')||$('dashboardStatus');
-      if(status){status.className='status bad';status.textContent=`Cannot continue. Required corner photos missing: ${names}.`;status.scrollIntoView({behavior:'smooth',block:'center'});}
-      $(missing[0])?.scrollIntoView({behavior:'smooth',block:'center'});
-    },true);
-  }
-
-  function restoreLastScreen(){
-    const draft=read(DRAFT,null), meta=read(RECOVERY,null);
-    if(!draft || !meta) return;
-    const active=['running','paused'].includes(draft.jobClock?.state) || /In Progress|Waiting|Road Test|Ready/i.test(draft.fields?.repairStatus||'');
-    if(!active) return;
-    const home=$('home');
-    if(home && !document.getElementById('v1031RecoveryNotice')){
-      const n=document.createElement('div');n.id='v1031RecoveryNotice';n.className='v1031-recovery-notice';
-      n.textContent=`Recovery protected: active repair and ${draft.jobClock?.state==='running'?'running timer':'saved timer'} were preserved on this device.`;
-      home.prepend(n);
+    const draft=read('nitros_prototype_v070_draft',null);
+    if(draft&&typeof draft==='object'){
+      draft.fields=draft.fields||{};
+      draft.fields.assignedTechnician=name;
+      draft.fields.technicianName=draft.fields.technicianName||name;
+      draft.updatedAt=new Date().toISOString();
+      write('nitros_prototype_v070_draft',draft);
     }
   }
 
-  function normalizeVersionLabels(){
-    document.querySelectorAll('title,.sub,.footer-note,#portalLoginStatus,.oliver-guide-sub').forEach(el=>{
-      if(el.tagName==='TITLE') el.textContent=el.textContent.replace(/10\.3\.0/g,VERSION);
-      else el.textContent=el.textContent.replace(/10\.3\.0/g,VERSION);
+  function completionTimestamp(){
+    const draft=read('nitros_prototype_v070_draft',{});
+    return draft.completedAt||draft.workOrder?.completedAt||new Date().toISOString();
+  }
+
+  function synchronizeCompletionState(){
+    const status=String($('repairStatus')?.value||'').trim();
+    if(!/complete|ready for delivery|ready for pickup/i.test(status))return;
+    const at=completionTimestamp();
+    const notes=String($('completionNotes')?.value||'').trim();
+    const ro=String($('workOrderNumber')?.value||$('roNumber')?.value||'').trim();
+
+    const draft=read('nitros_prototype_v070_draft',{});
+    draft.fields=draft.fields||{};
+    draft.fields.repairStatus=status||'Complete';
+    draft.fields.completionNotes=notes;
+    draft.completedAt=at;
+    draft.completionStatus='Completed';
+    draft.workOrder={...(draft.workOrder||{}),repairStatus:status||'Complete',completionNotes:notes,completedAt:at,completionStatus:'Completed'};
+    draft.savedAt=new Date().toISOString();
+    write('nitros_prototype_v070_draft',draft);
+
+    const jobs=read('nitros_portal_v8_assigned_jobs',[]);
+    let changed=false;
+    jobs.forEach(job=>{
+      const jobRo=String(job?.ro||job?.repairOrder||job?.roNumber||'').trim();
+      if((ro&&jobRo===ro)||(!ro&&job===jobs[0])){
+        job.status='Completed'; job.completionStatus='Completed'; job.completedAt=at;
+        job.completionNotes=notes; job.updatedAt=new Date().toISOString(); changed=true;
+      }
     });
+    if(changed)write('nitros_portal_v8_assigned_jobs',jobs);
+    window.dispatchEvent(new CustomEvent('nitros-workboard-change',{detail:{source:'v10.3.2-completion-sync',repairOrder:ro,completedAt:at}}));
+  }
+
+  function normalizePrimaryBuildLabels(){
+    const selectors=['header .sub','.footer-note','#portalLoginStatus','#diagWorkspace .diag-status','#smartOliverHead div div','.oliver-guide-sub'];
+    selectors.forEach(sel=>document.querySelectorAll(sel).forEach(el=>{
+      el.textContent=el.textContent.replace(/v10\.3\.0|Version 10\.3\.0/g,m=>m.startsWith('Version')?`Version ${BUILD}`:`v${BUILD}`);
+    }));
   }
 
   document.addEventListener('DOMContentLoaded',()=>{
-    enforceDefaults();normalizeVersionLabels();installPhotoGuard();restoreLastScreen();
-    snapshot('startup');
-    setInterval(()=>snapshot('30-second checkpoint'),30000);
-    document.addEventListener('input',()=>snapshot('field change'),{passive:true});
-    document.addEventListener('change',()=>snapshot('field change'),{passive:true});
-    ['startJob','pauseJob','resumeJob','finishJob'].forEach(id=>$(id)?.addEventListener('click',()=>setTimeout(()=>snapshot(`timer ${id}`),25)));
-  });
-  window.addEventListener('pagehide',()=>snapshot('page hidden'));
-  window.addEventListener('beforeunload',()=>snapshot('app closing'));
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')snapshot('app backgrounded')});
+    preserveTechnicianAssignment(); normalizePrimaryBuildLabels();
+    const rs=$('repairStatus');
+    rs?.addEventListener('change',()=>{preserveTechnicianAssignment();synchronizeCompletionState()});
+    ['saveInspection','saveRepairOrder','finishJob','finishJobClock','completeJob'].forEach(id=>$(id)?.addEventListener('click',()=>setTimeout(()=>{preserveTechnicianAssignment();synchronizeCompletionState()},0)));
+  },{once:true});
+
+  document.addEventListener('click',event=>{
+    if(event.target.closest?.('[data-start-assigned],[data-wb-edit],[data-wb-open-card],[data-active-open],[data-active-resume],#techOpenRepairOrderV1026')){
+      setTimeout(preserveTechnicianAssignment,80);
+    }
+    if(/complete|finish job|ready for delivery|ready for pickup/i.test(String(event.target.textContent||''))){
+      setTimeout(synchronizeCompletionState,80);
+    }
+  },true);
 })();
 </script>
+
 </body>
 </html>
