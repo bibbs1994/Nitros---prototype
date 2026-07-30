@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.4.0 — Oliver Diagnostic Engine v1 Rebuild</title>
+<title>Nitros Mobile Technician Portal v10.4.1 — Oliver Diagnostic Engine v1 Rebuild</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -482,7 +482,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.4.0 — Oliver Diagnostic Engine v1 Rebuild</div>
+  <div class="sub">Mobile Technician Portal v10.4.1 — Oliver Diagnostic Engine v1 Rebuild</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -1645,7 +1645,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.4.0 • Stable Active Jobs handoff • Header safe-area protection • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.4.1 • Stable Active Jobs handoff • Header safe-area protection • Evidence-based workflow</div>
 </div>
 
 <script>
@@ -5173,7 +5173,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.4.0 • diagnostic close-button safe-area and touch stabilization</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.4.1 • diagnostic close-button safe-area and touch stabilization</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5924,7 +5924,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.4.0</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.4.1</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -5936,7 +5936,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
       </div>
     </main>
     <aside class="diag-side">
-      <h3>Active Case</h3><div class="diag-card"><div class="diag-card-label">Engine</div><div class="diag-card-value">Oliver Diagnostic Engine v1.0 — clean text-first rebuild; secure service connection required for live AI responses.</div></div>
+      <h3>Active Case</h3><div class="diag-card"><div class="diag-card-label">Engine</div><div class="diag-card-value">Oliver Diagnostic Engine v1.1 — clean text-first rebuild; secure service connection required for live AI responses.</div></div>
       <div class="diag-card"><div class="diag-card-label">Vehicle / RO</div><div id="diagVehicle" class="diag-card-value"></div></div>
       <div class="diag-card"><div class="diag-card-label">Customer Concern</div><div id="diagConcern" class="diag-card-value"></div></div>
       <div class="diag-card"><div class="diag-card-label">DTC / Scan Information</div><div id="diagDtcs" class="diag-card-value"></div></div>
@@ -5967,7 +5967,7 @@ function updateContext(){const c=baseContext();$('diagContextLine').textContent=
 function addMessage(role,text){const d=document.createElement('div');d.className='diag-message '+(role==='user'?'tech':'');d.innerHTML=`<div class="speaker">${role==='user'?'Technician':'Oliver'}</div>${esc(text)}`;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;if(role==='assistant')lastOliver=text}
 function save(){try{localStorage.setItem(SESSION_KEY,JSON.stringify({history,at:Date.now()}))}catch(_){}}
 function restore(){try{const x=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');history=Array.isArray(x?.history)?x.history:[]}catch(_){history=[]}}
-function render(){chat.innerHTML='';if(!history.length){addMessage('assistant','Oliver Diagnostic Engine v1.0 is ready. This rebuilt module uses a clean conversation session and does not run the old scripted diagnostic tree. Enter the concern, code, test result, or measurement.');return}history.forEach(m=>addMessage(m.role,m.content))}
+function render(){chat.innerHTML='';if(!history.length){addMessage('assistant','Oliver Diagnostic Engine v1.1 is ready. This rebuilt module uses a clean conversation session and does not run the old scripted diagnostic tree. Enter the concern, code, test result, or measurement.');return}history.forEach(m=>addMessage(m.role,m.content))}
 function serviceUrl(){return (localStorage.getItem(ENDPOINT_KEY)||'').trim()}
 async function send(text){text=(text||'').trim();if(!text||busy)return;history.push({role:'user',content:text});addMessage('user',text);input.value='';save();updateContext();const url=serviceUrl();if(!url){const msg='The rebuilt Oliver engine is working, but a live Oliver service is not connected yet. The old canned script has been removed. Configure the secure Oliver service URL before live diagnostic answers can be returned.';history.push({role:'assistant',content:msg});addMessage('assistant',msg);save();updateContext();return}
  busy=true;$('diagSend').disabled=true;$('diagSend').textContent='Thinking…';updateContext();
@@ -5984,10 +5984,10 @@ $('diagLoadImage')?.addEventListener('click',()=>$('diagImageInput').click());$(
 function openViewer(){$('diagViewer').classList.add('active');renderImage()}function renderImage(){const st=$('diagViewerStage');st.innerHTML=loadedImage?`<img src="${loadedImage}" style="transform:scale(${zoom})">`:'<div style="color:#a9bfd0;text-align:center;padding:30px">Load a technical image.</div>'}
 $('diagOpenViewer')?.addEventListener('click',openViewer);$('diagViewerClose')?.addEventListener('click',()=>$('diagViewer').classList.remove('active'));$('diagZoomIn')?.addEventListener('click',()=>{zoom+=.25;renderImage()});$('diagZoomOut')?.addEventListener('click',()=>{zoom=Math.max(.25,zoom-.25);renderImage()});$('diagZoomReset')?.addEventListener('click',()=>{zoom=1;renderImage()});
 $('diagExportNotes')?.addEventListener('click',()=>{const n=$('internalTechnicianNotes');const text=history.map(m=>`${m.role==='user'?'TECH':'OLIVER'}: ${m.content}`).join('
-');if(n){n.value=[n.value,'=== Oliver Diagnostic Engine v1.0 Session ===',text].filter(Boolean).join('
+');if(n){n.value=[n.value,'=== Oliver Diagnostic Engine v1.1 Session ===',text].filter(Boolean).join('
 ');n.dispatchEvent(new Event('input',{bubbles:true}));addMessage('assistant','Conversation copied into Technician Notes.')}else addMessage('assistant','Technician Notes are unavailable on this screen. The conversation remains saved on this device.')});
 if(SpeechRecognition){recognition=new SpeechRecognition();recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-US';recognition.onstart=()=>$('diagMic').classList.add('listening');recognition.onend=()=>$('diagMic').classList.remove('listening');recognition.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;input.value=t};$('diagMic').onclick=()=>{try{recognition.start()}catch(_){recognition.stop()}}}else $('diagMic').onclick=()=>{input.placeholder='Voice input unavailable; type your observation here.'};
-$('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);$('oliverHubRepair')?.addEventListener('click',()=>setTimeout(openMode,80));const startBtn=$('smartDiagStart');if(startBtn){startBtn.textContent='Open Oliver Diagnostic Engine v1.0';startBtn.style.fontSize='16px'}window.openOliverDiagnosticMode=openMode;
+$('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openMode()},true);$('oliverHubRepair')?.addEventListener('click',()=>setTimeout(openMode,80));const startBtn=$('smartDiagStart');if(startBtn){startBtn.textContent='Open Oliver Diagnostic Engine v1.1';startBtn.style.fontSize='16px'}window.openOliverDiagnosticMode=openMode;
 })();
 </script>
 
@@ -6371,7 +6371,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 
 
-<!-- v10.4.0 completion, assignment and iPhone safe-area stabilization; v10.2.9 handoff logic preserved -->
+<!-- v10.4.1 completion, assignment and iPhone safe-area stabilization; v10.2.9 handoff logic preserved -->
 <datalist id="nitrosTechnicianChoicesV1029"></datalist>
 <script id="v1029TechnicianAssignmentHandoffFix">
 (()=>{
@@ -6457,7 +6457,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 </script>
 
 
-<!-- v10.4.0 diagnostic close-button safe-area and touch stabilization -->
+<!-- v10.4.1 diagnostic close-button safe-area and touch stabilization -->
 <style id="v1031StabilizationStyles">
   :root{--nitros-v1031-safe-bottom:max(14px,env(safe-area-inset-bottom))}
   header{scroll-margin-top:env(safe-area-inset-top)}
@@ -6525,7 +6525,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
       }
     });
     if(changed)write('nitros_portal_v8_assigned_jobs',jobs);
-    window.dispatchEvent(new CustomEvent('nitros-workboard-change',{detail:{source:'v10.4.0-completion-sync',repairOrder:ro,completedAt:at}}));
+    window.dispatchEvent(new CustomEvent('nitros-workboard-change',{detail:{source:'v10.4.1-completion-sync',repairOrder:ro,completedAt:at}}));
   }
 
   function normalizePrimaryBuildLabels(){
@@ -6553,5 +6553,59 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 })();
 </script>
 
+
+<script id="v1041-script-engine-elimination">
+(()=>{'use strict';
+  const $=id=>document.getElementById(id);
+  const legacyIds=['oliverGuidePanel','smartDiagnosticStep'];
+  function closeLegacy(){
+    const guide=$('oliverGuidePanel');
+    if(guide){guide.classList.add('hidden');guide.classList.remove('guiding');guide.style.display='none'}
+    document.querySelectorAll('.oliver-guide-panel,.oliver-guide-dialog').forEach(el=>{
+      el.classList.add('hidden');
+      el.style.display='none';
+      el.setAttribute('aria-hidden','true');
+    });
+  }
+  function replaceButton(id,label){
+    const old=$(id); if(!old)return null;
+    const fresh=old.cloneNode(true);
+    if(label)fresh.textContent=label;
+    old.replaceWith(fresh);
+    return fresh;
+  }
+  function openClean(e){
+    if(e){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.()}
+    closeLegacy();
+    if(typeof window.openOliverDiagnosticMode==='function')window.openOliverDiagnosticMode();
+  }
+  function wire(){
+    closeLegacy();
+    const start=replaceButton('smartDiagStart','Open Oliver Diagnostic Engine v1.1');
+    const repair=replaceButton('oliverHubRepair');
+    const launch=replaceButton('smartOliverLaunch');
+    [start,repair,launch].filter(Boolean).forEach(btn=>{
+      btn.addEventListener('click',openClean,{capture:true});
+      btn.addEventListener('pointerup',e=>{e.preventDefault();openClean(e)},{capture:true,passive:false});
+    });
+    // Disable every legacy six-step diagnostic control. They remain hidden only for data compatibility.
+    ['smartDiagComplete','smartDiagBack','smartDiagReset','smartDiagRecord'].forEach(id=>{
+      const el=$(id);if(el){el.disabled=true;el.style.display='none';el.setAttribute('aria-hidden','true')}
+    });
+    const oldPane=document.querySelector('[data-smart-pane="diagnostic"],.smart-diagnostic-guide');
+    if(oldPane){
+      oldPane.querySelectorAll('button,textarea,input').forEach(el=>{if(el.id!=='smartDiagStart'){el.disabled=true;el.style.display='none'}});
+    }
+    const status=$('diagState');if(status)status.textContent='Clean conversation engine ready — no scripted steps';
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});else wire();
+  window.addEventListener('pageshow',wire);
+})();
+</script>
+<style id="v1041-script-engine-elimination-style">
+/* v10.4.1: legacy guided diagnostic UI is retired and cannot intercept touch events. */
+.oliver-guide-panel,.oliver-guide-dialog{display:none!important;pointer-events:none!important}
+#smartDiagComplete,#smartDiagBack,#smartDiagReset,#smartDiagRecord{display:none!important}
+</style>
 </body>
 </html>
