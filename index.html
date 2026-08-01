@@ -7062,6 +7062,44 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
  }
  function setStatus(msg){const el=$('oliverImportStatus');if(el)el.textContent=msg}
  function previewHtml(html){const p=$('oliverImportPreview');if(!p)return;p.innerHTML=html;p.classList.add('open')}
+ function loadTesseract(){
+   if(window.Tesseract)return Promise.resolve(window.Tesseract);
+   if(window.__nitrosTesseractPromise)return window.__nitrosTesseractPromise;
+   window.__nitrosTesseractPromise=new Promise((resolve,reject)=>{
+     const sc=document.createElement('script');
+     sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+     sc.async=true;
+     sc.onload=()=>window.Tesseract?resolve(window.Tesseract):reject(new Error('OCR library did not initialize'));
+     sc.onerror=()=>reject(new Error('OCR service could not load. Check the internet connection.'));
+     document.head.appendChild(sc);
+   });
+   return window.__nitrosTesseractPromise;
+ }
+ function cleanOcr(text){
+   return String(text||'').replace(/\r/g,'').split('\n').map(x=>x.trim()).filter(Boolean).join('\n').slice(0,7000);
+ }
+ async function analyzeImage(file){
+   setStatus('Image attached. Oliver is reading the visible scan-tool text…');
+   const T=await loadTesseract();
+   const result=await T.recognize(file,'eng',{logger:m=>{
+     if(m.status==='recognizing text')setStatus(`Reading image… ${Math.round((m.progress||0)*100)}%`);
+     else if(m.status)setStatus('OCR: '+m.status);
+   }});
+   const text=cleanOcr(result?.data?.text);
+   if(!text)throw new Error('No readable text was detected in the image. Try a closer, straighter photo of the scan-tool screen.');
+   const codes=dtcs(text);
+   const summary=[
+     `Diagnostic image imported: ${file.name}`,
+     codes.length?`DTCs detected: ${codes.join(', ')}`:'No DTC was automatically detected',
+     'OCR text from the visible scan-tool screen:',
+     text,
+     'Use this extracted information as current case evidence. Do not restart the conversation or ask again for facts already recorded. Ask only for the single highest-value missing item needed to interpret the graph or readings.'
+   ].join('\n');
+   sendFact(summary);
+   const p=$('oliverImportPreview');
+   if(p){p.insertAdjacentHTML('beforeend',`<div style="margin-top:8px"><span class="oliver-import-chip">OCR extracted</span></div><pre>${esc(text)}</pre>`)}
+   setStatus('Image OCR completed and the extracted scan-tool text was sent into the active diagnostic case. Graph shape still requires AI vision or technician confirmation.');
+ }
  async function handleFile(file){
    if(!file)return;
    setStatus(`Loading ${file.name}…`);
@@ -7069,8 +7107,10 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    if(type.startsWith('image/')){
      const url=URL.createObjectURL(file);
      previewHtml(`<div><span class="oliver-import-chip">Image</span><span class="oliver-import-chip">${esc(file.name)}</span></div><img alt="Imported diagnostic image" src="${url}">`);
-     sendFact(`Attached diagnostic image: ${file.name}. Image is available in the import preview. Please use the visible scan-tool values or type the important readings so they can be added to the active case.`);
-     setStatus('Image attached and previewed. This offline build stores the attachment in the current browser session; automatic visual interpretation requires a connected AI/OCR service.');
+     try{await analyzeImage(file)}catch(err){
+       sendFact(`Diagnostic image attached: ${file.name}. Automatic OCR did not complete: ${err.message}. Keep the current diagnostic conversation active and ask for one specific visible value or label needed next; do not restart the intake.`);
+       setStatus('Image preview is ready, but OCR could not complete: '+err.message);
+     }
      return;
    }
    if(type==='application/pdf'||/\.pdf$/i.test(file.name)){
@@ -7099,7 +7139,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
     </div>
     <input id="oliverImportFile" type="file" hidden>
     <input id="oliverImportCameraFile" type="file" accept="image/*" capture="environment" hidden>
-    <div id="oliverImportStatus" class="oliver-import-status">Attach a scan-tool photo, CSV/text export, or PDF. Images and PDFs can be previewed locally; CSV and text data can be parsed into the active case.</div>
+    <div id="oliverImportStatus" class="oliver-import-status">Attach a scan-tool photo, CSV/text export, or PDF. Scan-tool photos will be previewed and OCR-read automatically when internet access is available.</div>
     <div id="oliverImportPreview" class="oliver-import-preview"></div>
    </div>`;
    anchor.insertAdjacentElement('afterend',wrap);
@@ -7112,13 +7152,13 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    file.onchange=()=>{handleFile(file.files?.[0]).catch(e=>setStatus('Import failed: '+e.message));file.value=''};
    $('oliverImportCameraFile').onchange=()=>{const f=$('oliverImportCameraFile');handleFile(f.files?.[0]).catch(e=>setStatus('Camera import failed: '+e.message));f.value=''};
  }
- const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.0 — Diagnostic Data Import';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Diagnostic Data Import ready — attach scan photos, CSV/text exports, and PDF reports';};
+ const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.1 — Image OCR Handoff';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Image OCR Handoff ready — import scan photos for automatic visible-text extraction';};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
  window.addEventListener('pageshow',()=>setTimeout(apply,40));
  const mo=new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))build()});mo.observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
-<!-- v10.8.0 adds local diagnostic attachment import, image/PDF preview, CSV/text parsing, DTC extraction, and active-case handoff. -->
+<!-- v10.8.1 adds browser-based image OCR, automatic text extraction, import-to-case handoff, and preserves the active diagnostic conversation. -->
 
 </body>
 </html>
