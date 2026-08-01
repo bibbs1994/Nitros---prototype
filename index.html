@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.6.0 — Oliver Free Diagnostic Mode</title>
+<title>Nitros Mobile Technician Portal v10.7.1 — Semantic Response Engine</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -482,7 +482,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.6.0 — Oliver Free Diagnostic Mode</div>
+  <div class="sub">Mobile Technician Portal v10.7.0 — Typed Intent Parser</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -496,7 +496,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.6.0 preserves the validated v10.5.2 portal workflow and adds Oliver Free Diagnostic Mode. Tap the AI button and begin with any DTC, symptom, vehicle description, or measurement—no repair order, VIN, customer record, or engine selection is required. Exact OEM wiring, pinouts, calibrations, programming, and specifications still require verified vehicle information.</div>
+    <div id="portalLoginStatus" class="status">Version 10.7.0 preserves the validated conversational and DTC knowledge engines while introducing the Oliver Diagnostic Session Manager. Oliver now builds an active structured case from natural technician conversation, including vehicle, engine, DTCs, status, symptoms, completed tests, measurements, replaced parts, observations, and the next recommended diagnostic question. VIN-specific wiring, pinouts, calibrations, and OEM procedures still require verified vehicle information.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -5173,7 +5173,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.6.0 • direct free-diagnostic launch and temporary sessions</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.5.2 • diagnostic close-button safe-area and touch stabilization</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5191,10 +5191,10 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
         <div id="smartOliverResponse" class="smart-response" style="margin-top:10px">Oliver is ready. Ask about the active repair, request the next diagnostic step, or dictate a timestamped note.</div>
       </div>
       <div class="smart-pane" data-smart-pane="diagnose">
-        <div id="smartDiagnosticStep" class="smart-response">Start a guided diagnostic sequence based on the current concern.</div>
+        <div id="smartDiagnosticStep" class="smart-response">Legacy guided sequence retired. Open Oliver Free Diagnostic Mode.</div>
         <label for="smartDiagResult" style="margin-top:10px">Measured result / observation</label>
         <textarea id="smartDiagResult" rows="3" placeholder="Example: Battery voltage 12.61 V KOEO; starter relay terminal 30 has battery voltage; no crank when 30 is jumped to 87."></textarea>
-        <div class="smart-action-grid"><button id="smartDiagStart" class="btn primary" type="button">Start Diagnostic Guide</button><button id="smartDiagRecord" class="btn secondary" type="button">Record Test Result</button><button id="smartDiagComplete" class="btn secondary" type="button">Complete & Next</button><button id="smartDiagBack" class="btn ghost" type="button">Previous</button><button id="smartDiagReset" class="btn ghost" type="button">Restart</button></div>
+        <div class="smart-action-grid"><button id="smartDiagStart" class="btn primary" type="button">Open Oliver Free Diagnostic Mode</button><button id="smartDiagRecord" class="btn secondary" type="button">Record Test Result</button><button id="smartDiagComplete" class="btn secondary" type="button">Complete & Next</button><button id="smartDiagBack" class="btn ghost" type="button">Previous</button><button id="smartDiagReset" class="btn ghost" type="button">Restart</button></div>
       </div>
       <div class="smart-pane" data-smart-pane="check">
         <div id="smartCompletenessList" class="smart-check-list"></div>
@@ -5211,7 +5211,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.6.0 • Oliver Free Diagnostic Mode</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.5.6 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -5495,15 +5495,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     else r=`I recorded your question in the active repair context. Based on the information currently entered, verify the complaint first, separate verified facts from assumptions, and document the result of each test before selecting the next test.\n\nCurrent concern: ${c.concern||'not entered'}.`;
     $('smartOliverResponse').textContent=r;addEvent('Oliver consultation',q);return r;
   }
-  const baseDiagnosticSteps=[
-    'Step 1 — Verify the customer concern. Reproduce the symptom safely and record the exact operating conditions.',
-    'Step 2 — Perform a complete vehicle scan. Save current, pending, history, and network DTCs before clearing anything.',
-    'Step 3 — Review freeze-frame and relevant live data. Compare actual values with specifications and known-good behavior.',
-    'Step 4 — Build and rank likely causes. Separate verified evidence from assumptions and previous parts replacement.',
-    'Step 5 — Perform the least intrusive test that can prove or disprove the highest-ranked cause.',
-    'Step 6 — Record the measured result, specification, tool used, test location, and pass/fail conclusion.',
-    'Step 7 — Repair only the verified fault. Repeat the failed test, clear codes only when appropriate, and complete final verification.'
-  ];
+  const baseDiagnosticSteps=[]; // v10.5.5: numbered legacy sequence permanently removed.
   function systemStep(){const x=((context().concern||'')+' '+(context().dtcs||'')).toLowerCase();
     if(/no.?crank|starter|crank.*no start/.test(x))return 'System-specific test — Confirm battery state, voltage drop on both starter circuits, relay command and load-side output, park/neutral or clutch input, immobilizer authorization, and starter response at the starter before condemning a module.';
     if(/misfire|p030[0-9]/.test(x))return 'System-specific test — Identify the affected cylinder, compare misfire counters, inspect plug and coil evidence, verify injector control and contribution, then test mechanical integrity before replacing parts.';
@@ -5514,7 +5506,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     return 'System-specific test — Identify the affected system, obtain the wiring diagram and specifications, then choose one test that divides the circuit or system in half and produces a measurable pass/fail result.'}
   let diagnosticSteps=[],diagIndex=-1;
   function buildDiagnosticSteps(){diagnosticSteps=[baseDiagnosticSteps[0],baseDiagnosticSteps[1],systemStep(),...baseDiagnosticSteps.slice(2)];}
-  function renderDiag(){if(!diagnosticSteps.length)buildDiagnosticSteps();if(diagIndex<0){$('smartDiagnosticStep').textContent='Start a guided diagnostic sequence based on the current concern.';return}$('smartDiagnosticStep').textContent=diagnosticSteps[diagIndex]+`\n\nConcern: ${context().concern||'Enter the customer concern in the repair order.'}\nDTC / scan information: ${context().dtcs||'Not entered yet.'}`}
+  function renderDiag(){if(!diagnosticSteps.length)buildDiagnosticSteps();if(diagIndex<0){$('smartDiagnosticStep').textContent='Legacy guided sequence retired. Open Oliver Free Diagnostic Mode.';return}$('smartDiagnosticStep').textContent=diagnosticSteps[diagIndex]+`\n\nConcern: ${context().concern||'Enter the customer concern in the repair order.'}\nDTC / scan information: ${context().dtcs||'Not entered yet.'}`}
   function runCompleteness(){const checks=[
     ['Customer concern documented',!!context().concern],['Vehicle identification entered',!!(value('vinInput')||value('vehicleYear')||value('appointmentVehicle'))],['Technician findings documented',!!(value('inspectionFindings')||value('technicianFindings')||value('internalTechnicianNotes'))],['Repair status selected',!!value('repairStatus')],['Completion or verification notes entered',!!(value('completionNotes')||value('roadTestNotes'))],['Road-test evidence addressed',!!(value('roadTestNotes')||value('roadTestNotRequiredReason')||document.querySelector('[data-road-test-complete="true"]'))],['Customer signature captured or exception documented',!!(value('customerSignatureName')||value('signatureException'))]];
     $('smartCompletenessList').innerHTML=checks.map(([n,ok])=>`<div class="smart-check ${ok?'good':'warn'}"><strong>${ok?'✓':'!'} ${n}</strong></div>`).join('');addEvent('Completeness check',`${checks.filter(x=>x[1]).length} of ${checks.length} checks complete`)
@@ -5526,7 +5518,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   $('smartOliverSaveNote').addEventListener('click',()=>{const q=value('smartOliverQuestion');if(!q)return;$('internalTechnicianNotes')&&($('internalTechnicianNotes').value=[$('internalTechnicianNotes').value,`[${new Date().toLocaleString()}] ${q}`].filter(Boolean).join('\n'));addEvent('Repair note',q);$('smartOliverResponse').textContent='The note was timestamped and added to the active repair timeline and technician notes.'});
   $('smartOliverRead').addEventListener('click',()=>{if(!('speechSynthesis'in window))return;window.speechSynthesis.cancel();window.speechSynthesis.speak(new SpeechSynthesisUtterance($('smartOliverResponse').textContent))});
   $('smartOliverDictate').addEventListener('click',()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){$('smartOliverResponse').textContent='Voice recognition is unavailable in this browser or local-file mode. Use the keyboard microphone or type the note.';return}const r=new SR();r.lang='en-US';r.onresult=e=>{$('smartOliverQuestion').value=e.results[0][0].transcript};r.onerror=e=>{$('smartOliverResponse').textContent='Voice recognition could not start: '+(e.error||'browser restriction')};try{r.start()}catch(e){}});
-  $('smartDiagStart').addEventListener('click',()=>{buildDiagnosticSteps();diagIndex=0;renderDiag();addEvent('Diagnostic guide started',diagnosticSteps[0])});
+  $('smartDiagStart').addEventListener('click',()=>{buildDiagnosticSteps();diagIndex=0;renderDiag();addEvent('Oliver diagnostic conversation opened',diagnosticSteps[0])});
   $('smartDiagRecord').addEventListener('click',()=>{const result=value('smartDiagResult');if(!result){$('smartDiagnosticStep').textContent+='\n\nEnter the measured result or observation before recording it.';return}const step=diagnosticSteps[Math.max(0,diagIndex)]||'Diagnostic test';const note=`${step}\nResult: ${result}`;if($('internalTechnicianNotes'))$('internalTechnicianNotes').value=[$('internalTechnicianNotes').value,`[${new Date().toLocaleString()}] ${note}`].filter(Boolean).join('\n');addEvent('Diagnostic evidence',note);$('smartDiagResult').value='';$('smartDiagnosticStep').textContent=step+'\n\nResult recorded in the repair timeline and technician notes.'});
   $('smartDiagComplete').addEventListener('click',()=>{if(!diagnosticSteps.length)buildDiagnosticSteps();if(diagIndex<0)diagIndex=0;addEvent('Diagnostic step completed',diagnosticSteps[diagIndex]);if(diagIndex<diagnosticSteps.length-1)diagIndex++;renderDiag()});$('smartDiagBack').addEventListener('click',()=>{diagIndex=Math.max(0,diagIndex-1);renderDiag()});$('smartDiagReset').addEventListener('click',()=>{buildDiagnosticSteps();diagIndex=0;renderDiag()});
   $('smartRunCompleteness').addEventListener('click',runCompleteness);$('smartAddTimeline').addEventListener('click',()=>{const q=value('smartOliverQuestion')||'Manual timeline checkpoint';addEvent('Manual checkpoint',q)});$('smartRefreshTimeline').addEventListener('click',renderTimeline);
@@ -5617,66 +5609,220 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   }
   function reply(text){line('Oliver',text);speak(text)}
   function generalDiagnosticReply(q){
-    const cleaned=String(q||'').toUpperCase().replace(/\bZERO\b/g,'0').replace(/\bOH\b/g,'0');
-    const raw=(cleaned.match(/\b([PCBU]\s*[- ]?\s*\d{4})\b/i)||[])[1];
-    const spoken=(cleaned.match(/(?:CODE\s+)?\b(\d{3,4})\b/)||[])[1];
-    let code=raw?raw.replace(/[\s-]/g,'').toUpperCase():'';
-    if(!code&&spoken){const digits=spoken.padStart(4,'0');code='P'+digits;}
-    if(/^P030[0-8]$/.test(code)){
-      const cyl=code==='P0300'?'multiple/random cylinders':`cylinder ${Number(code.slice(-1))}`;
-      const title=code==='P0300'?'Random/Multiple Cylinder Misfire Detected':`Cylinder ${Number(code.slice(-1))} Misfire Detected`;
-      return `${code} — ${title}.
-
-Most likely systems are ignition, fuel delivery, air entering that cylinder, or engine mechanical condition. Do not replace a coil or injector from the code alone.
-
-First tests:
-1. Confirm the misfire counter and freeze-frame conditions.
-2. Inspect the plug, boot, coil connector, and injector connector for ${cyl}.
-3. Perform one controlled A/B swap of the easiest ignition component and repeat the original failure condition.
-4. If the misfire stays on ${cyl}, verify injector command and contribution, then check compression or relative compression and intake leakage near that runner.
-
-Pass/fail: if the misfire moves, the swapped component is suspect; if it remains on ${cyl}, continue testing that cylinder's fuel, air, mechanical condition, and control circuits.
-
-Year, make, model, engine, and operating condition will let me narrow the next test. An RO is optional; it is only needed to save the case and attach vehicle-specific information.`;
-    }
-    if(code==='P0340'){
-      return `P0340 — Camshaft Position Sensor “A” Circuit Malfunction.
-
-This code means the ECM is not seeing a valid camshaft-position signal or the signal is not correlating as expected. Common causes include the sensor, connector tension or corrosion, an open or short in the signal/5-volt/ground circuits, incorrect mechanical timing, reluctor damage, or less commonly an ECM fault.
-
-First tests:
-1. Check whether the engine starts, stalls, runs in default mode, or has related crank/cam correlation codes.
-2. Inspect the cam sensor connector and harness where it bends or passes near hot or moving components.
-3. Verify sensor power, ground, and signal with a meter or scope; do not condemn the sensor from the code alone.
-4. Compare cam and crank signals or correlation data before disturbing mechanical timing.
-
-Vehicle information is optional for this preliminary path. It becomes necessary only for the exact sensor location, connector pins, waveform, and OEM thresholds.`;
+    const normalized=String(q||'').toUpperCase()
+      .replace(/\b(ZERO|OH)\b/g,'0').replace(/\bONE\b/g,'1').replace(/\bTWO\b/g,'2')
+      .replace(/\bTHREE\b/g,'3').replace(/\bFOUR\b/g,'4').replace(/\bFIVE\b/g,'5')
+      .replace(/\bSIX\b/g,'6').replace(/\bSEVEN\b/g,'7').replace(/\bEIGHT\b/g,'8').replace(/\bNINE\b/g,'9')
+      .replace(/\b([PCBU])\s*[- ]?\s*([0-9])\s*[- ]?\s*([0-9])\s*[- ]?\s*([0-9])\s*[- ]?\s*([0-9])\b/g,'$1$2$3$4$5')
+      .replace(/\b([PCBU])[-\s]+(\d{4})\b/g,'$1$2');
+    const raw=(normalized.match(/\b([PCBU]\d{4})\b/)||[])[1];
+    const digits=(normalized.match(/(?:CODE\s+)?\b(\d{3,4})\b/)||[])[1];
+    const code=raw||(digits?'P'+digits.padStart(4,'0'):'');
+    const K={
+      P0171:['System Too Lean (Bank 1)','fuel trims and whether the lean condition is strongest at idle or under load'],
+      P0300:['Random/Multiple Cylinder Misfire Detected','which cylinders are counting and under what operating condition'],
+      P0301:['Cylinder 1 Misfire Detected','whether the misfire is current and what the cylinder counters show'],
+      P0302:['Cylinder 2 Misfire Detected','whether the misfire is current and what the cylinder counters show'],
+      P0303:['Cylinder 3 Misfire Detected','whether the misfire is current and what the cylinder counters show'],
+      P0304:['Cylinder 4 Misfire Detected','whether the misfire is current and what the cylinder counters show'],
+      P0305:['Cylinder 5 Misfire Detected','whether the misfire is current and what the cylinder counters show'],
+      P0306:['Cylinder 6 Misfire Detected','whether the misfire is current and what the cylinder counters show'],
+      P0340:['Camshaft Position Sensor A Circuit (Bank 1 or Single Sensor)','whether the engine starts and whether related cam/crank codes are present'],
+      P0420:['Catalyst System Efficiency Below Threshold (Bank 1)','exhaust leaks, fuel control, sensor application, and catalyst-monitor data'],
+      P0430:['Catalyst System Efficiency Below Threshold (Bank 2)','exhaust leaks, fuel control, sensor application, and catalyst-monitor data'],
+      P0442:['Evaporative Emission System Leak Detected — Small Leak','whether the system seals during a smoke test and whether purge and vent valves hold'],
+      P0455:['Evaporative Emission System Leak Detected — Large Leak','cap, hoses, vent valve, purge valve, and whether the system can seal'],
+      P0456:['Evaporative Emission System Leak Detected — Very Small Leak','small-leak smoke testing and purge/vent valve sealing'],
+      P0562:['System Voltage Low','battery state, charging voltage, voltage drop, and module power feeds'],
+      P0700:['Transmission Control System Malfunction — MIL Request','the companion codes stored in the transmission control module'],
+      P0701:['Transmission Control System Range/Performance','the companion TCM or network codes, failsafe status, and scan data'],
+      U0100:['Lost Communication With ECM/PCM A','which modules communicate, network voltage, and ECM powers and grounds'],
+      U0101:['Lost Communication With TCM','which modules communicate, network voltage, and TCM powers and grounds'],
+      U0121:['Lost Communication With Anti-Lock Brake System Control Module','which modules communicate and ABS module powers, grounds, and network integrity'],
+      C0035:['Left Front Wheel Speed Sensor Circuit','the reporting module definition and left-front wheel-speed PID compared with the other wheels'],
+      B0028:['Right Front/Passenger Side Deployment Loop Resistance Low','the exact reporting module description and OEM service information before touching the restraint circuit']
+    };
+    const haveVehicle=!!(activeCase?.vehicle?.make&&activeCase?.vehicle?.model);
+    const vehicle=haveVehicle?vehicleLabel():'';
+    const status=activeCase?.status||'';
+    const symptomKnown=!!(activeCase?.symptoms||[]).length;
+    const missingQuestion=()=>{
+      if(!haveVehicle)return 'What vehicle are we working on? Year, make, model, and engine if known.';
+      if(!status)return `I have ${vehicle} recorded. Is the code current, pending, history, or intermittent?`;
+      if(!symptomKnown)return `I have ${vehicle}, and the code is ${status.toLowerCase()}. What symptoms is the vehicle showing?`;
+      return `For the ${vehicle}, what testing or repairs have already been performed?`;
+    };
+    if(code&&K[code]){
+      const [definition,next]=K[code];
+      const intro=code==='P0701'
+        ? `${code} is ${definition}. It is a supervisory transmission-control code, so do not condemn the transmission from this code alone.`
+        : `${code} is ${definition}. The first thing I want to narrow is ${next}.`;
+      return `${intro} ${missingQuestion()}`;
     }
     if(code){
-      const family=code[0]==='P'?'powertrain':code[0]==='B'?'body':code[0]==='C'?'chassis':'network';
-      return `${code} is a ${family} diagnostic trouble code. I do not have a verified definition for that exact code in this offline build, so I will not invent one.
-
-Use this test-first path now: identify the module that set the code, record current/history status and freeze-frame data, check for related codes, inspect the affected circuit and connectors, and verify powers, grounds, signal integrity, and component operation before replacement. Give me the code description shown by the scan tool plus the symptom, and I will build the next pass/fail test immediately. VIN or RO information is optional unless you need exact OEM pinouts or specifications.`;
+      const family={P:'powertrain',C:'chassis',B:'body',U:'network communication'}[code[0]]||'vehicle';
+      if(haveVehicle)return `${code} is a valid ${family} DTC format, but its exact definition may be manufacturer-specific and is not yet stored in this local catalog. I already have ${vehicle}. Which module reported it, and what exact definition does the scan tool show?`;
+      return `${code} is a valid ${family} DTC format, but its exact definition may be manufacturer-specific and is not yet stored in this local catalog. What vehicle are we working on, which module reported it, and what exact definition does the scan tool show?`;
     }
-    if(/misfire|engine skip|skipping|rough run|rough idle/.test(q)){
-      return 'For a misfire or engine skip, begin with a complete scan, freeze-frame data, and cylinder misfire counters. Identify whether it is one cylinder or multiple cylinders and whether it occurs at idle, under load, cold, or hot. Then use a component-swap test where practical before replacing parts. Tell me the year, make, model, engine, DTCs, and operating condition, and I will give you the next measurable test.';
-    }
-    if(/wire|pinout|connector|color code|wiring diagram/.test(q)){
-      return 'I can help interpret a wiring diagram and plan circuit tests, but exact pin numbers, connector views, wire colors, and OEM specifications require verified year, make, model, engine, and preferably the VIN. You do not need a repair order—enter the vehicle information and the circuit or DTC you are testing.';
-    }
-    if(/diagnos|next test|what.*next|voltage|pressure|code/.test(q)){
-      return 'Technician Mode is active. You can ask a general diagnostic question without an active repair order. Give me the year, make, model, engine, DTC or symptom, and any measurements already taken. I will separate what is verified from what is assumed and recommend the next test with a pass/fail result.';
-    }
-    return '';
+    const low=String(q||'').toLowerCase();
+    if(/no.?crank/.test(low))return 'All right—no crank. Do you hear nothing, one click, or rapid clicking when the key is turned?';
+    if(/crank.*no.?start|cranks.*won.?t start/.test(low))return 'All right—it cranks but does not start. Do you have RPM shown on the scan tool while cranking?';
+    if(/battery.*dead|parasitic|draw overnight/.test(low))return 'All right—battery discharge concern. Has the battery already passed a proper load or conductance test after being fully charged?';
+    if(/abs.*bearing|wheel bearing.*abs/.test(low))return 'After wheel-bearing work, start by comparing all wheel-speed PIDs at very low speed. Which wheel drops out or disagrees?';
+    return null;
+  }
+  const CASE_KEY='nitros_oliver_active_diagnostic_case_v1060';
+  const emptyCase=()=>({id:'CASE-'+Date.now(),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),vehicle:{year:'',make:'',model:'',engine:'',vin:''},codes:[],status:'',symptoms:[],tests:[],measurements:[],parts:[],observations:[],nextQuestion:'',lastPromptKey:'',completedPrompts:{vehicle:false,status:false,symptoms:false,testing:false,findingState:false}});
+  function loadCase(){
+    try{
+      const loaded={...emptyCase(),...(JSON.parse(localStorage.getItem(CASE_KEY)||'null')||{})};
+      loaded.vehicle={...emptyCase().vehicle,...(loaded.vehicle||{})};
+      loaded.completedPrompts={...emptyCase().completedPrompts,...(loaded.completedPrompts||{})};
+      loaded.lastPromptKey=loaded.lastPromptKey||'';
+      loaded.vehicle.model=String(loaded.vehicle.model||'')
+        .replace(/\b[PCBU]\d{4}\b/ig,' ')
+        .replace(/\bcentry\b/ig,'Century')
+        .replace(/\s+/g,' ').trim();
+      return loaded;
+    }catch(e){return emptyCase()}
+  }
+  let activeCase=loadCase();
+  function saveCase(){activeCase.updatedAt=new Date().toISOString();localStorage.setItem(CASE_KEY,JSON.stringify(activeCase));renderCaseBanner()}
+  function escCase(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+  function vehicleLabel(){const v=activeCase.vehicle||{};return [v.year,v.make,v.model,v.engine].filter(Boolean).join(' ')||'Not identified'}
+  function renderCaseBanner(){
+    let box=document.getElementById('oliverActiveCaseBanner');
+    const anchor=document.getElementById('oliverHubConversation')||document.getElementById('oliverHubSend')?.parentElement;
+    if(!box&&anchor){box=document.createElement('div');box.id='oliverActiveCaseBanner';box.className='oliver-active-case-banner';anchor.parentElement?.insertBefore(box,anchor)}
+    if(!box)return;
+    const codes=(activeCase.codes||[]).join(', ')||'None recorded';
+    const tests=(activeCase.tests||[]).slice(-2).join('; ');
+    const findings=(activeCase.observations||[]).slice(-2).join('; ');
+    box.innerHTML=`<div class="case-head"><strong>ACTIVE DIAGNOSTIC CASE</strong><button type="button" id="oliverNewCase">New Case</button></div><div><b>Vehicle:</b> ${escCase(vehicleLabel())}</div><div><b>Codes:</b> ${escCase(codes)}${activeCase.status?` · <b>Status:</b> ${escCase(activeCase.status)}`:''}</div>${tests?`<div><b>Testing:</b> ${escCase(tests)}</div>`:''}${findings?`<div><b>Findings:</b> ${escCase(findings)}</div>`:''}${activeCase.nextQuestion?`<div><b>Next:</b> ${escCase(activeCase.nextQuestion)}</div>`:''}`;
+    document.getElementById('oliverNewCase')?.addEventListener('click',()=>{activeCase=emptyCase();saveCase();reply('New diagnostic case started. What code or symptom are we working with?')},{once:true});
+  }
+  function parseVehicle(text){
+    const original=String(text||'').trim();
+    const cleaned=original
+      .replace(/\b[PCBU]\s*[- ]?\s*\d\s*[- ]?\s*\d\s*[- ]?\s*\d\s*[- ]?\s*\d\b/ig,' ')
+      .replace(/\b(?:code|dtc)\b/ig,' ')
+      .replace(/\s+/g,' ').trim();
+    const year=(cleaned.match(/\b(19[8-9]\d|20[0-3]\d)\b/)||[])[1]||'';
+    const engine=(cleaned.match(/\b(\d\.\d)\s*(?:l|liter)?\b/i)||[])[1]||'';
+    const makes=['Acura','Audi','BMW','Buick','Cadillac','Chevrolet','Chevy','Chrysler','Dodge','Ford','GMC','Honda','Hyundai','Infiniti','Jeep','Kia','Lexus','Lincoln','Mazda','Mercedes','Mercury','Mini','Mitsubishi','Nissan','Oldsmobile','Pontiac','Ram','Saturn','Scion','Subaru','Tesla','Toyota','Volkswagen','VW','Volvo'];
+    const make=makes.find(m=>new RegExp('\\b'+m+'\\b','i').test(cleaned))||'';
+    if(!make&&!year&&!engine)return null;
+    let remainder=cleaned.replace(/\b(19[8-9]\d|20[0-3]\d)\b/g,'').replace(/\b\d\.\d\s*(?:l|liter)?\b/ig,'').trim();
+    if(make)remainder=remainder.replace(new RegExp('\\b'+make+'\\b','i'),'').trim();
+    remainder=remainder.replace(/^(it is|it's|a|an|the|vehicle is)\s+/i,'').trim();
+    let model=remainder
+      .replace(/\b[PCBU]\d{4}\b/ig,' ')
+      .replace(/[^a-z0-9 -]/gi,' ')
+      .replace(/\s+/g,' ').trim();
+    const modelAliases={centry:'Century',century:'Century',silverado:'Silverado',camry:'Camry',accord:'Accord',civic:'Civic',malibu:'Malibu',impala:'Impala',tahoe:'Tahoe',f150:'F-150'};
+    const alias=modelAliases[model.toLowerCase()];
+    if(alias)model=alias;
+    else model=model.replace(/\bcentry\b/ig,'Century');
+    return {year,make:make==='Chevy'?'Chevrolet':make==='VW'?'Volkswagen':make,model,engine:engine?engine+'L':''};
+  }
+  function classifyTypedIntent(text){
+    const raw=String(text||'').trim();
+    const upper=raw.toUpperCase();
+    const codes=[...upper.matchAll(/\b[PCBU]\s*[- ]?\s*\d\s*[- ]?\s*\d\s*[- ]?\s*\d\s*[- ]?\s*\d\b/g)].map(m=>m[0].replace(/[^PCBU0-9]/g,''));
+    const vehicle=parseVehicle(raw);
+    let status='';
+    if(/\b(?:CURRENT|ACTIVE|PRESENT|ON NOW|HAPPENING NOW)\b/i.test(raw))status='Current';
+    else if(/\bPENDING\b/i.test(raw))status='Pending';
+    else if(/\b(?:HISTORY|HISTORIC|STORED|MEMORY)\b/i.test(raw))status='History';
+    else if(/\b(?:INTERMITTENT|COMES AND GOES|ON AND OFF)\b/i.test(raw))status='Intermittent';
+    const repair=/\b(?:REPLACED|INSTALLED|REPAIRED|FIXED|NEW)\b/i.test(raw);
+    const test=/\b(?:TESTED|CHECKED|VERIFIED|SWAPPED|SMOKE TEST|COMPRESSION|FUEL PRESSURE|VOLTAGE DROP|SCOPE|OSCILLOSCOPE|MISFIRE COUNT|FREEZE FRAME)\b/i.test(raw);
+    const measurement=/\b\d+(?:\.\d+)?\s*(?:V|VOLTS?|PSI|KPA|OHMS?|AMPS?|MA|HZ|MS|%|RPM)\b/i.test(raw);
+    const observation=/\b(?:LEAK|CRACK|BROKEN|LOOSE|CORRODED|MELTED|BURNT|WET|DRY|NO SIGNAL|DROPS OUT|SHORTED|OPEN CIRCUIT)\b/i.test(raw);
+    const symptom=/\b(?:NO START|NO CRANK|STALL|MISFIRE|ROUGH|HESITAT|SURGE|LIMP|FAILSAFE|SLIP|SHIFT|NOISE|CLUNK|DEAD BATTERY|ABS LIGHT|MIL|CHECK ENGINE|LACK OF POWER|LOSS OF POWER|LOW POWER|NO POWER|SLUGGISH|BOGGING|BOGS DOWN|POOR ACCELERATION)\b/i.test(raw);
+    const noTesting=/^(?:none|no|not yet|nothing|haven't|have not|no testing|not checked|never tested)[.! ]*$/i.test(raw);
+    const noSymptoms=/^(?:none|no symptoms|runs fine|nothing noticeable|no complaint)[.! ]*$/i.test(raw);
+    const repairedState=/\b(?:repaired|fixed|sealed|replaced|no longer present|gone now)\b/i.test(raw);
+    const stillPresent=/\b(?:still present|still there|not repaired|not fixed|leaking now|remains)\b/i.test(raw);
+    return {raw,codes,vehicle,status,repair,test,measurement,observation,symptom,noTesting,noSymptoms,repairedState,stillPresent};
+  }
+  function captureCaseFacts(text){
+    const intent=classifyTypedIntent(text);
+    activeCase.completedPrompts={...emptyCase().completedPrompts,...(activeCase.completedPrompts||{})};
+    intent.codes.forEach(c=>{if(!activeCase.codes.includes(c))activeCase.codes.push(c)});
+    if(intent.vehicle){activeCase.vehicle={...activeCase.vehicle,...Object.fromEntries(Object.entries(intent.vehicle).filter(([,val])=>val))};if(activeCase.vehicle.make&&activeCase.vehicle.model)activeCase.completedPrompts.vehicle=true}
+    if(intent.status){activeCase.status=intent.status;activeCase.completedPrompts.status=true}
+    if(intent.repair&&!activeCase.parts.some(x=>x.toLowerCase()===intent.raw.toLowerCase()))activeCase.parts.push(intent.raw);
+    if(intent.noTesting){if(!activeCase.tests.some(x=>x==='No testing performed'))activeCase.tests.push('No testing performed');activeCase.completedPrompts.testing=true}
+    else if(intent.test){if(!activeCase.tests.some(x=>x.toLowerCase()===intent.raw.toLowerCase()))activeCase.tests.push(intent.raw);activeCase.completedPrompts.testing=true}
+    if(intent.measurement&&!activeCase.measurements.some(x=>x.toLowerCase()===intent.raw.toLowerCase()))activeCase.measurements.push(intent.raw);
+    if((intent.observation||intent.symptom)&&!activeCase.observations.some(x=>x.toLowerCase()===intent.raw.toLowerCase()))activeCase.observations.push(intent.raw);
+    if(intent.noSymptoms){if(!activeCase.symptoms.some(x=>x==='No symptoms reported'))activeCase.symptoms.push('No symptoms reported');activeCase.completedPrompts.symptoms=true}
+    else if(intent.symptom){if(!activeCase.symptoms.some(x=>x.toLowerCase()===intent.raw.toLowerCase()))activeCase.symptoms.push(intent.raw);activeCase.completedPrompts.symptoms=true}
+    if(intent.repairedState||intent.stillPresent)activeCase.completedPrompts.findingState=true;
+    saveCase();
+    return intent;
+  }
+  function setPrompt(key,label,question){
+    activeCase.lastPromptKey=key;
+    activeCase.nextQuestion=label;
+    return question;
+  }
+  function nextCaseQuestion(){
+    activeCase.completedPrompts={...emptyCase().completedPrompts,...(activeCase.completedPrompts||{})};
+    const v=activeCase.vehicle||{},done=activeCase.completedPrompts;
+    if(v.make&&v.model)done.vehicle=true;
+    if(activeCase.status)done.status=true;
+    if((activeCase.symptoms||[]).length)done.symptoms=true;
+    if((activeCase.tests||[]).length)done.testing=true;
+    if(!done.vehicle)return setPrompt('vehicle','Identify the vehicle','What vehicle are we working on? Year, make, model, and engine if known.');
+    if(!done.status)return setPrompt('status','Confirm code status',`All right, ${vehicleLabel()}. Is the code current, pending, history, or intermittent?`);
+    if(!done.symptoms)return setPrompt('symptoms','Record the symptoms',`Got it—${activeCase.status.toLowerCase()}. What symptoms is the vehicle showing?`);
+    if(!done.testing)return setPrompt('testing','Review completed tests','What testing or repairs have already been performed?');
+    if((activeCase.observations||[]).length&&!done.findingState)return setPrompt('findingState','Act on the newest finding','Is the recorded finding still present, or has it already been repaired?');
+    return setPrompt('nextTest','Select the highest-value next test','What scan data or test result do you have available next?');
   }
   function routeCommand(raw){const text=raw.trim();if(!text)return;line('You',text);const q=text.replace(/^oliver[,:]?\s*/i,'').toLowerCase(),mode=currentMode();
+    if(/new case|clear case|start over/.test(q)){activeCase=emptyCase();saveCase();reply('New diagnostic case started. What code or symptom are we working with?');return}
     if(/show me how|walk me through|guided|learn the software|input this customer|check.?in/.test(q)){reply('I am opening Instructor Mode and the guided software walkthrough. Choose the workflow you want, and I will wait for each confirmation.');closeHub();setTimeout(()=>{$('oliverGuideLaunch')?.click()},120);return}
     if(/repair assistant/.test(q)){reply('I am opening the Repair Assistant. An active repair order adds saved vehicle and case context, but it is no longer required for general diagnostic questions.');closeHub();setTimeout(()=>{$('smartOliverLaunch')?.click()},120);return}
-    const diagnostic=generalDiagnosticReply(q);if(diagnostic){reply(diagnostic);return}
+    const intent=captureCaseFacts(text);
+    const vehicle=intent.vehicle;
+    if(intent.status){const follow=nextCaseQuestion();saveCase();reply(`Status recorded as ${activeCase.status}. ${follow}`);return}
+    if(intent.noTesting){
+      activeCase.completedPrompts.testing=true;activeCase.nextQuestion=(activeCase.observations||[]).length?'Act on the recorded finding':'Choose the first test';
+      saveCase();
+      if((activeCase.observations||[]).length){
+        const finding=activeCase.observations[activeCase.observations.length-1];
+        reply(`Okay, no testing has been performed yet. I have the finding “${finding}.” Is that condition still present, or has it already been repaired?`);
+      }else reply(`Okay, no testing has been performed yet. I already have the symptom recorded. What scan data or basic test result can you check first?`);
+      return;
+    }
+    if(intent.noSymptoms){activeCase.nextQuestion='Review completed tests';saveCase();reply(`Okay, no symptoms are currently reported. What testing or repairs have already been performed?`);return}
+    if(intent.repairedState&&(activeCase.observations||[]).length){activeCase.nextQuestion='Verify repair effect';saveCase();reply('Good. Since that condition has been repaired, clear the codes and complete the appropriate drive cycle or monitor check. Does the code return?');return}
+    if(intent.stillPresent&&(activeCase.observations||[]).length){activeCase.completedPrompts.findingState=true;activeCase.nextQuestion='Repair the known fault first';saveCase();reply('That known fault should be corrected before condemning related components. Repair it first, clear the codes, and then verify whether the fault returns.');return}
+    if(intent.symptom){
+      activeCase.completedPrompts.symptoms=true;
+      const follow=nextCaseQuestion();saveCase();
+      reply(`I recorded “${intent.raw}” as the symptom for the ${vehicleLabel()}. ${follow}`);return;
+    }
+    if(intent.observation){
+      activeCase.nextQuestion='Use the newest diagnostic finding';saveCase();
+      const lower=intent.raw.toLowerCase();
+      if(/exhaust.*leak|leak.*o2|leak.*oxygen sensor/.test(lower))reply(`I recorded the exhaust leak for the ${vehicleLabel()}. A leak between the oxygen sensors can distort downstream sensor activity and catalyst-monitor results, so it needs to be repaired before evaluating the converter. Is the leak still present?`);
+      else reply(`I recorded that finding for the ${vehicleLabel()}. Has that condition been repaired yet, or is it still present?`);
+      return;
+    }
+    const diagnostic=generalDiagnosticReply(q);
+    if(diagnostic){nextCaseQuestion();saveCase();reply(diagnostic);return}
+    if(vehicle){const follow=nextCaseQuestion();saveCase();reply(`All right, I recorded ${vehicleLabel()} in the active case. ${follow}`);return}
+    if(activeCase.vehicle?.make&&activeCase.vehicle?.model){
+      if(/current|pending|history|stored|intermittent/i.test(text)&&activeCase.status){const follow=nextCaseQuestion();saveCase();reply(follow);return}
+      if(activeCase.status&&!(activeCase.symptoms||[]).length){activeCase.symptoms.push(text);activeCase.nextQuestion='Review completed tests';saveCase();reply(`I recorded that symptom for the ${vehicleLabel()}. What testing or repairs have already been performed?`);return}
+    }
     if(/nati|academy|lesson|teach me|case study|drc/.test(q)){reply('NATI Academy is prepared as the training branch of Oliver. This build establishes the hub entry point; connected NATI lessons will be added as the curriculum integration is implemented.');return}
     if(/schedule|appointment|customer|invoice|estimate|payment/.test(q)){reply('Office Mode is active. I can guide the current office workflow and keep the instructions on screen. For detailed entry guidance, say “Oliver, show me how.”');return}
-    const intro=mode==='office'?'Office Mode is active. ':mode==='instructor'?'Instructor Mode is active. ':mode==='founder'?'Founder Mode is active. ':'Technician Mode is active. ';
-    reply(intro+'Ask me a diagnostic question directly. General DTC and symptom guidance does not require a repair order. Exact VIN-specific wiring, pinouts, specifications, programming, and OEM procedures require verified vehicle information.');
+    const follow=nextCaseQuestion();saveCase();reply(follow);
   }
   launch.addEventListener('pointerdown',e=>{dragging=true;moved=false;launch.setPointerCapture?.(e.pointerId);const r=launch.getBoundingClientRect();startX=e.clientX;startY=e.clientY;baseL=r.left;baseT=r.top;launch.style.left=r.left+'px';launch.style.top=r.top+'px';launch.style.right='auto';launch.style.bottom='auto';e.preventDefault()});
   launch.addEventListener('pointermove',e=>{if(!dragging)return;const dx=e.clientX-startX,dy=e.clientY-startY;if(Math.abs(dx)+Math.abs(dy)>5)moved=true;const maxX=innerWidth-launch.offsetWidth,maxY=innerHeight-launch.offsetHeight;launch.style.left=Math.max(0,Math.min(maxX,baseL+dx))+'px';launch.style.top=Math.max(0,Math.min(maxY,baseT+dy))+'px';e.preventDefault()});
@@ -5879,27 +6025,12 @@ Use this test-first path now: identify the module that set the code, record curr
   function scanText(){return readValue('dtcCodes')||readValue('scanResults')||'Not entered yet.'}
 
   function buildSteps(){
-    const text=activeText().toLowerCase();
+    const text=activeText().trim();
     const observation=readValue('smartDiagResult');
-    let steps=[];
-    if(/won.?t start|will not start|no.?crank|starter|relay|terminal 30|30.*12\s*v/.test(text)){
-      steps=[
-        'Step 1 — Confirm the exact symptom: no crank, crank-no-start, single click, rapid clicking, or intermittent operation. Verify battery state of charge and battery-terminal integrity first.',
-        'Step 2 — Terminal 30 has battery voltage. Next, command CRANK and verify whether starter-relay terminal 85/86 receives both the control power and control ground required to energize the relay.',
-        'Step 3 — With the transmission secured in Park or Neutral and the vehicle safely prepared, jump relay terminal 30 to terminal 87. Record whether the starter cranks.',
-        'Step 4 — If jumping 30 to 87 produces no crank, test voltage at relay terminal 87 and at the starter-solenoid S terminal while the jumper is installed. This determines whether the load circuit is open between the relay and starter.',
-        'Step 5 — If proper voltage reaches the starter-solenoid S terminal but the starter does not operate, verify starter B+ power and perform loaded voltage-drop tests on the positive and ground sides before condemning the starter.',
-        'Step 6 — If the starter cranks when 30 and 87 are jumped, diagnose the relay-control side: ignition request, park/neutral or clutch input, immobilizer authorization, PCM/TIPM command, relay coil power, and relay coil ground.',
-        'Step 7 — Record every measured voltage, test location, operating condition, and pass/fail conclusion. Repair only the verified fault, then repeat the original test and confirm normal starting operation.'
-      ];
-    }else if(/misfire|p030[0-9]/.test(text)){
-      steps=['Step 1 — Verify the misfire and operating conditions.','Step 2 — Save all DTCs, freeze-frame data, and misfire counters.','Step 3 — Identify the affected cylinder and compare ignition, fuel, and mechanical evidence.','Step 4 — Perform the least intrusive swap or circuit test that can prove the fault.','Step 5 — Verify injector command and mechanical integrity before replacing parts.','Step 6 — Record results and repeat the failed test after repair.'];
-    }else if(/evap|p044|p045/.test(text)){
-      steps=['Step 1 — Verify the EVAP concern and fuel level.','Step 2 — Save DTCs and freeze-frame data.','Step 3 — Command purge and vent valves and verify actual sealing response.','Step 4 — Smoke-test at controlled pressure and isolate the leak path.','Step 5 — Record the verified leak or control fault.','Step 6 — Repair, rerun the sealing test, and confirm monitor readiness when appropriate.'];
-    }else{
-      steps=['Step 1 — Verify the customer concern and record the exact operating conditions.','Step 2 — Perform a complete vehicle scan and save all current, pending, history, and network DTCs.','Step 3 — Review freeze-frame and relevant live data.','Step 4 — Obtain the wiring diagram and specifications for the affected system.','Step 5 — Choose the least intrusive test that divides the system and produces a measurable pass/fail result.','Step 6 — Record the measurement, specification, tool, location, and conclusion.','Step 7 — Repair only the verified fault and complete final verification.'];
-    }
-    return {steps,observation};
+    const prompt=text
+      ? `Review the active concern and evidence without using a fixed sequence. State what is verified, what remains unknown, and identify the single highest-value next test with a measurable pass/fail result. Active information: ${text}`
+      : 'Enter the concern, DTC, symptom, or measurement. Oliver will identify the highest-value next test without forcing a numbered workflow.';
+    return {steps:[prompt],observation};
   }
 
   let steps=[],index=-1;
@@ -5915,11 +6046,11 @@ Use this test-first path now: identify the module that set the code, record curr
     const button=$('smartDiagStart'),box=$('smartDiagnosticStep');
     if(!button||!box)return;
     const original=button.textContent;
-    button.disabled=true;button.textContent='Building Guide…';
+    button.disabled=true;button.textContent='Opening Oliver…';
     try{
       const built=buildSteps();steps=built.steps;index=0;render();
-      addTimeline('Diagnostic guide started',(built.observation?'Initial observation: '+built.observation+'\n':'')+steps[0]);
-      button.textContent='Guide Started';
+      addTimeline('Oliver diagnostic conversation opened',(built.observation?'Initial observation: '+built.observation+'\n':'')+steps[0]);
+      button.textContent='Oliver Opened';
       setTimeout(()=>{button.disabled=false;button.textContent=original},450);
     }catch(err){
       console.error('Oliver diagnostic start failed',err);
@@ -5936,7 +6067,7 @@ Use this test-first path now: identify the module that set the code, record curr
     render();
   }
   function previousGuide(e){if(e){e.preventDefault();e.stopImmediatePropagation()}if(!steps.length)return;index=Math.max(0,index-1);render()}
-  function resetGuide(e){if(e){e.preventDefault();e.stopImmediatePropagation()}steps=[];index=-1;const box=$('smartDiagnosticStep');if(box)box.textContent='Start a guided diagnostic sequence based on the current concern and measured observation.'}
+  function resetGuide(e){if(e){e.preventDefault();e.stopImmediatePropagation()}steps=[];index=-1;const box=$('smartDiagnosticStep');if(box)box.textContent='Legacy guided sequence retired. Open Oliver Free Diagnostic Mode.'}
 
   function wire(){
     const start=$('smartDiagStart');
@@ -5978,7 +6109,7 @@ Use this test-first path now: identify the module that set the code, record curr
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Free Diagnostic Mode <span class="diag-status">v10.6.0</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.5.2</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -6013,44 +6144,166 @@ const $=id=>document.getElementById(id), val=id=>($(id)?.value||'').trim();
 const shell=$('oliverDiagnosticMode'),chat=$('diagChat'),input=$('diagInput');
 let lastOliver='',busy=false,recognition=null,loadedImage='',zoom=1,activeMode='general';
 const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-const SESSION_KEY='nitrosOliverV1052Session';
+const SESSION_KEY='nitrosOliverV1057ConversationSession';
 const ENDPOINT_KEY='nitrosOliverServiceUrl';
 let history=[];
+let caseData={vehicle:'',year:'',make:'',model:'',engine:'',dtcs:[],status:'',symptoms:[],tests:[],measurements:[],parts:[],observations:[]};
 function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function baseContext(){return {vehicle:[val('vehicleYear'),val('vehicleMake'),val('vehicleModel'),val('vehicleEngine')||val('engineSize')].filter(Boolean).join(' ')||val('appointmentVehicle')||'',vin:val('vinInput')||val('vinNumber')||'',ro:val('roNumber')||val('workOrderNumber')||'',customer:val('customerName')||val('appointmentCustomer')||'',concern:val('customerConcern')||val('concern')||val('appointmentConcern')||'',dtcs:val('dtcCodes')||val('scanResults')||'',notes:val('internalTechnicianNotes')||''}}
 function setMode(next){activeMode=next==='ro'?'ro':'general';const c=baseContext();$('diagGeneralMode')?.classList.toggle('active',activeMode==='general');$('diagRoMode')?.classList.toggle('active',activeMode==='ro');if(activeMode==='general'){$('diagOperatingMode').textContent='General Diagnostics — no VIN, engine size, or RO required.';input.placeholder='Ask any general diagnostic question or enter a DTC…'}else{$('diagOperatingMode').textContent=c.ro?'RO Assistant — active repair-order context attached.':'RO Assistant — open or enter an RO for case-specific guidance.';input.placeholder='Ask about the active repair order, test result, or next diagnostic step…'}updateContext()}
-function updateContext(){const c=baseContext();$('diagContextLine').textContent=activeMode==='general'?'General Diagnostics • no RO required':[c.vehicle,c.ro&&`RO ${c.ro}`,c.concern].filter(Boolean).join(' • ')||'RO Assistant • no active repair order';$('diagVehicle').textContent=[c.vehicle,c.ro&&`RO ${c.ro}`].filter(Boolean).join(' • ')||'No vehicle or repair order selected';$('diagConcern').textContent=c.concern||'Not entered';$('diagDtcs').textContent=c.dtcs||'None entered';$('diagState').textContent=busy?'Waiting for Oliver response':history.length?`${activeMode==='general'?'General':'RO'} conversation active`:'Ready for technician input'}
+function uniquePush(arr,value){value=String(value||'').trim();if(value&&!arr.some(x=>x.toLowerCase()===value.toLowerCase()))arr.push(value)}
+function parseCaseInput(text){
+ const raw=String(text||'').trim(), upper=normalizeDiagnosticInput(raw);
+ const vehicleRaw=raw.replace(/\b[PCBU]\s*[- ]?\s*\d\s*[- ]?\s*\d\s*[- ]?\s*\d\s*[- ]?\s*\d\b/ig,' ').replace(/\s+/g,' ').trim();
+ const codes=upper.match(/\b[PCBU]\d{4}\b/g)||[];codes.forEach(c=>uniquePush(caseData.dtcs,c));
+ const year=vehicleRaw.match(/\b((?:19|20)\d{2})\b/)?.[1]||'';
+ const makes=['Toyota','Honda','Ford','Chevrolet','Chevy','GMC','Kia','Hyundai','Jeep','Dodge','Ram','BMW','Volkswagen','VW','Nissan','Subaru','Mazda','Lexus','Acura','Buick','Cadillac','Mercedes-Benz','Mercedes','Audi','Volvo','Lincoln','Mercury','Pontiac','Saturn','Mitsubishi','Chrysler','Mini','Scion','Infiniti'];
+ const make=makes.find(m=>new RegExp('\\b'+m.replace('-','[- ]?')+'\\b','i').test(vehicleRaw))||'';
+ const engine=vehicleRaw.match(/\b(\d\.\d)\s*(?:L|LITER)?\b/i)?.[1]||vehicleRaw.match(/\b(V[468]|I[346]|INLINE[- ]?[346])\b/i)?.[1]||'';
+ if(year)caseData.year=year;if(make)caseData.make=make==='Chevy'?'Chevrolet':make==='VW'?'Volkswagen':make;if(engine)caseData.engine=/^\d\.\d$/.test(engine)?engine+'L':engine.toUpperCase();
+ if(year||make){let remainder=vehicleRaw.replace(/\b(?:19|20)\d{2}\b/,'').trim();if(make)remainder=remainder.replace(new RegExp('\\b'+make.replace('-','[- ]?')+'\\b','i'),'').trim();remainder=remainder.replace(/\b\d\.\d\s*(?:L|LITER)?\b/ig,'').replace(/\b(?:V[468]|I[346]|INLINE[- ]?[346])\b/ig,'').replace(/^[,;:\- ]+|[,;:\- ]+$/g,'').trim();if(remainder&&remainder.split(/\s+/).length<=4)caseData.model=remainder;}
+ caseData.vehicle=[caseData.year,caseData.make,caseData.model,caseData.engine].filter(Boolean).join(' ');
+ if(/\bCURRENT|ACTIVE|PRESENT|ON NOW|HAPPENING NOW\b/i.test(raw))caseData.status='Current';else if(/\bPENDING\b/i.test(raw))caseData.status='Pending';else if(/\bHISTORY|HISTORIC|STORED|MEMORY\b/i.test(raw))caseData.status='History';else if(/\bINTERMITTENT|COMES AND GOES|ON AND OFF\b/i.test(raw))caseData.status='Intermittent';
+ if(/\bREPLACED|INSTALLED|NEW\b/i.test(raw))uniquePush(caseData.parts,raw);
+ if(/\bVOLT|OHM|AMP|PSI|KPA|HZ|RPM|PERCENT|%|DEGREE|°|MS\b/i.test(raw)&&/\d/.test(raw))uniquePush(caseData.measurements,raw);
+ if(/\bTESTED|CHECKED|VERIFIED|SWAPPED|SMOKE TEST|COMPRESSION|FUEL PRESSURE|SCOPE|OSCILLOSCOPE|MODE \$?06|FREEZE FRAME\b/i.test(raw))uniquePush(caseData.tests,raw);
+ if(/\bNO START|NO CRANK|STALL|MISFIRE|ROUGH|HESITAT|SURGE|LIMP|FAILSAFE|SLIP|SHIFT|NOISE|CLUNK|DEAD BATTERY|ABS LIGHT|MIL|CHECK ENGINE\b/i.test(raw))uniquePush(caseData.symptoms,raw);
+ if(!codes.length&&!year&&!make&&!engine&&!caseData.status&&!/^(YES|NO|YEP|NOPE|CURRENT|PENDING|HISTORY)$/i.test(raw))uniquePush(caseData.observations,raw);
+}
+function mergedContext(){const c=baseContext();return {...c,vehicle:caseData.vehicle||c.vehicle,dtcs:caseData.dtcs.join(', ')||c.dtcs,diagnosticSession:caseData}}
+function updateContext(){const c=mergedContext();const summary=[c.vehicle,caseData.dtcs.length&&caseData.dtcs.join(', '),caseData.status].filter(Boolean).join(' • ');$('diagContextLine').textContent=activeMode==='general'?(summary||'General Diagnostics • no RO required'):[c.vehicle,c.ro&&`RO ${c.ro}`,c.concern].filter(Boolean).join(' • ')||'RO Assistant • no active repair order';$('diagVehicle').textContent=[c.vehicle,c.ro&&`RO ${c.ro}`].filter(Boolean).join(' • ')||'No vehicle or repair order selected';$('diagConcern').textContent=caseData.symptoms.at(-1)||c.concern||'Not entered';$('diagDtcs').textContent=caseData.dtcs.join(', ')||c.dtcs||'None entered';$('diagState').textContent=busy?'Waiting for Oliver response':history.length?`${activeMode==='general'?'General':'RO'} conversation active — session memory on`:'Ready for technician input'}
 function addMessage(role,text){const d=document.createElement('div');d.className='diag-message '+(role==='user'?'tech':'');d.innerHTML=`<div class="speaker">${role==='user'?'Technician':'Oliver'}</div>${esc(text)}`;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;if(role==='assistant')lastOliver=text}
-function save(){try{localStorage.setItem(SESSION_KEY,JSON.stringify({history,activeMode,at:Date.now()}))}catch(_){}}
-function restore(){try{const x=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');history=Array.isArray(x?.history)?x.history:[];activeMode=x?.activeMode==='ro'?'ro':'general'}catch(_){history=[];activeMode='general'}}
+function save(){try{localStorage.setItem(SESSION_KEY,JSON.stringify({history,activeMode,caseData,at:Date.now()}))}catch(_){}}
+function restore(){try{const x=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');history=Array.isArray(x?.history)?x.history:[];activeMode=x?.activeMode==='ro'?'ro':'general';if(x?.caseData&&typeof x.caseData==='object')caseData={...caseData,...x.caseData,dtcs:Array.isArray(x.caseData.dtcs)?x.caseData.dtcs:[],symptoms:Array.isArray(x.caseData.symptoms)?x.caseData.symptoms:[],tests:Array.isArray(x.caseData.tests)?x.caseData.tests:[],measurements:Array.isArray(x.caseData.measurements)?x.caseData.measurements:[],parts:Array.isArray(x.caseData.parts)?x.caseData.parts:[],observations:Array.isArray(x.caseData.observations)?x.caseData.observations:[]}}catch(_){history=[];activeMode='general'}}
 function render(){chat.innerHTML='';if(!history.length){addMessage('assistant','Oliver Diagnostic Engine v2.0 is ready. General Diagnostics answers code and testing questions without requiring a VIN or repair order. RO Assistant is available separately for vehicle-specific case guidance.');return}history.forEach(m=>addMessage(m.role,m.content))}
 function serviceUrl(){return (localStorage.getItem(ENDPOINT_KEY)||'').trim()}
 function isContextRefusal(t){return /(vin[- ]specific|vin specific engine|engine size and (?:an )?(?:ro|repair order)|need(?:s|ed)? (?:the )?(?:vin|repair order|ro)|can only receive confirmation|cannot (?:answer|continue|provide).*?(?:vin|repair order|ro)|requires? .*?(?:vin|repair order|ro))/i.test(t||'')}
-function localGeneralAnswer(text){
- const q=String(text||'').toUpperCase().replace(/\bZERO\b/g,'0').replace(/\bOH\b/g,'0');
- let code=q.match(/\b[PCBU]\d{4}\b/)?.[0]||'';
- if(!code){const spoken=q.match(/(?:CODE\s+)?\b(\d{3,4})\b/)?.[1];if(spoken)code='P'+spoken.padStart(4,'0')}
- if(/^P030[0-8]$/.test(code)){if(code==='P0300')return 'P0300 — Random or Multiple-Cylinder Misfire Detected. Confirm which cylinders are counting, record freeze-frame conditions, and determine whether the cause is common to all cylinders. Test fuel quality and pressure, unmetered air, ignition feed and grounds, crank/cam correlation, and engine mechanical condition. Repair only the verified cause, clear the code, and reproduce the original conditions to confirm the counters remain at zero.';
- const cyl=parseInt(code.slice(-1),10);return `${code} — Cylinder ${cyl} Misfire Detected. Confirm cylinder ${cyl} is accumulating misfires and note whether it happens at idle, under load, cold, or hot. Inspect the plug, boot, coil connector, and injector connector. Perform one controlled ignition-component swap; if the misfire follows, the moved component is suspect. If it stays on cylinder ${cyl}, verify injector command and contribution, check compression or relative compression, inspect for an intake leak at that runner, and test the control circuits. Year, make, model, and engine are optional for this general path and are only needed for exact OEM specifications.`}
- if(code==='P0340')return 'P0340 — Camshaft Position Sensor A Circuit Malfunction. Inspect the sensor connector and harness, check for related crank/cam codes, verify sensor power, ground, and signal, and compare cam/crank correlation before replacing the sensor or disturbing mechanical timing. Exact pins and waveform thresholds require the vehicle information, but an RO is not required.';
- if(code){const family=code[0]==='P'?'powertrain':code[0]==='B'?'body':code[0]==='C'?'chassis':'network';return `${code} is a ${family} DTC. This offline fallback does not contain a verified definition for that exact code, so it will not guess. Record the scan-tool description, module, status, freeze-frame data, and related codes. Then verify powers, grounds, connector integrity, signal operation, and the affected system before replacing parts. Send the code description and symptom for a focused pass/fail test. VIN and RO data are optional unless exact OEM information is requested.`}
- if(/MISFIRE|ROUGH IDLE|ENGINE SKIP/.test(q))return 'Start by identifying whether the misfire is one cylinder or multiple cylinders and when it occurs. Use misfire counters and freeze-frame data, then perform controlled ignition isolation, injector contribution testing, intake-leak testing, and compression or relative-compression testing in that order. Send the affected cylinder, operating condition, and measurements for the next pass/fail test.';
- return 'Tell me the DTC, symptom, or measurement you are working with. General Diagnostics will provide a test-first answer without requiring a VIN, engine size, or repair order. Vehicle information is only needed for exact OEM pinouts, locations, specifications, programming, or relearn procedures.'
+function normalizeDiagnosticInput(text){
+ let t=String(text||'').toUpperCase().trim();
+ const words={ZERO:'0',OH:'0',ONE:'1',WON:'1',TWO:'2',TO:'2',TOO:'2',THREE:'3',FOUR:'4',FOR:'4',FIVE:'5',SIX:'6',SEVEN:'7',EIGHT:'8',ATE:'8',NINE:'9'};
+ t=t.replace(/\b(ZERO|OH|ONE|WON|TWO|TOO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|ATE|NINE)\b/g,m=>words[m]||m);
+ // Join speech-recognition formats such as “P zero seven zero one,” “P-0-7-0-1,” and “P 0701.”
+ t=t.replace(/\b([PCBU])\s*[- ]?\s*([0-9])\s*[- ]?\s*([0-9])\s*[- ]?\s*([0-9])\s*[- ]?\s*([0-9])\b/g,'$1$2$3$4$5');
+ t=t.replace(/\b([PCBU])[-\s]+(\d{4})\b/g,'$1$2');
+ return t;
 }
-async function send(text){text=(text||'').trim();if(!text||busy)return;history.push({role:'user',content:text,mode:activeMode});addMessage('user',text);input.value='';save();updateContext();const context=baseContext();
+const DTC_KNOWLEDGE_V1055={
+ P0010:['A Camshaft Position Actuator Circuit/Open (Bank 1)','variable valve timing control'],
+ P0011:['A Camshaft Position Timing Over-Advanced or System Performance (Bank 1)','variable valve timing and oil control'],
+ P0016:['Crankshaft Position–Camshaft Position Correlation (Bank 1 Sensor A)','base timing, cam/crank signals, and VVT'],
+ P0101:['Mass or Volume Air Flow Circuit Range/Performance','air measurement and unmetered-air'],
+ P0113:['Intake Air Temperature Sensor 1 Circuit High','IAT signal circuit'],
+ P0128:['Coolant Thermostat Temperature Below Regulating Temperature','engine warm-up and coolant-temperature control'],
+ P0171:['System Too Lean (Bank 1)','fuel control, air measurement, and unmetered air'],
+ P0172:['System Too Rich (Bank 1)','fuel control, excessive fuel, and air measurement'],
+ P0201:['Injector Circuit/Open — Cylinder 1','injector command and circuit integrity'],
+ P0299:['Turbocharger or Supercharger Underboost Condition','boost control, air leaks, and turbocharger operation'],
+ P0300:['Random/Multiple Cylinder Misfire Detected','ignition, fuel, air, and mechanical condition'],
+ P0301:['Cylinder 1 Misfire Detected','cylinder 1 ignition, fuel, air, and mechanical condition'],
+ P0302:['Cylinder 2 Misfire Detected','cylinder 2 ignition, fuel, air, and mechanical condition'],
+ P0303:['Cylinder 3 Misfire Detected','cylinder 3 ignition, fuel, air, and mechanical condition'],
+ P0304:['Cylinder 4 Misfire Detected','cylinder 4 ignition, fuel, air, and mechanical condition'],
+ P0305:['Cylinder 5 Misfire Detected','cylinder 5 ignition, fuel, air, and mechanical condition'],
+ P0306:['Cylinder 6 Misfire Detected','cylinder 6 ignition, fuel, air, and mechanical condition'],
+ P0325:['Knock Sensor 1 Circuit (Bank 1 or Single Sensor)','knock-sensor signal and circuit integrity'],
+ P0335:['Crankshaft Position Sensor A Circuit','crank signal, sensor circuit, and reluctor integrity'],
+ P0340:['Camshaft Position Sensor A Circuit (Bank 1 or Single Sensor)','cam signal, sensor circuit, and timing'],
+ P0401:['Exhaust Gas Recirculation Flow Insufficient Detected','EGR flow, passages, and control'],
+ P0420:['Catalyst System Efficiency Below Threshold (Bank 1)','catalyst efficiency, exhaust integrity, and oxygen-sensor performance'],
+ P0430:['Catalyst System Efficiency Below Threshold (Bank 2)','bank 2 catalyst efficiency, exhaust integrity, and oxygen-sensor performance'],
+ P0442:['Evaporative Emission System Leak Detected — Small Leak','EVAP sealing and purge/vent control'],
+ P0455:['Evaporative Emission System Leak Detected — Large Leak','EVAP sealing, cap, hoses, and vent control'],
+ P0456:['Evaporative Emission System Leak Detected — Very Small Leak','small EVAP leak and valve sealing'],
+ P0500:['Vehicle Speed Sensor A','vehicle-speed signal and circuit'],
+ P0507:['Idle Control System RPM Higher Than Expected','airflow, throttle control, and unmetered air'],
+ P0562:['System Voltage Low','battery, charging system, cables, and power distribution'],
+ P0606:['PCM/ECM Processor Fault','module power, ground, software, and internal control'],
+ P0700:['Transmission Control System Malfunction — MIL Request','a transmission-module fault requesting the engine controller to illuminate the MIL'],
+ P0701:['Transmission Control System Range/Performance','transmission control operation, power/grounds, network communication, inputs, and internal failsafe strategy'],
+ P0715:['Input/Turbine Speed Sensor A Circuit','transmission input-speed signal and circuit'],
+ P0720:['Output Speed Sensor Circuit','transmission output-speed signal and circuit'],
+ P0730:['Incorrect Gear Ratio','hydraulic, clutch, speed-sensor, and internal transmission performance'],
+ P0741:['Torque Converter Clutch Circuit Performance or Stuck Off','TCC apply control, hydraulics, and converter clutch operation'],
+ P0750:['Shift Solenoid A Malfunction','shift-solenoid circuit and hydraulic control'],
+ P1000:['OBD Systems Readiness Test Not Complete','monitor readiness; manufacturer wording may vary'],
+ U0100:['Lost Communication With ECM/PCM A','network integrity, module power/ground, and CAN communication'],
+ U0101:['Lost Communication With TCM','TCM power/ground and network communication'],
+ U0121:['Lost Communication With ABS Control Module','ABS module power/ground and network communication'],
+ C0035:['Left Front Wheel Speed Sensor Circuit','left-front wheel-speed signal, bearing encoder, air gap, wiring, and connector'],
+ B0020:['Supplemental Restraint System deployment-loop fault; exact definition is manufacturer dependent','SRS circuit; verify OEM code definition before testing']
+};
+function dtcFamilyDescription(code){
+ const letter=code[0],n=Number(code.slice(1));
+ if(letter==='P'){
+  if(n>=700&&n<=899)return 'a transmission-control fault';
+  if(n>=300&&n<=399)return 'an ignition, misfire, or engine-speed/position fault';
+  if(n>=400&&n<=499)return 'an emissions-control fault';
+  if(n>=100&&n<=199)return 'an air/fuel metering or sensor-circuit fault';
+  if(n>=500&&n<=599)return 'a vehicle-speed, idle-control, or electrical-system fault';
+  if(n>=600&&n<=699)return 'a control-module or output-circuit fault';
+  return 'a powertrain fault';
+ }
+ if(letter==='U')return 'a network communication fault';
+ if(letter==='C')return 'a chassis or ABS-related fault';
+ if(letter==='B')return 'a body, restraint, or comfort-system fault';
+ return 'a diagnostic fault';
+}
+function localGeneralAnswer(text){
+ const raw=String(text||'').trim();
+ const q=normalizeDiagnosticInput(raw);
+ const priorUser=history.filter(m=>m.role==='user').slice(0,-1).map(m=>m.content).join(' | ');
+ const full=normalizeDiagnosticInput(priorUser+' | '+raw);
+ let code=full.match(/\b[PCBU]\d{4}\b/)?.[0]||'';
+ if(!code){const spoken=full.match(/(?:CODE\s+)?\b(\d{3,4})\b/)?.[1];if(spoken)code='P'+spoken.padStart(4,'0')}
+ const firstTurn=history.filter(m=>m.role==='user').length<=1;
+ const hasVehicle=!!caseData.vehicle||/\b(19|20)\d{2}\b/.test(full)||/(TOYOTA|HONDA|FORD|CHEV|GMC|KIA|HYUNDAI|JEEP|DODGE|RAM|BMW|VOLKSWAGEN|VW|NISSAN|SUBARU|MAZDA|LEXUS|ACURA|BUICK|CADILLAC|MERCEDES|AUDI)/.test(full);
+ const completeRequest=/\b(COMPLETE|FULL|ALL STEPS|STEP BY STEP|PROCEDURE|EVERY TEST|DETAILED)\b/.test(q);
+ if(completeRequest&&code==='P0701')return 'P0701 workflow: scan every module and record all transmission and network codes before clearing anything. Verify battery voltage, charging voltage, TCM powers, grounds, connectors, and CAN communication. Compare commanded gear, actual gear, input speed, output speed, range-switch data, fluid temperature, and line-pressure or solenoid data when supported. Check fluid level and condition using the correct OEM procedure. Use accompanying transmission codes to direct circuit, hydraulic, or mechanical testing; P0701 by itself is usually a supervisory range/performance code, not authorization to replace the transmission. After repair, clear codes, complete the relearn if required, and duplicate the original operating conditions.';
+ if(completeRequest&&/^P030[0-8]$/.test(code))return `${code} misfire workflow: confirm the affected cylinder and operating condition with counters and freeze-frame. Inspect the plug, boot, coil connector, and evidence of coolant or oil intrusion. Swap an interchangeable ignition component only as a controlled test, then verify whether the misfire follows. If it stays, test injector command and contribution, check for an intake leak at that runner, and perform relative compression followed by mechanical testing as needed. Repair only after a measured failure, then clear codes and confirm under the original conditions.`;
+ if(completeRequest&&code==='P0420')return 'P0420 workflow: verify operating temperature and make sure no misfire, fuel-control, oil-consumption, or coolant-consumption fault is active. Inspect and smoke-test the exhaust ahead of and around the downstream sensor. Verify correct OE-quality sensor applications and heater operation. Review fuel trims and Mode $06 catalyst results, then compare upstream and downstream sensor activity during the OEM monitor conditions. Condemn the converter only after the engine, exhaust, and sensors pass and catalyst oxygen-storage performance still fails.';
+ if(code){
+   const item=DTC_KNOWLEDGE_V1055[code];
+   if(item){
+     const [definition,system]=item;
+     if(firstTurn){
+       if(code==='P0701')return `${code} is ${definition}. It is usually a supervisory transmission-control code, so the companion TCM codes matter more than replacing anything from P0701 alone. What vehicle is it, and what other transmission or network codes are stored?`;
+       return `${code} is ${definition}. That points us toward ${system}. What vehicle and engine are we working on, and is the code current, pending, or history?`;
+     }
+     if(!hasVehicle)return `I have ${code} as ${definition}. What year, make, model, and engine is this so I can narrow the next test without guessing?`;
+     const vehicleAck=caseData.vehicle?`All right, ${caseData.vehicle}. `:'All right. ';
+     if(!caseData.status)return `${vehicleAck}Is ${code} current, pending, history, or intermittent?`;
+     if(!caseData.symptoms.length)return `${vehicleAck}What symptoms are present with ${code}?`;
+     return `${vehicleAck}What scan data, freeze-frame, circuit measurement, or component test has already been verified?`;
+   }
+   const family=dtcFamilyDescription(code);
+   return `${code} is a valid ${code[0]}-series format and falls in ${family}, but its exact wording is not in this local catalog and may be manufacturer-specific. What vehicle, module, and scan-tool definition are shown?`;
+ }
+ if(/NO.?CRANK/.test(q))return firstTurn?'All right—no crank. Do you hear no sound, one click, or rapid clicking when the key is turned?':'What is battery voltage at rest and during the crank request?';
+ if(/CRANK.?NO.?START|CRANKS? BUT/.test(q))return firstTurn?'All right—it cranks but will not start. Do you have RPM on the scan tool while cranking?':'Do you have spark, injector pulse, and fuel pressure, or which of those has already been verified?';
+ if(/BATTERY.*(DEAD|DRAIN)|PARASITIC/.test(q))return firstTurn?'For a battery that goes dead, has the battery passed a conductance or load test, and how long does it take to discharge?':'After the vehicle goes to sleep, what is the measured key-off current draw?';
+ if(/ABS.*(BEARING|HUB)|WHEEL BEARING.*ABS/.test(q))return firstTurn?'An ABS light after a wheel-bearing or hub replacement usually points toward signal quality, connector damage, incorrect bearing orientation, or the wrong part. Which wheel was repaired, and what ABS code returned?':'Does that wheel-speed PID agree with the other wheels during a slow road test?';
+ if(/MISFIRE|ROUGH IDLE|ENGINE SKIP/.test(q))return firstTurn?'Which cylinder or cylinders are accumulating misfire counts, and when does it happen—idle, load, cold, or hot?':'What did the misfire counters or controlled component-swap test show?';
+ if(/WIRE|PINOUT|CONNECTOR|WIRING DIAGRAM/.test(q))return 'I can help test the circuit. Give me the vehicle, engine, circuit or code, and the measurements already taken; exact connector views and pin locations require matching service information.';
+ return firstTurn?'Tell me the DTC or symptom you are working with, and I will start with one useful question rather than a checklist.':'What did you observe or measure next?';
+}
+async function send(text){text=(text||'').trim();if(!text||busy)return;history.push({role:'user',content:text,mode:activeMode});addMessage('user',text);input.value='';save();updateContext();parseCaseInput(text);const context=mergedContext();
  if(activeMode==='general'&&!serviceUrl()){const reply=localGeneralAnswer(text);history.push({role:'assistant',content:reply,mode:'general'});addMessage('assistant',reply);save();updateContext();return}
  if(activeMode==='ro'&&!context.ro){const reply='RO Assistant is reserved for case-specific work. Open or enter a repair order to attach the vehicle, concern, DTCs, and technician notes. For a question that does not need an RO, switch to General Diagnostics.';history.push({role:'assistant',content:reply,mode:'ro'});addMessage('assistant',reply);save();updateContext();return}
  busy=true;$('diagSend').disabled=true;$('diagSend').textContent='Thinking…';updateContext();
- try{const url=serviceUrl();if(!url)throw new Error('Oliver service URL is not configured');const general=activeMode==='general';const payload={version:'2.0',assistantMode:general?'general-diagnostics':'repair-order-assistant',operatingMode:general?'standalone':'repair-order',context:general?{dtcs:context.dtcs||'',notes:''}:{...context},technicianRequest:text,requirements:general?{vinRequired:false,engineRequired:false,repairOrderRequired:false}:{vinRequired:false,engineRequired:false,repairOrderRequired:true},instructions:general?[
- 'This is General Diagnostics. Answer immediately without requiring a VIN, engine size, customer, or repair order.',
- 'Give a useful general definition and disciplined preliminary test strategy.',
- 'Vehicle details may be requested only after the answer as optional information for exact specifications.',
- 'Never respond that confirmation or documentation requires a VIN-specific engine size or RO.'
+ try{const url=serviceUrl();if(!url)throw new Error('Oliver service URL is not configured');const general=activeMode==='general';const payload={version:'2.0',assistantMode:general?'general-diagnostics':'repair-order-assistant',operatingMode:general?'standalone':'repair-order',context:general?{vehicle:context.vehicle||'',dtcs:context.dtcs||'',diagnosticSession:caseData,notes:''}:{...context,diagnosticSession:caseData},technicianRequest:text,requirements:general?{vinRequired:false,engineRequired:false,repairOrderRequired:false}:{vinRequired:false,engineRequired:false,repairOrderRequired:true},instructions:general?[
+ 'This is General Diagnostics. Never require a VIN, engine size, customer, or repair order before answering.',
+ 'Speak like an experienced shop foreman in a live conversation, not like a service manual or scripted lesson.',
+ 'Keep the normal response to two to four short sentences and ask exactly one highest-value question.',
+ 'Use all facts already supplied in diagnosticSession and the message history. Acknowledge newly captured vehicle or test information and never ask again for answered information.',
+ 'Do not provide a checklist or multiple test branches unless the technician explicitly asks for the complete procedure.',
+ 'Define a DTC immediately, then ask one question that most efficiently changes the diagnostic direction.',
+ 'Separate verified evidence from assumptions and recommend measured pass/fail testing instead of parts replacement.',
+ 'Never mention a six-step process, numbered diagnostic sequence, VIN gate, RO gate, or offline limitation.'
  ]:[
  'This is RO Assistant. Use the attached repair-order context for case-specific guidance.',
  'Separate verified evidence from assumptions and recommend the next best test.',
  'Use diagnose, repair, confirm methodology.'
- ],messages:[{role:'system',content:general?'You are Oliver General Diagnostics. You must answer automotive diagnostic questions without requiring a VIN, engine size, or repair order.':'You are Oliver RO Assistant. Use the active repair-order context for vehicle-specific guidance.'},...history.slice(-30)]};
+ ],messages:[{role:'system',content:general?'You are Oliver General Diagnostics, an experienced automotive diagnostician having a natural technician-to-technician conversation. Give a concise direct answer, use prior context, and ask exactly one high-value follow-up question unless the technician requests a complete procedure. Never use a fixed sequence or checklist by default.':'You are Oliver RO Assistant. Use the active repair-order context for vehicle-specific guidance.'},...history.slice(-30)]};
  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!r.ok)throw new Error(`Service returned ${r.status}`);const data=await r.json();let reply=String(data.reply||data.message||data.output||'').trim();if(!reply)throw new Error('Service returned no diagnostic response');if(general&&isContextRefusal(reply))reply=localGeneralAnswer(text);history.push({role:'assistant',content:reply,mode:activeMode});addMessage('assistant',reply);save()
  }catch(err){const reply=activeMode==='general'?localGeneralAnswer(text):`Oliver RO Assistant connection failed: ${err.message}. The repair-order conversation is preserved.`;history.push({role:'assistant',content:reply,mode:activeMode});addMessage('assistant',reply);save()}finally{busy=false;$('diagSend').disabled=false;$('diagSend').textContent='Send to Oliver';updateContext()}}
 function closeMode(){shell.classList.remove('active');document.body.style.overflow='';speechSynthesis?.cancel()}
@@ -6450,7 +6703,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 
 
-<!-- v10.5.2 completion, assignment and iPhone safe-area stabilization; v10.2.9 handoff logic preserved -->
+<!-- v10.5.5 completion, assignment and iPhone safe-area stabilization; v10.2.9 handoff logic preserved -->
 <datalist id="nitrosTechnicianChoicesV1029"></datalist>
 <script id="v1029TechnicianAssignmentHandoffFix">
 (()=>{
@@ -6536,7 +6789,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 </script>
 
 
-<!-- v10.5.2 diagnostic close-button safe-area and touch stabilization -->
+<!-- v10.5.5 diagnostic close-button safe-area and touch stabilization -->
 <style id="v1031StabilizationStyles">
   :root{--nitros-v1031-safe-bottom:max(14px,env(safe-area-inset-bottom))}
   header{scroll-margin-top:env(safe-area-inset-top)}
@@ -6682,7 +6935,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 })();
 </script>
 <style id="v1041-script-engine-elimination-style">
-/* v10.5.2: legacy guided diagnostic UI is retired and cannot intercept touch events. */
+/* v10.5.5: legacy guided diagnostic UI is retired and cannot intercept touch events. */
 .oliver-guide-panel,.oliver-guide-dialog{display:none!important;pointer-events:none!important}
 #smartDiagComplete,#smartDiagBack,#smartDiagReset,#smartDiagRecord{display:none!important}
 </style>
@@ -6701,73 +6954,171 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
   window.addEventListener('pageshow',apply);
 })();
 </script>
-<!-- v10.5.2 Standalone Diagnostic Mode: missing RO or vehicle data no longer blocks a general diagnostic answer. -->
+<!-- v10.5.5 Standalone Diagnostic Mode: missing RO or vehicle data no longer blocks a general diagnostic answer. -->
 
 
 <style id="v1050-separated-mode-style">
 #diagGeneralMode.active,#diagRoMode.active{background:#72c8ff;color:#001421;border-color:#72c8ff}
 </style>
-<!-- v10.5.2 separates General Diagnostics from RO Assistant and prevents VIN/RO refusal in General mode. -->
+<!-- v10.5.5 separates General Diagnostics from RO Assistant and prevents VIN/RO refusal in General mode. -->
 
-
-<!-- v10.6.0 Oliver Free Diagnostic Mode -->
-<style id="v1060-free-diagnostic-styles">
-#diagSessionCard .diag-tool-grid{grid-template-columns:1fr 1fr}
-#diagSessionId{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;word-break:break-all}
-#diagHubButton{border-color:#ff9d28;background:#2b1c0a}
-#diagNewSession{border-color:#72c8ff}
-#diagAttachSession{border-color:#55d68b}
-@media(max-width:800px){#diagSessionCard .diag-tool-grid{grid-template-columns:1fr}}
-</style>
-<script id="v1060-free-diagnostic-script">
-(()=>{
-  const $=id=>document.getElementById(id);
-  const VERSION='10.6.0';
-  const SESSION_KEY='nitros_v1060_free_diagnostic_session';
-  const ARCHIVE_KEY='nitros_v1060_free_diagnostic_archive';
-  const now=()=>new Date().toISOString();
-  const makeId=()=>`DIAG-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2,7).toUpperCase()}`;
-  function readJSON(key,fallback){try{return JSON.parse(localStorage.getItem(key)||'')||fallback}catch{return fallback}}
-  function writeJSON(key,value){localStorage.setItem(key,JSON.stringify(value))}
-  function activeSession(){let s=readJSON(SESSION_KEY,null);if(!s){s={sessionId:makeId(),version:VERSION,createdAt:now(),updatedAt:now(),status:'Temporary',vehicleText:'',dtcs:[],symptoms:[],measurements:[],attachedRo:'',source:'Oliver AI Button'};writeJSON(SESSION_KEY,s)}return s}
-  function saveSessionPatch(patch){const s=Object.assign(activeSession(),patch,{updatedAt:now()});writeJSON(SESSION_KEY,s);renderSession();return s}
-  function extract(text){const s=activeSession();const upper=String(text||'').toUpperCase();const codes=[...upper.matchAll(/\b[PCBU]\s*[- ]?\s*\d{4}\b/g)].map(m=>m[0].replace(/[\s-]/g,''));
-    const year=(upper.match(/\b(19\d{2}|20\d{2})\b/)||[])[1]||'';
-    const makes=['TOYOTA','HONDA','FORD','CHEVROLET','CHEVY','GMC','JEEP','DODGE','RAM','KIA','HYUNDAI','NISSAN','SUBARU','VOLKSWAGEN','VW','BMW','MERCEDES','AUDI','MAZDA','LEXUS'];
-    const make=makes.find(x=>upper.includes(x))||'';
-    const engine=(upper.match(/\b\d\.\d\s*(?:L|LITER)?\b/)||[])[0]||'';
-    const vehicle=[year,make,engine].filter(Boolean).join(' ');
-    if(vehicle)s.vehicleText=vehicle;
-    s.dtcs=[...new Set([...(s.dtcs||[]),...codes])];
-    s.updatedAt=now();writeJSON(SESSION_KEY,s);renderSession();
-  }
-  function renderSession(){const s=activeSession();if($('diagSessionId'))$('diagSessionId').textContent=s.sessionId;if($('diagSessionStatus'))$('diagSessionStatus').textContent=[s.status,s.attachedRo&&`RO ${s.attachedRo}`,s.vehicleText,s.dtcs?.join(', ')].filter(Boolean).join(' • ')||'Temporary session active'}
-  function installUi(){
-    const actions=document.querySelector('#oliverDiagnosticMode .diag-top-actions');
-    if(actions&&!$('diagHubButton')){const b=document.createElement('button');b.id='diagHubButton';b.className='diag-icon-btn';b.type='button';b.textContent='Oliver Hub';actions.insertBefore(b,actions.firstChild)}
-    const side=document.querySelector('#oliverDiagnosticMode .diag-side');
-    if(side&&!$('diagSessionCard')){const card=document.createElement('div');card.id='diagSessionCard';card.className='diag-card';card.innerHTML=`<div class="diag-card-label">Temporary Diagnostic Session</div><div id="diagSessionId" class="diag-card-value"></div><div id="diagSessionStatus" class="diag-card-value" style="color:#afc3d3;margin-top:6px"></div><div class="diag-tool-grid" style="margin-top:9px"><button id="diagSaveSession" type="button">Save Session</button><button id="diagAttachSession" type="button">Attach to Active RO</button><button id="diagNewSession" type="button">Start New Diagnosis</button><button id="diagDiscardSession" type="button">Discard Session</button></div>`;side.insertBefore(card,side.firstChild)}
-    renderSession();
-  }
-  function openFree(){activeSession();window.openOliverGeneralDiagnostics?.();setTimeout(()=>{$('diagInput')?.focus();renderSession()},100)}
-  function archiveCurrent(status='Saved'){const s=Object.assign(activeSession(),{status,updatedAt:now()});const a=readJSON(ARCHIVE_KEY,[]);a.unshift(s);writeJSON(ARCHIVE_KEY,a.slice(0,100));writeJSON(SESSION_KEY,s);renderSession();return s}
-  function newSession(){const current=activeSession();if((window.confirm?.('Start a new diagnostic conversation? The current temporary session will be saved first.')??true))archiveCurrent('Saved');const s={sessionId:makeId(),version:VERSION,createdAt:now(),updatedAt:now(),status:'Temporary',vehicleText:'',dtcs:[],symptoms:[],measurements:[],attachedRo:'',source:'Oliver AI Button'};writeJSON(SESSION_KEY,s);localStorage.removeItem('nitros_v90_diagnostic_history');const chat=$('diagChat');if(chat)chat.innerHTML='';renderSession();$('diagInput')?.focus()}
-  function activeRO(){return String($('jobRo')?.value||$('workboardRo')?.value||localStorage.getItem('nitros_active_ro')||'').trim()}
-  function attach(){const ro=activeRO();if(!ro){alert('No active repair order is available. The diagnostic session remains saved and can be attached later.');archiveCurrent('Saved');return}const s=saveSessionPatch({status:'Attached',attachedRo:ro});archiveCurrent('Attached');const notes=$('internalTechnicianNotes');if(notes){const history=readJSON('nitros_v90_diagnostic_history',[]);const text=history.map(m=>`${m.role==='user'?'TECH':'OLIVER'}: ${m.content}`).join('\n');notes.value=[notes.value,`=== Oliver Free Diagnostic Session ${s.sessionId} ===`,text].filter(Boolean).join('\n');notes.dispatchEvent(new Event('input',{bubbles:true}))}alert(`Diagnostic session attached to RO ${ro}.`)}
-  function discard(){if(!(window.confirm?.('Discard this temporary diagnostic session?')??true))return;localStorage.removeItem(SESSION_KEY);localStorage.removeItem('nitros_v90_diagnostic_history');const chat=$('diagChat');if(chat)chat.innerHTML='';activeSession();renderSession()}
-  function wire(){installUi();
-    const launch=$('unifiedOliverLaunch');if(launch&&!launch.dataset.v1060Direct){launch.dataset.v1060Direct='1';launch.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openFree()},true)}
-    const repair=$('oliverHubRepair');if(repair){repair.innerHTML='<strong>🔧 Free Diagnostic Mode</strong><span>Start immediately with any DTC, symptom, vehicle description, or measurement. No RO or VIN required.</span>';repair.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();$('unifiedOliverHub')?.classList.add('hidden');openFree()},true)}
-    $('diagHubButton')?.addEventListener('click',()=>{document.getElementById('oliverDiagnosticMode')?.classList.remove('active');document.body.style.overflow='';$('unifiedOliverHub')?.classList.remove('hidden')});
-    $('diagSaveSession')?.addEventListener('click',()=>{archiveCurrent('Saved');alert('Temporary diagnostic session saved on this device.')});
-    $('diagAttachSession')?.addEventListener('click',attach);$('diagNewSession')?.addEventListener('click',newSession);$('diagDiscardSession')?.addEventListener('click',discard);
-    const input=$('diagInput');if(input&&!input.dataset.v1060Extract){input.dataset.v1060Extract='1';input.addEventListener('change',()=>extract(input.value));const send=$('diagSend');send?.addEventListener('click',()=>extract(input.value),true);input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey)extract(input.value)},true)}
-    document.title='Nitros Mobile Technician Portal v10.6.0 — Oliver Free Diagnostic Mode';
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});else wire();
-  window.openOliverFreeDiagnosticMode=openFree;
+<script id="v1053-legacy-core-removal-guard">
+(()=>{'use strict';
+ const retire=()=>{
+  ['smartDiagComplete','smartDiagBack','smartDiagReset','smartDiagRecord'].forEach(id=>{const el=document.getElementById(id);if(el){el.disabled=true;el.hidden=true;el.style.display='none';el.replaceWith(el.cloneNode(true))}});
+  const old=document.getElementById('smartDiagnosticStep');if(old){old.textContent='Legacy guided diagnostic core removed. Use Oliver Free Diagnostic Mode for a live, adaptive conversation.'}
+  const state=document.getElementById('diagState');if(state&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))state.textContent='Adaptive conversation engine ready — no scripted sequence';
+ };
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',retire,{once:true});else retire();
+ window.addEventListener('pageshow',retire);
 })();
 </script>
-<!-- End v10.6.0 Oliver Free Diagnostic Mode -->
+<!-- v10.5.5 physically removes numbered diagnostic content and replaces all offline fallbacks with adaptive conversation logic. -->
+
+<script id="v1054-conversational-engine-marker">
+(()=>{const apply=()=>{const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Conversational diagnostic engine ready — one adaptive question at a time';const b=document.getElementById('smartDiagStart');if(b)b.textContent='Open Oliver Conversational Diagnostics';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+</script>
+<!-- v10.5.5 adds concise session-aware diagnostic conversation, single-question branching, and full-procedure expansion on request. -->
+
+<script id="v1055-knowledge-engine-marker">
+(()=>{const apply=()=>{const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Expanded DTC knowledge engine ready — conversational mode preserved';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+</script>
+<!-- v10.5.5 expands DTC normalization and local knowledge while preserving the validated conversational engine. -->
+
+<script id="v1057-diagnostic-session-memory-marker">
+(()=>{const apply=()=>{const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Diagnostic Session Memory ready — vehicle, status, symptoms, tests, and measurements retained';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+</script>
+<!-- v10.5.6 centralizes code normalization and DTC routing across Oliver Hub and Free Diagnostic Mode. -->
+
+<style id="v1060-session-manager-style">
+.oliver-active-case-banner{margin:10px 0 12px;padding:11px 13px;border:1px solid #ff982d;border-radius:14px;background:#081321;color:#e9f1fb;font-size:12px;line-height:1.45}
+.oliver-active-case-banner .case-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;color:#ffbd72}
+.oliver-active-case-banner button{border:1px solid #60748c;background:#13243a;color:#fff;border-radius:9px;padding:5px 9px;font-weight:800}
+</style>
+<script id="v1060-session-manager-marker">
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.7.2 — Completed Prompt Tracking';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+</script>
+<!-- v10.6.1 adds context awareness: Oliver reads the active case, acknowledges known facts, and asks only for the highest-value missing information. -->
+
+<script id="v1072-completed-prompt-tracking-marker">
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.7.2 — Completed Prompt Tracking';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+</script>
+<!-- v10.7.2 tracks completed prompts, recognizes power-loss symptoms, acknowledges each new fact, and blocks answered intake questions from repeating. -->
+
+
+<style id="v1080-diagnostic-import-style">
+.oliver-import-row{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
+.oliver-import-btn{width:100%;border:1px solid #ff982d;background:#13243a;color:#fff;border-radius:12px;padding:10px 12px;font-weight:850;cursor:pointer}
+.oliver-import-btn:hover{filter:brightness(1.08)}
+.oliver-import-panel{display:none;margin-top:10px;padding:12px;border:1px solid #526985;border-radius:14px;background:#081321;color:#e9f1fb}
+.oliver-import-panel.open{display:block}
+.oliver-import-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.oliver-import-action{border:1px solid #526985;background:#102039;color:#fff;border-radius:10px;padding:9px;font-weight:750;cursor:pointer}
+.oliver-import-status{margin-top:9px;font-size:12px;line-height:1.4;color:#b8c8dc}
+.oliver-import-preview{display:none;margin-top:10px;max-height:210px;overflow:auto;border:1px solid #334a65;border-radius:10px;padding:8px;background:#050d18}
+.oliver-import-preview.open{display:block}
+.oliver-import-preview img{display:block;max-width:100%;max-height:180px;margin:auto;border-radius:8px}
+.oliver-import-preview pre{white-space:pre-wrap;word-break:break-word;margin:0;font-size:11px;color:#dce8f7}
+.oliver-import-chip{display:inline-block;margin:3px 5px 0 0;padding:4px 7px;border-radius:999px;background:#17304d;border:1px solid #46617f;font-size:11px}
+@media(max-width:520px){.oliver-import-actions{grid-template-columns:1fr}}
+</style>
+<script id="v1080-diagnostic-data-import">
+(()=>{'use strict';
+ const $=id=>document.getElementById(id);
+ const MAX_TEXT=1500000;
+ function esc(s){return String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}
+ function findAnchor(){return $('oliverHubSend')?.parentElement||$('oliverHubTranscript')?.parentElement}
+ function sendFact(text){
+   const input=$('oliverHubInput'),send=$('oliverHubSend');
+   if(!input||!send)return false;
+   input.value=text;send.click();return true;
+ }
+ function dtcs(text){return [...new Set((String(text).toUpperCase().match(/\b[PCBU][0-9A-F]{4}\b/g)||[]))].slice(0,24)}
+ function parseCsv(text){
+   const lines=String(text).split(/\r?\n/).filter(Boolean);
+   if(!lines.length)return {summary:'The imported scan-data file was empty.',preview:''};
+   const delimiter=(lines[0].split('\t').length>lines[0].split(',').length)?'\t':',';
+   const rows=lines.slice(0,250).map(l=>l.split(delimiter).map(v=>v.trim().replace(/^\"|\"$/g,'')));
+   const headers=rows[0]||[];
+   const important=/^(dtc|code|pid|parameter|description|value|unit|rpm|ect|coolant|stft|ltft|maf|map|o2|oxygen|voltage|speed|load|fuel|status|freeze)/i;
+   const selected=headers.map((h,i)=>important.test(h)?i:-1).filter(i=>i>=0).slice(0,12);
+   const ids=dtcs(text);
+   let facts=[];
+   if(ids.length)facts.push('DTCs found: '+ids.join(', '));
+   if(selected.length&&rows.length>1){
+     const sample=rows.slice(1,Math.min(rows.length,8)).map(r=>selected.map(i=>`${headers[i]||'Column '+(i+1)}=${r[i]??''}`).join('; '));
+     facts.push('Scan-data sample: '+sample.join(' | '));
+   } else {
+     facts.push(`Imported ${Math.max(0,rows.length-1)} data rows with columns: ${headers.slice(0,14).join(', ')||'unlabeled'}`);
+   }
+   return {summary:facts.join('. '),preview:lines.slice(0,18).join('\n')};
+ }
+ function parseText(text,name){
+   const ids=dtcs(text);const clean=String(text).replace(/\s+/g,' ').trim();
+   const parts=[`Imported diagnostic file ${name}`];
+   if(ids.length)parts.push('DTCs found: '+ids.join(', '));
+   if(clean)parts.push('File notes: '+clean.slice(0,1200));
+   return {summary:parts.join('. '),preview:String(text).slice(0,5000)};
+ }
+ function setStatus(msg){const el=$('oliverImportStatus');if(el)el.textContent=msg}
+ function previewHtml(html){const p=$('oliverImportPreview');if(!p)return;p.innerHTML=html;p.classList.add('open')}
+ async function handleFile(file){
+   if(!file)return;
+   setStatus(`Loading ${file.name}…`);
+   const type=(file.type||'').toLowerCase();
+   if(type.startsWith('image/')){
+     const url=URL.createObjectURL(file);
+     previewHtml(`<div><span class="oliver-import-chip">Image</span><span class="oliver-import-chip">${esc(file.name)}</span></div><img alt="Imported diagnostic image" src="${url}">`);
+     sendFact(`Attached diagnostic image: ${file.name}. Image is available in the import preview. Please use the visible scan-tool values or type the important readings so they can be added to the active case.`);
+     setStatus('Image attached and previewed. This offline build stores the attachment in the current browser session; automatic visual interpretation requires a connected AI/OCR service.');
+     return;
+   }
+   if(type==='application/pdf'||/\.pdf$/i.test(file.name)){
+     previewHtml(`<div><span class="oliver-import-chip">PDF</span><span class="oliver-import-chip">${esc(file.name)}</span></div><pre>PDF attached. Local text extraction is not enabled in this offline build.</pre>`);
+     sendFact(`Attached diagnostic PDF: ${file.name}. Please type or paste the key scan readings from the report so they can be used in this case.`);
+     setStatus('PDF attached. A connected PDF extraction service is needed for automatic reading.');return;
+   }
+   if(file.size>MAX_TEXT){setStatus('That file is too large for local import. Export a smaller CSV or text report.');return}
+   const text=await file.text();
+   const parsed=(/\.csv$/i.test(file.name)||type.includes('csv'))?parseCsv(text):parseText(text,file.name);
+   previewHtml(`<div><span class="oliver-import-chip">Data file</span><span class="oliver-import-chip">${esc(file.name)}</span></div><pre>${esc(parsed.preview)}</pre>`);
+   sendFact(parsed.summary);
+   setStatus('Diagnostic data imported and sent into the active case.');
+ }
+ function build(){
+   if($('oliverDiagnosticImport'))return;
+   const anchor=findAnchor();if(!anchor)return;
+   const wrap=document.createElement('div');wrap.className='oliver-import-row';wrap.id='oliverDiagnosticImport';
+   wrap.innerHTML=`<button id="oliverImportToggle" class="oliver-import-btn" type="button">＋ Import Diagnostic Data</button>
+   <div id="oliverImportPanel" class="oliver-import-panel">
+    <div class="oliver-import-actions">
+     <button class="oliver-import-action" id="oliverImportImage" type="button">📷 Scan Tool Photo</button>
+     <button class="oliver-import-action" id="oliverImportData" type="button">📊 CSV / Text Data</button>
+     <button class="oliver-import-action" id="oliverImportPdf" type="button">📄 PDF Report</button>
+     <button class="oliver-import-action" id="oliverImportCamera" type="button">📱 Use Camera</button>
+    </div>
+    <input id="oliverImportFile" type="file" hidden>
+    <input id="oliverImportCameraFile" type="file" accept="image/*" capture="environment" hidden>
+    <div id="oliverImportStatus" class="oliver-import-status">Attach a scan-tool photo, CSV/text export, or PDF. Images and PDFs can be previewed locally; CSV and text data can be parsed into the active case.</div>
+    <div id="oliverImportPreview" class="oliver-import-preview"></div>
+   </div>`;
+   anchor.insertAdjacentElement('afterend',wrap);
+   $('oliverImportToggle').onclick=()=>$('oliverImportPanel').classList.toggle('open');
+   const file=$('oliverImportFile');
+   $('oliverImportImage').onclick=()=>{file.accept='image/*';file.click()};
+   $('oliverImportData').onclick=()=>{file.accept='.csv,.txt,.json,text/csv,text/plain,application/json';file.click()};
+   $('oliverImportPdf').onclick=()=>{file.accept='.pdf,application/pdf';file.click()};
+   $('oliverImportCamera').onclick=()=>$('oliverImportCameraFile').click();
+   file.onchange=()=>{handleFile(file.files?.[0]).catch(e=>setStatus('Import failed: '+e.message));file.value=''};
+   $('oliverImportCameraFile').onchange=()=>{const f=$('oliverImportCameraFile');handleFile(f.files?.[0]).catch(e=>setStatus('Camera import failed: '+e.message));f.value=''};
+ }
+ const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.0 — Diagnostic Data Import';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Diagnostic Data Import ready — attach scan photos, CSV/text exports, and PDF reports';};
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
+ window.addEventListener('pageshow',()=>setTimeout(apply,40));
+ const mo=new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))build()});mo.observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+<!-- v10.8.0 adds local diagnostic attachment import, image/PDF preview, CSV/text parsing, DTC extraction, and active-case handoff. -->
+
 </body>
 </html>
