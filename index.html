@@ -7818,5 +7818,117 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 })();
 </script>
 
+
+
+<!-- v10.9.0 Active Case Diagnostic Reasoning
+     Uses the loaded vehicle and exact stored DTCs before routing a reply,
+     prevents model-year digits from becoming invented DTCs, and advances
+     directly to a prioritized physical test. -->
+<script id="v1090-active-case-diagnostic-reasoning">
+(()=>{
+  'use strict';
+  const VERSION='10.9.0';
+  const BUILD='2026-08-01-1644';
+  const RELEASE='Active Case Diagnostic Reasoning';
+
+  function stamp1090(){
+    document.title=`Nitros Mobile Technician Portal v${VERSION} — ${RELEASE}`;
+    const sub=document.querySelector('header .sub');
+    if(sub)sub.textContent=`Mobile Technician Portal v${VERSION} — ${RELEASE}`;
+    document.querySelectorAll('.nitros-build-identity').forEach(el=>{
+      el.innerHTML=`<strong>Version ${VERSION}</strong> · ${RELEASE} · Build ${BUILD}`;
+    });
+    document.querySelectorAll('body *').forEach(el=>{
+      if(el.children.length===0 && /Version\s+10\.(?:8\.8|8\.9)/i.test(el.textContent||'')){
+        el.textContent=(el.textContent||'').replace(/Version\s+10\.(?:8\.8|8\.9)/ig,`Version ${VERSION}`);
+      }
+    });
+    document.documentElement.dataset.nitrosReady=VERSION;
+  }
+
+  const clean=s=>String(s||'').trim().replace(/^oliver[,:]?\s*/i,'');
+  const exactCodes=()=>{
+    try{return [...new Set((activeCase?.codes||[]).map(c=>String(c).toUpperCase().replace(/[^PCBU0-9A-F]/g,'')).filter(c=>/^[PCBU][0-9A-F]{4}$/.test(c)))];}
+    catch(_){return []}
+  };
+  const vehicleText=()=>{
+    try{
+      const v=activeCase?.vehicle||{};
+      return [v.year,v.make,v.model,v.engine].filter(Boolean).join(' ').replace(/\s+/g,' ').trim()||'the active vehicle';
+    }catch(_){return 'the active vehicle'}
+  };
+  function looksVehicleOnly(text){
+    const t=clean(text);
+    const hasYear=/\b(?:19|20)\d{2}\b/.test(t);
+    const hasExplicitCode=/\b[PCBU]\s*[- ]?\d\s*[- ]?[0-9A-F]\s*[- ]?[0-9A-F]\s*[- ]?[0-9A-F]\b/i.test(t);
+    const hasTest=/\b(?:volt|psi|ohm|amp|hz|rpm|percent|%|tested|checked|reading|signal|scope|graph|freeze frame)\b/i.test(t);
+    return hasYear&&!hasExplicitCode&&!hasTest&&t.split(/\s+/).length<=9;
+  }
+  function priorityFor(codes){
+    const order=['P0122','P0222','P2135','P2101','P1516','P0606'];
+    return [...codes].sort((a,b)=>{
+      const ai=order.indexOf(a),bi=order.indexOf(b);
+      if(ai>=0||bi>=0)return (ai<0?999:ai)-(bi<0?999:bi);
+      return a.localeCompare(b);
+    });
+  }
+  function nextTest(codes){
+    if(codes.includes('P0122')){
+      return 'Start with P0122 because a low throttle-position input can force reduced-power operation and can influence related throttle-control faults. Key on, engine off: graph APP 1/2 and TP 1/2 while slowly pressing the accelerator. Look for a smooth change with no dropout, then verify the 5-volt reference, low reference, and signal voltage at the throttle-body connector before replacing parts.';
+    }
+    if(codes.some(c=>/^P03/.test(c)))return 'Start with the highest-count active misfire. Compare misfire counters, then swap-test ignition only if the counter follows; if it does not, move to injector command, relative compression, and mechanical verification.';
+    if(codes.some(c=>/^P01/.test(c)))return 'Begin with the shared power, ground, reference-voltage, and live-data relationships for the highest-priority current code. Verify the circuit under load before replacing a sensor or actuator.';
+    return 'First confirm which codes are current versus history, then select the code most likely to affect multiple others. Perform the highest-value live-data or circuit test and record the exact result.';
+  }
+  function activeCaseReply(){
+    const codes=priorityFor(exactCodes());
+    const vehicle=vehicleText();
+    const first=codes[0]||'';
+    let msg=`I already have the active case loaded: ${vehicle}`;
+    if(codes.length)msg+=` with ${codes.join(', ')}.`; else msg+='.';
+    if(first)msg+=` I am keeping every DTC exactly as recorded—${first} is the first code I would attack.`;
+    msg+=' '+nextTest(codes);
+    if(codes.some(c=>['P1111','P1112'].includes(c)))msg+=' P1111 and P1112 can be manufacturer-specific, so keep their exact scan-tool definitions attached to the case; do not substitute or invent a definition.';
+    return msg;
+  }
+
+  function install(){
+    if(typeof routeCommand!=='function'||routeCommand.v1090Wrapped)return false;
+    const prior=routeCommand;
+    const wrapped=function(raw){
+      const text=clean(raw);
+      if(text&&looksVehicleOnly(text)&&exactCodes().length){
+        line('You',String(raw).trim());
+        try{
+          const parsed=parseVehicle(text);
+          if(parsed){
+            activeCase.vehicle={...(activeCase.vehicle||{}),...Object.fromEntries(Object.entries(parsed).filter(([,v])=>v))};
+            activeCase.completedPrompts={...(activeCase.completedPrompts||{}),vehicle:true};
+            activeCase.lastPromptKey='nextTest';
+            activeCase.nextQuestion='Perform prioritized diagnostic test';
+            saveCase();
+          }
+        }catch(_){ }
+        reply(activeCaseReply());
+        return;
+      }
+      return prior(raw);
+    };
+    wrapped.v1090Wrapped=true;
+    routeCommand=wrapped;
+    return true;
+  }
+
+  const start=()=>{
+    stamp1090();
+    let attempts=0;
+    const timer=setInterval(()=>{stamp1090();if(install()||++attempts>40)clearInterval(timer)},100);
+    setTimeout(stamp1090,500);setTimeout(stamp1090,1500);
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+  window.addEventListener('pageshow',()=>{setTimeout(stamp1090,30);setTimeout(install,80)});
+})();
+</script>
+
 </body>
 </html>
