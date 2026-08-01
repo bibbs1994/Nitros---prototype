@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.8.7 — Sign-In Session Lock Fix</title>
+<title>Nitros Mobile Technician Portal v10.8.8 — Diagnostic Conversation Progression Fix</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -482,7 +482,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.8.7 — Sign-In Session Lock Fix</div>
+  <div class="sub">Mobile Technician Portal v10.8.8 — Diagnostic Conversation Progression Fix</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -496,7 +496,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.8.7 preserves the validated conversational and DTC knowledge engines and adds diagnostic evidence analysis after photo, CSV, text, and PDF imports. Oliver now builds an active structured case from natural technician conversation, including vehicle, engine, DTCs, status, symptoms, completed tests, measurements, replaced parts, observations, and the next recommended diagnostic question. VIN-specific wiring, pinouts, calibrations, and OEM procedures still require verified vehicle information.</div>
+    <div id="portalLoginStatus" class="status">Version 10.8.8 preserves the validated conversational and DTC knowledge engines and adds diagnostic evidence analysis after photo, CSV, text, and PDF imports. Oliver now builds an active structured case from natural technician conversation, including vehicle, engine, DTCs, status, symptoms, completed tests, measurements, replaced parts, observations, and the next recommended diagnostic question. VIN-specific wiring, pinouts, calibrations, and OEM procedures still require verified vehicle information.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -659,7 +659,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.8.7</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.8.8</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -726,7 +726,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.8.7</div>
+      <div class="eyebrow">Version 10.8.8</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -5211,7 +5211,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.8.7 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.8.8 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6851,7 +6851,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1031CompletionAssignmentStabilization">
 (()=>{
   'use strict';
-  const BUILD='10.8.7';
+  const BUILD='10.8.8';
   const $=id=>document.getElementById(id);
   const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||'null');return v??fallback}catch{return fallback}};
   const write=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}};
@@ -7045,12 +7045,12 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 .oliver-active-case-banner button{border:1px solid #60748c;background:#13243a;color:#fff;border-radius:9px;padding:5px 9px;font-weight:800}
 </style>
 <script id="v1060-session-manager-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.7 — Sign-In Session Lock Fix';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.8 — Diagnostic Conversation Progression Fix';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 adds context awareness: Oliver reads the active case, acknowledges known facts, and asks only for the highest-value missing information. -->
 
 <script id="v1072-completed-prompt-tracking-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.7 — Sign-In Session Lock Fix';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.8 — Diagnostic Conversation Progression Fix';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 tracks completed prompts, recognizes power-loss symptoms, acknowledges each new fact, and blocks answered intake questions from repeating. -->
 
@@ -7218,7 +7218,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    file.onchange=()=>{handleFile(file.files?.[0]).catch(e=>setStatus('Import failed: '+e.message));file.value=''};
    $('oliverImportCameraFile').onchange=()=>{const f=$('oliverImportCameraFile');handleFile(f.files?.[0]).catch(e=>setStatus('Camera import failed: '+e.message));f.value=''};
  }
- const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.7 — Sign-In Session Lock Fix';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Startup Freeze Fix ready — import a scan-tool graph for panel-by-panel PID identification';};
+ const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.8 — Diagnostic Conversation Progression Fix';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Startup Freeze Fix ready — import a scan-tool graph for panel-by-panel PID identification';};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
  window.addEventListener('pageshow',()=>setTimeout(apply,40));
  const mo=new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))build()});mo.observe(document.documentElement,{childList:true,subtree:true});
@@ -7228,9 +7228,9 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1081-version-label-sync">
 (()=>{
  const sync=()=>{
-  document.title='Nitros Mobile Technician Portal v10.8.7 — Sign-In Session Lock Fix';
+  document.title='Nitros Mobile Technician Portal v10.8.8 — Diagnostic Conversation Progression Fix';
   document.querySelectorAll('.sub,.status,header,footer,[class*=version],[id*=version]').forEach(el=>{
-   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.8.7');
+   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.8.8');
   });
  };
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
@@ -7262,7 +7262,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1084-graph-pid-mapping-fix">
 (()=>{
   'use strict';
-  const RELEASE_VERSION='10.8.7';
+  const RELEASE_VERSION='10.8.8';
   const RELEASE_BUILD='2026-08-01-1512';
   const RELEASE_LABEL=`Version ${RELEASE_VERSION}`;
   window.NITROS_RELEASE={version:RELEASE_VERSION,build:RELEASE_BUILD,cacheKey:`nitros-mobile-${RELEASE_VERSION}-${RELEASE_BUILD}`};
@@ -7361,7 +7361,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 <!-- v10.8.6 Startup Freeze Fix: associates OCR words with upper-left, upper-right, lower-left, and lower-right graph panels; asks only for the first unresolved PID or operating condition. -->
 <script id="v1084-release-identity">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.7 — Sign-In Session Lock Fix';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.8.7</strong> · Startup Freeze Fix · Build 2026-08-01-1512');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.8 — Diagnostic Conversation Progression Fix';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.8.8</strong> · Startup Freeze Fix · Build 2026-08-01-1512');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
 </script>
 
 
@@ -7374,7 +7374,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1085-signin-recovery-fix">
 (()=>{
   'use strict';
-  const VERSION='10.8.7';
+  const VERSION='10.8.8';
   const PROFILE_KEY='nitros_portal_v8_profile';
   let signingIn=false;
 
@@ -7470,10 +7470,10 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
   };
 
   const stamp=()=>{
-    document.title='Nitros Mobile Technician Portal v10.8.7 — Sign-In Session Lock Fix';
+    document.title='Nitros Mobile Technician Portal v10.8.8 — Diagnostic Conversation Progression Fix';
     const sub=document.querySelector('header .sub');
-    if(sub) sub.textContent='Mobile Technician Portal v10.8.7 — Sign-In Session Lock Fix';
-    document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.8.7</strong> · Startup Freeze Fix · Build 2026-08-01-1512');
+    if(sub) sub.textContent='Mobile Technician Portal v10.8.8 — Diagnostic Conversation Progression Fix';
+    document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.8.8</strong> · Startup Freeze Fix · Build 2026-08-01-1512');
     const button=document.getElementById('portalSignIn');
     if(button){button.disabled=false;button.style.pointerEvents='auto';}
     recoverSession();
@@ -7489,7 +7489,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 (()=>{
  'use strict';
  const ready=()=>{
-   document.documentElement.dataset.nitrosReady='10.8.7';
+   document.documentElement.dataset.nitrosReady='10.8.8';
    const b=document.getElementById('portalSignIn');
    if(b){b.disabled=false;b.style.pointerEvents='auto';}
  };
@@ -7499,7 +7499,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 </script>
 
 
-<!-- v10.8.7 Sign-In Session Lock Fix: one authoritative login/session controller prevents legacy startup handlers from returning a signed-in technician to the login screen. -->
+<!-- v10.8.8 Diagnostic Conversation Progression Fix: one authoritative login/session controller prevents legacy startup handlers from returning a signed-in technician to the login screen. -->
 <style id="v1087-session-lock-style">
   #login.screen.active{pointer-events:auto!important;visibility:visible!important}
   #portalSignIn{pointer-events:auto!important;touch-action:manipulation!important}
@@ -7507,7 +7507,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1087-session-lock-fix">
 (()=>{
   'use strict';
-  const VERSION='10.8.7';
+  const VERSION='10.8.8';
   const PROFILE_KEY='nitros_portal_v8_profile';
   const SESSION_KEY='nitros_v1087_authenticated';
   let transition=false;
@@ -7580,8 +7580,8 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
   },true);
 
   const stabilize=()=>{
-    document.title='Nitros Mobile Technician Portal v10.8.7 — Sign-In Session Lock Fix';
-    const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.8.7 — Sign-In Session Lock Fix';
+    document.title='Nitros Mobile Technician Portal v10.8.8 — Diagnostic Conversation Progression Fix';
+    const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.8.8 — Diagnostic Conversation Progression Fix';
     const b=document.getElementById('portalSignIn');if(b){b.disabled=false;b.style.pointerEvents='auto';}
     const p=readProfile();if(p?.name){writeProfile(p);apply(p);show('home');}
   };
@@ -7589,6 +7589,86 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
   window.addEventListener('pageshow',()=>setTimeout(stabilize,20));
   window.addEventListener('load',()=>setTimeout(stabilize,60),{once:true});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&authenticated())setTimeout(()=>show('home'),20);});
+})();
+</script>
+
+
+
+<!-- v10.8.8 Diagnostic Conversation Progression Fix: records finding state once, locks the completed state, and advances imported graph evidence into analysis instead of repeating the same question. -->
+<script id="v1088-diagnostic-conversation-progression-fix">
+(()=>{
+  'use strict';
+  const VERSION='10.8.8';
+  const BUILD='2026-08-01-1529';
+
+  function stampRelease(){
+    document.title='Nitros Mobile Technician Portal v10.8.8 — Diagnostic Conversation Progression Fix';
+    const sub=document.querySelector('header .sub');
+    if(sub) sub.textContent='Mobile Technician Portal v10.8.8 — Diagnostic Conversation Progression Fix';
+    document.querySelectorAll('.nitros-build-identity').forEach(el=>{
+      el.innerHTML=`<strong>Version ${VERSION}</strong> · Diagnostic Conversation Progression Fix · Build ${BUILD}`;
+    });
+    document.documentElement.dataset.nitrosReady=VERSION;
+  }
+
+  function normalizedAnswer(value){
+    return String(value||'').trim().replace(/^oliver[,:]?\s*/i,'');
+  }
+  function isCurrentFinding(value){
+    return /^(?:still\s+)?(?:current|present|there|active|the same|same reading|same result|unchanged|not repaired|not fixed|still doing it|still happening|still remains)(?:\s+now)?[.! ]*$/i.test(normalizedAnswer(value)) ||
+      /\b(?:still current|still present|still there|same reading|same result|no change|not repaired|not fixed|still doing it|still happening|condition remains)\b/i.test(normalizedAnswer(value));
+  }
+  function isRepairedFinding(value){
+    return /\b(?:repaired|fixed|corrected|sealed|replaced|gone|no longer present|not present now|repair completed)\b/i.test(normalizedAnswer(value));
+  }
+  function findingQuestionActive(){
+    try{
+      return activeCase && (
+        activeCase.lastPromptKey==='findingState' ||
+        /recorded finding|still present|already been repaired|condition been repaired/i.test(activeCase.nextQuestion||'')
+      );
+    }catch(_){return false;}
+  }
+  function hasImportedGraphEvidence(){
+    try{return (activeCase.tests||[]).some(x=>/Imported diagnostic evidence:|graph|trace|waveform|plot|chart/i.test(x));}
+    catch(_){return false;}
+  }
+  function recordFindingState(state){
+    activeCase.completedPrompts={...(activeCase.completedPrompts||{}),findingState:true};
+    activeCase.findingStatus=state;
+    activeCase.findingStatusRecordedAt=new Date().toISOString();
+    activeCase.lastPromptKey=state==='Current'?'evidenceAnalysis':'repairVerification';
+    activeCase.nextQuestion=state==='Current'?'Analyze current evidence':'Verify repair effect';
+    saveCase();
+  }
+
+  if(typeof routeCommand==='function' && !routeCommand.v1088Wrapped){
+    const priorRouteCommand=routeCommand;
+    const wrapped=function(raw){
+      const text=String(raw||'').trim();
+      if(text && findingQuestionActive() && (isCurrentFinding(text)||isRepairedFinding(text))){
+        line('You',text);
+        if(isRepairedFinding(text)){
+          recordFindingState('Repaired');
+          reply('Recorded. That finding has been repaired, so I will not ask about its status again. Now verify the repair: clear the codes, repeat the same operating condition, and compare the post-repair reading with the original evidence. Did the code or abnormal trace return?');
+        }else{
+          recordFindingState('Current');
+          const next=hasImportedGraphEvidence()
+            ? 'I am moving forward with the imported graph as current evidence. I will separate confirmed observations from unreadable labels and use the trace relationship to choose the next test. What operating condition was captured—idle, steady cruise, snap throttle, or loaded acceleration?'
+            : 'I am treating the finding as current and moving forward with diagnosis. What scan data or test result can you provide next?';
+          reply('Recorded. This condition is still present on the vehicle, and I will not ask the status question again. '+next);
+        }
+        return;
+      }
+      return priorRouteCommand(raw);
+    };
+    wrapped.v1088Wrapped=true;
+    routeCommand=wrapped;
+  }
+
+  const start=()=>{stampRelease();setTimeout(stampRelease,80);};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+  window.addEventListener('pageshow',()=>setTimeout(stampRelease,40));
 })();
 </script>
 
