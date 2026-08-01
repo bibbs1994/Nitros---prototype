@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.8.2 — Version Identity Fix</title>
+<title>Nitros Mobile Technician Portal v10.8.4 — Sign-In Event Loop Fix</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -482,7 +482,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.8.2 — Version Identity Fix</div>
+  <div class="sub">Mobile Technician Portal v10.8.4 — Sign-In Event Loop Fix</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -496,7 +496,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.8.2 preserves the validated conversational and DTC knowledge engines and adds diagnostic evidence analysis after photo, CSV, text, and PDF imports. Oliver now builds an active structured case from natural technician conversation, including vehicle, engine, DTCs, status, symptoms, completed tests, measurements, replaced parts, observations, and the next recommended diagnostic question. VIN-specific wiring, pinouts, calibrations, and OEM procedures still require verified vehicle information.</div>
+    <div id="portalLoginStatus" class="status">Version 10.8.4 preserves the validated conversational and DTC knowledge engines and adds diagnostic evidence analysis after photo, CSV, text, and PDF imports. Oliver now builds an active structured case from natural technician conversation, including vehicle, engine, DTCs, status, symptoms, completed tests, measurements, replaced parts, observations, and the next recommended diagnostic question. VIN-specific wiring, pinouts, calibrations, and OEM procedures still require verified vehicle information.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -659,7 +659,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.8.2</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.8.4</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -726,7 +726,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.8.2</div>
+      <div class="eyebrow">Version 10.8.4</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1645,7 +1645,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.8.2 • Stable Active Jobs handoff • Header safe-area protection • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.8.4 • Stable Active Jobs handoff • Header safe-area protection • Evidence-based workflow</div>
 </div>
 
 <script>
@@ -2162,7 +2162,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
   }
 
   let lastDecodeDebug={
-    version:"10.8.2", rawInput:"", cleanedVin:"", vinLength:0, formatValid:false, checkDigitValid:false,
+    version:"10.8.4", rawInput:"", cleanedVin:"", vinLength:0, formatValid:false, checkDigitValid:false,
     endpoint:"", httpStatus:"Not requested", elapsedMs:0, error:"", warningCodes:[], returnedFields:[], missingFields:[], rawResponse:null
   };
 
@@ -2197,7 +2197,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 
   async function identifyVehicle(){
     const code=vinInput.value.trim().toUpperCase();
-    lastDecodeDebug={version:"10.8.2",rawInput:code,cleanedVin:"",vinLength:0,formatValid:false,checkDigitValid:false,endpoint:"",httpStatus:"Not requested",elapsedMs:0,error:"",warningCodes:[],returnedFields:[],missingFields:[],rawResponse:null};
+    lastDecodeDebug={version:"10.8.4",rawInput:code,cleanedVin:"",vinLength:0,formatValid:false,checkDigitValid:false,endpoint:"",httpStatus:"Not requested",elapsedMs:0,error:"",warningCodes:[],returnedFields:[],missingFields:[],rawResponse:null};
     updateDecoderDebug();
     if(vehicles[code]){
       selectedVehicle=vehicles[code];
@@ -5173,7 +5173,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.8.2 • diagnostic close-button safe-area and touch stabilization</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.8.4 • diagnostic close-button safe-area and touch stabilization</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5211,7 +5211,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.8.2 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.8.4 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -5495,7 +5495,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     else r=`I recorded your question in the active repair context. Based on the information currently entered, verify the complaint first, separate verified facts from assumptions, and document the result of each test before selecting the next test.\n\nCurrent concern: ${c.concern||'not entered'}.`;
     $('smartOliverResponse').textContent=r;addEvent('Oliver consultation',q);return r;
   }
-  const baseDiagnosticSteps=[]; // v10.8.2: numbered legacy sequence permanently removed.
+  const baseDiagnosticSteps=[]; // v10.8.4: numbered legacy sequence permanently removed.
   function systemStep(){const x=((context().concern||'')+' '+(context().dtcs||'')).toLowerCase();
     if(/no.?crank|starter|crank.*no start/.test(x))return 'System-specific test — Confirm battery state, voltage drop on both starter circuits, relay command and load-side output, park/neutral or clutch input, immobilizer authorization, and starter response at the starter before condemning a module.';
     if(/misfire|p030[0-9]/.test(x))return 'System-specific test — Identify the affected cylinder, compare misfire counters, inspect plug and coil evidence, verify injector control and contribution, then test mechanical integrity before replacing parts.';
@@ -5783,7 +5783,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     return setPrompt('nextTest','Select the highest-value next test','What scan data or test result do you have available next?');
   }
   function routeCommand(raw){const text=raw.trim();if(!text)return;line('You',text);const q=text.replace(/^oliver[,:]?\s*/i,'').toLowerCase(),mode=currentMode();
-    // v10.8.2: imported diagnostic evidence must bypass ordinary intake parsing.
+    // v10.8.4: imported diagnostic evidence must bypass ordinary intake parsing.
     // This prevents words inside OCR text (for example, “current”) from being
     // misread as a technician answer to the code-status question.
     if(/^diagnostic image imported:|^imported diagnostic file |^dtcs found:|^scan-data sample:|^attached diagnostic pdf:/i.test(text)){
@@ -6140,7 +6140,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.8.2</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.8.4</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -6679,7 +6679,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
         }
       });
     }catch(err){
-      console.error('[v10.8.2 stable active-job open]',err);
+      console.error('[v10.8.4 stable active-job open]',err);
       showError('Repair order could not open: '+(err?.message||String(err)));
     }
   }
@@ -6734,7 +6734,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 
 
-<!-- v10.8.2 completion, assignment and iPhone safe-area stabilization; v10.8.2 handoff logic preserved -->
+<!-- v10.8.4 completion, assignment and iPhone safe-area stabilization; v10.8.4 handoff logic preserved -->
 <datalist id="nitrosTechnicianChoicesV1029"></datalist>
 <script id="v1029TechnicianAssignmentHandoffFix">
 (()=>{
@@ -6807,7 +6807,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
   document.addEventListener('focusin',e=>{
     if(e.target?.id==='assignedTechnician'||e.target?.id==='workboardTechnician')ensureAssignment();
   });
-  // Capture phase runs before the existing v10.8.2/v10.8.2 button handler.
+  // Capture phase runs before the existing v10.8.4/v10.8.4 button handler.
   document.addEventListener('click',e=>{
     if(e.target.closest?.('#techOpenRepairOrderV1026'))prepareRepairOrder();
   },true);
@@ -6820,7 +6820,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 </script>
 
 
-<!-- v10.8.2 diagnostic close-button safe-area and touch stabilization -->
+<!-- v10.8.4 diagnostic close-button safe-area and touch stabilization -->
 <style id="v1031StabilizationStyles">
   :root{--nitros-v1031-safe-bottom:max(14px,env(safe-area-inset-bottom))}
   header{scroll-margin-top:env(safe-area-inset-top)}
@@ -6833,7 +6833,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1031CompletionAssignmentStabilization">
 (()=>{
   'use strict';
-  const BUILD='10.8.2';
+  const BUILD='10.8.4';
   const $=id=>document.getElementById(id);
   const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||'null');return v??fallback}catch{return fallback}};
   const write=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}};
@@ -6888,7 +6888,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
       }
     });
     if(changed)write('nitros_portal_v8_assigned_jobs',jobs);
-    window.dispatchEvent(new CustomEvent('nitros-workboard-change',{detail:{source:'v10.8.2-completion-sync',repairOrder:ro,completedAt:at}}));
+    window.dispatchEvent(new CustomEvent('nitros-workboard-change',{detail:{source:'v10.8.4-completion-sync',repairOrder:ro,completedAt:at}}));
   }
 
   function normalizePrimaryBuildLabels(){
@@ -6966,7 +6966,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 })();
 </script>
 <style id="v1041-script-engine-elimination-style">
-/* v10.8.2: legacy guided diagnostic UI is retired and cannot intercept touch events. */
+/* v10.8.4: legacy guided diagnostic UI is retired and cannot intercept touch events. */
 .oliver-guide-panel,.oliver-guide-dialog{display:none!important;pointer-events:none!important}
 #smartDiagComplete,#smartDiagBack,#smartDiagReset,#smartDiagRecord{display:none!important}
 </style>
@@ -6985,13 +6985,13 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
   window.addEventListener('pageshow',apply);
 })();
 </script>
-<!-- v10.8.2 Standalone Diagnostic Mode: missing RO or vehicle data no longer blocks a general diagnostic answer. -->
+<!-- v10.8.4 Standalone Diagnostic Mode: missing RO or vehicle data no longer blocks a general diagnostic answer. -->
 
 
 <style id="v1050-separated-mode-style">
 #diagGeneralMode.active,#diagRoMode.active{background:#72c8ff;color:#001421;border-color:#72c8ff}
 </style>
-<!-- v10.8.2 separates General Diagnostics from RO Assistant and prevents VIN/RO refusal in General mode. -->
+<!-- v10.8.4 separates General Diagnostics from RO Assistant and prevents VIN/RO refusal in General mode. -->
 
 <script id="v1053-legacy-core-removal-guard">
 (()=>{'use strict';
@@ -7004,22 +7004,22 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
  window.addEventListener('pageshow',retire);
 })();
 </script>
-<!-- v10.8.2 physically removes numbered diagnostic content and replaces all offline fallbacks with adaptive conversation logic. -->
+<!-- v10.8.4 physically removes numbered diagnostic content and replaces all offline fallbacks with adaptive conversation logic. -->
 
 <script id="v1054-conversational-engine-marker">
 (()=>{const apply=()=>{const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Conversational diagnostic engine ready — one adaptive question at a time';const b=document.getElementById('smartDiagStart');if(b)b.textContent='Open Oliver Conversational Diagnostics';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
-<!-- v10.8.2 adds concise session-aware diagnostic conversation, single-question branching, and full-procedure expansion on request. -->
+<!-- v10.8.4 adds concise session-aware diagnostic conversation, single-question branching, and full-procedure expansion on request. -->
 
 <script id="v1055-knowledge-engine-marker">
 (()=>{const apply=()=>{const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Expanded DTC knowledge engine ready — conversational mode preserved';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
-<!-- v10.8.2 expands DTC normalization and local knowledge while preserving the validated conversational engine. -->
+<!-- v10.8.4 expands DTC normalization and local knowledge while preserving the validated conversational engine. -->
 
 <script id="v1057-diagnostic-session-memory-marker">
 (()=>{const apply=()=>{const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Diagnostic Session Memory ready — vehicle, status, symptoms, tests, and measurements retained';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
-<!-- v10.8.2 centralizes code normalization and DTC routing across Oliver Hub and Free Diagnostic Mode. -->
+<!-- v10.8.4 centralizes code normalization and DTC routing across Oliver Hub and Free Diagnostic Mode. -->
 
 <style id="v1060-session-manager-style">
 .oliver-active-case-banner{margin:10px 0 12px;padding:11px 13px;border:1px solid #ff982d;border-radius:14px;background:#081321;color:#e9f1fb;font-size:12px;line-height:1.45}
@@ -7027,14 +7027,14 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 .oliver-active-case-banner button{border:1px solid #60748c;background:#13243a;color:#fff;border-radius:9px;padding:5px 9px;font-weight:800}
 </style>
 <script id="v1060-session-manager-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.2 — Version Identity Fix';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.4 — Sign-In Event Loop Fix';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
-<!-- v10.8.2 adds context awareness: Oliver reads the active case, acknowledges known facts, and asks only for the highest-value missing information. -->
+<!-- v10.8.4 adds context awareness: Oliver reads the active case, acknowledges known facts, and asks only for the highest-value missing information. -->
 
 <script id="v1072-completed-prompt-tracking-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.2 — Version Identity Fix';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.4 — Sign-In Event Loop Fix';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
-<!-- v10.8.2 tracks completed prompts, recognizes power-loss symptoms, acknowledges each new fact, and blocks answered intake questions from repeating. -->
+<!-- v10.8.4 tracks completed prompts, recognizes power-loss symptoms, acknowledges each new fact, and blocks answered intake questions from repeating. -->
 
 
 <style id="v1080-diagnostic-import-style">
@@ -7183,97 +7183,60 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    file.onchange=()=>{handleFile(file.files?.[0]).catch(e=>setStatus('Import failed: '+e.message));file.value=''};
    $('oliverImportCameraFile').onchange=()=>{const f=$('oliverImportCameraFile');handleFile(f.files?.[0]).catch(e=>setStatus('Camera import failed: '+e.message));f.value=''};
  }
- const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.2 — Version Identity Fix';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Version Identity Fix ready — import scan photos for automatic visible-text extraction';};
+ const apply=()=>{document.title='Nitros Mobile Technician Portal v10.8.4 — Sign-In Event Loop Fix';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Sign-In Event Loop Fix ready — import scan photos for automatic visible-text extraction';};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
  window.addEventListener('pageshow',()=>setTimeout(apply,40));
  const mo=new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))build()});mo.observe(document.documentElement,{childList:true,subtree:true});
 })();
 </script>
-<!-- v10.8.2 adds browser-based image OCR, automatic text extraction, import-to-case handoff, and preserves the active diagnostic conversation. -->
-<script id="v1081-version-label-sync">
-(()=>{
- const sync=()=>{
-  document.title='Nitros Mobile Technician Portal v10.8.2 — Version Identity Fix';
-  document.querySelectorAll('.sub,.status,header,footer,[class*=version],[id*=version]').forEach(el=>{
-   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.8.2');
-  });
- };
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
- window.addEventListener('pageshow',()=>setTimeout(sync,80));
- new MutationObserver(()=>sync()).observe(document.documentElement,{childList:true,subtree:true});
-})();
-</script>
+<!-- v10.8.4 adds browser-based image OCR, automatic text extraction, import-to-case handoff, and preserves the active diagnostic conversation. -->
+<!-- v10.8.4 authoritative release identity and sign-in interaction fix -->
 
-
-
-<!-- v10.8.2 authoritative version identity and cache-busting release marker -->
-<style id="v1082-version-identity-style">
-  .nitros-build-identity{margin-top:6px;color:#9fb3ca;font-size:.76rem;line-height:1.35;font-weight:700;letter-spacing:.01em}
-  .nitros-build-identity strong{color:#ffb55e}
-  #oliverDiagnosticMode .nitros-build-identity{margin:7px 0 0}
+<!-- v10.8.4 removes recursive DOM observers that could monopolize the UI thread. -->
+<style id="v1084-login-fix-style">
+  #login.screen.active{position:relative!important;z-index:10!important;pointer-events:auto!important}
+  #login.screen.active *{pointer-events:auto!important}
+  #portalTechName,#portalPin,#portalSignIn{position:relative!important;z-index:11!important;touch-action:manipulation!important}
 </style>
-<script id="v1082-version-identity-fix">
+<script id="v1084-login-fix">
 (()=>{
-  const RELEASE_VERSION='10.8.2';
-  const RELEASE_BUILD='2026-08-01-1421';
-  const RELEASE_LABEL=`Version ${RELEASE_VERSION}`;
-  window.NITROS_RELEASE={version:RELEASE_VERSION,build:RELEASE_BUILD,cacheKey:`nitros-mobile-${RELEASE_VERSION}-${RELEASE_BUILD}`};
+  'use strict';
+  const VERSION='10.8.4';
+  const BUILD='2026-08-01-1448';
+  window.NITROS_RELEASE={version:VERSION,build:BUILD,cacheKey:`nitros-mobile-${VERSION}-${BUILD}`};
 
-  const normalizeTextNode=(node)=>{
-    if(!node || node.nodeType!==Node.TEXT_NODE || !node.nodeValue) return;
-    const next=node.nodeValue.replace(/10\.\d+\.\d+/g,RELEASE_VERSION);
-    if(next!==node.nodeValue) node.nodeValue=next;
-  };
-  const normalizeTree=(root=document)=>{
-    document.title=`Nitros Mobile Technician Portal v${RELEASE_VERSION} — Version Identity Fix`;
-    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
-    let node;
-    while((node=walker.nextNode())) normalizeTextNode(node);
+  function stamp(){
+    document.title=`Nitros Mobile Technician Portal v${VERSION} — Sign-In Event Loop Fix`;
+    const sub=document.querySelector('header .sub');
+    if(sub) sub.textContent=`Mobile Technician Portal v${VERSION} — Sign-In Event Loop Fix`;
+  }
 
-    const header=document.querySelector('header .sub');
-    if(header) header.textContent=`Mobile Technician Portal v${RELEASE_VERSION} — Version Identity Fix`;
+  function releaseLogin(){
+    const login=document.getElementById('login');
+    if(!login || !login.classList.contains('active')) return;
+    login.style.pointerEvents='auto';
+    login.querySelectorAll('input,button,label,.field,.card').forEach(el=>{
+      el.style.pointerEvents='auto';
+      if('disabled' in el) el.disabled=false;
+    });
+    document.querySelectorAll('.photo-fullscreen,.oliver-guide-panel,.smart-oliver-panel').forEach(el=>{
+      if(!login.contains(el)){
+        el.style.pointerEvents='none';
+        el.style.display='none';
+      }
+    });
+  }
 
-    const loginStatus=document.getElementById('portalLoginStatus');
-    if(loginStatus && !loginStatus.dataset.v1082Stamped){
-      loginStatus.dataset.v1082Stamped='1';
-      loginStatus.textContent=loginStatus.textContent.replace(/^Version\s+10\.8\.2[^.]*\.?\s*/,'') || 'Release identity verified.';
-      loginStatus.textContent=`${RELEASE_LABEL} — ${loginStatus.textContent}`;
-    }
-
-    const hubHeader=document.querySelector('.oliver-hub-title, #oliverHubTitle, .diag-title');
-    if(hubHeader && !document.getElementById('nitrosOliverBuildIdentity')){
-      const badge=document.createElement('div');
-      badge.id='nitrosOliverBuildIdentity';
-      badge.className='nitros-build-identity';
-      badge.innerHTML=`<strong>${RELEASE_LABEL}</strong> · Build ${RELEASE_BUILD}`;
-      hubHeader.insertAdjacentElement('afterend',badge);
-    }
-
-    if(header && !document.getElementById('nitrosHeaderBuildIdentity')){
-      const badge=document.createElement('div');
-      badge.id='nitrosHeaderBuildIdentity';
-      badge.className='nitros-build-identity';
-      badge.innerHTML=`<strong>${RELEASE_LABEL}</strong> · Build ${RELEASE_BUILD}`;
-      header.insertAdjacentElement('afterend',badge);
-    }
-  };
-
-  const apply=()=>normalizeTree(document);
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',apply,{once:true}); else apply();
-  window.addEventListener('pageshow',()=>setTimeout(apply,25));
-  new MutationObserver(mutations=>{
-    for(const mutation of mutations){
-      mutation.addedNodes.forEach(node=>{
-        if(node.nodeType===Node.TEXT_NODE) normalizeTextNode(node);
-        else if(node.nodeType===Node.ELEMENT_NODE) normalizeTree(node);
-      });
-    }
-  }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
-
-  try{
-    localStorage.setItem('nitrosCurrentRelease',JSON.stringify(window.NITROS_RELEASE));
-    sessionStorage.setItem('nitrosLoadedRelease',JSON.stringify(window.NITROS_RELEASE));
-  }catch(_){ }
+  function start(){
+    stamp();
+    releaseLogin();
+    requestAnimationFrame(releaseLogin);
+    setTimeout(releaseLogin,100);
+    setTimeout(releaseLogin,500);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start,{once:true});
+  else start();
+  window.addEventListener('pageshow',start);
 })();
 </script>
 
