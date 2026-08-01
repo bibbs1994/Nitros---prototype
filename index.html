@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.5.2 — Technician-First Diagnostic Responses</title>
+<title>Nitros Mobile Technician Portal v10.6.0 — Oliver Free Diagnostic Mode</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -482,7 +482,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.5.2 — Technician-First Diagnostic Responses</div>
+  <div class="sub">Mobile Technician Portal v10.6.0 — Oliver Free Diagnostic Mode</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -496,7 +496,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.5.2 preserves the validated portal workflow and adds technician-first diagnostic replies. Oliver now defines supported DTCs, identifies likely systems, and provides ordered pass/fail testing before requesting optional vehicle details. VIN-specific wiring, pinouts, calibrations, and OEM procedures still require verified vehicle information.</div>
+    <div id="portalLoginStatus" class="status">Version 10.6.0 preserves the validated v10.5.2 portal workflow and adds Oliver Free Diagnostic Mode. Tap the AI button and begin with any DTC, symptom, vehicle description, or measurement—no repair order, VIN, customer record, or engine selection is required. Exact OEM wiring, pinouts, calibrations, programming, and specifications still require verified vehicle information.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -5173,7 +5173,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.5.2 • diagnostic close-button safe-area and touch stabilization</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.6.0 • direct free-diagnostic launch and temporary sessions</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5211,7 +5211,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.5.2 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.6.0 • Oliver Free Diagnostic Mode</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -5978,7 +5978,7 @@ Use this test-first path now: identify the module that set the code, record curr
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.5.2</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Free Diagnostic Mode <span class="diag-status">v10.6.0</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -6708,5 +6708,66 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 #diagGeneralMode.active,#diagRoMode.active{background:#72c8ff;color:#001421;border-color:#72c8ff}
 </style>
 <!-- v10.5.2 separates General Diagnostics from RO Assistant and prevents VIN/RO refusal in General mode. -->
+
+
+<!-- v10.6.0 Oliver Free Diagnostic Mode -->
+<style id="v1060-free-diagnostic-styles">
+#diagSessionCard .diag-tool-grid{grid-template-columns:1fr 1fr}
+#diagSessionId{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;word-break:break-all}
+#diagHubButton{border-color:#ff9d28;background:#2b1c0a}
+#diagNewSession{border-color:#72c8ff}
+#diagAttachSession{border-color:#55d68b}
+@media(max-width:800px){#diagSessionCard .diag-tool-grid{grid-template-columns:1fr}}
+</style>
+<script id="v1060-free-diagnostic-script">
+(()=>{
+  const $=id=>document.getElementById(id);
+  const VERSION='10.6.0';
+  const SESSION_KEY='nitros_v1060_free_diagnostic_session';
+  const ARCHIVE_KEY='nitros_v1060_free_diagnostic_archive';
+  const now=()=>new Date().toISOString();
+  const makeId=()=>`DIAG-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2,7).toUpperCase()}`;
+  function readJSON(key,fallback){try{return JSON.parse(localStorage.getItem(key)||'')||fallback}catch{return fallback}}
+  function writeJSON(key,value){localStorage.setItem(key,JSON.stringify(value))}
+  function activeSession(){let s=readJSON(SESSION_KEY,null);if(!s){s={sessionId:makeId(),version:VERSION,createdAt:now(),updatedAt:now(),status:'Temporary',vehicleText:'',dtcs:[],symptoms:[],measurements:[],attachedRo:'',source:'Oliver AI Button'};writeJSON(SESSION_KEY,s)}return s}
+  function saveSessionPatch(patch){const s=Object.assign(activeSession(),patch,{updatedAt:now()});writeJSON(SESSION_KEY,s);renderSession();return s}
+  function extract(text){const s=activeSession();const upper=String(text||'').toUpperCase();const codes=[...upper.matchAll(/\b[PCBU]\s*[- ]?\s*\d{4}\b/g)].map(m=>m[0].replace(/[\s-]/g,''));
+    const year=(upper.match(/\b(19\d{2}|20\d{2})\b/)||[])[1]||'';
+    const makes=['TOYOTA','HONDA','FORD','CHEVROLET','CHEVY','GMC','JEEP','DODGE','RAM','KIA','HYUNDAI','NISSAN','SUBARU','VOLKSWAGEN','VW','BMW','MERCEDES','AUDI','MAZDA','LEXUS'];
+    const make=makes.find(x=>upper.includes(x))||'';
+    const engine=(upper.match(/\b\d\.\d\s*(?:L|LITER)?\b/)||[])[0]||'';
+    const vehicle=[year,make,engine].filter(Boolean).join(' ');
+    if(vehicle)s.vehicleText=vehicle;
+    s.dtcs=[...new Set([...(s.dtcs||[]),...codes])];
+    s.updatedAt=now();writeJSON(SESSION_KEY,s);renderSession();
+  }
+  function renderSession(){const s=activeSession();if($('diagSessionId'))$('diagSessionId').textContent=s.sessionId;if($('diagSessionStatus'))$('diagSessionStatus').textContent=[s.status,s.attachedRo&&`RO ${s.attachedRo}`,s.vehicleText,s.dtcs?.join(', ')].filter(Boolean).join(' • ')||'Temporary session active'}
+  function installUi(){
+    const actions=document.querySelector('#oliverDiagnosticMode .diag-top-actions');
+    if(actions&&!$('diagHubButton')){const b=document.createElement('button');b.id='diagHubButton';b.className='diag-icon-btn';b.type='button';b.textContent='Oliver Hub';actions.insertBefore(b,actions.firstChild)}
+    const side=document.querySelector('#oliverDiagnosticMode .diag-side');
+    if(side&&!$('diagSessionCard')){const card=document.createElement('div');card.id='diagSessionCard';card.className='diag-card';card.innerHTML=`<div class="diag-card-label">Temporary Diagnostic Session</div><div id="diagSessionId" class="diag-card-value"></div><div id="diagSessionStatus" class="diag-card-value" style="color:#afc3d3;margin-top:6px"></div><div class="diag-tool-grid" style="margin-top:9px"><button id="diagSaveSession" type="button">Save Session</button><button id="diagAttachSession" type="button">Attach to Active RO</button><button id="diagNewSession" type="button">Start New Diagnosis</button><button id="diagDiscardSession" type="button">Discard Session</button></div>`;side.insertBefore(card,side.firstChild)}
+    renderSession();
+  }
+  function openFree(){activeSession();window.openOliverGeneralDiagnostics?.();setTimeout(()=>{$('diagInput')?.focus();renderSession()},100)}
+  function archiveCurrent(status='Saved'){const s=Object.assign(activeSession(),{status,updatedAt:now()});const a=readJSON(ARCHIVE_KEY,[]);a.unshift(s);writeJSON(ARCHIVE_KEY,a.slice(0,100));writeJSON(SESSION_KEY,s);renderSession();return s}
+  function newSession(){const current=activeSession();if((window.confirm?.('Start a new diagnostic conversation? The current temporary session will be saved first.')??true))archiveCurrent('Saved');const s={sessionId:makeId(),version:VERSION,createdAt:now(),updatedAt:now(),status:'Temporary',vehicleText:'',dtcs:[],symptoms:[],measurements:[],attachedRo:'',source:'Oliver AI Button'};writeJSON(SESSION_KEY,s);localStorage.removeItem('nitros_v90_diagnostic_history');const chat=$('diagChat');if(chat)chat.innerHTML='';renderSession();$('diagInput')?.focus()}
+  function activeRO(){return String($('jobRo')?.value||$('workboardRo')?.value||localStorage.getItem('nitros_active_ro')||'').trim()}
+  function attach(){const ro=activeRO();if(!ro){alert('No active repair order is available. The diagnostic session remains saved and can be attached later.');archiveCurrent('Saved');return}const s=saveSessionPatch({status:'Attached',attachedRo:ro});archiveCurrent('Attached');const notes=$('internalTechnicianNotes');if(notes){const history=readJSON('nitros_v90_diagnostic_history',[]);const text=history.map(m=>`${m.role==='user'?'TECH':'OLIVER'}: ${m.content}`).join('\n');notes.value=[notes.value,`=== Oliver Free Diagnostic Session ${s.sessionId} ===`,text].filter(Boolean).join('\n');notes.dispatchEvent(new Event('input',{bubbles:true}))}alert(`Diagnostic session attached to RO ${ro}.`)}
+  function discard(){if(!(window.confirm?.('Discard this temporary diagnostic session?')??true))return;localStorage.removeItem(SESSION_KEY);localStorage.removeItem('nitros_v90_diagnostic_history');const chat=$('diagChat');if(chat)chat.innerHTML='';activeSession();renderSession()}
+  function wire(){installUi();
+    const launch=$('unifiedOliverLaunch');if(launch&&!launch.dataset.v1060Direct){launch.dataset.v1060Direct='1';launch.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openFree()},true)}
+    const repair=$('oliverHubRepair');if(repair){repair.innerHTML='<strong>🔧 Free Diagnostic Mode</strong><span>Start immediately with any DTC, symptom, vehicle description, or measurement. No RO or VIN required.</span>';repair.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();$('unifiedOliverHub')?.classList.add('hidden');openFree()},true)}
+    $('diagHubButton')?.addEventListener('click',()=>{document.getElementById('oliverDiagnosticMode')?.classList.remove('active');document.body.style.overflow='';$('unifiedOliverHub')?.classList.remove('hidden')});
+    $('diagSaveSession')?.addEventListener('click',()=>{archiveCurrent('Saved');alert('Temporary diagnostic session saved on this device.')});
+    $('diagAttachSession')?.addEventListener('click',attach);$('diagNewSession')?.addEventListener('click',newSession);$('diagDiscardSession')?.addEventListener('click',discard);
+    const input=$('diagInput');if(input&&!input.dataset.v1060Extract){input.dataset.v1060Extract='1';input.addEventListener('change',()=>extract(input.value));const send=$('diagSend');send?.addEventListener('click',()=>extract(input.value),true);input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey)extract(input.value)},true)}
+    document.title='Nitros Mobile Technician Portal v10.6.0 — Oliver Free Diagnostic Mode';
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});else wire();
+  window.openOliverFreeDiagnosticMode=openFree;
+})();
+</script>
+<!-- End v10.6.0 Oliver Free Diagnostic Mode -->
 </body>
 </html>
