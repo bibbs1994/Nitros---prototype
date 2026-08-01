@@ -7672,5 +7672,151 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 })();
 </script>
 
+
+
+<!-- v10.8.9 Graph Image Recognition & Quality Guard
+     Recognizes scan-tool graph photos even when exact values are unreadable,
+     grades image suitability, reports readable PID labels, and requests only the
+     specific improvement needed instead of rejecting the image. -->
+<style id="v1089-graph-quality-style">
+  .oliver-quality-card{margin-top:9px;padding:9px 10px;border:1px solid #526985;border-radius:10px;background:#0b1828;font-size:12px;line-height:1.45;color:#dce8f7}
+  .oliver-quality-card strong{color:#ffb55e}
+</style>
+<script id="v1089-graph-image-recognition-quality-guard">
+(()=>{
+  'use strict';
+  const VERSION='10.8.9';
+  const BUILD='2026-08-01-1548';
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));
+
+  function stamp(){
+    document.title='Nitros Mobile Technician Portal v10.8.9 — Graph Image Recognition & Quality Guard';
+    const sub=document.querySelector('header .sub');
+    if(sub)sub.textContent='Mobile Technician Portal v10.8.9 — Graph Image Recognition & Quality Guard';
+    document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>Version ${VERSION}</strong> · Graph Image Recognition & Quality Guard · Build ${BUILD}`);
+    document.documentElement.dataset.nitrosReady=VERSION;
+    document.querySelectorAll('body *').forEach(el=>{
+      if(el.children.length===0 && /10\.8\.8/.test(el.textContent||''))el.textContent=(el.textContent||'').replace(/10\.8\.8/g,VERSION);
+    });
+  }
+
+  function status(msg){const el=$('oliverImportStatus');if(el)el.textContent=msg;}
+  function sendFact(msg){
+    const input=$('oliverHubInput'),send=$('oliverHubSend');
+    if(!input||!send)return false;
+    input.value=msg;send.click();return true;
+  }
+  function loadTesseract(){
+    if(window.Tesseract)return Promise.resolve(window.Tesseract);
+    if(window.__nitrosTesseractPromise)return window.__nitrosTesseractPromise;
+    window.__nitrosTesseractPromise=new Promise((resolve,reject)=>{
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.async=true;
+      s.onload=()=>window.Tesseract?resolve(window.Tesseract):reject(new Error('OCR library did not initialize'));
+      s.onerror=()=>reject(new Error('OCR service could not load. Check the internet connection.'));
+      document.head.appendChild(s);
+    });
+    return window.__nitrosTesseractPromise;
+  }
+  function imageInfo(file){
+    return new Promise((resolve,reject)=>{
+      const img=new Image(),url=URL.createObjectURL(file);
+      img.onload=()=>{resolve({width:img.naturalWidth,height:img.naturalHeight,pixels:img.naturalWidth*img.naturalHeight});URL.revokeObjectURL(url)};
+      img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('The image could not be opened.'))};img.src=url;
+    });
+  }
+  function terms(text){
+    const t=String(text||'').toUpperCase();
+    const patterns=[
+      ['HO2S / O2',/\b(?:HO2S|O2S?|OXYGEN)\b/],['Bank 1',/\bBANK\s*1\b|\bB1S[12]\b/],['Bank 2',/\bBANK\s*2\b|\bB2S[12]\b/],
+      ['Sensor 1',/\bSENSOR\s*1\b|\bB[12]S1\b/],['Sensor 2',/\bSENSOR\s*2\b|\bB[12]S2\b/],['STFT',/\bSTFT\b|SHORT\s*TERM/],
+      ['LTFT',/\bLTFT\b|LONG\s*TERM/],['RPM',/\bRPM\b/],['MAF',/\bMAF\b/],['MAP',/\bMAP\b/],['mV / V',/\bMV\b|\bVOLT(?:S|AGE)?\b/]
+    ];
+    return patterns.filter(([,r])=>r.test(t)).map(([n])=>n);
+  }
+  function graphSignals(text,words){
+    const t=String(text||'');
+    let score=0;
+    if(/graph\s*view|properties|scale|save|print/i.test(t))score+=2;
+    if(/HO2S|O2S?|STFT|LTFT|RPM|MAF|MAP|mV|voltage/i.test(t))score+=3;
+    if(/min\s*\d|max\s*\d/i.test(t))score+=1;
+    if((words||[]).length>8)score+=1;
+    return score;
+  }
+  function qualityGrade(info,confidence,wordCount,graphScore){
+    let points=0,issues=[];
+    if(info.width>=1200)points+=2; else if(info.width>=800)points+=1; else issues.push('move closer so the graph fills the frame');
+    if(info.height>=700)points+=1; else issues.push('capture more screen detail');
+    if(confidence>=65)points+=3; else if(confidence>=40)points+=2; else if(confidence>=20)points+=1; else issues.push('reduce glare, blur, and screen moiré');
+    if(wordCount>=20)points+=2; else if(wordCount>=8)points+=1; else issues.push('use a straighter, tighter crop');
+    if(graphScore>=4)points+=2; else if(graphScore>=2)points+=1;
+    if(points>=8)return {grade:'Diagnostic quality',usable:true,issues};
+    if(points>=5)return {grade:'Partially readable',usable:false,issues};
+    return {grade:'Graph recognized, values unreadable',usable:false,issues};
+  }
+  function addCard(html){
+    const p=$('oliverImportPreview');if(!p)return;
+    p.insertAdjacentHTML('beforeend',`<div class="oliver-quality-card">${html}</div>`);p.classList.add('open');
+  }
+  async function analyze(file){
+    status('Image attached. Oliver is checking graph type, labels, and image quality…');
+    const info=await imageInfo(file);
+    let result=null,ocrError='';
+    try{
+      const T=await loadTesseract();
+      result=await T.recognize(file,'eng',{logger:m=>{if(m.status==='recognizing text')status(`Reading graph labels… ${Math.round((m.progress||0)*100)}%`);}});
+    }catch(e){ocrError=e.message||String(e);}
+    const text=String(result?.data?.text||'').replace(/\r/g,'').trim();
+    const words=(result?.data?.words||[]).filter(w=>String(w.text||'').trim());
+    const conf=Number(result?.data?.confidence||0);
+    const found=terms(text);
+    const gscore=graphSignals(text,words);
+    const recognized=gscore>=2 || found.length>0;
+    const quality=qualityGrade(info,conf,words.length,gscore);
+    const improvement=(quality.issues[0]||'take a close, straight screenshot with the graph filling the image');
+
+    addCard(`<strong>${recognized?'Scan-tool graph recognized':'Diagnostic image received'}</strong><br>`+
+      `Quality: ${esc(quality.grade)} · ${info.width}×${info.height} · OCR confidence ${Math.round(conf)}%<br>`+
+      `Readable labels: ${esc(found.join(', ')||'none with confidence')}<br>`+
+      `${quality.usable?'Suitable for graph interpretation.':'Suitable for identifying the graph, but not for dependable exact-value diagnosis. Best next capture: '+esc(improvement)+'.'}`);
+
+    const evidence=[
+      `Diagnostic graph image imported: ${file.name}.`,
+      `Image dimensions: ${info.width} x ${info.height}. OCR confidence: ${Math.round(conf)} percent.`,
+      recognized?'The image is recognized as scan-tool graph data.':'The image may contain diagnostic data, but graph recognition is uncertain.',
+      found.length?`Readable labels or categories: ${found.join(', ')}.`:'No PID label was readable with confidence.',
+      text?`OCR text: ${text.slice(0,5000)}`:`OCR text unavailable${ocrError?': '+ocrError:''}.`,
+      `Quality classification: ${quality.grade}.`,
+      quality.usable
+        ? 'Interpret the visible trace relationships, distinguish confirmed labels from uncertain labels, and ask for the operating condition if it is not already known.'
+        : `Do not reject or restart the case. Acknowledge that a scan-tool graph was detected, state what is readable, explain that exact amplitudes or timing cannot be trusted, and request one better capture: ${improvement}. Continue using all existing case facts.`
+    ].join('\n');
+    sendFact(evidence);
+    status(quality.usable
+      ? 'Graph recognized and readable enough for interpretation. Oliver is analyzing the trace relationships.'
+      : `Graph recognized, but exact readings are not dependable. Oliver will use what is visible and request a closer capture: ${improvement}.`);
+  }
+
+  function intercept(event){
+    const input=event.target;
+    if(!input || !['oliverImportFile','oliverImportCameraFile'].includes(input.id))return;
+    const file=input.files?.[0];
+    if(!file || !(file.type||'').toLowerCase().startsWith('image/'))return;
+    event.stopImmediatePropagation();event.stopPropagation();
+    const p=$('oliverImportPreview');
+    if(p){const url=URL.createObjectURL(file);p.innerHTML=`<div><span class="oliver-import-chip">Image</span><span class="oliver-import-chip">${esc(file.name)}</span></div><img alt="Imported diagnostic image" src="${url}">`;p.classList.add('open');}
+    analyze(file).catch(e=>{
+      sendFact(`Diagnostic image attached: ${file.name}. The image could not be fully analyzed: ${e.message}. Do not restart the diagnostic conversation. Identify it as imported diagnostic evidence and ask for a closer, straighter image of the graph.`);
+      status('Image attached, but quality analysis did not complete: '+e.message);
+    }).finally(()=>{setTimeout(()=>{input.value=''},0)});
+  }
+  document.addEventListener('change',intercept,true);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',stamp,{once:true});else stamp();
+  window.addEventListener('pageshow',()=>setTimeout(stamp,30));
+  window.addEventListener('load',()=>setTimeout(stamp,70),{once:true});
+})();
+</script>
+
 </body>
 </html>
