@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.8.8 — Diagnostic Conversation Progression Fix</title>
+<title>Nitros Mobile Technician Portal v10.11.42 — Dynamic Active-DTC Checklist Refresh & Stale Panel Removal</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -5885,7 +5885,112 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   $('oliverHubSend').addEventListener('click',()=>{const q=input.value;input.value='';routeCommand(q)});input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('oliverHubSend').click()}});
   $('oliverHubReadLast').addEventListener('click',()=>{if(lastReply)speak(lastReply);else reply('There is no previous reply to read yet.')});
   const pref=$('oliverPreferredMode'),spoken=$('oliverSpokenReplies'),st=settings();pref.value=st.mode;spoken.value=st.spoken;function saveSettings(){localStorage.setItem(SET,JSON.stringify({mode:pref.value,spoken:spoken.value}));refreshMode()}pref.addEventListener('change',saveSettings);spoken.addEventListener('change',saveSettings);
-  $('oliverHubMic').addEventListener('click',()=>{unlockSpeech();const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){reply('Voice recognition is unavailable in this browser or local-file mode. Use the phone keyboard microphone or type the command.');return}const r=new SR();r.lang='en-US';r.interimResults=false;r.continuous=false;r.onstart=()=>{launch.classList.add('listening');$('oliverHubMic').textContent='Listening…'};r.onend=()=>{launch.classList.remove('listening');$('oliverHubMic').textContent='🎙️ Talk'};r.onerror=e=>reply('Voice recognition stopped because of '+(e.error||'a browser restriction')+'. You can still type the command.');r.onresult=e=>{const t=e.results[0][0].transcript;input.value=t;routeCommand(t);input.value=''};try{r.start()}catch{reply('The microphone is already active or blocked by the browser.')}});
+  $('oliverHubMic').addEventListener('click',()=>{
+  unlockSpeech();
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    reply('Voice recognition is unavailable in this browser or local-file mode. Use the phone keyboard microphone or type the command.');
+    return;
+  }
+
+  let caseState={};
+  try{caseState=JSON.parse(localStorage.getItem('nitros_oliver_case_v10107')||'{}')}catch(_){}
+
+  const step=caseState.currentStep||'';
+  const narrativeMode=[
+    'record_customer_complaint',
+    'record_drivability_symptoms',
+    'record_previous_repairs',
+    'record_previous_tests',
+    'technician_notes',
+    'final_diagnosis',
+    'repair_verification'
+  ].includes(step) ||
+  (caseState.previousRepairs===null && caseState.customerComplaint && caseState.drivabilitySymptoms) ||
+  (caseState.previousTests===null && caseState.previousRepairs!==null);
+
+  const r=new SR();
+  r.lang='en-US';
+  r.interimResults=true;
+  r.continuous=narrativeMode;
+
+  let finalText=String(input.value||'').trim();
+  let submitTimer=null;
+  let submitted=false;
+
+  const scheduleSubmit=(delay)=>{
+    clearTimeout(submitTimer);
+    submitTimer=setTimeout(()=>{
+      if(submitted)return;
+      const value=String(input.value||'').trim();
+      if(!value)return;
+      submitted=true;
+      const send=$('oliverHubSend');
+      if(send)send.click();
+      try{r.stop()}catch(_){}
+    },delay);
+  };
+
+  r.onstart=()=>{
+    launch.classList.add('listening');
+    $('oliverHubMic').textContent=narrativeMode?'Listening — say “done”':'Listening…';
+  };
+
+  r.onend=()=>{
+    launch.classList.remove('listening');
+    $('oliverHubMic').textContent='🎙️ Talk';
+    if(narrativeMode && !submitted && String(input.value||'').trim()){
+      scheduleSubmit(4500);
+    }
+  };
+
+  r.onerror=e=>{
+    clearTimeout(submitTimer);
+    reply('Voice recognition stopped because of '+(e.error||'a browser restriction')+'. You can still type the command.');
+  };
+
+  r.onresult=e=>{
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const phrase=e.results[i][0].transcript.trim();
+      if(e.results[i].isFinal){
+        finalText=(finalText+' '+phrase).replace(/\s+/g,' ').trim();
+      }else{
+        interim+=(interim?' ':'')+phrase;
+      }
+    }
+
+    let combined=(finalText+(interim?' '+interim:'')).replace(/\s+/g,' ').trim();
+    const explicitCommit=/\b(?:enter|submit|record that|done)\s*[.!?]*$/i.test(combined);
+    combined=combined.replace(/\b(?:enter|submit|record that|done)\s*[.!?]*$/i,'').trim();
+
+    if(/^(?:new case|start new case|reset case|clear case)[.!?\s]*$/i.test(combined)){
+      combined='new case';
+    }
+
+    input.value=combined;
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+
+    if(explicitCommit){
+      clearTimeout(submitTimer);
+      if(!submitted){
+        submitted=true;
+        const send=$('oliverHubSend');
+        if(send)send.click();
+        try{r.stop()}catch(_){}
+      }
+      return;
+    }
+
+    if(narrativeMode){
+      scheduleSubmit(4500);
+    }else if(e.results[e.results.length-1].isFinal){
+      scheduleSubmit(900);
+    }
+  };
+
+  try{r.start()}catch{reply('The microphone is already active or blocked by the browser.')}
+});
   document.addEventListener('click',e=>{if(e.target.closest('[data-screen],.nav-btn,.bottom-nav button'))setTimeout(refreshMode,80)});window.addEventListener('resize',()=>{const r=launch.getBoundingClientRect();launch.style.left=Math.max(0,Math.min(innerWidth-r.width,r.left))+'px';launch.style.top=Math.max(0,Math.min(innerHeight-r.height,r.top))+'px'});
   loadChat();refreshMode();
 })();
@@ -7929,6 +8034,1659 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
   window.addEventListener('pageshow',()=>{setTimeout(stamp1090,30);setTimeout(install,80)});
 })();
 </script>
+
+
+<!-- v10.9.1 Oliver Wake Phrase & Quick Actions
+     Restores the visible wake-up prompt, rotates practical shop commands,
+     adds one-tap diagnostic actions, and remains active-case aware. -->
+<style id="v1091-wake-quick-actions-style">
+  #oliverWakePanel{margin-top:10px;padding:10px;border:1px solid #415a77;border-radius:12px;background:linear-gradient(180deg,#0d1b2a,#0a1522);color:#eaf2fb}
+  #oliverWakePanel .wake-title{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;font-weight:800;color:#ffb55e}
+  #oliverWakePrompt{margin-top:7px;min-height:24px;font-size:14px;line-height:1.35;color:#f6f9fc}
+  #oliverWakePanel .wake-note{margin-top:4px;font-size:11px;color:#9fb4ca}
+  #oliverQuickActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:9px}
+  #oliverQuickActions button{min-height:42px;padding:8px 9px;border:1px solid #526985;border-radius:10px;background:#13263b;color:#eff6ff;font-size:12px;font-weight:750;text-align:left;cursor:pointer}
+  #oliverQuickActions button:active{transform:translateY(1px)}
+  #oliverQuickActions button.primary-action{border-color:#d7862f;background:#3b2615;color:#ffd6a3}
+  @media(min-width:700px){#oliverQuickActions{grid-template-columns:repeat(5,minmax(0,1fr))}}
+</style>
+<script id="v1091-wake-quick-actions">
+(()=>{
+  'use strict';
+  const VERSION='10.11.42';
+  const BUILD='2026-08-02-1418';
+  const RELEASE='Checklist Restoration & Intake Stabilization';
+  const $=id=>document.getElementById(id);
+  const prompts=[
+    '“Wake up, Oliver.”',
+    '“Oliver, diagnose the active vehicle.”',
+    '“Oliver, analyze this graph.”',
+    '“Oliver, what is my next test?”',
+    '“Oliver, review the stored codes.”',
+    '“Oliver, import my scan data.”'
+  ];
+
+  function stamp(){
+    document.title=`Nitros Mobile Technician Portal v${VERSION} — ${RELEASE}`;
+    const sub=document.querySelector('header .sub');
+    if(sub)sub.textContent=`Mobile Technician Portal v${VERSION} — ${RELEASE}`;
+    document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>Version ${VERSION}</strong> · ${RELEASE} · Build ${BUILD}`);
+    document.querySelectorAll('body *').forEach(el=>{
+      if(el.children.length===0 && /Version\s+10\.(?:8\.8|8\.9|9\.0)/i.test(el.textContent||''))
+        el.textContent=(el.textContent||'').replace(/Version\s+10\.(?:8\.8|8\.9|9\.0)/ig,`Version ${VERSION}`);
+    });
+    document.documentElement.dataset.nitrosReady=VERSION;
+  }
+
+  function activeVehicle(){
+    try{
+      const v=activeCase?.vehicle||{};
+      return [v.year,v.make,v.model,v.engine].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+    }catch(_){return ''}
+  }
+  function setInput(text,send=true){
+    const input=$('oliverHubInput'),btn=$('oliverHubSend');
+    if(!input)return;
+    input.value=text;
+    input.focus();
+    if(send&&btn)btn.click();
+  }
+  function clickFirst(ids){
+    for(const id of ids){const el=$(id);if(el){el.click();return true}}
+    return false;
+  }
+  function buildPanel(){
+    if($('oliverWakePanel'))return true;
+    const anchor=$('oliverHubTranscript')||$('oliverHubSend')?.parentElement;
+    if(!anchor||!anchor.parentElement)return false;
+    const panel=document.createElement('section');
+    panel.id='oliverWakePanel';
+    panel.setAttribute('aria-label','Oliver voice examples and quick actions');
+    panel.innerHTML=`
+      <div class="wake-title"><span>🎙️ Try saying…</span><span>Wake phrase: “Wake up, Oliver”</span></div>
+      <div id="oliverWakePrompt">${prompts[0]}</div>
+      <div class="wake-note">Tap Talk and speak naturally. Oliver will continue the active case instead of restarting intake.</div>
+      <div id="oliverQuickActions">
+        <button type="button" data-action="vin">📷 Scan VIN</button>
+        <button type="button" data-action="graph">📈 Import Graph</button>
+        <button type="button" data-action="codes">🔍 Analyze Codes</button>
+        <button type="button" class="primary-action" data-action="voice">🎙️ Start Voice</button>
+        <button type="button" data-action="resume">📋 Resume Active Case</button>
+      </div>`;
+    anchor.insertAdjacentElement('afterend',panel);
+    panel.addEventListener('click',e=>{
+      const b=e.target.closest('button[data-action]');if(!b)return;
+      const action=b.dataset.action;
+      if(action==='voice'){clickFirst(['oliverHubMic','diagMic']);return}
+      if(action==='graph'){
+        if(!clickFirst(['oliverDiagnosticImport','oliverImportFile','oliverImportCameraFile']))setInput('Oliver, import and analyze my diagnostic graph.',false);
+        return;
+      }
+      if(action==='vin'){
+        if(!clickFirst(['scanVinBtn','vinScanButton','startVinScan','vinCameraButton']))setInput('Oliver, open VIN scanning.',true);
+        return;
+      }
+      if(action==='codes'){
+        setInput('Oliver, review and prioritize the exact stored codes in the active diagnostic case.',true);return;
+      }
+      if(action==='resume'){
+        const v=activeVehicle();
+        setInput(v?`Oliver, resume the active diagnostic case for ${v}.`:'Oliver, resume the active diagnostic case.',true);
+      }
+    });
+    let i=0;
+    setInterval(()=>{const el=$('oliverWakePrompt');if(el){i=(i+1)%prompts.length;el.textContent=prompts[i]}},4200);
+    return true;
+  }
+
+  function wakeResponse(){
+    const v=activeVehicle();
+    let codes=[];
+    try{codes=[...(activeCase?.codes||[])].map(String).filter(Boolean)}catch(_){ }
+    if(v){
+      return `I'm awake. I have the active case for ${v}${codes.length?' with '+codes.join(', '):''}. We can review the codes, analyze scan data, or continue with the next diagnostic test.`;
+    }
+    return `I'm awake and ready. Tell me the vehicle, complaint, or diagnostic code, or import scan data and I will begin the case.`;
+  }
+  function installWakeRoute(){
+    if(typeof routeCommand!=='function'||routeCommand.v1091Wrapped)return false;
+    const prior=routeCommand;
+    const wrapped=function(raw){
+      const t=String(raw||'').trim();
+      if(/^\s*(?:hey\s+)?(?:wake\s+up[,.]?\s*)?oliver[.!]?\s*$/i.test(t)||/^\s*wake\s+up[,.]?\s*oliver[.!]?\s*$/i.test(t)){
+        try{line('You',t)}catch(_){ }
+        reply(wakeResponse());
+        return;
+      }
+      return prior(raw);
+    };
+    wrapped.v1091Wrapped=true;
+    routeCommand=wrapped;
+    return true;
+  }
+
+  function start(){
+    stamp();
+    let tries=0;
+    const timer=setInterval(()=>{
+      stamp();buildPanel();installWakeRoute();
+      if(++tries>60||($('oliverWakePanel')&&typeof routeCommand==='function'))clearInterval(timer);
+    },100);
+    setTimeout(()=>{stamp();buildPanel();installWakeRoute()},700);
+    setTimeout(()=>{stamp();buildPanel();installWakeRoute()},1700);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+  window.addEventListener('pageshow',()=>setTimeout(()=>{stamp();buildPanel();installWakeRoute()},60));
+})();
+</script>
+
+
+
+<!-- v10.10.0 Expanded DTC Knowledge Base
+     Broadens generic OBD-II code coverage, adds OEM-aware manufacturer-specific handling,
+     groups related codes, and prevents the repeated "definition unavailable" dead end. -->
+<script id="v10100-expanded-dtc-knowledge-base">
+(()=>{
+'use strict';
+const VERSION='10.10.0', BUILD='2026-08-01-1728', RELEASE='Expanded DTC Knowledge Base';
+const K={
+P0001:['Fuel Volume Regulator Control Circuit/Open','fuel-volume regulator circuit'],P0002:['Fuel Volume Regulator Control Circuit Range/Performance','fuel-volume regulator performance'],P0003:['Fuel Volume Regulator Control Circuit Low','fuel-volume regulator control low'],P0004:['Fuel Volume Regulator Control Circuit High','fuel-volume regulator control high'],
+P0010:['A Camshaft Position Actuator Circuit/Open — Bank 1','variable valve timing circuit'],P0011:['A Camshaft Position Timing Over-Advanced or System Performance — Bank 1','VVT oil control and base timing'],P0012:['A Camshaft Position Timing Over-Retarded — Bank 1','VVT oil control and base timing'],P0013:['B Camshaft Position Actuator Circuit/Open — Bank 1','exhaust cam actuator circuit'],P0014:['B Camshaft Position Timing Over-Advanced or System Performance — Bank 1','exhaust VVT control'],P0015:['B Camshaft Position Timing Over-Retarded — Bank 1','exhaust VVT control'],P0016:['Crankshaft Position–Camshaft Position Correlation — Bank 1 Sensor A','cam/crank correlation and mechanical timing'],P0017:['Crankshaft Position–Camshaft Position Correlation — Bank 1 Sensor B','cam/crank correlation and mechanical timing'],P0018:['Crankshaft Position–Camshaft Position Correlation — Bank 2 Sensor A','cam/crank correlation and mechanical timing'],P0019:['Crankshaft Position–Camshaft Position Correlation — Bank 2 Sensor B','cam/crank correlation and mechanical timing'],
+P0020:['A Camshaft Position Actuator Circuit/Open — Bank 2','bank 2 intake VVT circuit'],P0021:['A Camshaft Position Timing Over-Advanced — Bank 2','bank 2 intake VVT control'],P0022:['A Camshaft Position Timing Over-Retarded — Bank 2','bank 2 intake VVT control'],P0023:['B Camshaft Position Actuator Circuit/Open — Bank 2','bank 2 exhaust VVT circuit'],P0024:['B Camshaft Position Timing Over-Advanced — Bank 2','bank 2 exhaust VVT control'],P0025:['B Camshaft Position Timing Over-Retarded — Bank 2','bank 2 exhaust VVT control'],
+P0030:['HO2S Heater Control Circuit — Bank 1 Sensor 1','upstream oxygen-sensor heater circuit'],P0031:['HO2S Heater Control Circuit Low — Bank 1 Sensor 1','upstream oxygen-sensor heater low'],P0032:['HO2S Heater Control Circuit High — Bank 1 Sensor 1','upstream oxygen-sensor heater high'],P0036:['HO2S Heater Control Circuit — Bank 1 Sensor 2','downstream oxygen-sensor heater circuit'],P0037:['HO2S Heater Control Circuit Low — Bank 1 Sensor 2','downstream oxygen-sensor heater low'],P0038:['HO2S Heater Control Circuit High — Bank 1 Sensor 2','downstream oxygen-sensor heater high'],
+P0068:['MAP/MAF–Throttle Position Correlation','airflow and throttle correlation'],P0087:['Fuel Rail/System Pressure Too Low','fuel supply and rail pressure'],P0088:['Fuel Rail/System Pressure Too High','fuel pressure control'],P0093:['Fuel System Large Leak Detected','high-pressure fuel system'],
+P0100:['Mass or Volume Air Flow Circuit','MAF circuit'],P0101:['Mass or Volume Air Flow Circuit Range/Performance','MAF rationality and unmetered air'],P0102:['Mass or Volume Air Flow Circuit Low Input','MAF signal low'],P0103:['Mass or Volume Air Flow Circuit High Input','MAF signal high'],P0106:['MAP/Barometric Pressure Circuit Range/Performance','MAP rationality and engine vacuum'],P0107:['MAP/Barometric Pressure Circuit Low Input','MAP signal low'],P0108:['MAP/Barometric Pressure Circuit High Input','MAP signal high'],
+P0112:['Intake Air Temperature Sensor 1 Circuit Low','IAT signal low'],P0113:['Intake Air Temperature Sensor 1 Circuit High','IAT signal high'],P0117:['Engine Coolant Temperature Sensor Circuit Low','ECT signal low'],P0118:['Engine Coolant Temperature Sensor Circuit High','ECT signal high'],P0120:['Throttle/Pedal Position Sensor A Circuit','throttle-position circuit'],P0121:['Throttle/Pedal Position Sensor A Range/Performance','throttle-position rationality'],P0122:['Throttle/Pedal Position Sensor A Circuit Low','throttle-position signal low'],P0123:['Throttle/Pedal Position Sensor A Circuit High','throttle-position signal high'],P0128:['Coolant Thermostat Temperature Below Regulating Temperature','thermostat and warm-up performance'],
+P0130:['O2 Sensor Circuit — Bank 1 Sensor 1','upstream oxygen-sensor circuit'],P0131:['O2 Sensor Circuit Low Voltage — Bank 1 Sensor 1','upstream oxygen-sensor low signal'],P0132:['O2 Sensor Circuit High Voltage — Bank 1 Sensor 1','upstream oxygen-sensor high signal'],P0133:['O2 Sensor Circuit Slow Response — Bank 1 Sensor 1','upstream oxygen-sensor response'],P0134:['O2 Sensor Circuit No Activity — Bank 1 Sensor 1','upstream oxygen-sensor activity'],P0135:['O2 Sensor Heater Circuit — Bank 1 Sensor 1','upstream oxygen-sensor heater'],P0136:['O2 Sensor Circuit — Bank 1 Sensor 2','downstream oxygen-sensor circuit'],P0137:['O2 Sensor Circuit Low Voltage — Bank 1 Sensor 2','downstream oxygen-sensor low signal'],P0138:['O2 Sensor Circuit High Voltage — Bank 1 Sensor 2','downstream oxygen-sensor high signal'],P0141:['O2 Sensor Heater Circuit — Bank 1 Sensor 2','downstream oxygen-sensor heater'],
+P0150:['O2 Sensor Circuit — Bank 2 Sensor 1','bank 2 upstream oxygen-sensor circuit'],P0151:['O2 Sensor Circuit Low Voltage — Bank 2 Sensor 1','bank 2 upstream oxygen-sensor low'],P0152:['O2 Sensor Circuit High Voltage — Bank 2 Sensor 1','bank 2 upstream oxygen-sensor high'],P0153:['O2 Sensor Circuit Slow Response — Bank 2 Sensor 1','bank 2 upstream oxygen-sensor response'],P0155:['O2 Sensor Heater Circuit — Bank 2 Sensor 1','bank 2 upstream oxygen-sensor heater'],P0156:['O2 Sensor Circuit — Bank 2 Sensor 2','bank 2 downstream oxygen-sensor circuit'],P0157:['O2 Sensor Circuit Low Voltage — Bank 2 Sensor 2','bank 2 downstream oxygen-sensor low'],P0158:['O2 Sensor Circuit High Voltage — Bank 2 Sensor 2','bank 2 downstream oxygen-sensor high'],P0161:['O2 Sensor Heater Circuit — Bank 2 Sensor 2','bank 2 downstream oxygen-sensor heater'],
+P0171:['System Too Lean — Bank 1','fuel control and unmetered air'],P0172:['System Too Rich — Bank 1','fuel control and excessive fuel'],P0174:['System Too Lean — Bank 2','bank 2 fuel control and unmetered air'],P0175:['System Too Rich — Bank 2','bank 2 fuel control and excessive fuel'],
+P0200:['Injector Circuit/Open','injector power and control circuits'],P0201:['Injector Circuit/Open — Cylinder 1','cylinder 1 injector circuit'],P0202:['Injector Circuit/Open — Cylinder 2','cylinder 2 injector circuit'],P0203:['Injector Circuit/Open — Cylinder 3','cylinder 3 injector circuit'],P0204:['Injector Circuit/Open — Cylinder 4','cylinder 4 injector circuit'],P0205:['Injector Circuit/Open — Cylinder 5','cylinder 5 injector circuit'],P0206:['Injector Circuit/Open — Cylinder 6','cylinder 6 injector circuit'],P0207:['Injector Circuit/Open — Cylinder 7','cylinder 7 injector circuit'],P0208:['Injector Circuit/Open — Cylinder 8','cylinder 8 injector circuit'],
+P0217:['Engine Coolant Over-Temperature Condition','cooling-system performance'],P0234:['Turbocharger/Supercharger Overboost Condition','boost-control system'],P0236:['Turbocharger Boost Sensor A Range/Performance','boost-sensor rationality'],P0299:['Turbocharger/Supercharger Underboost Condition','boost leaks, wastegate, and turbocharger performance'],
+P0300:['Random/Multiple Cylinder Misfire Detected','ignition, fuel, air, and mechanical condition'],P0301:['Cylinder 1 Misfire Detected','cylinder 1 combustion'],P0302:['Cylinder 2 Misfire Detected','cylinder 2 combustion'],P0303:['Cylinder 3 Misfire Detected','cylinder 3 combustion'],P0304:['Cylinder 4 Misfire Detected','cylinder 4 combustion'],P0305:['Cylinder 5 Misfire Detected','cylinder 5 combustion'],P0306:['Cylinder 6 Misfire Detected','cylinder 6 combustion'],P0307:['Cylinder 7 Misfire Detected','cylinder 7 combustion'],P0308:['Cylinder 8 Misfire Detected','cylinder 8 combustion'],P0316:['Misfire Detected on Startup — First 1,000 Revolutions','cold-start combustion'],
+P0325:['Knock Sensor 1 Circuit — Bank 1 or Single Sensor','knock-sensor circuit'],P0335:['Crankshaft Position Sensor A Circuit','crankshaft-position signal'],P0336:['Crankshaft Position Sensor A Range/Performance','crankshaft signal quality and reluctor'],P0340:['Camshaft Position Sensor A Circuit — Bank 1 or Single Sensor','camshaft-position circuit'],P0341:['Camshaft Position Sensor A Range/Performance — Bank 1','camshaft signal quality and timing'],P0345:['Camshaft Position Sensor A Circuit — Bank 2','bank 2 camshaft-position circuit'],P0351:['Ignition Coil A Primary/Secondary Circuit','coil 1 circuit'],P0352:['Ignition Coil B Primary/Secondary Circuit','coil 2 circuit'],P0353:['Ignition Coil C Primary/Secondary Circuit','coil 3 circuit'],P0354:['Ignition Coil D Primary/Secondary Circuit','coil 4 circuit'],
+P0400:['Exhaust Gas Recirculation Flow Malfunction','EGR flow and control'],P0401:['Exhaust Gas Recirculation Flow Insufficient','EGR restriction and control'],P0402:['Exhaust Gas Recirculation Flow Excessive','EGR valve sealing and control'],P0403:['Exhaust Gas Recirculation Control Circuit','EGR control circuit'],P0410:['Secondary Air Injection System Malfunction','secondary-air system'],P0420:['Catalyst System Efficiency Below Threshold — Bank 1','bank 1 catalyst, exhaust integrity, and sensor performance'],P0430:['Catalyst System Efficiency Below Threshold — Bank 2','bank 2 catalyst, exhaust integrity, and sensor performance'],
+P0440:['Evaporative Emission Control System Malfunction','EVAP system integrity'],P0441:['EVAP Incorrect Purge Flow','purge flow and valve sealing'],P0442:['EVAP Leak Detected — Small Leak','EVAP sealing'],P0443:['EVAP Purge Control Valve Circuit','purge-valve circuit'],P0446:['EVAP Vent Control Circuit','vent-valve circuit'],P0455:['EVAP Leak Detected — Large Leak','large EVAP leak or vent not sealing'],P0456:['EVAP Leak Detected — Very Small Leak','very small EVAP leak'],P0457:['EVAP Leak Detected — Fuel Cap Loose/Off','fuel-cap and EVAP sealing'],P0458:['EVAP Purge Control Valve Circuit Low','purge control low'],P0459:['EVAP Purge Control Valve Circuit High','purge control high'],
+P0500:['Vehicle Speed Sensor A','vehicle-speed signal'],P0505:['Idle Control System Malfunction','idle-air or electronic-throttle control'],P0506:['Idle Control System RPM Lower Than Expected','low idle airflow'],P0507:['Idle Control System RPM Higher Than Expected','excess idle airflow'],P0520:['Engine Oil Pressure Sensor/Switch Circuit','oil-pressure signal circuit'],P0521:['Engine Oil Pressure Sensor/Switch Range/Performance','oil-pressure signal rationality'],P0522:['Engine Oil Pressure Sensor/Switch Circuit Low','oil-pressure signal low'],P0523:['Engine Oil Pressure Sensor/Switch Circuit High','oil-pressure signal high'],P0562:['System Voltage Low','battery, charging, and power distribution'],P0563:['System Voltage High','charging-system overvoltage'],
+P0601:['Internal Control Module Memory Checksum Error','module power, ground, programming, or internal fault'],P0603:['Internal Control Module Keep Alive Memory Error','module keep-alive power and internal memory'],P0606:['PCM/ECM Processor Fault','module power, grounds, software, and internal processor'],P0615:['Starter Relay Circuit','starter relay control circuit'],P0620:['Generator Control Circuit','charging-system control circuit'],P0650:['MIL Control Circuit','MIL command circuit'],P0685:['ECM/PCM Power Relay Control Circuit/Open','PCM power-relay control'],
+P0700:['Transmission Control System Malfunction — MIL Request','companion transmission codes in the TCM'],P0701:['Transmission Control System Range/Performance','TCM inputs, outputs, power, network, and failsafe strategy'],P0705:['Transmission Range Sensor Circuit Malfunction','range-sensor circuit and adjustment'],P0715:['Input/Turbine Speed Sensor A Circuit','input-speed signal'],P0720:['Output Speed Sensor Circuit','output-speed signal'],P0730:['Incorrect Gear Ratio','clutch, hydraulic, speed-sensor, or internal transmission performance'],P0740:['Torque Converter Clutch Circuit Malfunction','TCC control circuit'],P0741:['Torque Converter Clutch Performance or Stuck Off','TCC apply hydraulics and converter clutch'],P0750:['Shift Solenoid A Malfunction','shift-solenoid A circuit/hydraulics'],P0755:['Shift Solenoid B Malfunction','shift-solenoid B circuit/hydraulics'],P0760:['Shift Solenoid C Malfunction','shift-solenoid C circuit/hydraulics'],P0770:['Shift Solenoid E Malfunction','shift-solenoid E circuit/hydraulics'],
+P1000:['OBD Systems Readiness Test Not Complete','monitor readiness; OEM wording varies'],
+U0001:['High Speed CAN Communication Bus','high-speed CAN network'],U0073:['Control Module Communication Bus A Off','CAN bus-off condition'],U0100:['Lost Communication With ECM/PCM A','PCM power, ground, and network'],U0101:['Lost Communication With TCM','TCM power, ground, and network'],U0121:['Lost Communication With ABS Control Module','ABS module power, ground, and network'],U0140:['Lost Communication With Body Control Module','BCM power, ground, and network'],U0151:['Lost Communication With Restraints Control Module','airbag module power, ground, and network'],U0401:['Invalid Data Received From ECM/PCM A','implausible PCM data or network issue'],
+C0035:['Left Front Wheel Speed Sensor Circuit','left-front wheel-speed signal, encoder, air gap, and wiring'],C0040:['Right Front Wheel Speed Sensor Circuit','right-front wheel-speed signal, encoder, air gap, and wiring'],C0050:['Right Rear Wheel Speed Sensor Circuit','right-rear wheel-speed signal, encoder, air gap, and wiring'],C0110:['Pump Motor Circuit Malfunction','ABS hydraulic pump circuit'],C0561:['System Disabled Information Stored — OEM-specific','a chassis system disabled by another module fault'],
+B0020:['Supplemental Restraint Deployment Control — OEM-specific','restraint-system circuit; exact wording is OEM-specific'],B0083:['Front End Sensor 1 — OEM-specific','front-impact sensor circuit; exact wording is OEM-specific']
+};
+function normalizeCode(t){return String(t||'').toUpperCase().replace(/\b([PCBU])\s*[- ]?([0-9A-F])\s*[- ]?([0-9A-F])\s*[- ]?([0-9A-F])\s*[- ]?([0-9A-F])\b/g,'$1$2$3$4$5')}
+function codesIn(t){return [...new Set((normalizeCode(t).match(/\b[PCBU][0-9A-F]{4}\b/g)||[]))]}
+function family(c){const l=c[0],n=parseInt(c.slice(1),16);if(l==='P'){if(c[1]==='1'||c[1]==='2'||c[1]==='3')return 'a manufacturer-specific powertrain system';if(n<100)return 'fuel/air metering or auxiliary-emission controls';if(n<200)return 'fuel/air metering and sensor inputs';if(n<300)return 'injector or fuel-delivery controls';if(n<400)return 'ignition, misfire, or cam/crank inputs';if(n<500)return 'emissions and catalyst controls';if(n<600)return 'speed, idle, voltage, or auxiliary inputs';if(n<700)return 'computer, output, or module controls';if(n<900)return 'transmission controls';return 'powertrain controls'}if(l==='U')return 'network communication';if(l==='C')return 'chassis, ABS, steering, or stability control';return 'body, restraint, HVAC, or convenience control'}
+function nextTest(c){if(/^P030[0-8]$/.test(c))return 'Start with misfire counters and freeze-frame, then use one controlled swap or contribution test before moving to injector and compression testing.';if(/^P00(?:16|17|18|19)$/.test(c)||['P0340','P0341','P0345','P0335','P0336'].includes(c))return 'Compare commanded versus actual cam position and cam/crank synchronization, verify oil level/condition, then scope the signals before condemning a sensor or timing component.';if(['P0120','P0121','P0122','P0123'].includes(c))return 'Key on, engine off: graph APP and TP sensors together, then verify 5-volt reference, low reference, and signal voltage under load.';if(/^P01(?:71|72|74|75)$/.test(c))return 'Check fuel trims at idle and 2,500 RPM, verify MAF rationality, and smoke-test for unmetered air before replacing sensors.';if(['P0420','P0430'].includes(c))return 'First eliminate misfire, fuel-control, oil/coolant consumption, and exhaust leaks; then compare upstream/downstream activity and Mode $06 catalyst data.';if(/^P04(?:40|41|42|43|46|55|56|57|58|59)$/.test(c))return 'Seal the EVAP system, command purge and vent valves, and smoke-test while verifying valve sealing and circuit control.';if(/^U/.test(c))return 'Check battery condition, module powers and grounds, then measure CAN bias voltage and network resistance before replacing a module.';if(/^C00/.test(c))return 'Graph all wheel-speed PIDs at low speed, compare the affected corner, then inspect encoder, air gap, connector, and circuit integrity.';if(/^P07/.test(c))return 'Read the TCM directly for companion codes, verify fluid and power/grounds, then compare commanded gear, input speed, and output speed.';return 'Confirm whether the code is current or history, capture freeze-frame, and perform the least intrusive measurement that can prove the circuit or system fault.'}
+function answer(text, prior=''){
+ const all=codesIn(String(prior||'')+' '+String(text||''));if(!all.length)return null;
+ const vehicle=(typeof caseData!=='undefined'&&caseData?.vehicle)||'';
+ const known=all.filter(c=>K[c]), unknown=all.filter(c=>!K[c]);
+ let s='';
+ if(all.length>1){s+=`I have ${all.join(', ')}. `;const timing=all.filter(c=>['P0016','P0017','P0018','P0019','P0340','P0341','P0345','P0335','P0336'].includes(c));if(timing.length>1)s+='These codes share cam/crank timing and signal correlation, so they should be diagnosed as one system rather than separately. ';}
+ if(known.length){const c=known[0],[d,sys]=K[c];s+=`${c} is ${d}. That points toward ${sys}. ${nextTest(c)}`;}
+ else {const c=unknown[0];s+=`${c} is ${c[1]==='0'?'a standardized':'a manufacturer-specific'} ${c[0]}-series code in ${family(c)}. I will keep the exact code attached to the case and continue the diagnosis rather than stopping at a missing local definition. ${nextTest(c)}`;}
+ if(unknown.length&&known.length)s+=` I am also retaining ${unknown.join(', ')} exactly as entered; their OEM scan-tool wording should be attached when available.`;
+ if(!vehicle&&/^[P1-3]/.test(all[0]))s+=' What year, make, model, and engine are we working on?';else s+=' Is the highest-priority code current, pending, history, or intermittent?';
+ return s;
+}
+function stamp(){document.title=`Nitros Mobile Technician Portal v${VERSION} — ${RELEASE}`;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${VERSION} — ${RELEASE}`;document.querySelectorAll('.nitros-build-identity').forEach(e=>e.innerHTML=`<strong>Version ${VERSION}</strong> · ${RELEASE} · Build ${BUILD}`);document.querySelectorAll('body *').forEach(e=>{if(e.children.length===0)e.textContent=(e.textContent||'').replace(/10\.9\.1/g,VERSION)});document.documentElement.dataset.nitrosReady=VERSION}
+function install(){
+ try{if(typeof localGeneralAnswer==='function'&&!localGeneralAnswer.v10100){const old=localGeneralAnswer;const wrap=function(t){const p=(typeof history!=='undefined'?history.filter(m=>m.role==='user').slice(0,-1).map(m=>m.content).join(' | '):'');return answer(t,p)||old(t)};wrap.v10100=true;localGeneralAnswer=wrap}}
+ catch(_){ }
+ try{if(typeof routeCommand==='function'&&!routeCommand.v10100){const old=routeCommand;const wrap=function(raw){const a=answer(raw,'');if(a){line('You',String(raw).trim());reply(a);return}return old(raw)};wrap.v10100=true;routeCommand=wrap}}
+ catch(_){ }
+}
+const start=()=>{stamp();install();setTimeout(install,150);setTimeout(install,700)};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();window.addEventListener('pageshow',start);
+})();
+</script>
+
+
+<!-- v10.10.5 Login Recovery & Safe Controller Isolation -->
+<style id="v10105-safe-style">
+#oliverSafeWorkflowCard{margin:8px 0 10px;padding:10px;border:1px solid #43698f;border-radius:10px;background:#081827;color:#e2edf9;font-size:12px;line-height:1.45}
+#oliverSafeWorkflowCard strong{color:#ffb45f}.safe-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;margin-top:5px}.safe-current{margin-top:7px;color:#a9cef4}
+</style>
+<script id="v10105-login-recovery-safe-controller">
+(()=>{
+'use strict';
+const VERSION='10.10.5', BUILD='2026-08-01-1742', RELEASE='Login Recovery & Safe Controller Isolation';
+const KEY='nitros_oliver_workflow_v10105';
+const $=id=>document.getElementById(id);
+const clean=v=>String(v??'').trim();
+function hubOpen(){const h=$('unifiedOliverHub');return !!(h&&!h.classList.contains('hidden'));}
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(_){return {}}}
+function save(s){try{localStorage.setItem(KEY,JSON.stringify(s))}catch(_){};render(s);return s}
+function state(){const s=load();s.codes=s.codes||[];s.done=s.done||{};s.data=s.data||{};return s}
+function reset(){localStorage.removeItem(KEY);render(state())}
+function update(t){const s=state(),x=t.toLowerCase();
+ if(/^(?:new case|start new case|reset case|clear case)[.!?\s]*$/i.test(t)){reset();return state()}
+ const cs=[...t.toUpperCase().matchAll(/\b[PCBU][0-9A-F]{4}\b/g)].map(m=>m[0]);if(cs.length){s.codes=[...new Set([...s.codes,...cs])];s.done.codes=true}
+ const veh=t.match(/\b(19|20)\d{2}\s+[A-Za-z]+(?:\s+[A-Za-z0-9-]+){1,3}(?:\s+\d(?:\.\d)?L?)?/i);if(veh){s.data.vehicle=veh[0];s.done.vehicle=true}
+ if(/extended crank|long crank|excessive crank|hard start|no start|stall|misfire|lack of power|hesitat/i.test(t)){s.data.symptom=t;s.done.symptom=true}
+ if(/nothing.{0,22}repair|no repairs?|none repaired|not repaired|haven't repaired|have not repaired/i.test(x)){s.data.repairs='None';s.done.repairs=true}
+ if(/nothing.{0,22}(test|perform|check)|no tests?|no testing|none performed|nothing performed|haven't tested|have not tested/i.test(x)){s.data.tests='None';s.done.tests=true}
+ if(/cam(?:shaft)?\s*(?:rpm|speed).{0,24}(show|present|reading|yes)/i.test(t)){s.data.camRpm='Present';s.done.live=true}
+ if(/cam.{0,14}crank.{0,24}(sync|synchron).{0,14}(no|not|false)/i.test(t)||/(sync|synchron).{0,14}(no|not|false)/i.test(t)){s.data.sync='No';s.done.live=true}
+ return save(s)
+}
+function isCamCrank(s){return s.codes.some(c=>['P0340','P0341','P0345','P0335','P0336','P0016','P0017','P0018','P0019'].includes(c))}
+function replyFor(t,s){const x=t.toLowerCase();
+ if(/^(?:new case|start new case|reset case|clear case)[.!?\s]*$/i.test(t))return 'A new diagnostic case is ready. Enter the vehicle, engine, complaint, and diagnostic trouble code.';
+ if(s.done.repairs&&!s.done.tests&&/nothing.{0,22}repair|no repairs?|none repaired|not repaired/i.test(x))return 'Recorded: no previous repairs. Has any testing already been performed? Say “no testing” if none has been done.';
+ if(s.done.tests&&(/nothing.{0,22}(test|perform|check)|no tests?|no testing|none performed|nothing performed/i.test(x))){
+   const codes=s.codes.join(', ')||'the stored code';
+   if(isCamCrank(s))return `Recorded: no previous testing. We can begin the guided cam/crank procedure for ${codes}.\n\nStep 1 — Initial scan-data verification:\n• Confirm whether the DTC is current, pending, or history.\n• Record battery voltage while cranking.\n• Record engine RPM while cranking.\n• Record camshaft RPM or cam-sensor activity.\n• Record Cam/Crank Synchronization.\n• Record commanded and actual cam angle, if available.\n\nSend those readings together. I will interpret them and select Step 2.`;
+   return `Recorded: no previous testing. Step 1 for ${codes}: confirm code status, capture freeze-frame data, and record the live data most directly related to the affected system. Send those results together and I will select the next test.`;
+ }
+ if(isCamCrank(s)&&s.data.camRpm==='Present'&&s.data.sync==='No')return `Step 2 — Separate a signal problem from mechanical timing.\n\nThe PCM sees cam activity, but synchronization remains No. Capture the camshaft and crankshaft waveforms together during cranking or idle. Also verify engine-oil level and condition and compare commanded versus actual cam angle.\n\n• Missing or distorted waveform: load-test reference, ground, and signal circuits.\n• Clean waveforms with incorrect phase relationship: inspect chain stretch, timing alignment, reluctor indexing, and VVT phaser position.\n• Correct signals but no PCM synchronization: verify terminal tension, relearn requirements, and applicable software information.\n\nDo not replace the cam sensor until the fault is measured.`;
+ return null
+}
+function render(s=state()){
+ if(!hubOpen())return;
+ let card=$('oliverSafeWorkflowCard');const tr=$('oliverHubTranscript');if(!tr||!tr.parentElement)return;
+ if(!card){card=document.createElement('div');card.id='oliverSafeWorkflowCard';tr.insertAdjacentElement('afterend',card)}
+ const f=[['Vehicle','vehicle'],['DTCs','codes'],['Symptom','symptom'],['Previous repairs','repairs'],['Previous tests','tests'],['Live data','live']];
+ let current=!s.done.vehicle?'Identify vehicle':!s.done.codes?'Record DTCs':!s.done.symptom?'Record complaint':!s.done.repairs?'Record previous repairs':!s.done.tests?'Record previous testing':!s.done.live?'Perform guided Step 1':'Analyze evidence and select next test';
+ card.innerHTML=`<strong>Safe Diagnostic Workflow</strong><div class="safe-grid">${f.map(([n,k])=>`<span>${s.done[k]?'✓':'□'} ${n}</span>`).join('')}</div><div class="safe-current">Current step: ${current}</div>`;
+}
+function stamp(){
+ document.title=`Nitros Mobile Technician Portal v${VERSION} — ${RELEASE}`;
+ const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${VERSION} — ${RELEASE}`;
+ document.querySelectorAll('.nitros-build-identity').forEach(e=>e.innerHTML=`<strong>Version ${VERSION}</strong> · ${RELEASE} · Build ${BUILD}`);
+ document.documentElement.dataset.nitrosReady=VERSION;
+}
+function installController(){
+ if(!hubOpen()||typeof window.routeCommand!=='function'||window.routeCommand.v10105Wrapped)return;
+ const prior=window.routeCommand;
+ const wrapped=function(raw){
+   const t=clean(raw),s=update(t),a=replyFor(t,s);
+   if(a){try{if(typeof window.line==='function')window.line('You',t)}catch(_){};if(typeof window.reply==='function')window.reply(a);render(s);return}
+   return prior(raw)
+ };
+ wrapped.v10105Wrapped=true;window.routeCommand=wrapped;
+}
+function activateHub(){stamp();installController();render()}
+function boot(){
+ stamp();
+ const launch=$('unifiedOliverLaunch');if(launch)launch.addEventListener('click',()=>setTimeout(activateHub,0),{passive:true});
+ const repair=$('oliverHubRepair');if(repair)repair.addEventListener('click',()=>setTimeout(activateHub,0),{passive:true});
+ const hub=$('unifiedOliverHub');if(hub)new MutationObserver(()=>{if(hubOpen())activateHub()}).observe(hub,{attributes:true,attributeFilter:['class']});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
+</script>
+
+
+
+<!-- v10.11.42 Dynamic Active-DTC Checklist Refresh & Stale Panel Removal -->
+<style id="v101133-case-state-style">
+#oliverCaseCommitCard{margin:8px 0 10px;padding:10px;border:1px solid #4d759b;border-radius:10px;background:#071624;color:#e6f0fb;font-size:12px;line-height:1.45}
+#oliverCaseCommitCard strong{color:#ffb45f}.commit-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;margin-top:5px}.commit-current{margin-top:7px;color:#b7d8f6}.commit-debug{margin-top:8px;padding-top:7px;border-top:1px solid #29435e;color:#9fb8d0;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10px;white-space:pre-wrap}
+</style>
+<script id="v101133-case-state-commit-fix">
+(()=>{
+'use strict';
+const VERSION='10.11.42', BUILD='2026-08-02-1418', RELEASE='Dynamic Active-DTC Checklist Refresh & Stale Panel Removal';
+const KEY='nitros_oliver_case_v10106';
+const $=id=>document.getElementById(id);
+const clean=v=>String(v??'').trim();
+function hubOpen(){const h=$('unifiedOliverHub');return !!(h&&!h.classList.contains('hidden'));}
+function blank(){return {vehicle:{year:'',make:'',model:'',engine:''},dtcs:[],customerComplaint:'',drivabilitySymptoms:'',symptom:'',previousRepairs:null,previousTests:null,liveData:{},currentStep:'identify_vehicle',updatedAt:''};}
+function load(){try{return Object.assign(blank(),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(_){return blank()}}
+function save(c){c.updatedAt=new Date().toISOString();try{localStorage.setItem(KEY,JSON.stringify(c))}catch(_){};render(c);return c}
+function reset(){const c=blank();try{localStorage.removeItem(KEY)}catch(_){};return save(c)}
+function completed(v){return v!==null&&v!==undefined&&String(v).trim()!==''}
+function vehicleComplete(c){return !!(c.vehicle.year&&c.vehicle.make&&c.vehicle.model)}
+function parseVehicle(t,c){
+ const m=t.match(/\b((?:19|20)\d{2})\s+([A-Za-z][A-Za-z-]*)\s+([A-Za-z0-9][A-Za-z0-9 .-]*?)(?:\s+(\d(?:\.\d)?\s*L))?(?=\s+(?:[PCBU][0-9A-F]{4}\b|excessive\s+crank|extended\s+crank|long\s+crank|hard\s+start|no\s+start|stall|misfire|hesitat|lack\s+of\s+power)|$)/i);
+ if(m){c.vehicle={year:m[1],make:m[2],model:m[3].trim(),engine:(m[4]||c.vehicle.engine||'').replace(/\s+/g,'')};return true}
+ const y=t.match(/\b((?:19|20)\d{2})\b/), eng=t.match(/\b(\d(?:\.\d)?\s*L)\b/i);
+ if(y&&!c.vehicle.year)c.vehicle.year=y[1];if(eng)c.vehicle.engine=eng[1].replace(/\s+/g,'');
+ return false;
+}
+function parseFacts(t,c){
+ const x=t.toLowerCase();
+ if(/^(?:new case|start new case|reset case|clear case)[.!?\s]*$/i.test(t))return reset();
+ parseVehicle(t,c);
+ const codes=[...t.toUpperCase().matchAll(/\b[PCBU][0-9A-F]{4}\b/g)].map(m=>m[0]);if(codes.length)c.dtcs=[...new Set([...(c.dtcs||[]),...codes])];
+ const intakeStep=nextStep(c);
+ if(intakeStep==='record_customer_complaint'){
+   const complaint=String(t||'').trim();
+   if(complaint){
+     c.customerComplaint=complaint;
+     if(!c.symptom)c.symptom=complaint;
+   }
+ }
+ if(intakeStep==='record_drivability_symptoms'){
+   const raw=String(t||'').trim();
+   const none=/\b(no|none|nothing|no noticeable|no additional)\b.*\b(symptom|drivability|issue|problem)\b|\bruns?\s+(?:perfect|perfectly|fine|normal|normally|good)\b|\bcheck engine light only\b|\bmil only\b/i.test(raw);
+   c.drivabilitySymptoms=none?'None observed':raw;
+ }
+ const symptoms=['excessive crank','extended crank','long crank','hard start','no start','stall','misfire','lack of power','hesitation'];
+ for(const s of symptoms)if(x.includes(s)){if(!c.drivabilitySymptoms)c.drivabilitySymptoms=s;if(!c.symptom)c.symptom=s;break}
+ const noRepair=/(?:no|none|nothing|not any).{0,28}(?:repair|replaced|replacement)|(?:repair|replaced).{0,20}(?:none|nothing)|haven['’]?t repaired|have not repaired/i.test(t);
+ const noTest=/(?:no|none|nothing|not any).{0,28}(?:test|testing|checked|performed)|(?:test|testing).{0,20}(?:none|nothing)|haven['’]?t tested|have not tested/i.test(t);
+ if(noRepair)c.previousRepairs='None';
+ if(noTest)c.previousTests='None';
+ if(/cam(?:shaft)?\s*(?:rpm|speed).{0,25}(?:show|present|reading|yes)/i.test(t))c.liveData.camRpm='Present';
+ if(/(?:cam.{0,16}crank.{0,25}(?:sync|synchron)|(?:sync|synchron).{0,20})(?:\s*(?:=|is|says?)\s*)?(?:no|not|false)/i.test(t))c.liveData.camCrankSync='No';
+ c.currentStep=nextStep(c);return save(c);
+}
+function isCamCrank(c){return (c.dtcs||[]).some(d=>['P0340','P0341','P0345','P0335','P0336','P0016','P0017','P0018','P0019'].includes(d))}
+function nextStep(c){
+ if(!vehicleComplete(c))return'identify_vehicle';if(!(c.dtcs||[]).length)return'record_dtcs';if(!completed(c.customerComplaint))return'record_customer_complaint';if(!completed(c.drivabilitySymptoms))return'record_drivability_symptoms';if(!completed(c.previousRepairs))return'record_previous_repairs';if(!completed(c.previousTests))return'record_previous_tests';if(!Object.keys(c.liveData||{}).length)return'initial_scan_data';return'analyze_evidence';
+}
+function vehicleText(c){return [c.vehicle.year,c.vehicle.make,c.vehicle.model,c.vehicle.engine].filter(Boolean).join(' ')}
+function stepOne(c){const codes=c.dtcs.join(', ')||'the stored DTC';if(isCamCrank(c))return `Case intake is complete for ${vehicleText(c)} with ${codes}.\n\nStep 1 — Initial cam/crank scan-data verification:\n• Confirm whether each DTC is current, pending, history, or intermittent.\n• Record battery voltage while cranking.\n• Record engine RPM while cranking.\n• Record camshaft RPM or cam-sensor activity.\n• Record Cam/Crank Synchronization.\n• Record commanded and actual cam angle, if available.\n\nSend those readings together. I will interpret them and direct Step 2.`;return `Case intake is complete for ${vehicleText(c)} with ${codes}. Step 1: verify code status, capture freeze-frame data, and record the live data directly related to the affected system. Send the results together and I will direct the next test.`}
+function response(t,c){
+ if(/^(?:new case|start new case|reset case|clear case)[.!?\s]*$/i.test(t))return'A new diagnostic case is ready. Enter the year, make, model, engine, complaint, and DTC.';
+ const step=nextStep(c);c.currentStep=step;save(c);
+ if(step==='identify_vehicle')return'Enter the complete vehicle: year, make, model, and engine.';
+ if(step==='record_dtcs')return`Vehicle recorded as ${vehicleText(c)}. Enter the exact diagnostic trouble code or codes.`;
+ if(step==='record_customer_complaint')return`I have ${vehicleText(c)} with ${c.dtcs.join(', ')}. What is the customer's complaint?`;
+ if(step==='record_drivability_symptoms')return`Customer complaint recorded as ${c.customerComplaint}. Are there any drivability symptoms? Say “none observed” if the vehicle runs normally.`;if(step==='record_previous_repairs')return`Complaint and drivability information recorded. Have any repairs or parts replacements already been performed? Say “no repairs” if none.`;
+ if(step==='record_previous_tests')return`Previous repairs recorded as ${c.previousRepairs}. Has any diagnostic testing already been performed? Say “no testing” if none.`;
+ if(step==='initial_scan_data')return stepOne(c);
+ if(isCamCrank(c)&&c.liveData.camRpm==='Present'&&c.liveData.camCrankSync==='No')return`Step 2 — Separate signal integrity from mechanical timing.\n\nCam activity is present, but Cam/Crank Synchronization remains No. Capture the camshaft and crankshaft waveforms together. Also verify oil level and condition and compare commanded versus actual cam angle.\n\n• Missing or distorted signal: load-test reference, ground, and signal circuits.\n• Clean signals with incorrect phase: inspect timing alignment, chain stretch, reluctor indexing, and VVT phaser position.\n• Correct correlation but no synchronization: verify terminal tension, relearn requirements, and software information.\n\nDo not replace the sensor until the fault is measured.`;
+ return'Enter the next measured test result, and I will interpret it against the active workflow.';
+}
+function render(c=load()){
+ if(!hubOpen())return;const tr=$('oliverHubTranscript');if(!tr||!tr.parentElement)return;let card=$('oliverCaseCommitCard');if(!card){card=document.createElement('div');card.id='oliverCaseCommitCard';tr.insertAdjacentElement('afterend',card)}
+ const rows=[['Vehicle',vehicleComplete(c)],['DTCs',(c.dtcs||[]).length>0],['Symptom',completed(c.symptom)],['Previous repairs',completed(c.previousRepairs)],['Previous tests',completed(c.previousTests)],['Live data',Object.keys(c.liveData||{}).length>0]];
+ const debug=`Vehicle: ${vehicleText(c)||'—'}\nDTCs: ${(c.dtcs||[]).join(', ')||'—'}\nSymptom: ${c.symptom||'—'}\nPrevious repairs: ${c.previousRepairs===null?'UNANSWERED':c.previousRepairs}\nPrevious tests: ${c.previousTests===null?'UNANSWERED':c.previousTests}\nCurrent step: ${nextStep(c)}`;
+ card.innerHTML=`<strong>Case State Commit</strong><div class="commit-grid">${rows.map(([n,v])=>`<span>${v?'✓':'□'} ${n}</span>`).join('')}</div><div class="commit-current">Current step: ${nextStep(c).replaceAll('_',' ')}</div><div class="commit-debug">${debug}</div>`;
+}
+function stamp(){document.title=`Nitros Mobile Technician Portal v${VERSION} — ${RELEASE}`;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${VERSION} — ${RELEASE}`;document.querySelectorAll('.nitros-build-identity').forEach(e=>e.innerHTML=`<strong>Version ${VERSION}</strong> · ${RELEASE} · Build ${BUILD}`);document.documentElement.dataset.nitrosReady=VERSION}
+function install(){
+ if(!hubOpen()||typeof window.routeCommand!=='function'||window.routeCommand.v10106Wrapped)return false;
+ const prior=window.routeCommand;
+ const wrapped=function(raw){const t=clean(raw);if(!t)return prior(raw);const c=parseFacts(t,load());const a=response(t,c);try{if(typeof window.line==='function')window.line('You',t)}catch(_){};if(typeof window.reply==='function')window.reply(a);render(c);return;};
+ wrapped.v10106Wrapped=true;wrapped.v10106Prior=prior;window.routeCommand=wrapped;return true;
+}
+function activate(){stamp();install();render();setTimeout(()=>{install();render()},30);setTimeout(()=>{install();render()},150)}
+function boot(){stamp();const hub=$('unifiedOliverHub');if(hub)new MutationObserver(()=>{if(hubOpen())activate()}).observe(hub,{attributes:true,attributeFilter:['class']});const launch=$('unifiedOliverLaunch');if(launch)launch.addEventListener('click',()=>setTimeout(activate,0),{passive:true});if(hubOpen())activate()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
+</script>
+
+
+
+<!-- v10.10.7 Intake Parser Debug — capture-phase parser/commit validation -->
+<style id="v10107-parser-debug-style">
+#oliverParserDebugCard{margin:8px 0 10px;padding:10px;border:1px solid #5b86ad;border-radius:10px;background:#061522;color:#e9f3ff;font-size:12px;line-height:1.45}
+#oliverParserDebugCard strong{color:#ffb45f}.parser-pass{color:#86e3a5}.parser-warn{color:#ffd18b}.parser-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;margin-top:6px}.parser-mono{margin-top:8px;padding-top:7px;border-top:1px solid #2c4863;white-space:pre-wrap;font:10px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;color:#abc4dc}
+</style>
+<script id="v10107-intake-parser-debug">
+(()=>{
+'use strict';
+const VERSION='10.10.7', BUILD='2026-08-01-1841', RELEASE='Intake Parser Debug';
+const KEY='nitros_oliver_case_v10107';
+const $=id=>document.getElementById(id);
+const clean=v=>String(v??'').trim();
+const blank=()=>({vehicle:{year:'',make:'',model:'',engine:''},dtcs:[],customerComplaint:'',drivabilitySymptoms:'',symptom:'',previousRepairs:null,previousTests:null,currentStep:'identify_vehicle',lastInput:'',lastDetected:{},updatedAt:''});
+function load(){try{return Object.assign(blank(),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(_){return blank()}}
+function save(c){c.updatedAt=new Date().toISOString();localStorage.setItem(KEY,JSON.stringify(c));return c}
+function complete(v){return v!==null&&v!==undefined&&clean(v)!==''}
+function vehicleComplete(c){return !!(c.vehicle.year&&c.vehicle.make&&c.vehicle.model)}
+function nextStep(c){if(!vehicleComplete(c))return'identify_vehicle';if(!c.dtcs.length)return'record_dtcs';if(!complete(c.customerComplaint))return'record_customer_complaint';if(!complete(c.drivabilitySymptoms))return'record_drivability_symptoms';if(!complete(c.previousRepairs))return'record_previous_repairs';if(!complete(c.previousTests))return'record_previous_tests';return'initial_scan_data'}
+function reset(){const c=blank();localStorage.removeItem(KEY);save(c);return c}
+function parse(raw){
+ const t=clean(raw), low=t.toLowerCase(), c=load(), d={};
+ c.lastInput=t;
+ if(/^(?:new case|start new case|reset case|clear case)[.!?\s]*$/i.test(t)){
+   const n=reset();
+   try{localStorage.removeItem('nitros_oliver_case_v10106')}catch(_){}
+   n.lastInput='new case';
+   n.lastDetected={reset:true};
+   save(n);
+   return n;
+ }
+ const year=t.match(/\b((?:19|20)\d{2})\b/); if(year){c.vehicle.year=year[1];d.year=year[1]}
+ const dtcs=[...t.toUpperCase().matchAll(/\b[PCBU][0-9A-F]{4}\b/g)].map(m=>m[0]); if(dtcs.length){c.dtcs=[...new Set([...c.dtcs,...dtcs])];d.dtcs=dtcs.join(', ')}
+ const engine=t.match(/\b(\d(?:\.\d)?\s*L)\b/i); if(engine){c.vehicle.engine=engine[1].replace(/\s+/g,'');d.engine=c.vehicle.engine}
+ const makes=['Toyota','GMC','Chevrolet','Chevy','Ford','Honda','Nissan','Kia','Hyundai','Jeep','Dodge','Chrysler','Ram','Volkswagen','VW','Audi','BMW','Lexus','Subaru','Mazda','Buick','Cadillac','Lincoln','Mercury','Volvo','Mercedes','Acura','Infiniti','Mitsubishi','Pontiac','Saturn'];
+ let make=''; for(const m of makes){if(new RegExp('\\b'+m.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(t)){make=m==='Chevy'?'Chevrolet':m==='VW'?'Volkswagen':m;break}}
+ if(make){c.vehicle.make=make;d.make=make}
+ if(year&&make){
+   const after=t.slice((t.toLowerCase().indexOf(make.toLowerCase())+make.length));
+   const stop=after.search(/\b(?:\d(?:\.\d)?\s*L|[PCBU][0-9A-F]{4}|excessive|extended|long|hard|no\s+start|stall|misfire|hesitat|lack)\b/i);
+   const model=clean((stop>=0?after.slice(0,stop):after).replace(/^[,\s-]+|[,\s-]+$/g,''));
+   if(model){c.vehicle.model=model;d.model=model}
+ }
+ const intakeStep=nextStep(c);
+ if(intakeStep==='record_customer_complaint'){
+   const complaint=String(t||'').trim();
+   if(complaint){
+     c.customerComplaint=complaint;
+     d.customerComplaint=complaint;
+     if(!c.symptom)c.symptom=complaint;
+   }
+ }
+ if(intakeStep==='record_drivability_symptoms'){
+   const raw=String(t||'').trim();
+   const none=/\b(no|none|nothing|no noticeable|no additional)\b.*\b(symptom|drivability|issue|problem)\b|\bruns?\s+(?:perfect|perfectly|fine|normal|normally|good)\b|\bcheck engine light only\b|\bmil only\b/i.test(raw);
+   c.drivabilitySymptoms=none?'None observed':raw;
+   d.drivabilitySymptoms=c.drivabilitySymptoms;
+ }
+ const symptomMap=[['excessive crank','Excessive crank'],['extended crank','Extended crank'],['long crank','Long crank'],['hard start','Hard start'],['no start','No start'],['stall','Stall'],['misfire','Misfire'],['lack of power','Lack of power'],['hesitation','Hesitation']];
+ for(const [needle,label] of symptomMap){if(low.includes(needle)){c.symptom=label;d.symptom=label;break}}
+ const noTests=/(?:\bno\b|\bnone\b|\bnothing\b).{0,35}\b(?:test|tests|testing|diagnos|checked|performed)\b|\b(?:test|tests|testing)\b.{0,25}\b(?:none|nothing)\b|\bno testing has been performed\b/i.test(t);
+ const noRepairs=/(?:\bno\b|\bnone\b|\bnothing\b).{0,35}\b(?:repair|repairs|repaired|replace|replaced|parts?)\b|\b(?:repair|repairs|repaired)\b.{0,25}\b(?:none|nothing)\b|\bno repairs? (?:have|has) been performed\b/i.test(t);
+ if(noTests){c.previousTests='None';d.previousTests='None'}
+ if(noRepairs){c.previousRepairs='None';d.previousRepairs='None'}
+
+ // v10.11.42: narrative repair/testing evidence is stored verbatim.
+ const narrativeStep=nextStep(c);
+ if(narrativeStep==='record_previous_repairs' && !noRepairs){
+   const statement=String(t||'').trim();
+   if(statement){
+     c.previousRepairs=statement;
+     d.previousRepairs=statement;
+
+     const lowStatement=statement.toLowerCase();
+     c.repairEvidence={
+       fullStatement:statement,
+       catalyticConverter:/catalytic converter|\bcat\b/.test(lowStatement),
+       downpipe:/downpipe|front pipe/.test(lowStatement),
+       intermediatePipe:/intermediate pipe|center pipe|mid pipe/.test(lowStatement),
+       tailpipe:/tailpipe|rear pipe/.test(lowStatement),
+       completeExhaust:/complete exhaust|entire exhaust|whole exhaust/.test(lowStatement),
+       oxygenSensors:/oxygen sensor|o2 sensor|air fuel sensor|a\/f sensor/.test(lowStatement),
+       anotherShop:/another shop|other shop|previous shop/.test(lowStatement),
+       unknownBrand:/brand unknown|unknown brand|do not know the brand|don't know the brand/.test(lowStatement)
+     };
+     d.repairEvidence=c.repairEvidence;
+   }
+ }
+
+ if(narrativeStep==='record_previous_tests' && !noTests){
+   const statement=String(t||'').trim();
+   if(statement){
+     c.previousTests=statement;
+     d.previousTests=statement;
+   }
+ }
+ if((c.dtcs||[]).includes('P0340')&&nextStep(c)==='initial_scan_data'){const m=t.match(/\bP0340\b.{0,30}\b(current|pending|history|intermittent)\b|\b(current|pending|history|intermittent)\b.{0,30}\bP0340\b/i);if(m){const v=(m[1]||m[2]).toLowerCase();c.checklist=c.checklist||{};c.checklist.p0340Status=v.charAt(0).toUpperCase()+v.slice(1);d.p0340Status=c.checklist.p0340Status;}}
+ if((c.dtcs||[]).includes('P0340')&&c.checklist&&c.checklist.p0340Status&&!c.checklist.crankingVoltage){const vm=t.match(/(?:battery(?: voltage)?|cranking voltage|voltage while cranking)[^0-9]{0,24}(\d{1,2}(?:\.\d{1,2})?)\s*(?:v|volt|volts)?\b|\b(\d{1,2}(?:\.\d{1,2})?)\s*(?:v|volt|volts)\b/i);if(vm){const value=parseFloat(vm[1]||vm[2]);if(value>=5&&value<=18){c.checklist=c.checklist||{};c.checklist.crankingVoltage=value.toFixed(value%1?1:0)+' V';d.crankingVoltage=c.checklist.crankingVoltage;}}}
+ if((c.dtcs||[]).includes('P0340')&&c.checklist&&c.checklist.crankingVoltage&&!c.checklist.engineRpm){const rm=t.match(/(?:engine\s*)?(?:rpm|cranking speed)[^0-9]{0,24}(\d{2,4})\s*(?:rpm)?\b|\b(\d{2,4})\s*rpm\b/i);if(rm){const value=parseInt(rm[1]||rm[2],10);if(value>=50&&value<=1000){c.checklist.engineRpm=value+' RPM';d.engineRpm=c.checklist.engineRpm;}}}
+ if((c.dtcs||[]).includes('P0340')&&c.checklist&&c.checklist.engineRpm&&!c.checklist.camActivity){
+   const noCam=/\b(?:no|none|zero)\b.{0,25}\b(?:cam|camshaft)(?:\s*(?:rpm|activity|signal))?\b|\b(?:cam|camshaft)(?:\s*(?:rpm|activity|signal))?\b.{0,25}\b(?:not present|absent|missing|zero)\b/i.test(t);
+   const camRpm=t.match(/(?:camshaft|cam)\s*(?:rpm|speed)?[^0-9]{0,20}(\d{1,4})\s*(?:rpm)?\b|\b(\d{1,4})\s*rpm\b.{0,20}\b(?:camshaft|cam)\b/i);
+   const present=/\b(?:camshaft|cam)(?:\s*(?:rpm|activity|signal))?\b.{0,25}\b(?:present|showing|available|yes|detected)\b|\b(?:present|yes|detected)\b.{0,20}\b(?:camshaft|cam)(?:\s*(?:rpm|activity|signal))?\b/i.test(t);
+   if(noCam){c.checklist.camActivity='Not present';d.camActivity=c.checklist.camActivity;}
+   else if(camRpm){const value=parseInt(camRpm[1]||camRpm[2],10);if(value>=0&&value<=5000){c.checklist.camActivity=value+' RPM';d.camActivity=c.checklist.camActivity;}}
+   else if(present){c.checklist.camActivity='Present';d.camActivity=c.checklist.camActivity;}
+ }
+ if((c.dtcs||[]).includes('P0340')&&c.checklist&&c.checklist.camActivity&&!c.checklist.camCrankSync){
+   const normalized=t.toLowerCase().replace(/[.?!,]/g,' ').replace(/\s+/g,' ').trim();
+   let sync=null;
+   if(/^(?:yes|y|yeah|yep|correct|affirmative)$/.test(normalized)||/\b(?:cam(?:shaft)?(?:\s*\/\s*|\s+and\s+|\s+)crank(?:shaft)?\s*(?:sync|synchronization)?|sync|synchronization)\b.{0,20}\b(?:yes|present|good|ok|okay|synchronized|in sync)\b/.test(normalized)||/\b(?:cam|camshaft)\b.{0,15}\b(?:and|\/)\b.{0,15}\b(?:crank|crankshaft)\b.{0,20}\b(?:synchronized|in sync)\b/.test(normalized))sync='Yes';
+   if(/^(?:no|n|nope|negative)$/.test(normalized)||/\b(?:cam(?:shaft)?(?:\s*\/\s*|\s+and\s+|\s+)crank(?:shaft)?\s*(?:sync|synchronization)?|sync|synchronization)\b.{0,20}\b(?:no|not present|failed|fail|not synchronized|out of sync)\b/.test(normalized)||/\b(?:not synchronized|out of sync|sync failed)\b/.test(normalized))sync='No';
+   if(sync){
+     c.checklist.camCrankSync=sync;
+     c.currentChecklistStep='commanded_cam_angle';
+     d.camCrankSync=sync;
+     d.currentChecklistStep=c.currentChecklistStep;
+   }
+ }
+
+ if((c.dtcs||[]).includes('P0340')&&c.checklist&&c.checklist.camCrankSync){
+   c.currentChecklistStep=c.currentChecklistStep||'commanded_cam_angle';
+   c.checklist.camAngles=c.checklist.camAngles||{commanded:null,actual:null};
+
+   const wordNums={zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,ninety:90};
+   const parseAngle=input=>{
+     let raw=String(input||'').toLowerCase().replace(/[.?!,]/g,' ').replace(/degrees?|deg|°/g,' ').replace(/\s+/g,' ').trim();
+     const numeric=raw.match(/-?\d+(?:\.\d+)?/);
+     if(numeric)return parseFloat(numeric[0]);
+     const parts=raw.split(' ').filter(Boolean);
+     let sign=1,total=0,seen=false;
+     if(parts[0]==='minus'||parts[0]==='negative'){sign=-1;parts.shift();}
+     for(const p of parts){
+       if(Object.prototype.hasOwnProperty.call(wordNums,p)){total+=wordNums[p];seen=true;}
+     }
+     return seen?sign*total:null;
+   };
+
+   if(c.currentChecklistStep==='commanded_cam_angle'){
+     const angle=parseAngle(t);
+     if(angle!=null&&angle>=-180&&angle<=180){
+       c.checklist.camAngles.commanded=angle;
+       c.currentChecklistStep='actual_cam_angle';
+       d.commandedCamAngle=angle;
+       d.currentChecklistStep=c.currentChecklistStep;
+     }
+   }else if(c.currentChecklistStep==='actual_cam_angle'){
+     const angle=parseAngle(t);
+     if(angle!=null&&angle>=-180&&angle<=180){
+       c.checklist.camAngles.actual=angle;
+       c.checklist.camAngles.difference=Math.abs(angle-c.checklist.camAngles.commanded);
+       c.currentChecklistStep='freeze_frame';
+       d.actualCamAngle=angle;
+       d.camAngleDifference=c.checklist.camAngles.difference;
+       d.currentChecklistStep=c.currentChecklistStep;
+     }
+   }
+ }
+
+ if((c.dtcs||[]).includes('P0340')&&c.checklist&&c.currentChecklistStep&&c.currentChecklistStep.startsWith('freeze_frame')){
+   c.freezeFrame=c.freezeFrame||{};
+   d.freezeFrameStateBefore=c.currentChecklistStep;
+   if(c.currentChecklistStep==='freeze_frame')c.currentChecklistStep='freeze_frame_ect';
+
+   const firstNumber=input=>{
+     const m=String(input||'').match(/-?\d+(?:\.\d+)?/);
+     return m?parseFloat(m[0]):null;
+   };
+   const normalized=String(t||'').toLowerCase().replace(/[.?!,]/g,' ').replace(/\s+/g,' ').trim();
+
+   if(c.currentChecklistStep==='freeze_frame_ect'){
+     const v=firstNumber(t);
+     if(v!=null&&v>=-60&&v<=300){
+       c.freezeFrame.ect=v;
+       c.currentChecklistStep='freeze_frame_iat';
+       d.freezeFrameECT=v;
+     }
+   }else if(c.currentChecklistStep==='freeze_frame_iat'){
+     const raw=String(t||'').trim();
+     const normalizedIAT=raw
+       .toLowerCase()
+       .replace(/i\s*[-._ ]\s*a\s*[-._ ]\s*t/g,'iat')
+       .replace(/intake\s*air\s*temperature/g,'iat')
+       .replace(/intake\s*air\s*temp/g,'iat')
+       .replace(/intake\s*temp(?:erature)?/g,'iat')
+       .replace(/degrees?|deg|°/g,' ')
+       .replace(/[,:;!?]/g,' ')
+       .replace(/\s+/g,' ')
+       .trim();
+
+     let v=null;
+     const labeled=normalizedIAT.match(/\biat\b\s*(?:is|was|=|at)?\s*(-?\d+(?:\.\d+)?)/i);
+     if(labeled)v=parseFloat(labeled[1]);
+
+     if(v==null&&/^-?\d+(?:\.\d+)?$/.test(normalizedIAT)){
+       v=parseFloat(normalizedIAT);
+     }
+
+     if(v==null){
+       const anyNumber=normalizedIAT.match(/-?\d+(?:\.\d+)?/);
+       if(anyNumber)v=parseFloat(anyNumber[0]);
+     }
+
+     if(v!=null&&v>=-60&&v<=250){
+       c.freezeFrame.iat=v;
+       c.currentChecklistStep='freeze_frame_load';
+       d.freezeFrameIAT=v;
+       d.currentChecklistStep=c.currentChecklistStep;
+       d.iatCommit='PASS';
+     }else{
+       d.iatCommit='WAITING_FOR_VALID_IAT';
+     }
+   }else if(c.currentChecklistStep==='freeze_frame_load'){
+     const v=firstNumber(t);
+     if(v!=null&&v>=0&&v<=100){
+       c.freezeFrame.engineLoad=v;
+       c.currentChecklistStep='freeze_frame_rpm';
+       d.freezeFrameLoad=v;
+     }
+   }else if(c.currentChecklistStep==='freeze_frame_rpm'){
+     const v=firstNumber(t);
+     if(v!=null&&v>=0&&v<=10000){
+       c.freezeFrame.rpm=Math.round(v);
+       c.currentChecklistStep='freeze_frame_speed';
+       d.freezeFrameRPM=c.freezeFrame.rpm;
+     }
+   }else if(c.currentChecklistStep==='freeze_frame_speed'){
+     const v=firstNumber(t);
+     if(v!=null&&v>=0&&v<=250){
+       c.freezeFrame.vehicleSpeed=v;
+       c.currentChecklistStep='freeze_frame_voltage';
+       d.freezeFrameSpeed=v;
+     }
+   }else if(c.currentChecklistStep==='freeze_frame_voltage'){
+     const v=firstNumber(t);
+     if(v!=null&&v>=5&&v<=18){
+       c.freezeFrame.batteryVoltage=v;
+       c.currentChecklistStep='freeze_frame_fuel_status';
+       d.freezeFrameVoltage=v;
+     }
+   }else if(c.currentChecklistStep==='freeze_frame_fuel_status'){
+     let status=null;
+     if(/\bclosed loop\b/.test(normalized))status='Closed Loop';
+     else if(/\bopen loop\b/.test(normalized))status='Open Loop';
+     else if(/\bclosed\b/.test(normalized))status='Closed Loop';
+     else if(/\bopen\b/.test(normalized))status='Open Loop';
+     if(status){
+       c.freezeFrame.fuelSystemStatus=status;
+       c.currentChecklistStep='freeze_frame_stft';
+       d.freezeFrameFuelStatus=status;
+     }
+   }else if(c.currentChecklistStep==='freeze_frame_stft'){
+     const v=firstNumber(t);
+     if(v!=null&&v>=-100&&v<=100){
+       c.freezeFrame.stftB1=v;
+       c.currentChecklistStep='freeze_frame_ltft';
+       d.freezeFrameSTFT=v;
+     }
+   }else if(c.currentChecklistStep==='freeze_frame_ltft'){
+     const v=firstNumber(t);
+     if(v!=null&&v>=-100&&v<=100){
+       c.freezeFrame.ltftB1=v;
+       c.analysisComplete=true;
+       c.currentChecklistStep='circuit_supply_spec';
+       c.circuitTests=c.circuitTests||{};
+       d.freezeFrameLTFT=v;
+       d.currentChecklistStep=c.currentChecklistStep;
+     }
+   }
+   d.freezeFrameStateAfter=c.currentChecklistStep;
+   d.freezeFrameSnapshot=JSON.stringify(c.freezeFrame||{});
+ }
+ if((c.dtcs||[]).includes('P0340')&&c.currentChecklistStep==='circuit_supply_spec'){
+   c.circuitTests=c.circuitTests||{};
+   const normalized=String(t||'').toLowerCase().replace(/[.?!,]/g,' ').replace(/\s+/g,' ').trim();
+   let spec=null;
+   if(/\b(?:5|five)\s*(?:v|volt|volts)?\b/.test(normalized))spec=5;
+   else if(/\b(?:12|twelve)\s*(?:v|volt|volts)?\b/.test(normalized))spec=12;
+   if(spec){
+     c.circuitTests.supplySpecification=spec;
+     c.currentChecklistStep='circuit_supply_measured';
+     d.cmpSupplySpecification=spec+' V';
+     d.currentChecklistStep=c.currentChecklistStep;
+   }
+ }
+
+ if((c.dtcs||[]).includes('P0340')&&c.currentChecklistStep==='circuit_supply_measured'){
+   c.circuitTests=c.circuitTests||{};
+   const m=String(t||'').match(/(?:measured|reading|voltage|supply|reference|power)?[^0-9-]{0,20}(-?\d{1,2}(?:\.\d{1,2})?)\s*(?:v|volt|volts)?\b/i);
+   if(m){
+     const measured=parseFloat(m[1]);
+     const expected=Number(c.circuitTests.supplySpecification||0);
+     if(measured>=0&&measured<=18&&expected){
+       const pass=expected===5 ? measured>=4.5&&measured<=5.5 : measured>=10.5&&measured<=14.8;
+       c.circuitTests.supplyMeasured=measured;
+       c.circuitTests.supplyResult=pass?'Pass':'Fail';
+       c.currentChecklistStep='circuit_ground_test';
+       d.cmpSupplyMeasured=measured+' V';
+       d.cmpSupplyResult=c.circuitTests.supplyResult;
+       d.currentChecklistStep=c.currentChecklistStep;
+     }
+   }
+ }
+
+
+ // v10.11.30: common vehicle-model fallback.
+ // This runs only when a year/make are present but the model is still missing.
+ if(!c.vehicle)c.vehicle={};
+ if(!c.vehicle.model){
+   const vehicleText=String(t||'').toLowerCase()
+     .replace(/[.,;:!?]/g,' ')
+     .replace(/\s+/g,' ')
+     .trim();
+
+   const modelAliases=[
+     ['camry','Camry'],
+     ['corolla','Corolla'],
+     ['rav4','RAV4'],
+     ['highlander','Highlander'],
+     ['tacoma','Tacoma'],
+     ['tundra','Tundra'],
+     ['sienna','Sienna'],
+     ['prius','Prius'],
+     ['avalon','Avalon'],
+     ['4runner','4Runner'],
+     ['sequoia','Sequoia'],
+     ['venza','Venza'],
+     ['yaris','Yaris'],
+     ['supra','Supra'],
+     ['c-hr','C-HR'],
+     ['chr','C-HR'],
+     ['crown','Crown'],
+     ['gr86','GR86'],
+     ['bz4x','bZ4X']
+   ];
+
+   for(const [alias,label] of modelAliases){
+     const pattern=new RegExp('(?:^|\\s)'+alias.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')+'(?:\\s|$)','i');
+     if(pattern.test(vehicleText)){
+       c.vehicle.model=label;
+       d.model=label;
+       break;
+     }
+   }
+ }
+
+ // If a make is missing but a recognized Toyota model is present, infer Toyota.
+ if(c.vehicle.model && !c.vehicle.make){
+   const toyotaModels=new Set(['Camry','Corolla','RAV4','Highlander','Tacoma','Tundra','Sienna','Prius','Avalon','4Runner','Sequoia','Venza','Yaris','Supra','C-HR','Crown','GR86','bZ4X']);
+   if(toyotaModels.has(c.vehicle.model)){
+     c.vehicle.make='Toyota';
+     d.make='Toyota';
+   }
+ }
+
+
+ // v10.11.42: classify any entered DTC so unsupported codes still receive a useful path.
+ if((c.dtcs||[]).length){
+   const primary=c.dtcs[0];
+   if(/^P03/.test(primary))c.diagnosticFamily='Ignition / misfire / engine position';
+   else if(/^P04/.test(primary))c.diagnosticFamily='Emissions / catalyst / EGR / EVAP';
+   else if(/^P07/.test(primary))c.diagnosticFamily='Transmission';
+   else if(/^C/.test(primary))c.diagnosticFamily='Chassis / ABS / stability';
+   else if(/^B/.test(primary))c.diagnosticFamily='Body';
+   else if(/^U/.test(primary))c.diagnosticFamily='Network communication';
+   else c.diagnosticFamily='Powertrain / manufacturer-specific';
+ }
+
+ // P0420 field profile for tomorrow's Camry.
+ if((c.dtcs||[]).includes('P0420')){
+   c.p0420=c.p0420||{step:'status'};
+   const step=c.p0420.step;
+   c.activeDiagnosticQuestion=step;
+   const lower=String(t||'').toLowerCase().trim();
+
+   if(step==='status'){
+     const m=lower.match(/\b(current|present|pending|history|intermittent|stored)\b/);
+     if(m){c.p0420.status=m[1]==='present'?'Current':m[1];c.p0420.step='exhaust_leak';d.p0420Status=c.p0420.status;}
+   }else if(step==='exhaust_leak'){
+     // v10.11.42 — accept natural technician confirmations such as:
+     // “Yes”, “Yes, it was checked”, and “Yes, it's been checked. No leaks.”
+     // The previous singular-only `leak` expression did not recognize `leaks`.
+     const noLeakAnswer=/\bno\s+(?:active\s+)?leaks?\b|\bnone\b.*\bleaks?\b|\b(?:checked|tested|smoke[- ]?tested|inspected)\b.*\b(?:no|without)\b.*\bleaks?\b|\b(?:repaired|fixed|sealed)\b.*\bleaks?\b/i.test(lower);
+     const affirmativeChecked=/^(?:yes|yeah|yep|correct|confirmed|it has|has been|already)(?:\b|[,.!])/i.test(lower)&&/\b(?:check|checked|tested|inspect|inspected|done|complete|completed)\b/i.test(lower);
+     const leakPresent=/\b(?:active\s+)?leaks?\s+(?:is|are|was|were)?\s*(?:present|found|detected)|\bleaking\b|\bfound\s+(?:an?\s+)?exhaust\s+leak\b/i.test(lower);
+     if(noLeakAnswer||affirmativeChecked){
+       c.p0420.exhaustLeak='No active leak verified';
+       c.p0420.step='misfire_fuel';
+       c.verifiedFacts=c.verifiedFacts||{};
+       c.verifiedFacts.p0420ExhaustLeak={value:'No active leak verified',status:'Verified',source:'Technician confirmation',input:t,verifiedAt:new Date().toISOString()};
+       c.lastCommittedAnswer={id:'p0420_exhaust_leak',question:'Complete exhaust checked for leaks ahead of or near downstream sensor',value:'No active leak verified',status:'COMMITTED',input:t,committedAt:new Date().toISOString()};
+       d.p0420ExhaustLeak=c.p0420.exhaustLeak;
+       d.commit='p0420_exhaust_leak';
+     }else if(leakPresent){
+       c.p0420.exhaustLeak='Leak present';
+       c.p0420.step='repair_leak_first';
+       c.verifiedFacts=c.verifiedFacts||{};
+       c.verifiedFacts.p0420ExhaustLeak={value:'Leak present',status:'Verified',source:'Technician confirmation',input:t,verifiedAt:new Date().toISOString()};
+       c.lastCommittedAnswer={id:'p0420_exhaust_leak',question:'Complete exhaust checked for leaks ahead of or near downstream sensor',value:'Leak present',status:'COMMITTED',input:t,committedAt:new Date().toISOString()};
+       d.p0420ExhaustLeak=c.p0420.exhaustLeak;
+       d.commit='p0420_exhaust_leak';
+     }
+   }else if(step==='misfire_fuel'){
+     const shortNo=/^(?:no|nope|none|zero|negative|not present|nothing)(?:[.!\s]*)$/i.test(lower);
+     const shortYes=/^(?:yes|yeah|yep|correct|present|affirmative)(?:[.!\s]*)$/i.test(lower);
+     const explicitNo=/\b(no|none|zero|not present|no active)\b.*\b(misfire|rich|lean|fuel trim|fuel control|fault)\b|\b(misfire|fuel trim|fuel control)\b.*\b(no|none|zero|normal)\b/i.test(lower);
+     const explicitYes=/\b(active )?(misfire|rich|lean|fuel trim|fuel control|engine-control fault)\b/i.test(lower)&&!/\b(no|none|zero|not present|normal)\b/i.test(lower);
+     if(shortNo||explicitNo){
+       c.p0420.misfireFuel='No active misfire/fuel-control fault reported';c.p0420.step='consumption';d.p0420MisfireFuel=c.p0420.misfireFuel;
+       c.verifiedFacts=c.verifiedFacts||{};c.verifiedFacts.p0420MisfireFuel={value:c.p0420.misfireFuel,status:'Verified',source:'Technician confirmation',input:t,verifiedAt:new Date().toISOString()};
+       c.lastCommittedAnswer={id:'p0420_misfire_fuel',question:'Active misfires, rich/lean faults, or abnormal fuel trims',value:c.p0420.misfireFuel,status:'COMMITTED',input:t,committedAt:new Date().toISOString()};d.commit='p0420_misfire_fuel';
+     }else if(shortYes||explicitYes){
+       c.p0420.misfireFuel='Related engine-control issue present';c.p0420.step='correct_engine_fault_first';d.p0420MisfireFuel=c.p0420.misfireFuel;
+       c.verifiedFacts=c.verifiedFacts||{};c.verifiedFacts.p0420MisfireFuel={value:c.p0420.misfireFuel,status:'Verified',source:'Technician confirmation',input:t,verifiedAt:new Date().toISOString()};
+       c.lastCommittedAnswer={id:'p0420_misfire_fuel',question:'Active misfires, rich/lean faults, or abnormal fuel trims',value:c.p0420.misfireFuel,status:'COMMITTED',input:t,committedAt:new Date().toISOString()};d.commit='p0420_misfire_fuel';
+     }
+   }else if(step==='consumption'){
+     const shortNo=/^(?:no|nope|none|zero|negative|not consuming|not using|nothing)(?:[.!\s]*)$/i.test(lower);
+     const shortYes=/^(?:yes|yeah|yep|correct|present|affirmative)(?:[.!\s]*)$/i.test(lower);
+     const explicitNo=/\b(no|none|not using|not consuming|doesn['’]?t use|does not use)\b.*\b(oil|coolant)\b|\b(oil|coolant)\b.*\b(no|none|normal)\b/i.test(lower);
+     const explicitYes=/\b(oil consumption|burning oil|uses oil|using oil|coolant consumption|using coolant|losing coolant)\b/i.test(lower)&&!/\b(no|none|not)\b/i.test(lower);
+     if(shortNo||explicitNo){
+       c.p0420.consumption='No oil/coolant consumption reported';c.p0420.step='sensor_brand';d.p0420Consumption=c.p0420.consumption;
+       c.verifiedFacts=c.verifiedFacts||{};c.verifiedFacts.p0420Consumption={value:c.p0420.consumption,status:'Verified',source:'Technician confirmation',input:t,verifiedAt:new Date().toISOString()};
+       c.lastCommittedAnswer={id:'p0420_consumption',question:'Engine oil or coolant consumption',value:c.p0420.consumption,status:'COMMITTED',input:t,committedAt:new Date().toISOString()};d.commit='p0420_consumption';
+     }else if(shortYes||explicitYes){
+       c.p0420.consumption='Consumption concern present';c.p0420.step='evaluate_contamination';d.p0420Consumption=c.p0420.consumption;
+       c.verifiedFacts=c.verifiedFacts||{};c.verifiedFacts.p0420Consumption={value:c.p0420.consumption,status:'Verified',source:'Technician confirmation',input:t,verifiedAt:new Date().toISOString()};
+       c.lastCommittedAnswer={id:'p0420_consumption',question:'Engine oil or coolant consumption',value:c.p0420.consumption,status:'COMMITTED',input:t,committedAt:new Date().toISOString()};d.commit='p0420_consumption';
+     }
+   }else if(step==='sensor_brand'){
+     const m=lower.match(/\b(oem|denso|ntk|ngk|bosch|aftermarket|unknown)\b/i);
+     if(m){c.p0420.sensorBrand=m[1].toUpperCase();c.p0420.step='upstream_pattern';d.p0420SensorBrand=c.p0420.sensorBrand;}
+   }else if(step==='upstream_pattern'){
+     const m=lower.match(/\b(switching|active|normal|lazy|flat|stuck|slow)\b/i);
+     if(m){c.p0420.upstreamPattern=m[1];c.p0420.step='downstream_pattern';d.p0420UpstreamPattern=c.p0420.upstreamPattern;}
+   }else if(step==='downstream_pattern'){
+     const m=lower.match(/\b(steady|stable|switching|mirrors|follows|lazy|flat|stuck|slow)\b/i);
+     if(m){c.p0420.downstreamPattern=m[1];c.p0420.step='mode6';d.p0420DownstreamPattern=c.p0420.downstreamPattern;}
+   }else if(step==='mode6'){
+     const m=lower.match(/\b(pass|passed|fail|failed|near limit|not available|unavailable)\b/i);
+     if(m){c.p0420.mode6=m[1];c.p0420.step='analysis';d.p0420Mode6=c.p0420.mode6;}
+   }
+ }
+
+ c.currentStep=nextStep(c);c.lastDetected=d;save(c);return c;
+}
+function vehicleText(c){return [c.vehicle.year,c.vehicle.make,c.vehicle.model,c.vehicle.engine].filter(Boolean).join(' ')}
+function guidedReply(c){
+ const s=nextStep(c);
+ if(s==='identify_vehicle')return'Parser received the message, but the complete vehicle was not detected. Enter year, make, model, and engine in one line.';
+ if(s==='record_dtcs')return`Vehicle committed: ${vehicleText(c)}. Enter the exact DTC or DTCs.`;
+ if(s==='record_customer_complaint')return`Vehicle and DTC committed. What is the customer's complaint? For example: check-engine light comes on after 30 to 40 miles.`;
+ if(s==='record_drivability_symptoms')return`Customer complaint recorded. Are there any drivability symptoms? You can say “none observed” or “runs perfectly.”`;if(s==='record_previous_repairs')return`Complaint and drivability information committed. Describe all previous repairs in detail. Pause as needed, then say “record that” or “done.” Say “no repairs” if none.`;
+ if(s==='record_previous_tests')return`Previous repairs recorded. Describe all previous diagnostic testing in detail. Pause as needed, then say “record that” or “done.” Say “no testing” if none.`;
+ if(c.currentStep==='identify_vehicle'){
+   const v=c.vehicle||{};
+   const captured=[v.year,v.make,v.model,v.engine].filter(Boolean).join(' ');
+   const missing=[];
+   if(!v.year)missing.push('year');
+   if(!v.make)missing.push('make');
+   if(!v.model)missing.push('model');
+   if(!v.engine)missing.push('engine size');
+   return`${captured?captured+' recorded. ':''}${missing.length?'I still need the vehicle '+missing.join(', ')+'.':'Vehicle identification is complete.'}`;
+ }
+ if(c.currentStep==='identify_dtcs'){
+   const v=c.vehicle||{};
+   return`${[v.year,v.make,v.model,v.engine].filter(Boolean).join(' ')} recorded. Now enter the diagnostic trouble code or codes.`;
+ }
+ if(c.currentStep==='record_customer_complaint'){
+   return`${(c.dtcs||[]).join(', ')} recorded. What is the customer's complaint?`;
+ }
+ if(c.currentStep==='record_drivability_symptoms'){
+   return`Customer complaint recorded. Are there any drivability symptoms? You can say none observed.`;
+ }
+ if(c.currentStep==='previous_tests'){
+   return`Symptom recorded as ${c.symptom||'provided'}. What testing has already been performed? You can say none.`;
+ }
+ if(c.currentStep==='previous_repairs'){
+   return`Previous testing recorded as ${c.previousTests==='None'?'none':(c.previousTests||'provided')}. What repairs have already been performed? You can say none.`;
+ }
+ if(c.currentStep==='initial_scan_data'&&!c.checklist?.p0340Status){
+   return`Previous repairs recorded as ${c.previousRepairs==='None'?'none':(c.previousRepairs||'provided')}. Intake is complete. Is P0340 current, pending, history, or intermittent?`;
+ }
+
+ if((c.dtcs||[]).includes('P0420')){
+   const p=c.p0420||{step:'status'};
+   if(p.step==='status')return`P0420 profile loaded. Is the code current, pending, history, or intermittent?`;
+   if(p.step==='exhaust_leak')return`P0420 recorded. Has the complete exhaust been checked for leaks ahead of or near the downstream sensor?`;
+   if(p.step==='repair_leak_first')return`An exhaust leak is present. Repair and verify the leak first, clear the code, complete the monitor, and reassess catalyst efficiency.`;
+   if(p.step==='misfire_fuel')return`Good. The complete exhaust leak check is committed as verified with no active leaks found, so I will not ask that question again. Are there any active misfires, rich or lean faults, or abnormal fuel trims?`;
+   if(p.step==='correct_engine_fault_first')return`A related engine-control fault is present. Correct that fault before judging the catalyst.`;
+   if(p.step==='consumption')return`Misfire and fuel-control check recorded. Is the engine consuming oil or coolant?`;
+   if(p.step==='evaluate_contamination')return`Oil or coolant consumption can contaminate a catalyst. Evaluate and correct that condition first.`;
+   if(p.step==='sensor_brand')return`Consumption check recorded. What brand are the upstream and downstream sensors: OEM, Denso, NTK, Bosch, aftermarket, or unknown?`;
+   if(p.step==='upstream_pattern')return`Sensor brand recorded as ${p.sensorBrand}. Describe the upstream pattern: active or switching, lazy, flat, stuck, or slow.`;
+   if(p.step==='downstream_pattern')return`Upstream pattern recorded. Describe the downstream pattern: steady, switching, mirrors upstream, lazy, flat, or stuck.`;
+   if(p.step==='mode6')return`Downstream pattern recorded. What does Mode 6 catalyst data show: passed, failed, near limit, or unavailable?`;
+   if(p.step==='analysis'){
+     const mirrors=/switching|mirrors|follows/i.test(p.downstreamPattern||'');
+     const sensorRisk=/AFTERMARKET|UNKNOWN/i.test(p.sensorBrand||'');
+     return`P0420 evidence capture is complete. ${mirrors?'The downstream pattern follows upstream activity, which supports reduced catalyst oxygen-storage capacity after leaks and engine-control faults are eliminated.':'The downstream pattern is relatively stable, so do not condemn the converter without confirming monitor conditions and Mode 6 results.'} ${sensorRisk?'The sensor brand is aftermarket or unknown; verify correct application and response before replacing the converter.':''} Next: verify no leak under load, review misfire counters and fuel trims, compare both sensor graphs during cruise and deceleration, review Mode 6 limits, and check applicable calibration or service information.`;
+   }
+ }
+
+ if(c.currentChecklistStep==='circuit_ground_test'&&c.circuitTests){const x=c.circuitTests;return`CMP sensor supply measured ${x.supplyMeasured} volts against a ${x.supplySpecification}-volt specification. Result: ${x.supplyResult}. ${x.supplyResult==='Pass'?'The supply circuit passes this check.':'The supply circuit does not meet the selected specification and must be diagnosed before condemning the sensor.'} Next, verify CMP sensor ground integrity with a loaded voltage-drop test.`;}
+ if(c.currentChecklistStep==='circuit_supply_measured'&&c.circuitTests){return`CMP sensor supply specification recorded as ${c.circuitTests.supplySpecification} volts. With the key on and engine off, measure the supply voltage at the CMP connector and enter the measured value.`;}
+ if(c.currentChecklistStep==='circuit_supply_spec'&&c.freezeFrame){const f=c.freezeFrame;const tempSpread=Math.abs(Number(f.ect)-Number(f.iat));const trimTotal=Number(f.stftB1)+Number(f.ltftB1);return`Freeze-frame capture is complete. Initial analysis is ready. ECT-to-IAT difference is ${tempSpread.toFixed(0)} degrees and combined Bank 1 fuel trim is ${trimTotal.toFixed(1)} percent. We will now begin CMP circuit verification. Does this sensor use a 5-volt reference or a 12-volt power feed?`;}
+ if(c.currentChecklistStep==='freeze_frame_ltft')return`Short-term fuel trim recorded at ${c.freezeFrame.stftB1} percent. What was Bank 1 long-term fuel trim in the freeze frame?`;
+ if(c.currentChecklistStep==='freeze_frame_stft')return`Fuel-system status recorded as ${c.freezeFrame.fuelSystemStatus}. What was Bank 1 short-term fuel trim in the freeze frame?`;
+ if(c.currentChecklistStep==='freeze_frame_fuel_status')return`Freeze-frame battery voltage recorded at ${c.freezeFrame.batteryVoltage} volts. Was the fuel system in open loop or closed loop?`;
+ if(c.currentChecklistStep==='freeze_frame_voltage')return`Freeze-frame vehicle speed recorded at ${c.freezeFrame.vehicleSpeed}. What was battery voltage in the freeze frame?`;
+ if(c.currentChecklistStep==='freeze_frame_speed')return`Freeze-frame engine speed recorded at ${c.freezeFrame.rpm} RPM. What was vehicle speed in the freeze frame?`;
+ if(c.currentChecklistStep==='freeze_frame_rpm')return`Freeze-frame engine load recorded at ${c.freezeFrame.engineLoad} percent. What was engine RPM in the freeze frame?`;
+ if(c.currentChecklistStep==='freeze_frame_load')return`Freeze-frame intake-air temperature recorded at ${c.freezeFrame.iat} degrees. What was engine load in percent?`;
+ if(c.currentChecklistStep==='freeze_frame_iat')return`Freeze-frame coolant temperature recorded at ${c.freezeFrame.ect} degrees. What was the intake-air temperature?`;
+ if(c.currentChecklistStep==='freeze_frame_ect')return`Cam-angle data is complete. What was the freeze-frame engine coolant temperature?`;
+ if(c.checklist&&c.checklist.camAngles&&c.checklist.camAngles.commanded!=null&&c.checklist.camAngles.actual!=null){const a=c.checklist.camAngles;const diff=Number(a.difference||0);return`Commanded cam angle recorded at ${a.commanded} degrees and actual cam angle recorded at ${a.actual} degrees. The difference is ${diff.toFixed(1)} degrees. ${diff<=5?'Commanded and actual cam position are tracking closely in this snapshot.':'The commanded-to-actual difference is significant and should be evaluated against operating conditions and manufacturer specifications.'} Next, capture the P0340 freeze-frame data.`;}
+ if(c.currentChecklistStep==='actual_cam_angle'&&c.checklist&&c.checklist.camAngles&&c.checklist.camAngles.commanded!=null){return`Commanded cam angle recorded at ${c.checklist.camAngles.commanded} degrees. Now enter the actual cam angle.`;}
+ if(c.currentChecklistStep==='commanded_cam_angle'&&c.checklist&&c.checklist.camCrankSync){const sync=c.checklist.camCrankSync;return`Cam/Crank Synchronization recorded as ${sync}. ${sync==='Yes'?'The PCM is recognizing cam-to-crank correlation during cranking.':'The PCM is not recognizing cam-to-crank correlation, so this will direct the next diagnostic branch toward signal correlation or mechanical timing.'} Next, enter the commanded cam angle.`;}
+ if(c.checklist&&c.checklist.camActivity){const cam=c.checklist.camActivity;return`Camshaft activity recorded as ${cam}. ${cam==='Not present'?'No camshaft activity is being reported, so the next step is to verify whether Cam/Crank Synchronization remains No and then inspect the cam-sensor circuit.':'Camshaft activity is present, which confirms the scan tool is receiving cam information.'} Next, does Cam/Crank Synchronization show Yes or No while cranking?`;}
+ if(c.checklist&&c.checklist.engineRpm){const rpm=parseInt(c.checklist.engineRpm,10);return`${c.checklist.engineRpm} recorded. ${rpm>=150?'Cranking speed appears adequate for this initial check.':'Cranking speed is lower than expected and should be investigated before continuing.'} Next, does the scan tool show camshaft RPM or cam-sensor activity while cranking?`;}
+ if(c.checklist&&c.checklist.crankingVoltage){const volts=parseFloat(c.checklist.crankingVoltage);return`Battery voltage while cranking recorded at ${c.checklist.crankingVoltage}. ${volts>=9.6?'That is acceptable for the initial cranking test.':'That voltage is low enough to affect sensor signals and module operation.'} Next, what engine RPM did the scan tool display while cranking?`;}
+ if(c.checklist&&c.checklist.p0340Status)return`I've recorded P0340 as ${c.checklist.p0340Status.toLowerCase()}. Now let's verify the electrical baseline. What was the battery voltage while cranking?`;
+ return`Parser and case commit passed. Intake is complete for ${vehicleText(c)} with ${c.dtcs.join(', ')} and symptom “${c.symptom}.”\n\nStep 1 — Initial scan-data verification:\n• Confirm code status: current, pending, history, or intermittent.\n• Record battery voltage while cranking.\n• Record engine RPM while cranking.\n• Record camshaft RPM or cam-sensor activity.\n• Record Cam/Crank Synchronization.\n• Record commanded and actual cam angle, if available.\n\nFor this build, type “P0340 is current” (or pending, history, intermittent).`;
+
+}
+function render(c=load()){
+ const tr=$('oliverHubTranscript');if(!tr||!tr.parentElement)return;
+ let card=$('oliverParserDebugCard');if(!card){card=document.createElement('div');card.id='oliverParserDebugCard';tr.insertAdjacentElement('afterend',card)}
+ const d=c.lastDetected||{};
+ const fields=[['Year',c.vehicle.year],['Make',c.vehicle.make],['Model',c.vehicle.model],['Engine',c.vehicle.engine],['DTCs',c.dtcs.join(', ')],['Customer complaint',c.customerComplaint],['Drivability symptoms',c.drivabilitySymptoms],['Previous repairs',c.previousRepairs],['Previous tests',c.previousTests]];
+ card.innerHTML=`<strong>Intake Parser Debug</strong><div class="parser-grid">${fields.map(([n,v])=>`<span class="${complete(v)?'parser-pass':'parser-warn'}">${complete(v)?'✓':'□'} ${n}: ${complete(v)?v:'not detected'}</span>`).join('')}</div><div class="parser-mono">Incoming: ${c.lastInput||'—'}\nDetected this message: ${Object.keys(d).length?JSON.stringify(d,null,2):'none'}\nCommit status: ${c.lastCommittedAnswer?.status||(Object.keys(d).length?'PASS':'WAITING')}\nWorkflow step: ${nextStep(c)}</div>`;
+}
+function stamp(){document.title=`Nitros Mobile Technician Portal v${VERSION} — ${RELEASE}`;document.querySelectorAll('.nitros-build-identity').forEach(e=>e.innerHTML=`<strong>Version ${VERSION}</strong> · ${RELEASE} · Build ${BUILD}`)}
+function installCapture(){
+ const btn=$('oliverHubSend'), input=$('oliverHubInput');if(!btn||!input||btn.dataset.v10107Capture)return false;
+ btn.dataset.v10107Capture='1';
+ btn.addEventListener('click',ev=>{
+   const t=clean(input.value);if(!t)return;
+   ev.preventDefault();ev.stopImmediatePropagation();
+   input.value='';
+   const c=parse(t);
+
+   // v10.11.42: carry accepted intake facts into the case-state controller.
+   // The parser remains the source of truth; the secondary display/state store
+   // receives the same year, make, model, engine, DTC, symptom, and history.
+   try{
+     const caseKey='nitros_oliver_case_v10106';
+     const existing=JSON.parse(localStorage.getItem(caseKey)||'{}');
+     const synced=Object.assign({
+       vehicle:{year:'',make:'',model:'',engine:''},
+       dtcs:[],customerComplaint:'',drivabilitySymptoms:'',symptom:'',previousRepairs:null,previousTests:null,
+       liveData:{},currentStep:'identify_vehicle',updatedAt:''
+     },existing);
+
+     synced.vehicle=Object.assign(
+       {year:'',make:'',model:'',engine:'',engineSize:''},
+       synced.vehicle||{},
+       c.vehicle||{}
+     );
+
+     // v10.11.42: map the parsed engine into every engine field currently
+     // used by the portal's intake, case-state, and dedicated display layers.
+     const parsedEngine=(
+       c.vehicle?.engine ||
+       c.vehicle?.engineSize ||
+       c.engine ||
+       c.engineSize ||
+       ''
+     );
+
+     if(parsedEngine){
+       synced.vehicle.engine=parsedEngine;
+       synced.vehicle.engineSize=parsedEngine;
+       synced.engine=parsedEngine;
+       synced.engineSize=parsedEngine;
+       synced.caseVehicle=Object.assign({},synced.caseVehicle||{},{
+         engine:parsedEngine,
+         engineSize:parsedEngine
+       });
+
+       if(c.vehicle){
+         c.vehicle.engine=parsedEngine;
+         c.vehicle.engineSize=parsedEngine;
+       }
+       c.engine=parsedEngine;
+       c.engineSize=parsedEngine;
+     }
+
+     synced.dtcs=[...new Set([...(synced.dtcs||[]),...(c.dtcs||[])])];
+     if(c.customerComplaint)synced.customerComplaint=c.customerComplaint;if(c.drivabilitySymptoms)synced.drivabilitySymptoms=c.drivabilitySymptoms;if(c.symptom)synced.symptom=c.symptom;
+     if(c.previousRepairs!==null&&c.previousRepairs!==undefined)synced.previousRepairs=c.previousRepairs;
+     if(c.previousTests!==null&&c.previousTests!==undefined)synced.previousTests=c.previousTests;
+     synced.currentStep=c.currentStep||synced.currentStep;
+     synced.updatedAt=new Date().toISOString();
+     localStorage.setItem(caseKey,JSON.stringify(synced));
+   }catch(_){}
+
+   const message=guidedReply(c);
+
+   // v10.11.42: direct parser-to-conversation bridge.
+   const transcript=document.getElementById('oliverHubTranscript');
+   if(transcript){
+     const userLine=document.createElement('div');
+     userLine.className='oliver-line user';
+     userLine.innerHTML='<strong>You:</strong> '+String(t)
+       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+     transcript.appendChild(userLine);
+
+     const oliverLine=document.createElement('div');
+     oliverLine.className='oliver-line oliver';
+     oliverLine.innerHTML='<strong>Oliver:</strong> '+String(message)
+       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+     transcript.appendChild(oliverLine);
+     transcript.scrollTop=transcript.scrollHeight;
+   }
+
+   try{
+     localStorage.setItem('nitros_oliver_last_reply',message);
+   }catch(_){}
+
+   try{
+     if('speechSynthesis' in window){
+       window.speechSynthesis.cancel();
+       const u=new SpeechSynthesisUtterance(message);
+       u.rate=1;
+       u.pitch=1;
+       window.speechSynthesis.speak(u);
+     }
+   }catch(_){}
+
+   render(c);
+
+   // Keep any dedicated engine controls synchronized with the accepted parser value.
+   try{
+     const parsedEngine=c.vehicle?.engine||c.vehicle?.engineSize||c.engine||c.engineSize||'';
+     if(parsedEngine){
+       const selectors=[
+         '#oliverCaseEngine',
+         '#caseEngine',
+         '#engine',
+         '#engineSize',
+         '[data-case-field="engine"]',
+         '[data-case-field="engineSize"]',
+         'input[name="engine"]',
+         'input[name="engineSize"]'
+       ];
+       selectors.forEach(selector=>{
+         document.querySelectorAll(selector).forEach(el=>{
+           if('value' in el){
+             el.value=parsedEngine;
+             el.dispatchEvent(new Event('input',{bubbles:true}));
+             el.dispatchEvent(new Event('change',{bubbles:true}));
+           }else{
+             el.textContent=parsedEngine;
+           }
+         });
+       });
+     }
+   }catch(_){}
+
+ },true);
+ return true;
+}
+function activate(){installCapture();render()}
+function boot(){stamp();activate();const hub=$('unifiedOliverHub');if(hub)new MutationObserver(()=>activate()).observe(hub,{attributes:true,attributeFilter:['class']});const mo=new MutationObserver(()=>{if(!($('oliverHubSend')?.dataset.v10107Capture))activate()});mo.observe(document.documentElement,{childList:true,subtree:true})}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
+</script>
+
+
+
+<!-- v10.11.1 Typed Checklist Input Only -->
+<style id="v10109-checklist-style">
+#oliverInitialChecklistCard{margin:8px 0 10px;padding:11px;border:1px solid #5f8fb8;border-radius:11px;background:#071827;color:#eaf4ff;font-size:12px;line-height:1.48}
+#oliverInitialChecklistCard strong{color:#ffb45f}.v10109-phase{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}.v10109-badge{padding:2px 7px;border:1px solid #3f6d91;border-radius:999px;color:#a9d4f7;font-size:10px}.v10109-list{display:grid;gap:5px;margin-top:7px}.v10109-item{display:flex;gap:7px;align-items:flex-start;padding:6px 7px;border:1px solid #263f56;border-radius:8px;background:#0a1d2f}.v10109-box{font-size:15px;line-height:1}.v10109-note{margin-top:8px;color:#b9cee2;font-size:11px}.v10109-hidden{display:none!important}
+</style>
+<script id="v10109-p0340-initial-checklist">
+(()=>{
+'use strict';
+const VERSION='10.11.42', BUILD='2026-08-02-1418', RELEASE='Dynamic Active-DTC Checklist Refresh & Stale Panel Removal';
+const KEY='nitros_oliver_case_v10107';
+const $=id=>document.getElementById(id);
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(_){return {}}}
+function complete(v){return v!==null&&v!==undefined&&String(v).trim()!==''}
+function ready(c){return !!(c&&c.vehicle&&c.vehicle.year&&c.vehicle.make&&c.vehicle.model&&(c.dtcs||[]).length&&complete(c.customerComplaint)&&complete(c.drivabilitySymptoms)&&complete(c.previousRepairs)&&complete(c.previousTests)&&c.currentStep==='initial_scan_data')}
+function isP0340(c){const active=String(c&&c.activeDiagnosticCode||'').toUpperCase();return active?active==='P0340':(c.dtcs||[]).includes('P0340')}
+function render(){
+ const tr=$('oliverHubTranscript'); if(!tr||!tr.parentElement)return;
+ let card=$('oliverInitialChecklistCard');
+ if(!card){card=document.createElement('div');card.id='oliverInitialChecklistCard';const anchor=$('oliverParserDebugCard');(anchor||tr).insertAdjacentElement('afterend',card)}
+ const c=load();
+ if(!(ready(c)&&isP0340(c))){card.classList.add('v10109-hidden');card.innerHTML='';return}
+ card.classList.remove('v10109-hidden');
+ const vehicle=[c.vehicle.year,c.vehicle.make,c.vehicle.model,c.vehicle.engine].filter(Boolean).join(' ');
+ const status=c.checklist&&c.checklist.p0340Status;
+ const voltage=c.checklist&&c.checklist.crankingVoltage;
+ const rpm=c.checklist&&c.checklist.engineRpm;
+ const cam=c.checklist&&c.checklist.camActivity;
+ const sync=c.checklist&&c.checklist.camCrankSync;
+ const angles=c.checklist&&c.checklist.camAngles;
+ const items=[
+  {done:!!status,text:status?`P0340 status: ${status}`:'Confirm P0340 status: current, pending, history, or intermittent.'},
+  {done:!!voltage,text:voltage?`Battery voltage while cranking: ${voltage}`:'Record battery voltage while cranking.'},
+  {done:!!rpm,text:rpm?`Engine RPM while cranking: ${rpm}`:'Record engine RPM while cranking.'},
+  {done:!!cam,text:cam?`Camshaft RPM/activity: ${cam}`:'Record camshaft RPM or cam-sensor activity.'},
+  {done:!!sync,text:sync?`Cam/Crank Synchronization: ${sync}`:'Record Cam/Crank Synchronization.'},
+  {done:!!(angles&&angles.commanded!=null&&angles.actual!=null),text:angles&&angles.commanded!=null?(angles.actual!=null?`Commanded cam angle: ${angles.commanded}° · Actual cam angle: ${angles.actual}° · Difference: ${Number(angles.difference||0).toFixed(1)}°`:`Commanded cam angle: ${angles.commanded}° · Waiting for actual angle`):'Record commanded and actual cam angle, if available.'},
+  {done:false,text:'Capture freeze-frame data for P0340.'}
+ ];
+ card.innerHTML=`<div class="v10109-phase"><strong>Diagnose — Step 1: Initial Scan Data</strong><span class="v10109-badge">${vehicle} · P0340</span></div><div class="v10109-list">${items.map(x=>`<div class="v10109-item"><span class="v10109-box">${x.done?'✓':'□'}</span><span>${x.text}</span></div>`).join('')}</div><div class="v10109-note">${c.currentChecklistStep==='freeze_frame_complete'?'Freeze-frame complete. Step 3 analysis is ready.':c.currentChecklistStep==='freeze_frame'?'Cam angles saved. Next: capture freeze-frame data for P0340.':c.currentChecklistStep==='actual_cam_angle'?'Commanded angle saved. Next: enter actual cam angle.':c.currentChecklistStep==='commanded_cam_angle'?'Synchronization saved. Next: enter commanded cam angle.':cam?'Camshaft activity saved. Next: report Cam/Crank Synchronization as Yes or No.':rpm?'Engine RPM saved. Next: report camshaft RPM or cam-sensor activity.':voltage?'Cranking voltage saved. Next: enter engine RPM while cranking.':status?'First item saved. Next: enter the cranking battery voltage.':'Type “P0340 is current” (or pending, history, intermittent) to save the first checklist item.'}</div>`;
+ const f=c.freezeFrame||{};
+ let ff=document.getElementById('oliverFreezeFrameCard');
+ if(c.currentChecklistStep&&c.currentChecklistStep.startsWith('freeze_frame')){
+   if(!ff){ff=document.createElement('div');ff.id='oliverFreezeFrameCard';ff.className='v10109-card';card.insertAdjacentElement('afterend',ff);}
+   const ffItems=[
+    ['ECT',f.ect!=null?`${f.ect}°`:'—'],
+    ['IAT',f.iat!=null?`${f.iat}°`:'—'],
+    ['Engine load',f.engineLoad!=null?`${f.engineLoad}%`:'—'],
+    ['Engine RPM',f.rpm!=null?`${f.rpm} RPM`:'—'],
+    ['Vehicle speed',f.vehicleSpeed!=null?`${f.vehicleSpeed}`:'—'],
+    ['Battery voltage',f.batteryVoltage!=null?`${f.batteryVoltage} V`:'—'],
+    ['Fuel-system status',f.fuelSystemStatus||'—'],
+    ['STFT Bank 1',f.stftB1!=null?`${f.stftB1}%`:'—'],
+    ['LTFT Bank 1',f.ltftB1!=null?`${f.ltftB1}%`:'—']
+   ];
+   ff.innerHTML=`<div class="v10109-phase"><strong>Diagnose — Step 2: Freeze-Frame Data</strong><span class="v10109-badge">${c.currentChecklistStep==='freeze_frame_complete'?'Complete':'In progress'}</span></div><div class="v10109-list">${ffItems.map(x=>`<div class="v10109-item"><span class="v10109-box">${x[1]!=='—'?'✓':'□'}</span><span>${x[0]}: ${x[1]}</span></div>`).join('')}</div>`;
+ }else if(ff){ff.remove();}
+
+ let analysis=document.getElementById('oliverDiagnosticAnalysisCard');
+ if(c.analysisComplete||String(c.currentChecklistStep||'').startsWith('circuit_')){
+   if(!analysis){analysis=document.createElement('div');analysis.id='oliverDiagnosticAnalysisCard';analysis.className='v10109-card';(ff||card).insertAdjacentElement('afterend',analysis);}
+   const tempSpread=Math.abs(Number(f.ect)-Number(f.iat));
+   const trimTotal=Number(f.stftB1)+Number(f.ltftB1);
+   const camDiff=Number(c.checklist?.camAngles?.difference||0);
+   const sync=c.checklist?.camCrankSync||'—';
+   const crankV=Number(c.checklist?.crankingVoltage||0);
+   const crankRpm=Number(c.checklist?.engineRpm||0);
+   const observations=[
+     `Cranking foundation: ${crankV>=9.6&&crankRpm>=150?'Adequate':'Needs verification'} (${crankV} V, ${crankRpm} RPM)`,
+     `Cam/Crank synchronization: ${sync}`,
+     `Commanded/actual cam difference: ${camDiff.toFixed(1)}°`,
+     `Combined Bank 1 trim: ${trimTotal.toFixed(1)}%`,
+     `ECT/IAT difference: ${tempSpread.toFixed(0)}°`
+   ];
+   const interpretations=[
+     sync==='Yes'?'The PCM recognizes cam-to-crank correlation in this snapshot; a complete loss of correlation is less likely, but an intermittent signal fault is not ruled out.':'Synchronization is not confirmed; signal correlation and mechanical timing remain high-priority checks.',
+     camDiff<=5?'Commanded and actual cam angle are tracking closely in the captured snapshot.':'The cam-angle difference is significant and requires comparison with manufacturer specifications and operating conditions.',
+     Math.abs(trimTotal)<=10?'Fuel trim is not showing a major mixture correction in this snapshot.':'Fuel trim shows a notable correction that may need separate evaluation.'
+   ];
+   const nextTests=[
+     'Verify CMP sensor reference voltage or power supply.',
+     'Verify CMP sensor ground integrity with a loaded voltage-drop test.',
+     'Inspect CMP signal activity while cranking; use a lab scope when available.',
+     'Inspect the connector, terminal tension, wiring routing, and oil contamination.',
+     'Do not replace the sensor until the circuit and signal are verified.'
+   ];
+   analysis.innerHTML=`<div class="v10109-phase"><strong>Diagnose — Step 3: Initial Analysis</strong><span class="v10109-badge">Complete</span></div><div class="v10109-list">${observations.map(x=>`<div class="v10109-item"><span class="v10109-box">✓</span><span>${x}</span></div>`).join('')}</div><div class="v10109-note"><strong>Interpretation</strong><br>${interpretations.join('<br>')}</div><div class="v10109-phase" style="margin-top:12px"><strong>Next highest-value test</strong><span class="v10109-badge">Circuit verification</span></div><div class="v10109-list">${nextTests.map((x,i)=>`<div class="v10109-item"><span class="v10109-box">${i+1}</span><span>${x}</span></div>`).join('')}</div>`;
+ }else if(analysis){analysis.remove();}
+
+ let circuit=document.getElementById('oliverCircuitTestCard');
+ if(String(c.currentChecklistStep||'').startsWith('circuit_')){
+   if(!circuit){circuit=document.createElement('div');circuit.id='oliverCircuitTestCard';circuit.className='v10109-card';(analysis||ff||card).insertAdjacentElement('afterend',circuit);}
+   const ct=c.circuitTests||{};
+   const rows=[
+     ['Supply specification',ct.supplySpecification!=null?`${ct.supplySpecification} V`:'Waiting'],
+     ['Measured supply',ct.supplyMeasured!=null?`${ct.supplyMeasured} V`:'Waiting'],
+     ['Supply result',ct.supplyResult||'Waiting']
+   ];
+   const prompt=c.currentChecklistStep==='circuit_supply_spec'
+     ?'Enter 5 volts or 12 volts.'
+     :c.currentChecklistStep==='circuit_supply_measured'
+       ?'Measure CMP supply KOEO and enter the voltage.'
+       :'Supply test complete. Ground voltage-drop testing is next.';
+   circuit.innerHTML=`<div class="v10109-phase"><strong>Diagnose — Step 4: CMP Circuit Testing</strong><span class="v10109-badge">${c.currentChecklistStep==='circuit_ground_test'?'Supply complete':'In progress'}</span></div><div class="v10109-list">${rows.map(x=>`<div class="v10109-item"><span class="v10109-box">${x[1]!=='Waiting'?'✓':'□'}</span><span>${x[0]}: ${x[1]}</span></div>`).join('')}</div><div class="v10109-note">${prompt}</div>`;
+ }else if(circuit){circuit.remove();}
+
+}
+function stamp(){
+ document.title=`Nitros Mobile Technician Portal v${VERSION} — ${RELEASE}`;
+ const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${VERSION} — ${RELEASE}`;
+ document.querySelectorAll('.nitros-build-identity').forEach(e=>e.innerHTML=`<strong>Version ${VERSION}</strong> · ${RELEASE} · Build ${BUILD}`);
+ document.documentElement.dataset.nitrosReady=VERSION;
+}
+function boot(){
+ stamp();render();
+ const dbg=$('oliverParserDebugCard');if(dbg)new MutationObserver(render).observe(dbg,{childList:true,subtree:true,characterData:true});
+ const hub=$('unifiedOliverHub');if(hub)new MutationObserver(()=>{stamp();render()}).observe(hub,{attributes:true,attributeFilter:['class']});
+ new MutationObserver(()=>{const d=$('oliverParserDebugCard');if(d&&!d.dataset.v10109Observed){d.dataset.v10109Observed='1';new MutationObserver(render).observe(d,{childList:true,subtree:true,characterData:true});render()}}).observe(document.documentElement,{childList:true,subtree:true});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
+</script>
+
+<script id="v101111-final-identity-lock">(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.11.11 — Freeze-Frame Data Capture';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.11.11 — Freeze-Frame Data Capture';document.querySelectorAll('.nitros-build-identity').forEach(e=>e.innerHTML='<strong>Version 10.11.11</strong> · Freeze-Frame Data Capture · Build 2026-08-02-0545');document.querySelectorAll('body *').forEach(e=>{if(e.children.length===0&&/Version 10\.(?:9\.1|10\.6|11\.(?:[1-9]|10))/.test(e.textContent||''))e.textContent=(e.textContent||'').replace(/Version 10\.(?:9\.1|10\.6|11\.(?:[1-9]|10))/g,'Version 10.11.11').replace(/Oliver Wake Phrase & Quick Actions|Intake-to-Conversation Commit Bridge|Typed Checklist Input Only|Typed Cranking Voltage & Spoken Confirmation|Conversation Engine|Camshaft Activity Capture|Cam\/Crank Synchronization Capture|Sync Answer Parser Fix|Commanded & Actual Cam Angle Capture|Cam Angle Parser Fix|Two-Step Cam Angle Capture|Explicit Cam-Angle Step State/g,'Freeze-Frame Data Capture')})};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply)})();</script>
+
+
+<script id="v101130-safe-identity">
+(()=>{
+  const VERSION='10.11.42';
+  const RELEASE='Checklist Restoration & Intake Stabilization';
+  const BUILD='2026-08-02-1418';
+
+  const applyOliverIdentity=()=>{
+    const hub=document.getElementById('unifiedOliverHub') ||
+              document.getElementById('oliverHub') ||
+              document.querySelector('.oliver-hub, .oliverHub, [data-oliver-hub]');
+    if(!hub)return;
+
+    const walker=document.createTreeWalker(hub,NodeFilter.SHOW_TEXT);
+    const nodes=[];
+    while(walker.nextNode())nodes.push(walker.currentNode);
+
+    nodes.forEach(node=>{
+      let s=node.nodeValue||'';
+      if(/Version\s+10\.\d+(?:\.\d+)?/i.test(s)){
+        s=s.replace(/Version\s+10\.\d+(?:\.\d+)?/gi,`Version ${VERSION}`);
+      }
+      if(/Build\s+\d{4}-\d{2}-\d{2}-\d{4}/i.test(s)){
+        s=s.replace(/Build\s+\d{4}-\d{2}-\d{2}-\d{4}/gi,`Build ${BUILD}`);
+      }
+      if(/Intake-to-Conversation Commit Bridge|Oliver Wake Phrase & Quick Actions|Workflow State Routing Fix/i.test(s)){
+        s=s.replace(/Intake-to-Conversation Commit Bridge|Oliver Wake Phrase & Quick Actions|Workflow State Routing Fix/gi,RELEASE);
+      }
+      node.nodeValue=s;
+    });
+
+    hub.querySelectorAll('.nitros-build-identity').forEach(el=>{
+      el.innerHTML=`<strong>Version ${VERSION}</strong> · ${RELEASE} · Build ${BUILD}`;
+    });
+  };
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',()=>setTimeout(applyOliverIdentity,0),{once:true});
+  }else{
+    setTimeout(applyOliverIdentity,0);
+  }
+
+  document.addEventListener('click',e=>{
+    if(e.target && /oliver/i.test(e.target.textContent||'')){
+      setTimeout(applyOliverIdentity,120);
+    }
+  });
+})();
+</script>
+
+
+<style id="v101123-submit-style">
+#oliverMobileSubmit{
+  width:100%;
+  min-height:48px;
+  margin-top:8px;
+  border:0;
+  border-radius:10px;
+  background:#b96814;
+  color:#fff;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+#oliverMobileSubmit:active{transform:translateY(1px)}
+</style>
+
+<script id="v101123-mobile-submit">
+(()=>{
+  'use strict';
+
+  function installMobileSubmit(){
+    const input=document.getElementById('oliverHubInput');
+    const existingSend=document.getElementById('oliverHubSend');
+    if(!input || !existingSend || document.getElementById('oliverMobileSubmit')) return;
+
+    const button=document.createElement('button');
+    button.id='oliverMobileSubmit';
+    button.type='button';
+    button.textContent='Submit Answer';
+    button.setAttribute('aria-label','Submit Oliver answer');
+
+    button.addEventListener('click',()=>{
+      if(!String(input.value||'').trim()) return;
+      existingSend.click();
+      setTimeout(()=>{
+        try{ input.focus({preventScroll:true}); }catch(_){ input.focus(); }
+      },0);
+    });
+
+    const parent=input.parentElement;
+    if(parent) parent.appendChild(button);
+  }
+
+  function boot(){
+    installMobileSubmit();
+
+    const launch=document.getElementById('unifiedOliverLaunch');
+    if(launch){
+      launch.addEventListener('click',()=>{
+        setTimeout(installMobileSubmit,100);
+        setTimeout(installMobileSubmit,300);
+      });
+    }
+
+    document.addEventListener('click',e=>{
+      const target=e.target;
+      if(target && /oliver/i.test(target.textContent||'')){
+        setTimeout(installMobileSubmit,120);
+      }
+    });
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',boot,{once:true});
+  }else{
+    boot();
+  }
+})();
+</script>
+
+
+
+
+
+
+
+<style id="v101129-voice-status-style">
+#oliverVoiceBridgeStatus{
+  margin-top:6px;
+  min-height:15px;
+  font-size:11px;
+  color:#9fc3df;
+}
+</style>
+<script id="v101129-voice-status">
+(()=>{
+  const mic=document.getElementById('oliverHubMic');
+  const input=document.getElementById('oliverHubInput');
+  if(!mic || !input || document.getElementById('oliverVoiceBridgeStatus')) return;
+
+  const status=document.createElement('div');
+  status.id='oliverVoiceBridgeStatus';
+  status.textContent='Voice ready. Recognized speech will appear above and submit automatically.';
+  mic.parentElement?.parentElement?.appendChild(status);
+
+  mic.addEventListener('click',()=>{
+    status.textContent='Listening…';
+  });
+
+  const send=document.getElementById('oliverHubSend');
+  if(send){
+    send.addEventListener('click',()=>{
+      const value=String(input.value||'').trim();
+      if(value) status.textContent='Submitting: '+value;
+      setTimeout(()=>{
+        status.textContent='Ready for the next answer.';
+      },500);
+    });
+  }
+})();
+</script>
+
+
+<script id="v101130-read-last-bridge">
+(()=>{
+  const button=document.getElementById('oliverHubReadLast');
+  if(!button || button.dataset.v101130Bridge) return;
+  button.dataset.v101130Bridge='1';
+
+  button.addEventListener('click',e=>{
+    const saved=localStorage.getItem('nitros_oliver_last_reply')||'';
+    if(!saved) return;
+
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+    if('speechSynthesis' in window){
+      window.speechSynthesis.cancel();
+      const utterance=new SpeechSynthesisUtterance(saved);
+      utterance.rate=1;
+      utterance.pitch=1;
+      window.speechSynthesis.speak(utterance);
+    }
+  },true);
+})();
+</script>
+
+
+<style id="v101135-complaint-style">
+#oliverComplaintCard{margin-top:12px;padding:12px;border:1px solid #58768f;border-radius:12px;background:#071927;color:#eaf4fb}
+#oliverComplaintCard .row{padding:5px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13px}
+#oliverComplaintCard .row:last-child{border-bottom:0}
+</style>
+<script id="v101135-complaint-card">
+(()=>{
+  function renderComplaint(){
+    let c={};
+    try{c=JSON.parse(localStorage.getItem('nitros_oliver_case_v10107')||'{}')}catch(_){}
+    const host=document.querySelector('#unifiedOliverHub .oliver-hub-body');
+    if(!host)return;
+    let card=document.getElementById('oliverComplaintCard');
+    if(!c.customerComplaint&&!c.drivabilitySymptoms){if(card)card.remove();return}
+    if(!card){card=document.createElement('div');card.id='oliverComplaintCard';host.appendChild(card)}
+    card.innerHTML='<strong>Intake — Complaint & Drivability</strong>'+
+      `<div class="row">Customer complaint: ${c.customerComplaint||'Waiting'}</div>`+
+      `<div class="row">Drivability symptoms: ${c.drivabilitySymptoms||'Waiting'}</div>`;
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',renderComplaint,{once:true});else renderComplaint();
+  document.addEventListener('click',()=>setTimeout(renderComplaint,150));
+})();
+</script>
+
+
+<style id="v101136-repair-evidence-style">
+#oliverRepairEvidenceCard{
+  margin-top:12px;padding:12px;border:1px solid #58768f;border-radius:12px;
+  background:#071927;color:#eaf4fb
+}
+#oliverRepairEvidenceCard .row{
+  padding:5px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13px
+}
+#oliverRepairEvidenceCard .row:last-child{border-bottom:0}
+</style>
+<script id="v101136-repair-evidence-card">
+(()=>{
+  function renderRepairEvidence(){
+    let c={};
+    try{c=JSON.parse(localStorage.getItem('nitros_oliver_case_v10107')||'{}')}catch(_){}
+    const host=document.querySelector('#unifiedOliverHub .oliver-hub-body');
+    if(!host)return;
+    let card=document.getElementById('oliverRepairEvidenceCard');
+    if(!c.previousRepairs){if(card)card.remove();return}
+    if(!card){card=document.createElement('div');card.id='oliverRepairEvidenceCard';host.appendChild(card)}
+    const e=c.repairEvidence||{};
+    const parts=[
+      e.completeExhaust?'Complete exhaust':'',
+      e.catalyticConverter?'Catalytic converter':'',
+      e.downpipe?'Downpipe':'',
+      e.intermediatePipe?'Intermediate pipe':'',
+      e.tailpipe?'Tailpipe':'',
+      e.oxygenSensors?'O₂ sensors':''
+    ].filter(Boolean).join(', ')||'No structured components extracted';
+    card.innerHTML='<strong>Previous Repair Evidence</strong>'+
+      `<div class="row">Statement: ${c.previousRepairs}</div>`+
+      `<div class="row">Relevant components: ${parts}</div>`+
+      `<div class="row">Performed by another shop: ${e.anotherShop?'Yes':'Not stated'}</div>`+
+      `<div class="row">Unknown part brand: ${e.unknownBrand?'Yes':'Not stated'}</div>`;
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',renderRepairEvidence,{once:true});else renderRepairEvidence();
+  document.addEventListener('click',()=>setTimeout(renderRepairEvidence,150));
+})();
+</script>
+
+
+
+<!-- v10.11.42 Dynamic Active-DTC Checklist Refresh & Stale Panel Removal -->
+<style id="v101137-stabilization-style">
+#oliverIntakeStateCard{margin:10px 0;padding:11px;border:1px solid #2f8f70;border-radius:12px;background:#071d20;color:#eafff4;font-size:12px;line-height:1.45}
+#oliverIntakeStateCard .state-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;margin-top:7px}
+#oliverIntakeStateCard .done{color:#86e3a5}#oliverIntakeStateCard .waiting{color:#ffd18b}
+@media(max-width:560px){#oliverIntakeStateCard .state-grid{grid-template-columns:1fr}}
+</style>
+<script id="v101137-stabilization">
+(()=>{
+'use strict';
+const VERSION='10.11.42', BUILD='2026-08-02-1418', RELEASE='Dynamic Active-DTC Checklist Refresh & Stale Panel Removal';
+const KEY='nitros_oliver_case_v10107';
+const clean=v=>String(v??'').trim();
+const complete=v=>v!==null&&v!==undefined&&clean(v)!=='';
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(_){return {}}}
+function save(c){c.updatedAt=new Date().toISOString();localStorage.setItem(KEY,JSON.stringify(c));return c}
+function step(c){
+ const v=c.vehicle||{};
+ if(!(v.year&&v.make&&v.model))return'identify_vehicle';
+ if(!(c.dtcs||[]).length)return'record_dtcs';
+ if(!complete(c.customerComplaint))return'record_customer_complaint';
+ if(!complete(c.drivabilitySymptoms))return'record_drivability_symptoms';
+ if(!complete(c.previousRepairs))return'record_previous_repairs';
+ if(!complete(c.previousTests))return'record_previous_tests';
+ return'initial_scan_data';
+}
+function normalize(){
+ const c=load(); if(!c||typeof c!=='object')return;
+ c.vehicle=Object.assign({year:'',make:'',model:'',engine:''},c.vehicle||{});
+ c.dtcs=Array.isArray(c.dtcs)?c.dtcs:[];
+ if(!('customerComplaint' in c))c.customerComplaint='';
+ if(!('drivabilitySymptoms' in c))c.drivabilitySymptoms='';
+ if(!('previousRepairs' in c))c.previousRepairs=null;
+ if(!('previousTests' in c))c.previousTests=null;
+ c.checklist=c.checklist&&typeof c.checklist==='object'?c.checklist:{};
+ c.currentStep=step(c);
+ save(c);
+}
+function stamp(){
+ document.title=`Nitros Mobile Technician Portal v${VERSION} — ${RELEASE}`;
+ const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${VERSION} — ${RELEASE}`;
+ document.querySelectorAll('.nitros-build-identity').forEach(e=>e.innerHTML=`<strong>Version ${VERSION}</strong> · ${RELEASE} · Build ${BUILD}`);
+ document.documentElement.dataset.nitrosReady=VERSION;
+}
+function render(){
+ const host=document.getElementById('oliverParserDebugCard');if(!host||!host.parentElement)return;
+ const c=load(), values=[
+  ['Customer complaint',c.customerComplaint],['Drivability symptoms',c.drivabilitySymptoms],
+  ['Previous repairs',c.previousRepairs],['Previous tests',c.previousTests]
+ ];
+ let card=document.getElementById('oliverIntakeStateCard');
+ if(!card){card=document.createElement('div');card.id='oliverIntakeStateCard';host.insertAdjacentElement('afterend',card)}
+ card.innerHTML=`<strong>Restored Intake & Checklist State</strong><div class="state-grid">${values.map(([n,v])=>`<span class="${complete(v)?'done':'waiting'}">${complete(v)?'✓':'□'} ${n}: ${complete(v)?v:'waiting'}</span>`).join('')}</div><div style="margin-top:7px">Workflow step: <strong>${step(c).replaceAll('_',' ')}</strong> · Checklist values preserved: <strong>${Object.keys(c.checklist||{}).length}</strong></div>`;
+}
+function boot(){
+ // Run once at startup. Do not observe the full document: render() changes the DOM
+ // and a document-wide MutationObserver creates a self-triggering interaction lock.
+ normalize();stamp();render();
+
+ // Short, capped startup refreshes allow late-created Oliver elements to appear
+ // without continuously rewriting the page or intercepting user interaction.
+ [150,400,900,1600].forEach(delay=>setTimeout(()=>{stamp();render()},delay));
+
+ // Refresh only after completed user actions and page restoration.
+ document.addEventListener('click',()=>setTimeout(()=>{normalize();stamp();render()},180),{passive:true});
+ document.addEventListener('change',()=>setTimeout(()=>{normalize();render()},80),{passive:true});
+ window.addEventListener('pageshow',()=>setTimeout(()=>{normalize();stamp();render()},30));
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
+</script>
+
+
+<script id="v101138-interaction-recovery">
+(()=>{
+  'use strict';
+  function recover(){
+    document.documentElement.style.pointerEvents='';
+    document.body.style.pointerEvents='';
+    document.body.removeAttribute('inert');
+    document.querySelectorAll('[inert]').forEach(el=>el.removeAttribute('inert'));
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',recover,{once:true});
+  else recover();
+  window.addEventListener('pageshow',recover);
+})();
+</script>
+
+
+<!-- v10.11.42 Diagnostic Answer Commit Evidence -->
+<style id="v101140-answer-commit-style">
+#oliverCommittedEvidenceCard{margin:10px 0;padding:11px;border:1px solid #2f8f70;border-radius:12px;background:#071d20;color:#eafff4;font-size:12px;line-height:1.45}
+#oliverCommittedEvidenceCard .commit-row{display:grid;grid-template-columns:130px 1fr;gap:7px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+#oliverCommittedEvidenceCard .commit-row:last-child{border-bottom:0}
+#oliverCommittedEvidenceCard .commit-label{color:#86e3a5;font-weight:800}
+@media(max-width:560px){#oliverCommittedEvidenceCard .commit-row{grid-template-columns:1fr}}
+</style>
+<script id="v101140-answer-commit-evidence">
+(()=>{
+'use strict';
+const KEY='nitros_oliver_case_v10107';
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(_){return {}}}
+function renderCommittedEvidence(){
+ const host=document.getElementById('oliverParserDebugCard');
+ if(!host||!host.parentElement)return;
+ const c=load(), answer=c.lastCommittedAnswer;
+ let card=document.getElementById('oliverCommittedEvidenceCard');
+ if(!answer){if(card)card.remove();return}
+ if(!card){card=document.createElement('div');card.id='oliverCommittedEvidenceCard';host.insertAdjacentElement('afterend',card)}
+ const next=(c.p0420?.step||'Continue diagnosis').replaceAll('_',' ');
+ card.innerHTML='<strong>Committed Diagnostic Evidence</strong>'+   `<div class="commit-row"><span class="commit-label">Question</span><span>${answer.question||answer.id||'Active diagnostic checkpoint'}</span></div>`+   `<div class="commit-row"><span class="commit-label">Verified result</span><span>${answer.value||'Committed'}</span></div>`+   `<div class="commit-row"><span class="commit-label">Evidence status</span><span>${answer.status||'COMMITTED'}</span></div>`+   `<div class="commit-row"><span class="commit-label">Next workflow</span><span>${next}</span></div>`;
+}
+function boot(){renderCommittedEvidence();[180,500,1000].forEach(ms=>setTimeout(renderCommittedEvidence,ms));document.addEventListener('click',()=>setTimeout(renderCommittedEvidence,220),{passive:true});}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
+</script>
+
+
+
+<!-- v10.11.42 Dynamic Active-DTC Checklist Refresh & Stale Panel Removal -->
+<style id="v101141-active-dtc-style">
+#oliverActiveDtcCard{margin:8px 0 10px;padding:11px;border:1px solid #ff9d28;border-radius:11px;background:#1a130b;color:#fff4e7;font-size:12px;line-height:1.45}
+#oliverActiveDtcCard .head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#oliverActiveDtcCard .code{font-weight:900;color:#ffbd66;font-size:14px}
+#oliverActiveDtcCard .inactive{margin-top:6px;color:#b8c4d2}
+#oliverInitialChecklistCard[data-active-dtc="P0420"]{border-color:#ff9d28;background:#17130d}
+#oliverInitialChecklistCard[data-active-dtc="P0420"] strong{color:#ffbd66}
+</style>
+<script id="v101141-active-dtc-routing">
+(()=>{
+'use strict';
+const KEY='nitros_oliver_case_v10107';
+const VERSION='10.11.42';
+const BUILD='2026-08-02-1418';
+const RELEASE='Dynamic Active-DTC Checklist Refresh & Stale Panel Removal';
+const load=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(_){return {}}};
+const save=c=>{c.updatedAt=new Date().toISOString();localStorage.setItem(KEY,JSON.stringify(c));return c};
+const text=v=>String(v??'');
+function chooseActive(c){
+ const codes=(c.dtcs||[]).map(x=>text(x).toUpperCase());
+ const context=[c.customerComplaint,c.symptom,c.previousTests,c.previousRepairs,c.lastUserMessage,c.lastIncomingMessage].map(text).join(' ').toUpperCase();
+ const transcript=text(document.getElementById('oliverHubTranscript')?.innerText).toUpperCase();
+ const currentQuestion=[c.activeDiagnosticQuestion,c.pendingDiagnosticQuestion,c.lastOliverQuestion,c.currentQuestion,c.p0420&&c.p0420.lastQuestion].map(text).join(' ').toUpperCase();
+ if(codes.includes('P0420')&&(context.includes('P0420')||transcript.includes('P0420')||currentQuestion.includes('P0420')||c.p0420)) return 'P0420';
+ if(codes.includes('P0430')&&(context.includes('P0430')||transcript.includes('P0430')||currentQuestion.includes('P0430'))) return 'P0430';
+ if(c.activeDiagnosticCode&&codes.includes(text(c.activeDiagnosticCode).toUpperCase())) return text(c.activeDiagnosticCode).toUpperCase();
+ return codes[0]||'';
+}
+function route(){
+ const c=load(); if(!c||typeof c!=='object')return;
+ const active=chooseActive(c); if(!active)return;
+ c.activeDiagnosticCode=active;
+ c.inactiveDiagnosticCodes=(c.dtcs||[]).filter(x=>text(x).toUpperCase()!==active);
+ c.activeWorkflow=active==='P0420'||active==='P0430'?'catalyst_efficiency':'code_specific';
+ if(active==='P0420'||active==='P0430'){
+   c.currentStep='catalyst_efficiency';
+   c.currentChecklistStep=c.p0420?.step||'exhaust_integrity';
+ }
+ save(c);
+}
+function p0420Items(c){
+ const p=c.p0420||{};
+ const commits=c.diagnosticCommits||c.committedAnswers||{};
+ const has=(...keys)=>keys.some(k=>p[k]!==undefined||commits[k]!==undefined||c[k]!==undefined);
+ const doneExhaust=has('exhaustLeakChecked','exhaust_integrity','exhaustLeaks')||/no leaks|checked.*exhaust/i.test(text(c.previousTests));
+ const doneFuel=has('misfireFuelControl','fuel_control','misfires');
+ const doneConsumption=has('oilCoolantConsumption','fluid_consumption');
+ const doneSensors=has('sensorBrand','oxygenSensorBrand','o2_sensor_identity');
+ const doneWaveform=has('oxygenSensorWaveform','o2_waveform','liveData');
+ const doneMode6=has('mode6','mode06','catalystMonitor');
+ const doneCalibration=has('calibration','tsbCheck','pcmUpdate');
+ return [
+  [doneExhaust,'Confirm exhaust integrity ahead of and near the downstream sensor.'],
+  [doneFuel,'Verify no active misfire, rich/lean faults, or abnormal fuel trims.'],
+  [doneConsumption,'Verify the engine is not consuming oil or coolant.'],
+  [doneSensors,'Identify upstream and downstream sensor brand/type and confirm correct application.'],
+  [doneWaveform,'Compare upstream and downstream O₂/A/F sensor activity under stable operating conditions.'],
+  [doneMode6,'Review Mode $06 catalyst-monitor data or equivalent catalyst-efficiency test results.'],
+  [doneCalibration,'Check applicable TSBs and PCM calibration updates before condemning the catalyst.']
+ ];
+}
+function nextP0420(items){const i=items.findIndex(x=>!x[0]);return i<0?'P0420 diagnostic evidence complete. Review the combined evidence before recommending a catalyst.':'Next: '+items[i][1]}
+function render(){
+ const c=load(), active=text(c.activeDiagnosticCode).toUpperCase();
+ const transcript=document.getElementById('oliverHubTranscript'); if(!transcript||!transcript.parentElement)return;
+ let banner=document.getElementById('oliverActiveDtcCard');
+ if(!banner){banner=document.createElement('div');banner.id='oliverActiveDtcCard';const anchor=document.getElementById('oliverParserDebugCard')||transcript;anchor.insertAdjacentElement('afterend',banner)}
+ const inactive=(c.inactiveDiagnosticCodes||[]).join(', ')||'None';
+ const label=active==='P0420'?'Catalyst System Efficiency — Bank 1':active==='P0430'?'Catalyst System Efficiency — Bank 2':active||'Not selected';
+ banner.innerHTML=`<div class="head"><strong>Active diagnosis</strong><span class="code">${active||'—'} · ${label}</span></div><div class="inactive">Inactive codes preserved separately: ${inactive}</div>`;
+ const card=document.getElementById('oliverInitialChecklistCard'); if(!card)return;
+ const ff=document.getElementById('oliverFreezeFrameCard');
+ if(active==='P0420'||active==='P0430'){
+   card.classList.remove('v10109-hidden'); card.dataset.activeDtc=active;
+   if(ff)ff.style.display='none';
+   const vehicle=[c.vehicle?.year,c.vehicle?.make,c.vehicle?.model,c.vehicle?.engine].filter(Boolean).join(' ');
+   const items=p0420Items(c);
+   card.innerHTML=`<div class="v10109-phase"><strong>Diagnose — Catalyst Efficiency Workflow</strong><span class="v10109-badge">${vehicle} · ${active}</span></div><div class="v10109-list">${items.map(x=>`<div class="v10109-item"><span class="v10109-box">${x[0]?'✓':'□'}</span><span>${x[1]}</span></div>`).join('')}</div><div class="v10109-note">${nextP0420(items)}</div>`;
+ }else{
+   card.dataset.activeDtc=active;
+   if(ff)ff.style.display='';
+ }
+ document.title=`Nitros Mobile Technician Portal v${VERSION} — ${RELEASE}`;
+ document.querySelectorAll('.nitros-build-identity').forEach(e=>e.innerHTML=`<strong>Version ${VERSION}</strong> · ${RELEASE} · Build ${BUILD}`);
+}
+function refresh(){route();render()}
+function boot(){
+ refresh();
+ [120,350,800,1500].forEach(ms=>setTimeout(refresh,ms));
+ document.addEventListener('click',()=>setTimeout(refresh,160),{passive:true});
+ document.addEventListener('change',()=>setTimeout(refresh,80),{passive:true});
+ window.addEventListener('pageshow',()=>setTimeout(refresh,30));
+ const watch=()=>{const card=document.getElementById('oliverInitialChecklistCard');if(!card)return setTimeout(watch,120);let repairing=false;new MutationObserver(()=>{if(repairing)return;const c=load(),active=text(c.activeDiagnosticCode).toUpperCase();const stale=(active==='P0420'||active==='P0430')&&(/P0340|Initial Scan Data|Cam\/Crank|cranking/i.test(card.textContent||'')||card.dataset.activeDtc!==active);if(stale){repairing=true;render();setTimeout(()=>repairing=false,0)}}).observe(card,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['class','data-active-dtc']});};
+ watch();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
+</script>
+
+<!-- v10.11.42: The legacy P0340 checklist renderer now honors activeDiagnosticCode.
+     A scoped stale-panel observer re-renders only the checklist card when an older
+     renderer attempts to restore P0340 while P0420/P0430 is active. -->
 
 </body>
 </html>
