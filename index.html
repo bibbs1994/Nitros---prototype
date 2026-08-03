@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.12.5 — Automatic Graph Image Enhancement</title>
+<title>Nitros Mobile Technician Portal v10.12.6 — Symptom-First OCR Upgrade</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -482,7 +482,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.5 — Automatic Graph Image Enhancement</div>
+  <div class="sub">Mobile Technician Portal v10.12.6 — Symptom-First OCR Upgrade</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -496,7 +496,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.5 preserves the validated conversational and DTC knowledge engines and adds diagnostic evidence analysis after photo, CSV, text, and PDF imports. Oliver now builds an active structured case from natural technician conversation, including vehicle, engine, DTCs, status, symptoms, completed tests, measurements, replaced parts, observations, and the next recommended diagnostic question. VIN-specific wiring, pinouts, calibrations, and OEM procedures still require verified vehicle information.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.6 preserves the validated conversational and DTC knowledge engines and adds diagnostic evidence analysis after photo, CSV, text, and PDF imports. Oliver now builds an active structured case from natural technician conversation, including vehicle, engine, DTCs, status, symptoms, completed tests, measurements, replaced parts, observations, and the next recommended diagnostic question. VIN-specific wiring, pinouts, calibrations, and OEM procedures still require verified vehicle information.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -659,7 +659,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.5</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.6</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -726,7 +726,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.5</div>
+      <div class="eyebrow">Version 10.12.6</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -5211,7 +5211,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.5 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.6 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6956,7 +6956,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1031CompletionAssignmentStabilization">
 (()=>{
   'use strict';
-  const BUILD='10.12.5';
+  const BUILD='10.12.6';
   const $=id=>document.getElementById(id);
   const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||'null');return v??fallback}catch{return fallback}};
   const write=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}};
@@ -7150,12 +7150,12 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 .oliver-active-case-banner button{border:1px solid #60748c;background:#13243a;color:#fff;border-radius:9px;padding:5px 9px;font-weight:800}
 </style>
 <script id="v1060-session-manager-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.5 — Automatic Graph Image Enhancement';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.6 — Symptom-First OCR Upgrade';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 adds context awareness: Oliver reads the active case, acknowledges known facts, and asks only for the highest-value missing information. -->
 
 <script id="v1072-completed-prompt-tracking-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.5 — Automatic Graph Image Enhancement';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.6 — Symptom-First OCR Upgrade';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 tracks completed prompts, recognizes power-loss symptoms, acknowledges each new fact, and blocks answered intake questions from repeating. -->
 
@@ -7234,7 +7234,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
  }
  async function imageToCanvas(file){
    const bitmap=await createImageBitmap(file);
-   // v10.12.5: preserve detail and upscale smaller phone photos before OCR.
+   // v10.12.6: preserve detail and upscale smaller phone photos before OCR.
    // Limit total size so iPhone Safari remains stable.
    const targetWidth=Math.min(3000,Math.max(2200,bitmap.width));
    const scale=Math.min(4,targetWidth/bitmap.width);
@@ -7266,6 +7266,22 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
      ctx.putImageData(im,0,0);
    }
    return c;
+ }
+ function rotateCanvas(source,degrees){
+   const rad=degrees*Math.PI/180,swap=Math.abs(degrees)%180===90;
+   const c=document.createElement('canvas');c.width=swap?source.height:source.width;c.height=swap?source.width:source.height;
+   const ctx=c.getContext('2d',{willReadFrequently:true});ctx.translate(c.width/2,c.height/2);ctx.rotate(rad);ctx.drawImage(source,-source.width/2,-source.height/2);return c;
+ }
+ function extractPidLabels(text){
+   const t=String(text||'');const labels=[];
+   const patterns=[
+    [/A\/?F[^\n]{0,40}(?:B1S1|SENSOR ?1)|(?:B1S1)[^\n]{0,30}A\/?F/ig,'Bank 1 Sensor 1 (upstream A/F or O2)'],
+    [/(?:O2|OXYGEN)[^\n]{0,40}(?:B1S2|SENSOR ?2)|(?:B1S2)[^\n]{0,30}(?:O2|OXYGEN)/ig,'Bank 1 Sensor 2 (downstream O2)'],
+    [/SHORT[^\n]{0,25}FUEL|STFT/ig,'Short-term fuel trim'],[/LONG[^\n]{0,25}FUEL|LTFT/ig,'Long-term fuel trim'],
+    [/ENGINE[^\n]{0,15}RPM|\bRPM\b/ig,'Engine RPM'],[/COOLANT|\bECT\b/ig,'Engine coolant temperature'],[/VEHICLE[^\n]{0,15}SPEED|\bVSS\b/ig,'Vehicle speed'],
+    [/MAF|MASS AIR FLOW/ig,'Mass airflow'],[/CALCULAT(?:ED|E)[^\n]{0,15}LOAD|VEHICLE LOAD/ig,'Calculated load']
+   ];
+   for(const [r,label] of patterns)if(r.test(t)&&!labels.includes(label))labels.push(label);return labels;
  }
  function normalizePid(text){
    const t=String(text||'').toUpperCase().replace(/[^A-Z0-9 ._\/-]/g,' ').replace(/\s+/g,' ').trim();
@@ -7302,6 +7318,16 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
  async function analyzeImage(file){
    setStatus('Image attached. Oliver is isolating graph panels and label regions…');
    const T=await loadTesseract(),source=await imageToCanvas(file),W=source.width,H=source.height;
+   // v10.12.6: read the complete scan-tool display at three orientations before panel mapping.
+   // This catches sideways phone photos and labels that do not fall inside the fixed four-panel title bands.
+   let screenBest={text:'',confidence:0,labels:[],rotation:0};
+   for(const rotation of [0,90,-90]){
+     const rotated=rotation?rotateCanvas(source,rotation):source;
+     const broad=cropCanvas(rotated,0,0,rotated.width,rotated.height,'contrast',150,.82);
+     const result=await T.recognize(broad,'eng',{logger:m=>{if(m.status==='recognizing text')setStatus(`Reading complete screen (${rotation}°): ${Math.round((m.progress||0)*100)}%`)}});
+     const text=cleanOcr(result?.data?.text),confidence=Math.round(result?.data?.confidence||0),labels=extractPidLabels(text);
+     if(labels.length>screenBest.labels.length||(labels.length===screenBest.labels.length&&confidence>screenBest.confidence))screenBest={text,confidence,labels,rotation};
+   }
    // The central scan-tool display normally occupies most of the photo. Divide it into four graph regions,
    // but OCR only each panel's title/label band; waveform pixels are evaluated separately.
    const marginX=Math.round(W*.08),top=Math.round(H*.16),usableW=Math.round(W*.84),usableH=Math.round(H*.68);
@@ -7324,24 +7350,27 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
      panels.push({number:i+1,position:names[i],...ocr,labelConfidence,metrics});
    }
    const identified=panels.filter(p=>p.pid&&p.labelConfidence>=55),unresolved=panels.filter(p=>!p.pid||p.labelConfidence<55);
-   const codes=dtcs(panels.map(p=>p.text).join('\n'));
+   const broadLabels=screenBest.labels.filter(label=>!identified.some(p=>p.pid===label));
+   const codes=dtcs(panels.map(p=>p.text).join('\n')+'\n'+screenBest.text);
    const evidence=panels.map(p=>`Panel ${p.number} (${p.position}): ${p.pid||'PID unresolved'}; label confidence ${p.labelConfidence}%; ${p.metrics.description}; trace activity ${(p.metrics.activity*100).toFixed(1)}%; switching index ${(p.metrics.switching*100).toFixed(1)}%.`).join('\n');
    let instruction;
    if(unresolved.length){
-     if(identified.length===0)instruction='Do not diagnose from uncertain labels and do not ask for Panel 1. Explain that all four labels remain unreadable after automatic enhancement. Ask the technician to retake the photo closer and level, rotate the phone to landscape, crop/export the graph directly, or submit one graph at a time. Preserve the active case and all prior findings.';
+     if(identified.length===0&&broadLabels.length===0)instruction='Do not diagnose from uncertain labels and do not ask for Panel 1. Explain that the labels remain unreadable after automatic enhancement and orientation correction. Ask the technician to retake the photo closer and level, crop/export the graph directly, or submit one graph at a time. Preserve the active case and all prior findings.';
+     else if(identified.length===0)instruction=`The complete-screen OCR recognized these PID labels: ${broadLabels.join(', ')}. Use them as screen-level evidence, but do not assign them to a specific panel unless position is confirmed. Summarize what is readable and request only the one missing operating condition or value needed next.`;
      else instruction=`Do not diagnose from uncertain labels. Explain that automatic enhancement confirmed ${identified.length} panel label(s), but the remaining label(s) are still unreadable. Ask for a closer crop of Panel ${unresolved[0].number}, the ${unresolved[0].position} graph, rather than asking the technician to manually identify every panel. Preserve the active case and all prior findings.`;
    }
    else instruction='All four panel labels were mapped with usable confidence. Summarize the measured waveform evidence without claiming voltage scales that are not readable, ask for the exact operating condition (RPM/load/time) if it is not already known, and then provide the next best measured test for the active DTC.';
    const summary=[
      `Diagnostic graph image imported: ${file.name}`,
      codes.length?`DTCs visibly detected: ${codes.join(', ')}`:'No additional DTC was read from the image',
-     `Graph-specific evidence analysis completed. ${identified.length} of 4 PID labels identified with usable confidence.`,
+     `Graph-specific evidence analysis completed. ${identified.length} of 4 panel labels identified with usable confidence. Complete-screen OCR additionally recognized ${broadLabels.length} label(s) at ${screenBest.rotation}° orientation.`,
+     broadLabels.length?`Additional readable screen labels: ${broadLabels.join(', ')}`:'No additional screen-level PID labels were confirmed.',
      evidence,instruction
    ].join('\n');
    sendFact(summary);
    const p=$('oliverImportPreview');
-   if(p){p.insertAdjacentHTML('beforeend',`<div style="margin-top:8px"><span class="oliver-import-chip">Graph analysis</span><span class="oliver-import-chip">${identified.length}/4 labels confirmed</span></div><pre>${esc(evidence)}</pre>`)}
-   setStatus(unresolved.length?(identified.length===0?'Automatic enhancement completed, but the four PID labels are still unreadable. Retake closer in landscape, crop/export the graph, or submit one graph at a time.':`Automatic enhancement confirmed ${identified.length} of 4 PID labels. Submit a closer crop of Panel ${unresolved[0].number} next.`):'Graph analysis complete. All panel labels were mapped; Oliver is evaluating the evidence and operating condition.');
+   if(p){p.insertAdjacentHTML('beforeend',`<div style="margin-top:8px"><span class="oliver-import-chip">Graph analysis</span><span class="oliver-import-chip">${identified.length}/4 panels + ${broadLabels.length} screen labels</span></div><pre>${esc(evidence)}</pre>`)}
+   setStatus(unresolved.length?((identified.length===0&&broadLabels.length===0)?'Automatic enhancement and orientation correction completed, but the PID labels remain unreadable. Retake closer, crop/export the graph, or submit one graph at a time.':`OCR confirmed ${identified.length} panel label(s) and ${broadLabels.length} additional screen label(s). Oliver is preserving the readable evidence and will request only the next missing item.`):'Graph analysis complete. All panel labels were mapped; Oliver is evaluating the evidence and operating condition.');
  }
  async function handleFile(file){
    if(!file)return;
@@ -7395,7 +7424,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    file.onchange=()=>{handleFile(file.files?.[0]).catch(e=>setStatus('Import failed: '+e.message));file.value=''};
    $('oliverImportCameraFile').onchange=()=>{const f=$('oliverImportCameraFile');handleFile(f.files?.[0]).catch(e=>setStatus('Camera import failed: '+e.message));f.value=''};
  }
- const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.5 — Automatic Graph Image Enhancement';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Startup Freeze Fix ready — import a scan-tool graph for panel-by-panel PID identification';};
+ const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.6 — Symptom-First OCR Upgrade';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Symptom-first intake and orientation-aware OCR ready';};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
  window.addEventListener('pageshow',()=>setTimeout(apply,40));
  const mo=new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))build()});mo.observe(document.documentElement,{childList:true,subtree:true});
@@ -7405,9 +7434,9 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1081-version-label-sync">
 (()=>{
  const sync=()=>{
-  document.title='Nitros Mobile Technician Portal v10.12.5 — Automatic Graph Image Enhancement';
+  document.title='Nitros Mobile Technician Portal v10.12.6 — Symptom-First OCR Upgrade';
   document.querySelectorAll('.sub,.status,header,footer,[class*=version],[id*=version]').forEach(el=>{
-   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.5');
+   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.6');
   });
  };
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
@@ -7420,7 +7449,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 <!-- v10.8.6 Startup Freeze Fix: associates OCR words with upper-left, upper-right, lower-left, and lower-right graph panels; asks only for the first unresolved PID or operating condition. -->
 <script id="v1084-release-identity">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.5 — Automatic Graph Image Enhancement';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.5</strong> · Startup Freeze Fix · Build 2026-08-01-1512');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.6 — Symptom-First OCR Upgrade';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.6</strong> · Startup Freeze Fix · Build 2026-08-01-1512');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
 </script>
 
 
@@ -7434,7 +7463,7 @@ html.nitros-stabilizing body{visibility:hidden}
 <script id="v10120-single-authoritative-diagnostic-state">
 (()=>{
 'use strict';
-const VERSION='10.12.5',BUILD='2026-08-03-0545',RELEASE='Automatic Graph Image Enhancement';
+const VERSION='10.12.6',BUILD='2026-08-03-1635',RELEASE='Symptom-First OCR Upgrade';
 const STATE_KEY='nitros_diagnostic_case_v10120';
 const LEGACY_KEYS=[
  'nitros_v1052_oliver_transcript','nitros_oliver_active_diagnostic_case_v1060','nitros_oliver_case_v10106','nitros_oliver_case_v10107','nitros_oliver_case_v10109','nitros_oliver_case_v10110','nitros_oliver_case_v10111','nitros_oliver_case_v10112','nitros_oliver_case_v10113','nitros_oliver_case_v10114','nitros_oliver_case_v10143','nitros_oliver_workflow_v10105'
@@ -7465,16 +7494,17 @@ function speakOliver(text){
  }catch(_){}
 }
 function ask(text){add('Oliver',text);save();speakOliver(text)}
-function workflowName(){if(state.activeDtc==='P0420'||state.activeDtc==='P0430')return'Catalyst Efficiency';if(state.activeDtc==='P0340')return'Camshaft Position Circuit';if(/^P030[0-8]$/.test(state.activeDtc))return'Misfire Diagnosis';return state.activeDtc?'Code-Specific Diagnostic':'Vehicle Intake'}
+function workflowName(){if(state.activeDtc==='P0420'||state.activeDtc==='P0430')return'Catalyst Efficiency';if(state.activeDtc==='P0340')return'Camshaft Position Circuit';if(/^P030[0-8]$/.test(state.activeDtc))return'Misfire Diagnosis';if(!state.activeDtc&&(state.complaint||state.symptoms))return'Symptom-Based Diagnosis';return state.activeDtc?'Code-Specific Diagnostic':'Vehicle Intake'}
 function nextQuestion(){
  if(!vehicleLabel())return'What vehicle are we working on? Give me the year, make, model, and engine if known.';
- if(!state.activeDtc)return'Enter the exact diagnostic code or describe the symptom.';
- if(!state.status)return`Is ${state.activeDtc} current, pending, history, or intermittent?`;
- if(!state.complaint)return'What is the customer complaint? You can say “MIL only” if there are no drivability complaints.';
- if(!state.symptoms)return'Are there any drivability symptoms? Say “none” or “runs perfectly” if there are none.';
+ if(!state.activeDtc&&!state.complaint)return'Enter a diagnostic code or simply describe the symptom or customer concern. A code is not required.';
+ if(state.activeDtc&&!state.status)return`Is ${state.activeDtc} current, pending, history, or intermittent?`;
+ if(state.activeDtc&&!state.complaint)return'What is the customer complaint? You can say “MIL only” if there are no drivability complaints.';
+ if(state.activeDtc&&!state.symptoms)return'Are there any drivability symptoms? Say “none” or “runs perfectly” if there are none.';
  if(!state.previousRepairs)return'What repairs have already been performed? Say “none” if nothing has been replaced or repaired.';
  if(!state.previousTests)return'What diagnostic testing has already been performed? Say “none” if no testing has been completed.';
  state.stage='diagnostic';
+ if(!state.activeDtc)return`Symptom-based intake is complete for “${state.complaint||state.symptoms}.” Describe when it occurs and provide the first verified scan-data value, visual finding, sound, measurement, or test result.`;
  if(state.activeDtc==='P0420')return'Intake is complete for P0420. First verify there are no active misfires, fuel-control faults, oil or coolant consumption, or exhaust leaks ahead of or between the oxygen sensors. What is the first verified finding?';
  if(state.activeDtc==='P0340')return'Intake is complete for P0340. Begin with battery voltage, related cam/crank codes, sensor power and ground, and a cam/crank signal comparison. What is the first verified test result?';
  return`Intake is complete for ${state.activeDtc}. Capture freeze-frame data and perform the least intrusive test that can prove the fault. What is the first verified result?`;
@@ -7484,6 +7514,11 @@ function process(raw){const text=String(raw||'').trim();if(!text)return;add('You
  if(/^(new case|start new case|clear case|start over)$/.test(low)){reset();return}
  const v=parseVehicle(text);if(v){state.vehicle={...state.vehicle,...Object.fromEntries(Object.entries(v).filter(([,x])=>x))};state.stage='dtc';ask(`Vehicle recorded as ${vehicleLabel()}. ${nextQuestion()}`);return}
  const found=codes(text);if(found.length){state.dtcs=found;state.activeDtc=found[0];state.status='';state.complaint='';state.symptoms='';state.previousRepairs='';state.previousTests='';state.liveData='';state.stage='status';ask(`${state.activeDtc} recorded as the active diagnostic code. ${nextQuestion()}`);return}
+ // v10.12.6: symptom-first intake. A technician may begin with a complaint without entering any DTC.
+ if(!state.activeDtc&&!state.complaint){
+   const controlOnly=/^(yes|no|current|pending|history|stored|intermittent|none|nothing)$/i.test(text);
+   if(!controlOnly){state.complaint=text;state.symptoms=text;state.stage='repairs';ask(`Symptom recorded as “${text}.” No diagnostic code is required. ${nextQuestion()}`);return}
+ }
  if(state.stage==='status'||(!state.status&&state.activeDtc)){
    const m=low.match(/\b(current|pending|history|stored|intermittent)\b/);if(m){state.status=m[1]==='stored'?'history':m[1];state.stage='complaint';ask(`Code status recorded as ${state.status}. ${nextQuestion()}`);return}
    ask(nextQuestion());return
@@ -7500,6 +7535,7 @@ function process(raw){const text=String(raw||'').trim();if(!text)return;add('You
  }
  if(state.activeDtc==='P0340'){ask(`Finding recorded: “${text}.” Next, verify the cam sensor power, ground, and signal with a meter or scope, then compare cam and crank synchronization if those circuits test correctly.`);return}
  if(/^P030[0-8]$/.test(state.activeDtc)){ask(`Finding recorded: “${text}.” Next, compare cylinder misfire counters and fuel trim, then use the least intrusive swap or relative-compression test that can separate ignition, fuel, mechanical, and control causes.`);return}
+ if(!state.activeDtc){ask(`Finding recorded: “${text}.” I am keeping this as a symptom-based case. Correlate the symptom with the most relevant scan data or direct measurement, then report what changes when the symptom occurs.`);return}
  ask(`Finding recorded: “${text}.” Continue with the next verified measurement or say “new case” to start another vehicle.`)
 }
 function renderTranscript(){const tr=$('oliverHubTranscript');if(!tr)return;rendering=true;tr.innerHTML=state.history.map(m=>`<div class="oliver-line ${m.who==='You'?'user':'oliver'}"><strong>${esc(m.who)}:</strong> ${esc(m.text)}</div>`).join('');tr.scrollTop=tr.scrollHeight;rendering=false}
@@ -7568,14 +7604,14 @@ window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),pr
 <script id="v10121-login-controller">
 (()=>{
   'use strict';
-  const VERSION='10.12.5';
+  const VERSION='10.12.6';
   const PROFILE_KEY='nitros_portal_v8_profile';
   const init=()=>{
-    document.title='Nitros Mobile Technician Portal v10.12.5 — Automatic Graph Image Enhancement';
+    document.title='Nitros Mobile Technician Portal v10.12.6 — Symptom-First OCR Upgrade';
     const sub=document.querySelector('header .sub');
-    if(sub) sub.textContent='Mobile Technician Portal v10.12.5 — Automatic Graph Image Enhancement';
+    if(sub) sub.textContent='Mobile Technician Portal v10.12.6 — Symptom-First OCR Upgrade';
     const status=document.getElementById('portalLoginStatus');
-    if(status) status.textContent='Version 10.12.5 — Single login controller active. Enter technician name and an optional 4-digit PIN.';
+    if(status) status.textContent='Version 10.12.6 — Single login controller active. Enter technician name and an optional 4-digit PIN.';
     const button=document.getElementById('portalSignIn');
     if(button){button.disabled=false;button.style.pointerEvents='auto';}
   };
@@ -7584,13 +7620,13 @@ window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),pr
 </script>
 
 <style id="v10122-staged-startup-style">
-/* v10.12.5 never hides the complete application during diagnostic initialization. */
+/* v10.12.6 never hides the complete application during diagnostic initialization. */
 html.nitros-stabilizing body{visibility:visible!important}
 #nitrosStabilizationCover{display:none!important}
 #portalSignIn{position:relative;z-index:1000;pointer-events:auto!important;touch-action:manipulation!important}
 </style>
 <script id="v10122-release-marker">
-(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.5 — Automatic Graph Image Enhancement';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.5 — Automatic Graph Image Enhancement';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.5 preserves the stable staged startup and diagnostic conversation while isolating graph panels, OCR-reading label bands only, scoring PID confidence, and analyzing waveform activity separately.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
+(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.6 — Symptom-First OCR Upgrade';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.6 — Symptom-First OCR Upgrade';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.6 accepts a symptom without requiring a DTC and adds whole-screen, rotated OCR before panel mapping while preserving the stable diagnostic conversation.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
 </script>
 
 </body>
