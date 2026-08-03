@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.12.7C — Symptom-First OCR Upgrade</title>
+<title>Nitros Mobile Technician Portal v10.12.7D — Symptom-First OCR Upgrade</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -479,10 +479,10 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 
 
 <script id="graphDetectionEngineStub">
-/* Nitros Mobile Technician Portal v10.12.7C
+/* Nitros Mobile Technician Portal v10.12.7D
    Sprint 1: Graph Detection Engine (Scaffold) */
 window.GraphDetectionEngine = {
-  version: "10.12.7C",
+  version: "10.12.7D",
   state: {
     originalImage: null,
     graphDetected: false,
@@ -499,12 +499,34 @@ window.GraphDetectionEngine = {
 };
 </script>
 
+
+<script id="graph-intelligence-v10127d">
+window.GraphIntelligenceEngine = window.GraphIntelligenceEngine || {};
+Object.assign(window.GraphIntelligenceEngine,{
+ version:"10.12.7D",
+ pipeline:[
+  "Image Validation",
+  "Graph Region Detection",
+  "Panel Segmentation",
+  "Targeted OCR",
+  "Waveform Preparation"
+ ],
+ debugState:{
+   validation:"Pending",
+   graphRegion:"Pending",
+   panels:"0",
+   ocr:"Pending",
+   waveform:"Pending"
+ }
+});
+</script>
+
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.7C — Symptom-First OCR Upgrade</div>
+  <div class="sub">Mobile Technician Portal v10.12.7D — Symptom-First OCR Upgrade</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -518,7 +540,7 @@ window.GraphDetectionEngine = {
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.7C preserves the validated conversational and DTC knowledge engines and adds diagnostic evidence analysis after photo, CSV, text, and PDF imports. Oliver now builds an active structured case from natural technician conversation, including vehicle, engine, DTCs, status, symptoms, completed tests, measurements, replaced parts, observations, and the next recommended diagnostic question. VIN-specific wiring, pinouts, calibrations, and OEM procedures still require verified vehicle information.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.7D preserves the validated conversational and DTC knowledge engines and adds diagnostic evidence analysis after photo, CSV, text, and PDF imports. Oliver now builds an active structured case from natural technician conversation, including vehicle, engine, DTCs, status, symptoms, completed tests, measurements, replaced parts, observations, and the next recommended diagnostic question. VIN-specific wiring, pinouts, calibrations, and OEM procedures still require verified vehicle information.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -681,7 +703,7 @@ window.GraphDetectionEngine = {
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.7C</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.7D</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -748,7 +770,7 @@ window.GraphDetectionEngine = {
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.7C</div>
+      <div class="eyebrow">Version 10.12.7D</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -5233,7 +5255,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7C • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7D • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6978,7 +7000,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1031CompletionAssignmentStabilization">
 (()=>{
   'use strict';
-  const BUILD='10.12.7C';
+  const BUILD='10.12.7D';
   const $=id=>document.getElementById(id);
   const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||'null');return v??fallback}catch{return fallback}};
   const write=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}};
@@ -7172,12 +7194,12 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 .oliver-active-case-banner button{border:1px solid #60748c;background:#13243a;color:#fff;border-radius:9px;padding:5px 9px;font-weight:800}
 </style>
 <script id="v1060-session-manager-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7C — Symptom-First OCR Upgrade';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7D — Symptom-First OCR Upgrade';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 adds context awareness: Oliver reads the active case, acknowledges known facts, and asks only for the highest-value missing information. -->
 
 <script id="v1072-completed-prompt-tracking-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7C — Symptom-First OCR Upgrade';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7D — Symptom-First OCR Upgrade';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 tracks completed prompts, recognizes power-loss symptoms, acknowledges each new fact, and blocks answered intake questions from repeating. -->
 
@@ -7256,7 +7278,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
  }
  async function imageToCanvas(file){
    const bitmap=await createImageBitmap(file);
-   // v10.12.7C: preserve detail and upscale smaller phone photos before OCR.
+   // v10.12.7D: preserve detail and upscale smaller phone photos before OCR.
    // Limit total size so iPhone Safari remains stable.
    const targetWidth=Math.min(3000,Math.max(2200,bitmap.width));
    const scale=Math.min(4,targetWidth/bitmap.width);
@@ -7340,7 +7362,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
  async function analyzeImage(file){
    setStatus('Image attached. Oliver is isolating graph panels and label regions…');
    const T=await loadTesseract(),source=await imageToCanvas(file),W=source.width,H=source.height;
-   // v10.12.7C: read the complete scan-tool display at three orientations before panel mapping.
+   // v10.12.7D: read the complete scan-tool display at three orientations before panel mapping.
    // This catches sideways phone photos and labels that do not fall inside the fixed four-panel title bands.
    let screenBest={text:'',confidence:0,labels:[],rotation:0};
    for(const rotation of [0,90,-90]){
@@ -7446,7 +7468,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    file.onchange=()=>{handleFile(file.files?.[0]).catch(e=>setStatus('Import failed: '+e.message));file.value=''};
    $('oliverImportCameraFile').onchange=()=>{const f=$('oliverImportCameraFile');handleFile(f.files?.[0]).catch(e=>setStatus('Camera import failed: '+e.message));f.value=''};
  }
- const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7C — Symptom-First OCR Upgrade';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Symptom-first intake and orientation-aware OCR ready';};
+ const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7D — Symptom-First OCR Upgrade';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Symptom-first intake and orientation-aware OCR ready';};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
  window.addEventListener('pageshow',()=>setTimeout(apply,40));
  const mo=new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))build()});mo.observe(document.documentElement,{childList:true,subtree:true});
@@ -7456,9 +7478,9 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1081-version-label-sync">
 (()=>{
  const sync=()=>{
-  document.title='Nitros Mobile Technician Portal v10.12.7C — Symptom-First OCR Upgrade';
+  document.title='Nitros Mobile Technician Portal v10.12.7D — Symptom-First OCR Upgrade';
   document.querySelectorAll('.sub,.status,header,footer,[class*=version],[id*=version]').forEach(el=>{
-   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.7C');
+   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.7D');
   });
  };
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
@@ -7471,7 +7493,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 <!-- v10.8.6 Startup Freeze Fix: associates OCR words with upper-left, upper-right, lower-left, and lower-right graph panels; asks only for the first unresolved PID or operating condition. -->
 <script id="v1084-release-identity">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7C — Symptom-First OCR Upgrade';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7C</strong> · Startup Freeze Fix · Build 2026-08-01-1512');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7D — Symptom-First OCR Upgrade';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7D</strong> · Startup Freeze Fix · Build 2026-08-01-1512');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
 </script>
 
 
@@ -7485,7 +7507,7 @@ html.nitros-stabilizing body{visibility:hidden}
 <script id="v10120-single-authoritative-diagnostic-state">
 (()=>{
 'use strict';
-const VERSION='10.12.7C',BUILD='2026-08-03-1635',RELEASE='Symptom-First OCR Upgrade';
+const VERSION='10.12.7D',BUILD='2026-08-03-1635',RELEASE='Symptom-First OCR Upgrade';
 const STATE_KEY='nitros_diagnostic_case_v10120';
 const LEGACY_KEYS=[
  'nitros_v1052_oliver_transcript','nitros_oliver_active_diagnostic_case_v1060','nitros_oliver_case_v10106','nitros_oliver_case_v10107','nitros_oliver_case_v10109','nitros_oliver_case_v10110','nitros_oliver_case_v10111','nitros_oliver_case_v10112','nitros_oliver_case_v10113','nitros_oliver_case_v10114','nitros_oliver_case_v10143','nitros_oliver_workflow_v10105'
@@ -7536,7 +7558,7 @@ function process(raw){const text=String(raw||'').trim();if(!text)return;add('You
  if(/^(new case|start new case|clear case|start over)$/.test(low)){reset();return}
  const v=parseVehicle(text);if(v){state.vehicle={...state.vehicle,...Object.fromEntries(Object.entries(v).filter(([,x])=>x))};state.stage='dtc';ask(`Vehicle recorded as ${vehicleLabel()}. ${nextQuestion()}`);return}
  const found=codes(text);if(found.length){state.dtcs=found;state.activeDtc=found[0];state.status='';state.complaint='';state.symptoms='';state.previousRepairs='';state.previousTests='';state.liveData='';state.stage='status';ask(`${state.activeDtc} recorded as the active diagnostic code. ${nextQuestion()}`);return}
- // v10.12.7C: symptom-first intake. A technician may begin with a complaint without entering any DTC.
+ // v10.12.7D: symptom-first intake. A technician may begin with a complaint without entering any DTC.
  if(!state.activeDtc&&!state.complaint){
    const controlOnly=/^(yes|no|current|pending|history|stored|intermittent|none|nothing)$/i.test(text);
    if(!controlOnly){state.complaint=text;state.symptoms=text;state.stage='repairs';ask(`Symptom recorded as “${text}.” No diagnostic code is required. ${nextQuestion()}`);return}
@@ -7626,14 +7648,14 @@ window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),pr
 <script id="v10121-login-controller">
 (()=>{
   'use strict';
-  const VERSION='10.12.7C';
+  const VERSION='10.12.7D';
   const PROFILE_KEY='nitros_portal_v8_profile';
   const init=()=>{
-    document.title='Nitros Mobile Technician Portal v10.12.7C — Symptom-First OCR Upgrade';
+    document.title='Nitros Mobile Technician Portal v10.12.7D — Symptom-First OCR Upgrade';
     const sub=document.querySelector('header .sub');
-    if(sub) sub.textContent='Mobile Technician Portal v10.12.7C — Symptom-First OCR Upgrade';
+    if(sub) sub.textContent='Mobile Technician Portal v10.12.7D — Symptom-First OCR Upgrade';
     const status=document.getElementById('portalLoginStatus');
-    if(status) status.textContent='Version 10.12.7C — Single login controller active. Enter technician name and an optional 4-digit PIN.';
+    if(status) status.textContent='Version 10.12.7D — Single login controller active. Enter technician name and an optional 4-digit PIN.';
     const button=document.getElementById('portalSignIn');
     if(button){button.disabled=false;button.style.pointerEvents='auto';}
   };
@@ -7642,21 +7664,21 @@ window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),pr
 </script>
 
 <style id="v10122-staged-startup-style">
-/* v10.12.7C never hides the complete application during diagnostic initialization. */
+/* v10.12.7D never hides the complete application during diagnostic initialization. */
 html.nitros-stabilizing body{visibility:visible!important}
 #nitrosStabilizationCover{display:none!important}
 #portalSignIn{position:relative;z-index:1000;pointer-events:auto!important;touch-action:manipulation!important}
 </style>
 <script id="v10122-release-marker">
-(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7C — Symptom-First OCR Upgrade';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7C — Symptom-First OCR Upgrade';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7C accepts a symptom without requiring a DTC and adds whole-screen, rotated OCR before panel mapping while preserving the stable diagnostic conversation.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
+(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7D — Symptom-First OCR Upgrade';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7D — Symptom-First OCR Upgrade';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7D accepts a symptom without requiring a DTC and adds whole-screen, rotated OCR before panel mapping while preserving the stable diagnostic conversation.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
 </script>
 
 
-<!-- v10.12.7C Development Panel -->
+<!-- v10.12.7D Development Panel -->
 
 <script id="graphIntelligenceEngineV127C">
 window.GraphIntelligenceEngine = {
-  version: "10.12.7C",
+  version: "10.12.7D",
   stages: [
     "Image Imported",
     "Preprocessing",
@@ -7681,7 +7703,7 @@ window.GraphIntelligenceEngine = {
 <script id="developerModeStub">
 window.NitrosDeveloperMode={
  enabled:false,
- build:"10.12.7C",
+ build:"10.12.7D",
  stage:"Idle",
  lastOperation:"None",
  setStage(s){this.stage=s;console.log("[DeveloperMode]",s);}
@@ -7691,9 +7713,9 @@ document.addEventListener("DOMContentLoaded",()=>{
  panel.id="nitrosDeveloperPanel";
  panel.style.margin="12px";
  panel.innerHTML=`
- <summary><strong>Developer Mode (v10.12.7C)</strong></summary>
+ <summary><strong>Developer Mode (v10.12.7D)</strong></summary>
  <div style="padding:8px">
- <p><b>Build:</b> 10.12.7C</p>
+ <p><b>Build:</b> 10.12.7D</p>
  <p><b>Graph Status:</b> Waiting for image</p>
  <p><b>Pipeline:</b> Import → Graph Detection → OCR (planned)</p>
  <p><b>Purpose:</b> Development build for Graph Workspace testing.</p>
@@ -7704,11 +7726,22 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 
 <div style="margin:16px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
-<h3>v10.12.7C Development Notes</h3>
+<h3>v10.12.7D Development Notes</h3>
 <ul>
 <li>Graph Intelligence Engine module added (development scaffold).</li>
 <li>Graph processing stages defined.</li>
 <li>Ready for future preprocessing and panel extraction integration.</li>
+</ul>
+</div>
+
+
+<div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
+<h3>v10.12.7D Development Preview</h3>
+<ul>
+<li>Updated development branch to v10.12.7D.</li>
+<li>Added Graph Intelligence pipeline definition.</li>
+<li>Added placeholder debug state for graph-region detection.</li>
+<li>Prepared structure for panel segmentation integration.</li>
 </ul>
 </div>
 
