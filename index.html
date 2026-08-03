@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.12.2 — Staged Startup Watchdog Fix</title>
+<title>Nitros Mobile Technician Portal v10.12.3 — Spoken Next-Best Test</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -482,7 +482,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.2 — Staged Startup Watchdog Fix</div>
+  <div class="sub">Mobile Technician Portal v10.12.3 — Spoken Next-Best Test</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -496,7 +496,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.2 preserves the validated conversational and DTC knowledge engines and adds diagnostic evidence analysis after photo, CSV, text, and PDF imports. Oliver now builds an active structured case from natural technician conversation, including vehicle, engine, DTCs, status, symptoms, completed tests, measurements, replaced parts, observations, and the next recommended diagnostic question. VIN-specific wiring, pinouts, calibrations, and OEM procedures still require verified vehicle information.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.3 preserves the validated conversational and DTC knowledge engines and adds diagnostic evidence analysis after photo, CSV, text, and PDF imports. Oliver now builds an active structured case from natural technician conversation, including vehicle, engine, DTCs, status, symptoms, completed tests, measurements, replaced parts, observations, and the next recommended diagnostic question. VIN-specific wiring, pinouts, calibrations, and OEM procedures still require verified vehicle information.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -659,7 +659,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.2</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.3</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -726,7 +726,7 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.2</div>
+      <div class="eyebrow">Version 10.12.3</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -5211,7 +5211,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.2 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.3 • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6956,7 +6956,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1031CompletionAssignmentStabilization">
 (()=>{
   'use strict';
-  const BUILD='10.12.2';
+  const BUILD='10.12.3';
   const $=id=>document.getElementById(id);
   const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||'null');return v??fallback}catch{return fallback}};
   const write=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}};
@@ -7150,12 +7150,12 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 .oliver-active-case-banner button{border:1px solid #60748c;background:#13243a;color:#fff;border-radius:9px;padding:5px 9px;font-weight:800}
 </style>
 <script id="v1060-session-manager-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.2 — Staged Startup Watchdog Fix';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.3 — Spoken Next-Best Test';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 adds context awareness: Oliver reads the active case, acknowledges known facts, and asks only for the highest-value missing information. -->
 
 <script id="v1072-completed-prompt-tracking-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.2 — Staged Startup Watchdog Fix';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.3 — Spoken Next-Best Test';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 tracks completed prompts, recognizes power-loss symptoms, acknowledges each new fact, and blocks answered intake questions from repeating. -->
 
@@ -7323,7 +7323,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    file.onchange=()=>{handleFile(file.files?.[0]).catch(e=>setStatus('Import failed: '+e.message));file.value=''};
    $('oliverImportCameraFile').onchange=()=>{const f=$('oliverImportCameraFile');handleFile(f.files?.[0]).catch(e=>setStatus('Camera import failed: '+e.message));f.value=''};
  }
- const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.2 — Staged Startup Watchdog Fix';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Startup Freeze Fix ready — import a scan-tool graph for panel-by-panel PID identification';};
+ const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.3 — Spoken Next-Best Test';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Startup Freeze Fix ready — import a scan-tool graph for panel-by-panel PID identification';};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
  window.addEventListener('pageshow',()=>setTimeout(apply,40));
  const mo=new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))build()});mo.observe(document.documentElement,{childList:true,subtree:true});
@@ -7333,9 +7333,9 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1081-version-label-sync">
 (()=>{
  const sync=()=>{
-  document.title='Nitros Mobile Technician Portal v10.12.2 — Staged Startup Watchdog Fix';
+  document.title='Nitros Mobile Technician Portal v10.12.3 — Spoken Next-Best Test';
   document.querySelectorAll('.sub,.status,header,footer,[class*=version],[id*=version]').forEach(el=>{
-   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.2');
+   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.3');
   });
  };
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
@@ -7348,7 +7348,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 <!-- v10.8.6 Startup Freeze Fix: associates OCR words with upper-left, upper-right, lower-left, and lower-right graph panels; asks only for the first unresolved PID or operating condition. -->
 <script id="v1084-release-identity">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.2 — Staged Startup Watchdog Fix';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.2</strong> · Startup Freeze Fix · Build 2026-08-01-1512');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.3 — Spoken Next-Best Test';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.3</strong> · Startup Freeze Fix · Build 2026-08-01-1512');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
 </script>
 
 
@@ -7362,7 +7362,7 @@ html.nitros-stabilizing body{visibility:hidden}
 <script id="v10120-single-authoritative-diagnostic-state">
 (()=>{
 'use strict';
-const VERSION='10.12.2',BUILD='2026-08-03-0500',RELEASE='Staged Startup Watchdog Fix';
+const VERSION='10.12.3',BUILD='2026-08-03-0515',RELEASE='Spoken Next-Best Test';
 const STATE_KEY='nitros_diagnostic_case_v10120';
 const LEGACY_KEYS=[
  'nitros_v1052_oliver_transcript','nitros_oliver_active_diagnostic_case_v1060','nitros_oliver_case_v10106','nitros_oliver_case_v10107','nitros_oliver_case_v10109','nitros_oliver_case_v10110','nitros_oliver_case_v10111','nitros_oliver_case_v10112','nitros_oliver_case_v10113','nitros_oliver_case_v10114','nitros_oliver_case_v10143','nitros_oliver_workflow_v10105'
@@ -7379,7 +7379,20 @@ function vehicleLabel(){return [state.vehicle.year,state.vehicle.make,state.vehi
 function parseVehicle(text){const t=String(text||'').trim();const y=(t.match(/\b(19\d{2}|20\d{2})\b/)||[])[1]||'';if(!y)return null;const makes=['Toyota','GMC','Chevrolet','Ford','Honda','Kia','Hyundai','Nissan','Jeep','Dodge','Ram','Volkswagen','VW','BMW','Mini','Subaru','Mazda','Lexus','Acura','Buick','Cadillac','Chrysler'];const make=makes.find(m=>new RegExp('\\b'+m.replace('VW','VW')+'\\b','i').test(t))||'';const after=t.slice(t.indexOf(y)+4).trim().split(/\s+/);let model='';if(make){const mi=after.findIndex(x=>x.toLowerCase()===make.toLowerCase());model=after.slice(mi+1).filter(x=>!/^\d(?:\.\d)?(?:l)?$/i.test(x)).slice(0,3).join(' ')}
 const eng=(t.match(/\b(\d(?:\.\d)?)\s*(?:L|liter)?\b/i)||[])[1]||'';return {year:y,make:make==='VW'?'Volkswagen':make,model:model.replace(/\bengine\b/ig,'').trim(),engine:eng?(eng+'L'):''}}
 function add(who,text){state.history.push({who,text:String(text),at:new Date().toISOString()});if(state.history.length>200)state.history=state.history.slice(-200)}
-function ask(text){add('Oliver',text);save();try{window.speechSynthesis?.cancel()}catch(_){}}
+function speakOliver(text){
+ try{
+  if(!('speechSynthesis' in window)||!text)return;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.resume();
+  const u=new SpeechSynthesisUtterance(String(text).replace(/[“”]/g,'"'));
+  u.lang='en-US';u.rate=.94;u.pitch=.92;u.volume=1;
+  const voices=window.speechSynthesis.getVoices?.()||[];
+  const preferred=voices.find(v=>/Microsoft David|Microsoft Mark|Google US English|Daniel|Alex/i.test(v.name))||voices.find(v=>/^en-US/i.test(v.lang))||voices.find(v=>/^en/i.test(v.lang));
+  if(preferred)u.voice=preferred;
+  setTimeout(()=>{try{window.speechSynthesis.resume();window.speechSynthesis.speak(u)}catch(_){}},40);
+ }catch(_){}
+}
+function ask(text){add('Oliver',text);save();speakOliver(text)}
 function workflowName(){if(state.activeDtc==='P0420'||state.activeDtc==='P0430')return'Catalyst Efficiency';if(state.activeDtc==='P0340')return'Camshaft Position Circuit';if(/^P030[0-8]$/.test(state.activeDtc))return'Misfire Diagnosis';return state.activeDtc?'Code-Specific Diagnostic':'Vehicle Intake'}
 function nextQuestion(){
  if(!vehicleLabel())return'What vehicle are we working on? Give me the year, make, model, and engine if known.';
@@ -7407,7 +7420,15 @@ function process(raw){const text=String(raw||'').trim();if(!text)return;add('You
  if(!state.symptoms){state.symptoms=/^(none|no|no symptoms|runs perfectly|mil only)$/i.test(text)?'None reported':text;state.stage='repairs';ask(`Drivability symptoms recorded as “${state.symptoms}.” ${nextQuestion()}`);return}
  if(!state.previousRepairs){state.previousRepairs=/^(none|no|nothing)$/i.test(text)?'None reported':text;state.stage='tests';ask(`Previous repairs recorded as “${state.previousRepairs}.” ${nextQuestion()}`);return}
  if(!state.previousTests){state.previousTests=/^(none|no|no testing|nothing)$/i.test(text)?'None reported':text;state.stage='diagnostic';ask(`Previous testing recorded as “${state.previousTests}.” ${nextQuestion()}`);return}
- state.liveData=(state.liveData?state.liveData+' | ':'')+text;ask(`Finding recorded: “${text}.” Continue with the next verified measurement or say “new case” to start another vehicle.`)
+ state.liveData=(state.liveData?state.liveData+' | ':'')+text;
+ const noFinding=/^(no findings?|nothing found|none|runs fine|runs perfectly|no problem found|no faults?)$/i.test(text.trim());
+ if(state.activeDtc==='P0420'){
+  if(noFinding){ask('No findings recorded. The next best measured test is to fully warm the engine and graph the upstream air-fuel or oxygen sensor against the downstream oxygen sensor at a steady 2,000 to 2,500 RPM or during a steady cruise. Verify fuel control is normal, then look for the rear sensor closely mirroring the front sensor. Import the graph here when available.');return}
+  ask(`Finding recorded: “${text}.” For P0420, the next best step is to quantify catalyst oxygen-storage performance with a warmed upstream-versus-downstream sensor graph, unless your finding already proves an exhaust leak, mixture fault, misfire, or oil or coolant contamination.`);return
+ }
+ if(state.activeDtc==='P0340'){ask(`Finding recorded: “${text}.” Next, verify the cam sensor power, ground, and signal with a meter or scope, then compare cam and crank synchronization if those circuits test correctly.`);return}
+ if(/^P030[0-8]$/.test(state.activeDtc)){ask(`Finding recorded: “${text}.” Next, compare cylinder misfire counters and fuel trim, then use the least intrusive swap or relative-compression test that can separate ignition, fuel, mechanical, and control causes.`);return}
+ ask(`Finding recorded: “${text}.” Continue with the next verified measurement or say “new case” to start another vehicle.`)
 }
 function renderTranscript(){const tr=$('oliverHubTranscript');if(!tr)return;rendering=true;tr.innerHTML=state.history.map(m=>`<div class="oliver-line ${m.who==='You'?'user':'oliver'}"><strong>${esc(m.who)}:</strong> ${esc(m.text)}</div>`).join('');tr.scrollTop=tr.scrollHeight;rendering=false}
 function renderStatus(){let box=$('nitrosAuthoritativeStatus');const tr=$('oliverHubTranscript');if(!tr)return;if(!box){box=document.createElement('div');box.id='nitrosAuthoritativeStatus';tr.insertAdjacentElement('afterend',box)}box.innerHTML=`<strong>Authoritative Diagnostic State — v${VERSION}</strong><br>Case: ${esc(state.id)}<br>Vehicle: ${esc(vehicleLabel()||'Blank')}<br>Active DTC: ${esc(state.activeDtc||'None')}<br>Workflow: ${esc(workflowName())}<br>Stage: ${esc(state.stage)}`}
@@ -7415,6 +7436,8 @@ function stamp(){document.title=`Nitros Mobile Technician Portal v${VERSION} —
 function renderAll(){stamp();renderTranscript();renderStatus()}
 function install(){
  stamp();
+ const unlockSpeech=()=>{try{if('speechSynthesis' in window){const u=new SpeechSynthesisUtterance('');u.volume=0;window.speechSynthesis.speak(u);window.speechSynthesis.resume()}}catch(_){}};
+ document.addEventListener('pointerdown',unlockSpeech,{once:true,capture:true});
  // One-time removal of incompatible diagnostic stores; portal data is untouched.
  if(!localStorage.getItem('nitros_v10120_migrated')){LEGACY_KEYS.forEach(k=>localStorage.removeItem(k));localStorage.setItem('nitros_v10120_migrated',new Date().toISOString())}
  const btn=$('oliverHubSend'),input=$('oliverHubInput');
@@ -7473,14 +7496,14 @@ window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),pr
 <script id="v10121-login-controller">
 (()=>{
   'use strict';
-  const VERSION='10.12.2';
+  const VERSION='10.12.3';
   const PROFILE_KEY='nitros_portal_v8_profile';
   const init=()=>{
-    document.title='Nitros Mobile Technician Portal v10.12.2 — Staged Startup Watchdog Fix';
+    document.title='Nitros Mobile Technician Portal v10.12.3 — Spoken Next-Best Test';
     const sub=document.querySelector('header .sub');
-    if(sub) sub.textContent='Mobile Technician Portal v10.12.2 — Staged Startup Watchdog Fix';
+    if(sub) sub.textContent='Mobile Technician Portal v10.12.3 — Spoken Next-Best Test';
     const status=document.getElementById('portalLoginStatus');
-    if(status) status.textContent='Version 10.12.2 — Single login controller active. Enter technician name and an optional 4-digit PIN.';
+    if(status) status.textContent='Version 10.12.3 — Single login controller active. Enter technician name and an optional 4-digit PIN.';
     const button=document.getElementById('portalSignIn');
     if(button){button.disabled=false;button.style.pointerEvents='auto';}
   };
@@ -7489,13 +7512,13 @@ window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),pr
 </script>
 
 <style id="v10122-staged-startup-style">
-/* v10.12.2 never hides the complete application during diagnostic initialization. */
+/* v10.12.3 never hides the complete application during diagnostic initialization. */
 html.nitros-stabilizing body{visibility:visible!important}
 #nitrosStabilizationCover{display:none!important}
 #portalSignIn{position:relative;z-index:1000;pointer-events:auto!important;touch-action:manipulation!important}
 </style>
 <script id="v10122-release-marker">
-(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.2 — Staged Startup Watchdog Fix';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.2 — Staged Startup Watchdog Fix';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.2 starts the sign-in screen first, attaches diagnostic state in isolated stages, removes recursive transcript refresh, and keeps sign-in available if startup exceeds five seconds.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
+(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.3 — Spoken Next-Best Test';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.3 — Spoken Next-Best Test';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.3 preserves the stable staged startup, speaks each Oliver reply, and recommends the next DTC-specific measured test instead of a generic continuation prompt.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
 </script>
 
 </body>
