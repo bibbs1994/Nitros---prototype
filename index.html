@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.12.7H — Symptom-First OCR Upgrade</title>
+<title>Nitros Mobile Technician Portal v10.12.7I — Symptom-First OCR Upgrade</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -479,10 +479,10 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 
 
 <script id="graphDetectionEngineStub">
-/* Nitros Mobile Technician Portal v10.12.7H
+/* Nitros Mobile Technician Portal v10.12.7I
    Sprint 1: Graph Detection Engine (Scaffold) */
 window.GraphDetectionEngine = {
-  version: "10.12.7H",
+  version: "10.12.7I",
   state: {
     originalImage: null,
     graphDetected: false,
@@ -503,7 +503,7 @@ window.GraphDetectionEngine = {
 <script id="graph-intelligence-v10127d">
 window.GraphIntelligenceEngine = window.GraphIntelligenceEngine || {};
 Object.assign(window.GraphIntelligenceEngine,{
- version:"10.12.7H",
+ version:"10.12.7I",
  pipeline:[
   "Image Validation",
   "Graph Region Detection",
@@ -524,7 +524,7 @@ Object.assign(window.GraphIntelligenceEngine,{
 
 <script id="graph-intelligence-v10127e">
 window.GraphIntelligenceEngine=Object.assign(window.GraphIntelligenceEngine||{},{
- version:"10.12.7H",
+ version:"10.12.7I",
  targets:{labelConfidence:90,traceConfidence:90},
  adaptivePreprocess:true,
  panelIndependentProcessing:true,
@@ -549,7 +549,7 @@ canvas.graph-preview,canvas.ocr-preview{
 
 <script id="v10127f-analysis">
 window.GraphIntelligenceEngine=Object.assign(window.GraphIntelligenceEngine||{},{
- version:"10.12.7H",
+ version:"10.12.7I",
  analysisMode:"Prefer Original Resolution",
  developerMetrics:{
    originalResolution:"Pending",
@@ -582,7 +582,7 @@ window.GraphIntelligenceEngine=Object.assign(window.GraphIntelligenceEngine||{},
 </style>
 <script>
 window.GraphIntelligenceEngine=Object.assign(window.GraphIntelligenceEngine||{},{
-version:"10.12.7H",
+version:"10.12.7I",
 viewer:{
 displayWidth:"95%",
 displayHeight:"50vh",
@@ -596,7 +596,7 @@ zoomPlanned:true
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.7H — Symptom-First OCR Upgrade</div>
+  <div class="sub">Mobile Technician Portal v10.12.7I — Symptom-First OCR Upgrade</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -610,7 +610,7 @@ zoomPlanned:true
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.7H preserves the validated conversational and DTC knowledge engines and adds diagnostic evidence analysis after photo, CSV, text, and PDF imports. Oliver now builds an active structured case from natural technician conversation, including vehicle, engine, DTCs, status, symptoms, completed tests, measurements, replaced parts, observations, and the next recommended diagnostic question. VIN-specific wiring, pinouts, calibrations, and OEM procedures still require verified vehicle information.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.7I preserves the validated conversational and DTC knowledge engines and adds diagnostic evidence analysis after photo, CSV, text, and PDF imports. Oliver now builds an active structured case from natural technician conversation, including vehicle, engine, DTCs, status, symptoms, completed tests, measurements, replaced parts, observations, and the next recommended diagnostic question. VIN-specific wiring, pinouts, calibrations, and OEM procedures still require verified vehicle information.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -773,7 +773,7 @@ zoomPlanned:true
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.7H</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.7I</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -840,7 +840,7 @@ zoomPlanned:true
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.7H</div>
+      <div class="eyebrow">Version 10.12.7I</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -5325,7 +5325,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7H • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7I • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -7070,7 +7070,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1031CompletionAssignmentStabilization">
 (()=>{
   'use strict';
-  const BUILD='10.12.7H';
+  const BUILD='10.12.7I';
   const $=id=>document.getElementById(id);
   const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||'null');return v??fallback}catch{return fallback}};
   const write=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}};
@@ -7264,12 +7264,12 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 .oliver-active-case-banner button{border:1px solid #60748c;background:#13243a;color:#fff;border-radius:9px;padding:5px 9px;font-weight:800}
 </style>
 <script id="v1060-session-manager-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7H — Symptom-First OCR Upgrade';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7I — Symptom-First OCR Upgrade';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 adds context awareness: Oliver reads the active case, acknowledges known facts, and asks only for the highest-value missing information. -->
 
 <script id="v1072-completed-prompt-tracking-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7H — Symptom-First OCR Upgrade';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7I — Symptom-First OCR Upgrade';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 tracks completed prompts, recognizes power-loss symptoms, acknowledges each new fact, and blocks answered intake questions from repeating. -->
 
@@ -7348,7 +7348,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
  }
  async function imageToCanvas(file){
    const bitmap=await createImageBitmap(file);
-   // v10.12.7H: preserve detail and upscale smaller phone photos before OCR.
+   // v10.12.7I: preserve detail and upscale smaller phone photos before OCR.
    // Limit total size so iPhone Safari remains stable.
    const targetWidth=Math.min(3000,Math.max(2200,bitmap.width));
    const scale=Math.min(4,targetWidth/bitmap.width);
@@ -7432,7 +7432,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
  async function analyzeImage(file){
    setStatus('Image attached. Oliver is isolating graph panels and label regions…');
    const T=await loadTesseract(),source=await imageToCanvas(file),W=source.width,H=source.height;
-   // v10.12.7H: read the complete scan-tool display at three orientations before panel mapping.
+   // v10.12.7I: read the complete scan-tool display at three orientations before panel mapping.
    // This catches sideways phone photos and labels that do not fall inside the fixed four-panel title bands.
    let screenBest={text:'',confidence:0,labels:[],rotation:0};
    for(const rotation of [0,90,-90]){
@@ -7538,7 +7538,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    file.onchange=()=>{handleFile(file.files?.[0]).catch(e=>setStatus('Import failed: '+e.message));file.value=''};
    $('oliverImportCameraFile').onchange=()=>{const f=$('oliverImportCameraFile');handleFile(f.files?.[0]).catch(e=>setStatus('Camera import failed: '+e.message));f.value=''};
  }
- const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7H — Symptom-First OCR Upgrade';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Symptom-first intake and orientation-aware OCR ready';};
+ const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7I — Symptom-First OCR Upgrade';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Symptom-first intake and orientation-aware OCR ready';};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
  window.addEventListener('pageshow',()=>setTimeout(apply,40));
  const mo=new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))build()});mo.observe(document.documentElement,{childList:true,subtree:true});
@@ -7548,9 +7548,9 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1081-version-label-sync">
 (()=>{
  const sync=()=>{
-  document.title='Nitros Mobile Technician Portal v10.12.7H — Symptom-First OCR Upgrade';
+  document.title='Nitros Mobile Technician Portal v10.12.7I — Symptom-First OCR Upgrade';
   document.querySelectorAll('.sub,.status,header,footer,[class*=version],[id*=version]').forEach(el=>{
-   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.7H');
+   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.7I');
   });
  };
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
@@ -7563,7 +7563,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 <!-- v10.8.6 Startup Freeze Fix: associates OCR words with upper-left, upper-right, lower-left, and lower-right graph panels; asks only for the first unresolved PID or operating condition. -->
 <script id="v1084-release-identity">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7H — Symptom-First OCR Upgrade';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7H</strong> · Startup Freeze Fix · Build 2026-08-01-1512');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7I — Symptom-First OCR Upgrade';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7I</strong> · Startup Freeze Fix · Build 2026-08-01-1512');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
 </script>
 
 
@@ -7577,7 +7577,7 @@ html.nitros-stabilizing body{visibility:hidden}
 <script id="v10120-single-authoritative-diagnostic-state">
 (()=>{
 'use strict';
-const VERSION='10.12.7H',BUILD='2026-08-03-2028',RELEASE='Symptom-First OCR Upgrade';
+const VERSION='10.12.7I',BUILD='2026-08-03-2115',RELEASE='Symptom-First OCR Upgrade';
 const STATE_KEY='nitros_diagnostic_case_v10120';
 const LEGACY_KEYS=[
  'nitros_v1052_oliver_transcript','nitros_oliver_active_diagnostic_case_v1060','nitros_oliver_case_v10106','nitros_oliver_case_v10107','nitros_oliver_case_v10109','nitros_oliver_case_v10110','nitros_oliver_case_v10111','nitros_oliver_case_v10112','nitros_oliver_case_v10113','nitros_oliver_case_v10114','nitros_oliver_case_v10143','nitros_oliver_workflow_v10105'
@@ -7628,7 +7628,7 @@ function process(raw){const text=String(raw||'').trim();if(!text)return;add('You
  if(/^(new case|start new case|clear case|start over)$/.test(low)){reset();return}
  const v=parseVehicle(text);if(v){state.vehicle={...state.vehicle,...Object.fromEntries(Object.entries(v).filter(([,x])=>x))};state.stage='dtc';ask(`Vehicle recorded as ${vehicleLabel()}. ${nextQuestion()}`);return}
  const found=codes(text);if(found.length){state.dtcs=found;state.activeDtc=found[0];state.status='';state.complaint='';state.symptoms='';state.previousRepairs='';state.previousTests='';state.liveData='';state.stage='status';ask(`${state.activeDtc} recorded as the active diagnostic code. ${nextQuestion()}`);return}
- // v10.12.7H: symptom-first intake. A technician may begin with a complaint without entering any DTC.
+ // v10.12.7I: symptom-first intake. A technician may begin with a complaint without entering any DTC.
  if(!state.activeDtc&&!state.complaint){
    const controlOnly=/^(yes|no|current|pending|history|stored|intermittent|none|nothing)$/i.test(text);
    if(!controlOnly){state.complaint=text;state.symptoms=text;state.stage='repairs';ask(`Symptom recorded as “${text}.” No diagnostic code is required. ${nextQuestion()}`);return}
@@ -7718,14 +7718,14 @@ window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),pr
 <script id="v10121-login-controller">
 (()=>{
   'use strict';
-  const VERSION='10.12.7H';
+  const VERSION='10.12.7I';
   const PROFILE_KEY='nitros_portal_v8_profile';
   const init=()=>{
-    document.title='Nitros Mobile Technician Portal v10.12.7H — Symptom-First OCR Upgrade';
+    document.title='Nitros Mobile Technician Portal v10.12.7I — Symptom-First OCR Upgrade';
     const sub=document.querySelector('header .sub');
-    if(sub) sub.textContent='Mobile Technician Portal v10.12.7H — Symptom-First OCR Upgrade';
+    if(sub) sub.textContent='Mobile Technician Portal v10.12.7I — Symptom-First OCR Upgrade';
     const status=document.getElementById('portalLoginStatus');
-    if(status) status.textContent='Version 10.12.7H — Single login controller active. Enter technician name and an optional 4-digit PIN.';
+    if(status) status.textContent='Version 10.12.7I — Single login controller active. Enter technician name and an optional 4-digit PIN.';
     const button=document.getElementById('portalSignIn');
     if(button){button.disabled=false;button.style.pointerEvents='auto';}
   };
@@ -7734,21 +7734,21 @@ window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),pr
 </script>
 
 <style id="v10122-staged-startup-style">
-/* v10.12.7H never hides the complete application during diagnostic initialization. */
+/* v10.12.7I never hides the complete application during diagnostic initialization. */
 html.nitros-stabilizing body{visibility:visible!important}
 #nitrosStabilizationCover{display:none!important}
 #portalSignIn{position:relative;z-index:1000;pointer-events:auto!important;touch-action:manipulation!important}
 </style>
 <script id="v10122-release-marker">
-(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7H — Symptom-First OCR Upgrade';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7H — Symptom-First OCR Upgrade';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7H accepts a symptom without requiring a DTC and adds whole-screen, rotated OCR before panel mapping while preserving the stable diagnostic conversation.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
+(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7I — Symptom-First OCR Upgrade';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7I — Symptom-First OCR Upgrade';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7I accepts a symptom without requiring a DTC and adds whole-screen, rotated OCR before panel mapping while preserving the stable diagnostic conversation.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
 </script>
 
 
-<!-- v10.12.7H Development Panel -->
+<!-- v10.12.7I Development Panel -->
 
 <script id="graphIntelligenceEngineV127C">
 window.GraphIntelligenceEngine = {
-  version: "10.12.7H",
+  version: "10.12.7I",
   stages: [
     "Image Imported",
     "Preprocessing",
@@ -7773,7 +7773,7 @@ window.GraphIntelligenceEngine = {
 <script id="developerModeStub">
 window.NitrosDeveloperMode={
  enabled:false,
- build:"10.12.7H",
+ build:"10.12.7I",
  stage:"Idle",
  lastOperation:"None",
  setStage(s){this.stage=s;console.log("[DeveloperMode]",s);}
@@ -7783,9 +7783,9 @@ document.addEventListener("DOMContentLoaded",()=>{
  panel.id="nitrosDeveloperPanel";
  panel.style.margin="12px";
  panel.innerHTML=`
- <summary><strong>Developer Mode (v10.12.7H)</strong></summary>
+ <summary><strong>Developer Mode (v10.12.7I)</strong></summary>
  <div style="padding:8px">
- <p><b>Build:</b> 10.12.7H</p>
+ <p><b>Build:</b> 10.12.7I</p>
  <p><b>Graph Status:</b> Waiting for image</p>
  <p><b>Pipeline:</b> Import → Graph Detection → OCR (planned)</p>
  <p><b>Purpose:</b> Development build for Graph Workspace testing.</p>
@@ -7796,7 +7796,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 
 <div style="margin:16px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
-<h3>v10.12.7H Development Notes</h3>
+<h3>v10.12.7I Development Notes</h3>
 <ul>
 <li>Graph Intelligence Engine module added (development scaffold).</li>
 <li>Graph processing stages defined.</li>
@@ -7806,9 +7806,9 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
-<h3>v10.12.7H Development Preview</h3>
+<h3>v10.12.7I Development Preview</h3>
 <ul>
-<li>Updated development branch to v10.12.7H.</li>
+<li>Updated development branch to v10.12.7I.</li>
 <li>Added Graph Intelligence pipeline definition.</li>
 <li>Added placeholder debug state for graph-region detection.</li>
 <li>Prepared structure for panel segmentation integration.</li>
@@ -7816,7 +7816,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 </div>
 
 
-<!-- v10.12.7H Full-Screen Zoom OCR Viewer -->
+<!-- v10.12.7I Full-Screen Zoom OCR Viewer -->
 <style id="v10127h-ocr-viewer-fix">
 /* Restrict the large viewer rules to the diagnostic import preview only. */
 #oliverImportPreview.oliver-import-preview{
@@ -7838,7 +7838,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 #oliverImportPreview .ocr-preview-frame{
   position:relative;
   width:100%;
-  min-height:46vh;
+  min-height:42vh;
   max-height:58vh;
   overflow:auto;
   display:flex;
@@ -7854,7 +7854,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   width:100%!important;
   max-width:100%!important;
   height:auto!important;
-  max-height:56vh!important;
+  max-height:52vh!important;
   min-height:0!important;
   margin:auto!important;
   object-fit:contain!important;
@@ -7882,11 +7882,11 @@ document.addEventListener("DOMContentLoaded",()=>{
   overscroll-behavior:none;
 }
 #ocrFullViewer.active{display:flex}
-.ocr-full-head,.ocr-full-controls{display:flex;align-items:center;gap:8px;padding:10px;border-color:#36576e;background:#07111f}
+.ocr-full-head,.ocr-full-controls{position:relative;z-index:2;flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px;border-color:#36576e;background:#07111f}
 .ocr-full-head{border-bottom:1px solid #36576e}.ocr-full-controls{border-top:1px solid #36576e;justify-content:center;flex-wrap:wrap}
 .ocr-full-head strong{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ocr-full-head button,.ocr-full-controls button{border:1px solid #41657d;background:#0a2233;color:#fff;border-radius:10px;padding:9px 13px;font-weight:800}
-#ocrFullStage{position:relative;flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none;background:#000}
+#ocrFullStage{position:relative;flex:1;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none;background:#000}
 #ocrFullImage{display:block;max-width:none;max-height:none;transform-origin:0 0;user-select:none;-webkit-user-drag:none;will-change:transform}
 #ocrZoomReadout{min-width:70px;text-align:center;color:#dce8f7;font-weight:800}
 @media(max-width:700px){
@@ -7903,34 +7903,48 @@ document.addEventListener("DOMContentLoaded",()=>{
     <button id="ocrZoomReset" type="button">Fit</button><button id="ocrZoom200" type="button">200%</button>
   </div>
 </div>
-<script id="v10127h-ocr-viewer-runtime">
+<script id="v10127i-ocr-viewer-runtime">
 (()=>{'use strict';
  const $=id=>document.getElementById(id),viewer=$('ocrFullViewer'),stage=$('ocrFullStage'),img=$('ocrFullImage'),readout=$('ocrZoomReadout');
  if(!viewer||!stage||!img)return;
- let scale=1,minScale=.1,maxScale=8,x=0,y=0,naturalW=0,naturalH=0,pointers=new Map(),startDistance=0,startScale=1,startMid=null,startX=0,startY=0,lastTap=0;
+ let scale=1,fitValue=1,maxScale=6,x=0,y=0,naturalW=1,naturalH=1;
+ let contacts=new Map(),gesture=null,lastTap=0,oldBodyOverflow='';
  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
- function stageSize(){const r=stage.getBoundingClientRect();return {w:r.width,h:r.height}}
- function fitScale(){const s=stageSize();return naturalW&&naturalH?Math.min(s.w/naturalW,s.h/naturalH):1}
- function bounds(){const s=stageSize(),w=naturalW*scale,h=naturalH*scale;return {minX:Math.min(0,s.w-w),maxX:Math.max(0,s.w-w),minY:Math.min(0,s.h-h),maxY:Math.max(0,s.h-h)}}
- function constrain(){const b=bounds();x=clamp(x,b.minX,b.maxX);y=clamp(y,b.minY,b.maxY)}
- function render(){constrain();img.style.width=naturalW+'px';img.style.height=naturalH+'px';img.style.transform=`translate(${x}px,${y}px) scale(${scale})`;readout.textContent=Math.round(scale*100)+'%'}
- function centerAt(nextScale,cx,cy){const old=scale||1;const imageX=(cx-x)/old,imageY=(cy-y)/old;scale=clamp(nextScale,minScale,maxScale);x=cx-imageX*scale;y=cy-imageY*scale;render()}
- function fit(){scale=fitScale();minScale=Math.min(scale,.25);const s=stageSize();x=(s.w-naturalW*scale)/2;y=(s.h-naturalH*scale)/2;render()}
- function open(src,title){img.onload=()=>{naturalW=img.naturalWidth||1;naturalH=img.naturalHeight||1;viewer.classList.add('active');document.body.style.overflow='hidden';requestAnimationFrame(fit)};img.src=src;$('ocrFullTitle').textContent=title||'Imported Diagnostic Image';if(img.complete&&img.naturalWidth)img.onload()}
- function close(){viewer.classList.remove('active');document.body.style.overflow='';pointers.clear()}
- $('ocrFullClose').onclick=close;$('ocrZoomReset').onclick=fit;$('ocrZoom200').onclick=()=>{const s=stageSize();centerAt(2,s.w/2,s.h/2)};
- $('ocrZoomIn').onclick=()=>{const s=stageSize();centerAt(scale*1.25,s.w/2,s.h/2)};$('ocrZoomOut').onclick=()=>{const s=stageSize();centerAt(scale/1.25,s.w/2,s.h/2)};
- stage.addEventListener('pointerdown',e=>{e.preventDefault();stage.setPointerCapture?.(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});startX=x;startY=y;if(pointers.size===2){const p=[...pointers.values()];startDistance=Math.hypot(p[1].x-p[0].x,p[1].y-p[0].y);startScale=scale;startMid={x:(p[0].x+p[1].x)/2-stage.getBoundingClientRect().left,y:(p[0].y+p[1].y)/2-stage.getBoundingClientRect().top}}});
- stage.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;e.preventDefault();const previous=pointers.get(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1){x+=e.clientX-previous.x;y+=e.clientY-previous.y;render()}else if(pointers.size===2){const p=[...pointers.values()],d=Math.hypot(p[1].x-p[0].x,p[1].y-p[0].y);if(startDistance>0&&startMid)centerAt(startScale*d/startDistance,startMid.x,startMid.y)}});
- const end=e=>{pointers.delete(e.pointerId);try{stage.releasePointerCapture?.(e.pointerId)}catch(_){ }if(pointers.size<2){startDistance=0;startMid=null}};stage.addEventListener('pointerup',end);stage.addEventListener('pointercancel',end);
- stage.addEventListener('dblclick',e=>{const r=stage.getBoundingClientRect();centerAt(scale<1.75?2:fitScale(),e.clientX-r.left,e.clientY-r.top)});
- stage.addEventListener('touchend',e=>{const now=Date.now();if(now-lastTap<320){e.preventDefault();const t=e.changedTouches[0],r=stage.getBoundingClientRect();centerAt(scale<1.75?2:fitScale(),t.clientX-r.left,t.clientY-r.top)}lastTap=now},{passive:false});
- window.addEventListener('resize',()=>{if(viewer.classList.contains('active'))fit()});
- function enhancePreview(){const p=$('oliverImportPreview');if(!p)return;const imported=[...p.querySelectorAll('img')];imported.forEach(im=>{if(im.dataset.fullViewerReady)return;im.dataset.fullViewerReady='1';const frame=document.createElement('div');frame.className='ocr-preview-frame';im.parentNode.insertBefore(frame,im);frame.appendChild(im);const b=document.createElement('button');b.type='button';b.className='ocr-viewer-open';b.textContent='Open Full Screen / Pinch to Zoom';frame.insertAdjacentElement('afterend',b);const title=im.alt||'Imported diagnostic image';const launch=()=>open(im.currentSrc||im.src,title);im.addEventListener('click',launch);b.addEventListener('click',launch)});}
- const observer=new MutationObserver(enhancePreview);const boot=()=>{const p=$('oliverImportPreview');if(p){observer.observe(p,{childList:true,subtree:true});enhancePreview()}};
+ const rect=()=>stage.getBoundingClientRect();
+ function calculateFit(){const r=rect();return Math.max(.05,Math.min(r.width/naturalW,r.height/naturalH));}
+ function limits(){const r=rect(),w=naturalW*scale,h=naturalH*scale;return {minX:Math.min((r.width-w)/2,0),maxX:Math.max((r.width-w)/2,0),minY:Math.min((r.height-h)/2,0),maxY:Math.max((r.height-h)/2,0)};}
+ function contain(){const b=limits();x=clamp(x,b.minX,b.maxX);y=clamp(y,b.minY,b.maxY);}
+ function draw(){contain();img.style.width=naturalW+'px';img.style.height=naturalH+'px';img.style.transform=`translate3d(${x}px,${y}px,0) scale(${scale})`;readout.textContent=Math.round(scale*100)+'%';}
+ function fit(){fitValue=calculateFit();scale=fitValue;x=0;y=0;gesture=null;contacts.clear();draw();}
+ function zoomAt(next,cx,cy){const r=rect(),px=cx-r.left-r.width/2,py=cy-r.top-r.height/2,old=scale;next=clamp(next,fitValue,maxScale);if(Math.abs(next-fitValue)<.002){fit();return;}x=px-(px-x)*(next/old);y=py-(py-y)*(next/old);scale=next;draw();}
+ function open(src,title){
+   $('ocrFullTitle').textContent=title||'Imported Diagnostic Image';viewer.classList.add('active');oldBodyOverflow=document.body.style.overflow;document.body.style.overflow='hidden';
+   img.onload=()=>{naturalW=img.naturalWidth||1;naturalH=img.naturalHeight||1;requestAnimationFrame(fit);};
+   if(img.src!==src)img.src=src;else if(img.complete&&img.naturalWidth)img.onload();
+ }
+ function close(){viewer.classList.remove('active');document.body.style.overflow=oldBodyOverflow;contacts.clear();gesture=null;scale=fitValue;x=0;y=0;}
+ function points(){return [...contacts.values()];}
+ function beginGesture(){const p=points();if(p.length===1)gesture={type:'pan',lastX:p[0].x,lastY:p[0].y};else if(p.length>=2){const a=p[0],b=p[1],r=rect();gesture={type:'pinch',distance:Math.max(1,Math.hypot(b.x-a.x,b.y-a.y)),scale,x,y,cx:(a.x+b.x)/2-r.left-r.width/2,cy:(a.y+b.y)/2-r.top-r.height/2};}}
+ $('ocrFullClose').onclick=close;$('ocrZoomReset').onclick=fit;
+ $('ocrZoom200').onclick=()=>{const r=rect();zoomAt(Math.max(2,fitValue),r.left+r.width/2,r.top+r.height/2);};
+ $('ocrZoomIn').onclick=()=>{const r=rect();zoomAt(scale*1.25,r.left+r.width/2,r.top+r.height/2);};
+ $('ocrZoomOut').onclick=()=>{const r=rect();zoomAt(scale/1.25,r.left+r.width/2,r.top+r.height/2);};
+ stage.addEventListener('pointerdown',e=>{e.preventDefault();stage.setPointerCapture?.(e.pointerId);contacts.set(e.pointerId,{x:e.clientX,y:e.clientY});beginGesture();},{passive:false});
+ stage.addEventListener('pointermove',e=>{if(!contacts.has(e.pointerId))return;e.preventDefault();contacts.set(e.pointerId,{x:e.clientX,y:e.clientY});const p=points();if(p.length===1&&gesture?.type==='pan'){const q=p[0];x+=q.x-gesture.lastX;y+=q.y-gesture.lastY;gesture.lastX=q.x;gesture.lastY=q.y;draw();}else if(p.length>=2){if(gesture?.type!=='pinch')beginGesture();const a=p[0],b=p[1],r=rect(),d=Math.max(1,Math.hypot(b.x-a.x,b.y-a.y)),next=clamp(gesture.scale*d/gesture.distance,fitValue,maxScale),mx=(a.x+b.x)/2-r.left-r.width/2,my=(a.y+b.y)/2-r.top-r.height/2,ratio=next/gesture.scale;scale=next;x=mx-(gesture.cx-gesture.x)*ratio;y=my-(gesture.cy-gesture.y)*ratio;draw();}},{passive:false});
+ function endPointer(e){contacts.delete(e.pointerId);try{stage.releasePointerCapture?.(e.pointerId)}catch(_){}beginGesture();}
+ stage.addEventListener('pointerup',endPointer);stage.addEventListener('pointercancel',endPointer);stage.addEventListener('lostpointercapture',endPointer);
+ stage.addEventListener('dblclick',e=>zoomAt(scale>fitValue*1.5?fitValue:Math.max(2,fitValue),e.clientX,e.clientY));
+ stage.addEventListener('touchend',e=>{if(e.touches.length)return;const now=Date.now();if(now-lastTap<300&&e.changedTouches[0]){e.preventDefault();const t=e.changedTouches[0];zoomAt(scale>fitValue*1.5?fitValue:Math.max(2,fitValue),t.clientX,t.clientY);}lastTap=now;},{passive:false});
+ stage.addEventListener('wheel',e=>{e.preventDefault();zoomAt(scale*(e.deltaY<0?1.12:.89),e.clientX,e.clientY);},{passive:false});
+ viewer.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+ window.addEventListener('resize',()=>{if(viewer.classList.contains('active'))fit();});
+ function enhancePreview(){const p=$('oliverImportPreview');if(!p)return;[...p.querySelectorAll('img')].forEach(im=>{if(im.dataset.fullViewerReady)return;im.dataset.fullViewerReady='1';const frame=document.createElement('div');frame.className='ocr-preview-frame';im.parentNode.insertBefore(frame,im);frame.appendChild(im);const b=document.createElement('button');b.type='button';b.className='ocr-viewer-open';b.textContent='Open Full Screen / Pinch to Zoom';frame.insertAdjacentElement('afterend',b);const launch=()=>open(im.currentSrc||im.src,im.alt||'Imported diagnostic image');im.addEventListener('click',launch);b.addEventListener('click',launch);});}
+ const observer=new MutationObserver(enhancePreview),boot=()=>{const p=$('oliverImportPreview');if(p){observer.observe(p,{childList:true,subtree:true});enhancePreview();}};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
- window.NitrosOCRViewer={open};
+ window.NitrosOCRViewer={open,close,fit};
 })();
 </script>
+
+<!-- v10.12.7I: bounded Safari-safe pinch zoom; Fit and Close remain recoverable; preview uses nearly full card width; OCR continues from the original loaded image rather than the displayed preview. -->
 </body>
 </html>
