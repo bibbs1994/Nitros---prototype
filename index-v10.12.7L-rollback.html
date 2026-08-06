@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.12.7P — AI Diagnostic Engine Phase 2</title>
+<title>Nitros Mobile Technician Portal v10.12.7L — Adaptive Consensus OCR Pipeline L</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -407,7 +407,6 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 .oliver-hub-head{position:sticky;top:0;z-index:2;background:#111d2d;border-bottom:1px solid rgba(255,157,40,.35);padding:15px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}.oliver-hub-title{font-size:1.18rem;font-weight:900}.oliver-mode-pill{display:inline-flex;align-items:center;gap:6px;margin-top:5px;padding:5px 9px;border-radius:999px;background:#1b3049;color:#ffd59c;font-size:.79rem;font-weight:800}
 .oliver-hub-close{border:1px solid #71839b;background:#142236;color:#fff;border-radius:10px;padding:8px 11px;font-weight:800}.oliver-hub-body{padding:14px 16px 18px}.oliver-hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.oliver-hub-choice{border:1px solid #31465f;background:#111d2d;color:#fff;border-radius:16px;padding:15px;text-align:left;min-height:112px}.oliver-hub-choice strong{display:block;font-size:1rem;margin-bottom:7px}.oliver-hub-choice span{display:block;color:#b7c5d8;font-size:.84rem;line-height:1.35}.oliver-hub-choice.primary{border-color:#ff9d28}.oliver-voice-box{margin-top:13px;padding:13px;border:1px solid #2f465f;border-radius:16px;background:#0e1a2a}.oliver-voice-row{display:grid;grid-template-columns:1fr auto;gap:8px}.oliver-voice-input{width:100%;min-height:48px;border:1px solid #3b516b;border-radius:12px;background:#08111d;color:#fff;padding:11px;font:inherit}.oliver-voice-btn{border:1px solid #ff9d28;background:#ff9d28;color:#101820;border-radius:12px;padding:10px 13px;font-weight:900}.oliver-transcript{margin-top:10px;max-height:190px;overflow:auto;border-radius:12px;background:#07101b;padding:10px;font-size:.88rem;line-height:1.4}.oliver-line{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.07)}.oliver-line:last-child{border-bottom:0}.oliver-line.user strong{color:#8fd3ff}.oliver-line.oliver strong{color:#ffbd66}.oliver-hub-footer{margin-top:11px;color:#93a7bf;font-size:.76rem;line-height:1.35}.oliver-hub-settings{margin-top:12px;display:none}.oliver-hub-settings.open{display:block}.oliver-setting-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08)}.oliver-setting-row select{background:#07101b;color:#fff;border:1px solid #3b516b;border-radius:9px;padding:8px}
 @media(max-width:520px){.oliver-hub-grid{grid-template-columns:1fr}.oliver-hub-choice{min-height:88px}.oliver-hub-shell{padding:8px}.oliver-hub-card{max-height:92vh}.oliver-hub-launch{width:54px;height:54px;bottom:76px;right:10px}}
-</style>
 <style id="v826cGuideMobileFix">
 .oliver-guide-actions{position:sticky;bottom:0;z-index:4;background:#071522;padding:10px 0 2px;margin-top:12px;border-top:1px solid rgba(255,255,255,.08)}
 @media(max-width:650px){.oliver-guide-actions{grid-template-columns:1fr 1fr}.oliver-guide-actions #oliverGuideStop{grid-column:1/-1}.oliver-guide-panel.guiding .oliver-guide-dialog{max-height:72vh}}
@@ -480,10 +479,10 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 
 
 <script id="graphDetectionEngineStub">
-/* Nitros Mobile Technician Portal v10.12.7P
-   Runtime: Graph Detection Engine */
+/* Nitros Mobile Technician Portal v10.12.7K
+   Sprint 1: Graph Detection Engine (Scaffold) */
 window.GraphDetectionEngine = {
-  version: "10.12.7P",
+  version: "10.12.7K",
   state: {
     originalImage: null,
     graphDetected: false,
@@ -494,7 +493,7 @@ window.GraphDetectionEngine = {
   },
   detect(image){
     this.state.originalImage = image || null;
-    console.log("[GraphDetectionEngine] Runtime detector initialized.");
+    console.log("[GraphDetectionEngine] Detection scaffold initialized.");
     return this.state;
   }
 };
@@ -504,7 +503,7 @@ window.GraphDetectionEngine = {
 <script id="graph-intelligence-v10127d">
 window.GraphIntelligenceEngine = window.GraphIntelligenceEngine || {};
 Object.assign(window.GraphIntelligenceEngine,{
- version:"10.12.7P",
+ version:"10.12.7K",
  pipeline:[
   "Image Validation",
   "Graph Region Detection",
@@ -525,7 +524,7 @@ Object.assign(window.GraphIntelligenceEngine,{
 
 <script id="graph-intelligence-v10127e">
 window.GraphIntelligenceEngine=Object.assign(window.GraphIntelligenceEngine||{},{
- version:"10.12.7P",
+ version:"10.12.7K",
  targets:{labelConfidence:90,traceConfidence:90},
  adaptivePreprocess:true,
  panelIndependentProcessing:true,
@@ -550,7 +549,7 @@ canvas.graph-preview,canvas.ocr-preview{
 
 <script id="v10127f-analysis">
 window.GraphIntelligenceEngine=Object.assign(window.GraphIntelligenceEngine||{},{
- version:"10.12.7P",
+ version:"10.12.7K",
  analysisMode:"Prefer Original Resolution",
  developerMetrics:{
    originalResolution:"Pending",
@@ -583,7 +582,7 @@ window.GraphIntelligenceEngine=Object.assign(window.GraphIntelligenceEngine||{},
 </style>
 <script>
 window.GraphIntelligenceEngine=Object.assign(window.GraphIntelligenceEngine||{},{
-version:"10.12.7P",
+version:"10.12.7K",
 viewer:{
 displayWidth:"95%",
 displayHeight:"50vh",
@@ -592,12 +591,21 @@ zoomPlanned:true
 }
 });
 </script>
+
+<!-- v10.12.7L DEVELOPMENT PATCH
+Added placeholders for:
+- Multi-pass OCR consensus
+- Adaptive preprocessing hooks
+- Deskew/rotation pipeline hooks
+- Full-resolution OCR preservation
+-->
+
 </head>
 <body>
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.7P — AI Diagnostic Engine Phase 2</div>
+  <div class="sub">Mobile Technician Portal v10.12.7K — Symptom-First OCR Upgrade</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -611,7 +619,7 @@ zoomPlanned:true
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.7P — AI Diagnostic Engine Phase 2. Existing conversational and diagnostic evidence features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.7K preserves the validated conversational and DTC knowledge engines and adds diagnostic evidence analysis after photo, CSV, text, and PDF imports. Oliver now builds an active structured case from natural technician conversation, including vehicle, engine, DTCs, status, symptoms, completed tests, measurements, replaced parts, observations, and the next recommended diagnostic question. VIN-specific wiring, pinouts, calibrations, and OEM procedures still require verified vehicle information.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -774,7 +782,7 @@ zoomPlanned:true
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.7P</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.7K</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -841,7 +849,7 @@ zoomPlanned:true
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.7P</div>
+      <div class="eyebrow">Version 10.12.7K</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -2052,7 +2060,6 @@ zoomPlanned:true
   }
 
   function returnHomeAndStartNewVehicle(){
-    window.resetOcrSessionState?.("start new vehicle");
     resetActiveWorkspace();
     showScreen("home");
   }
@@ -2638,7 +2645,6 @@ zoomPlanned:true
   }
 
   let pendingOcrVin="";
-  window.clearPendingOcrVin=()=>{pendingOcrVin="";};
 
   function collectVinCandidates(text){
     const t=normalizeOcrText(text||"");
@@ -5328,7 +5334,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7P • AI Diagnostic Engine Phase 2</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7K • Full-screen diagnostic workspace</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -5816,7 +5822,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     const tests=(activeCase.tests||[]).slice(-2).join('; ');
     const findings=(activeCase.observations||[]).slice(-2).join('; ');
     box.innerHTML=`<div class="case-head"><strong>ACTIVE DIAGNOSTIC CASE</strong><button type="button" id="oliverNewCase">New Case</button></div><div><b>Vehicle:</b> ${escCase(vehicleLabel())}</div><div><b>Codes:</b> ${escCase(codes)}${activeCase.status?` · <b>Status:</b> ${escCase(activeCase.status)}`:''}</div>${tests?`<div><b>Testing:</b> ${escCase(tests)}</div>`:''}${findings?`<div><b>Findings:</b> ${escCase(findings)}</div>`:''}${activeCase.nextQuestion?`<div><b>Next:</b> ${escCase(activeCase.nextQuestion)}</div>`:''}`;
-    document.getElementById('oliverNewCase')?.addEventListener('click',()=>{window.resetOcrSessionState?.('New Case button');activeCase=emptyCase();saveCase();reply('New diagnostic case started. What code or symptom are we working with?')},{once:true});
+    document.getElementById('oliverNewCase')?.addEventListener('click',()=>{activeCase=emptyCase();saveCase();reply('New diagnostic case started. What code or symptom are we working with?')},{once:true});
   }
   function parseVehicle(text){
     const original=String(text||'').trim();
@@ -5949,7 +5955,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
       }
       reply(response);return;
     }
-    if(/new case|clear case|start over/.test(q)){window.resetOcrSessionState?.('typed or voice New Case command');activeCase=emptyCase();saveCase();reply('New diagnostic case started. What code or symptom are we working with?');return}
+    if(/new case|clear case|start over/.test(q)){activeCase=emptyCase();saveCase();reply('New diagnostic case started. What code or symptom are we working with?');return}
     if(/show me how|walk me through|guided|learn the software|input this customer|check.?in/.test(q)){reply('I am opening Instructor Mode and the guided software walkthrough. Choose the workflow you want, and I will wait for each confirmation.');closeHub();setTimeout(()=>{$('oliverGuideLaunch')?.click()},120);return}
     if(/repair assistant/.test(q)){reply('I am opening the Repair Assistant. An active repair order adds saved vehicle and case context, but it is no longer required for general diagnostic questions.');closeHub();setTimeout(()=>{$('smartOliverLaunch')?.click()},120);return}
     const intent=captureCaseFacts(text);
@@ -7073,7 +7079,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1031CompletionAssignmentStabilization">
 (()=>{
   'use strict';
-  const BUILD='10.12.7P';
+  const BUILD='10.12.7K';
   const $=id=>document.getElementById(id);
   const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||'null');return v??fallback}catch{return fallback}};
   const write=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}};
@@ -7267,12 +7273,12 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 .oliver-active-case-banner button{border:1px solid #60748c;background:#13243a;color:#fff;border-radius:9px;padding:5px 9px;font-weight:800}
 </style>
 <script id="v1060-session-manager-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7P — AI Diagnostic Engine Phase 2';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7K — Symptom-First OCR Upgrade';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 adds context awareness: Oliver reads the active case, acknowledges known facts, and asks only for the highest-value missing information. -->
 
 <script id="v1072-completed-prompt-tracking-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7P — AI Diagnostic Engine Phase 2';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7K — Symptom-First OCR Upgrade';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 tracks completed prompts, recognizes power-loss symptoms, acknowledges each new fact, and blocks answered intake questions from repeating. -->
 
@@ -7291,37 +7297,12 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 .oliver-import-preview img{display:block;max-width:100%;max-height:180px;margin:auto;border-radius:8px}
 .oliver-import-preview pre{white-space:pre-wrap;word-break:break-word;margin:0;font-size:11px;color:#dce8f7}
 .oliver-import-chip{display:inline-block;margin:3px 5px 0 0;padding:4px 7px;border-radius:999px;background:#17304d;border:1px solid #46617f;font-size:11px}
-.phase2-result{margin-top:9px;padding:9px;border:1px solid #315879;border-radius:10px;background:#071522;font-size:12px;line-height:1.45}.phase2-result strong{color:#fff}.phase2-confidence{color:#7fe0ff;font-weight:800}.phase2-uncertain{color:#ffd074;font-weight:800}.phase2-raw pre{max-height:150px;overflow:auto;white-space:pre-wrap;color:#b9cce0}
 @media(max-width:520px){.oliver-import-actions{grid-template-columns:1fr}}
 </style>
 <script id="v1080-diagnostic-data-import">
 (()=>{'use strict';
  const $=id=>document.getElementById(id);
  const MAX_TEXT=1500000;
- const initialImportStatus='Attach a scan-tool photo, CSV/text export, or PDF. Scan-tool photos will be previewed and OCR-read automatically when internet access is available.';
- let ocrGeneration=0,analysisController=null,activePreviewUrl='',imageBuffer=null,analysisState={};
- const active=token=>token===ocrGeneration&&!analysisController?.signal.aborted;
- function stale(){const error=new Error('OCR session was reset');error.name='AbortError';return error}
- function requireActive(token){if(!active(token))throw stale()}
- function revokePreview(){if(activePreviewUrl){try{URL.revokeObjectURL(activePreviewUrl)}catch(_){}activePreviewUrl=''}}
- function developerDiagnostic(reason){
-   const host=$('oliverDiagnosticImport');if(!host)return;
-   let entry=$('ocrSessionResetDiagnostic');if(!entry){entry=document.createElement('div');entry.id='ocrSessionResetDiagnostic';entry.style.cssText='margin-top:8px;font:11px/1.35 ui-monospace,monospace;color:#9fb5c9';host.appendChild(entry)}
-   entry.textContent=`OCR session ${ocrGeneration} reset (${reason}): OCR cache cleared • Image buffer empty • Graph buffer empty • Previous results cleared • Active analysis cancelled • New OCR session created`;
- }
- window.resetOcrSessionState=function(reason='New Case'){
-   ocrGeneration++;try{analysisController?.abort()}catch(_){}analysisController=null;revokePreview();imageBuffer=null;analysisState={};
-   ['oliverImportFile','oliverImportCameraFile','diagImageInput'].forEach(id=>{const el=$(id);if(el)el.value='' });
-   const preview=$('oliverImportPreview');if(preview){preview.replaceChildren();preview.classList.remove('open')}
-   const status=$('oliverImportStatus');if(status)status.textContent=initialImportStatus;
-   const raw=$('ocrRawText');if(raw)raw.textContent='No OCR scan has been completed.';const edit=$('ocrVinEdit');if(edit)edit.value='';
-   [['ocrSource','Not scanned'],['ocrCandidates','None'],['ocrSelectedVin','None'],['ocrVinLength','0'],['ocrFormatValid','Not tested'],['ocrCheckDigitValid','Not tested'],['ocrConfidence','0%']].forEach(([id,value])=>{const el=$(id);if(el)el.textContent=value});
-   $('ocrDiagnostic')?.classList.add('hidden');window.clearPendingOcrVin?.();
-   window.NitrosOCRViewer?.close?.();$('diagViewer')?.classList.remove('active');const diagStage=$('diagViewerStage');if(diagStage)diagStage.replaceChildren();
-   ['GraphDetectionEngine','GraphIntelligenceEngine'].forEach(name=>{const engine=window[name];if(engine?.state)Object.keys(engine.state).forEach(key=>{engine.state[key]=typeof engine.state[key]==='boolean'?false:null});if(engine?.metrics)Object.keys(engine.metrics).forEach(key=>{engine.metrics[key]=key==='panelQuality'?[]:key==='traceConfidence'?0:'Pending'})});
-   try{Object.keys(localStorage).filter(key=>/nitros.*(ocr|graph|image|trace|analysis|pid|panel)/i.test(key)).forEach(key=>localStorage.removeItem(key));Object.keys(sessionStorage).filter(key=>/nitros.*(ocr|graph|image|trace|analysis|pid|panel)/i.test(key)).forEach(key=>sessionStorage.removeItem(key))}catch(_){}
-   $('dynamicPanelDiagnostics')?.remove();developerDiagnostic(reason);return ocrGeneration;
- };
  function esc(s){return String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}
  function findAnchor(){return $('oliverHubSend')?.parentElement||$('oliverHubTranscript')?.parentElement}
  function sendFact(text){
@@ -7356,7 +7337,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    if(clean)parts.push('File notes: '+clean.slice(0,1200));
    return {summary:parts.join('. '),preview:String(text).slice(0,5000)};
  }
- function setStatus(msg,token){const el=$('oliverImportStatus');if(el&&(token===undefined||active(token)))el.textContent=msg}
+ function setStatus(msg){const el=$('oliverImportStatus');if(el)el.textContent=msg}
  function previewHtml(html){const p=$('oliverImportPreview');if(!p)return;p.innerHTML=html;p.classList.add('open')}
  function loadTesseract(){
    if(window.Tesseract)return Promise.resolve(window.Tesseract);
@@ -7376,7 +7357,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
  }
  async function imageToCanvas(file){
    const bitmap=await createImageBitmap(file);
-   // v10.12.7P: preserve detail and upscale smaller phone photos before OCR.
+   // v10.12.7K: preserve detail and upscale smaller phone photos before OCR.
    // Limit total size so iPhone Safari remains stable.
    const targetWidth=Math.min(3000,Math.max(2200,bitmap.width));
    const scale=Math.min(4,targetWidth/bitmap.width);
@@ -7433,7 +7414,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    for(const [r,label] of patterns)if(r.test(t)&&!labels.includes(label))labels.push(label);return labels;
  }
  function normalizePid(text){
-   // v10.12.7P: tolerate common OCR substitutions such as O/0, I/1, S/5 and broken spacing.
+   // v10.12.7K: tolerate common OCR substitutions such as O/0, I/1, S/5 and broken spacing.
    const raw=String(text||'').toUpperCase();
    const t=raw.replace(/[|!]/g,'I').replace(/[^A-Z0-9 ._\/-]/g,' ').replace(/\s+/g,' ').trim();
    const compact=t.replace(/[ ._\/-]/g,'');
@@ -7463,7 +7444,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    const activity=samples?edges/samples:0, switching=samples?vertical/samples:0;
    return {activity,switching,description:activity>.18?'high trace activity':activity>.09?'moderate trace activity':'low trace activity'};
  }
- async function ocrRegion(T,variants,label,token){
+ async function ocrRegion(T,variants,label){
    // Consensus OCR: confidence rises only when independent enhancement passes agree on the same PID.
    const reads=[];
    for(let i=0;i<variants.length;i++){
@@ -7472,7 +7453,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
        tessedit_pageseg_mode:7,
        preserve_interword_spaces:'1'
      };
-     const result=await T.recognize(variants[i],'eng',config);requireActive(token);
+     const result=await T.recognize(variants[i],'eng',config);
      const text=cleanOcr(result?.data?.text),rawConfidence=Math.round(result?.data?.confidence||0),pid=normalizePid(text);
      const wordConfidence=Math.round((result?.data?.words||[]).filter(w=>String(w.text||'').trim()).reduce((a,w)=>a+Number(w.confidence||0),0)/Math.max(1,(result?.data?.words||[]).filter(w=>String(w.text||'').trim()).length));
      reads.push({text,pid,confidence:Math.max(rawConfidence,wordConfidence||0),pass:i});
@@ -7493,6 +7474,14 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    const best=reads.sort((a,b)=>b.confidence-a.confidence)[0]||{text:'',confidence:0,pid:''};
    return {...best,agreement:0,totalPasses:reads.length,reads};
  }
+ function panelLayouts(W,H){
+   // Candidate display bounds cover tight screenshots, phone photos with borders, and slightly shifted displays.
+   return [
+     {name:'standard',x:.06,y:.12,w:.88,h:.76},
+     {name:'wide',x:.025,y:.08,w:.95,h:.84},
+     {name:'inset',x:.10,y:.16,w:.80,h:.68}
+   ].map(l=>({name:l.name,x:Math.round(W*l.x),y:Math.round(H*l.y),w:Math.round(W*l.w),h:Math.round(H*l.h)}));
+ }
  function buildLabelVariants(source,x,y,w,h){
    const scales=w<900?[1.8,1.55]:[1.5,1.3];
    return [
@@ -7505,16 +7494,16 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
      cropCanvas(source,x,y,w,h,'invert',150,scales[1])
    ];
  }
- async function analyzeImageFixedPhase1(file,token){
+ async function analyzeImage(file){
    setStatus('Image attached. Oliver is running adaptive graph detection and consensus OCR…');
-   const T=await loadTesseract();requireActive(token);const source=await imageToCanvas(file);requireActive(token);imageBuffer=source;const W=source.width,H=source.height;
+   const T=await loadTesseract(),source=await imageToCanvas(file),W=source.width,H=source.height;
    let screenBest={text:'',confidence:0,labels:[],rotation:0};
    for(const rotation of [0,90,-90,180]){
      const rotated=rotation?rotateCanvas(source,rotation):source;
      for(const mode of ['contrast','adaptive']){
        const broad=cropCanvas(rotated,0,0,rotated.width,rotated.height,mode,150,.82);
        const result=await T.recognize(broad,'eng',{logger:m=>{if(m.status==='recognizing text')setStatus(`Reading complete screen ${rotation}° ${mode}: ${Math.round((m.progress||0)*100)}%`)},tessedit_pageseg_mode:11,preserve_interword_spaces:'1'});
-       requireActive(token);const text=cleanOcr(result?.data?.text),confidence=Math.round(result?.data?.confidence||0),labels=extractPidLabels(text);
+       const text=cleanOcr(result?.data?.text),confidence=Math.round(result?.data?.confidence||0),labels=extractPidLabels(text);
        if(labels.length>screenBest.labels.length||(labels.length===screenBest.labels.length&&confidence>screenBest.confidence))screenBest={text,confidence,labels,rotation,mode};
      }
    }
@@ -7528,7 +7517,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
        // Search both a compact title strip and a broader upper section, since scan tools place labels differently.
        const compactH=Math.max(72,ph*.25),broadH=Math.max(110,ph*.46);
        const variants=[...buildLabelVariants(source,x,y,pw,compactH),...buildLabelVariants(source,x,y,pw,broadH)];
-       const ocr=await ocrRegion(T,variants,`Reading ${layout.name} Panel ${i+1}`,token),metrics=traceMetrics(full);
+       const ocr=await ocrRegion(T,variants,`Reading ${layout.name} Panel ${i+1}`),metrics=traceMetrics(full);
        const labelConfidence=ocr.pid?Math.min(99,Math.max(50,ocr.confidence)):Math.min(49,ocr.confidence);
        panels.push({number:i+1,position:names[i],...ocr,labelConfidence,metrics});
      }
@@ -7539,7 +7528,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
      if(!bestLayout||score>bestLayout.score)bestLayout={...layout,panels,identified,score};
      if(identified.length===4&&agreement>=8)break;
    }
-   requireActive(token);const panels=bestLayout.panels;
+   const panels=bestLayout.panels;
    const identified=panels.filter(p=>p.pid&&p.labelConfidence>=55),unresolved=panels.filter(p=>!p.pid||p.labelConfidence<55);
    const broadLabels=screenBest.labels.filter(label=>!identified.some(p=>p.pid===label));
    const codes=dtcs(panels.map(p=>p.text).join('\n')+'\n'+screenBest.text);
@@ -7557,86 +7546,19 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
      broadLabels.length?`Additional readable screen labels: ${broadLabels.join(', ')}`:'No additional screen-level PID labels were confirmed.',
      evidence,instruction
    ].join('\n');
-   analysisState={screenBest,bestLayout,panels,broadLabels,codes,evidence};sendFact(summary);
+   sendFact(summary);
    const p=$('oliverImportPreview');
    if(p){p.insertAdjacentHTML('beforeend',`<div style="margin-top:8px"><span class="oliver-import-chip">Adaptive consensus OCR</span><span class="oliver-import-chip">${esc(bestLayout.name)} layout</span><span class="oliver-import-chip">${identified.length}/4 panels + ${broadLabels.length} screen labels</span></div><pre>${esc(evidence)}</pre>`)}
    setStatus(unresolved.length?((identified.length===0&&broadLabels.length===0)?'Adaptive OCR completed, but the PID labels remain unreadable. Retake closer, crop/export the graph, or submit one graph at a time.':`Consensus OCR confirmed ${identified.length} panel label(s) and ${broadLabels.length} additional screen label(s). Oliver is preserving the readable evidence and will request only the next missing item.`):'Adaptive graph analysis complete. All panel labels were mapped with consensus confidence.');
  }
- function dynamicDiagnostics(d){
-   const host=$('oliverDiagnosticImport');if(!host)return;
-   let box=$('dynamicPanelDiagnostics');if(!box){box=document.createElement('details');box.id='dynamicPanelDiagnostics';box.open=true;box.style.cssText='margin-top:9px;padding:7px;border:1px solid #36576e;border-radius:8px;color:#cfe0ef;font:11px/1.4 ui-monospace,monospace';host.appendChild(box)}
-   const seg=d.segmentation||{};box.innerHTML=`<summary><strong>Developer Mode - Recursive Panel Segmentation</strong></summary><div style="margin-top:6px">Image preparation: ${d.prepare||0} ms<br>Panel detection: ${d.detect||0} ms<br>PID-label OCR: ${d.ocr||0} ms<br>Trace analysis: ${d.trace||0} ms<br>Numerical-value OCR: not used<br>Total: ${d.total||0} ms<br>Detected panels: ${d.panels||0} | Confirmed PID labels: ${d.confirmed||0} | Unresolved panels: ${d.unresolved||0} | OCR passes: ${d.passes||0}<br>Outer containers: ${seg.outerContainers||0} | Horizontal candidates: ${seg.horizontalCandidates||0} | Accepted row boundaries: ${(seg.rows||[]).join(', ')||'none'}<br>Vertical candidates per row: ${(seg.verticalCandidates||[]).join(', ')||'none'} | Accepted vertical boundaries: ${(seg.verticalCuts||[]).map(x=>x.join(',')||'none').join(' / ')||'none'}<br>Candidate panels: ${seg.candidates||0} | Final panels: ${seg.finalPanels||0} | Rejected: ${(seg.rejected||[]).join('; ')||'none'}<br>Recursive fallback: ${seg.fallback?'YES':'No'}<br><button type="button" id="toggleSegmentationOverlay">${seg.overlayVisible?'Hide':'Show'} segmentation overlay</button><br>Processing limit reached: ${d.limited?'YES':'No'}</div>`;
-   $('toggleSegmentationOverlay')?.addEventListener('click',()=>{seg.overlayVisible=!seg.overlayVisible;renderSegmentationOverlay(seg);dynamicDiagnostics(d)},{once:true});
- }
- function panelLocation(r,W,H){const h=r.y<H*.34?'top':r.y>H*.66?'bottom':'middle',v=r.x<W*.34?'left':r.x>W*.66?'right':'center';return `${h}-${v} [${r.x},${r.y},${r.w},${r.h}]`}
- function lineCuts(canvas,axis){
-   const ctx=canvas.getContext('2d',{willReadFrequently:true}),w=canvas.width,h=canvas.height,im=ctx.getImageData(0,0,w,h).data,along=axis==='x'?w:h,cross=axis==='x'?h:w,step=Math.max(2,Math.round(Math.min(w,h)/850)),scores=[];
-   for(let p=Math.floor(along*.04);p<Math.ceil(along*.96);p+=step){let dark=0,edge=0,n=0;
-     for(let q=Math.floor(cross*.04);q<Math.ceil(cross*.96);q+=step){const x=axis==='x'?p:q,y=axis==='x'?q:p,i=(y*w+x)*4,g=.299*im[i]+.587*im[i+1]+.114*im[i+2];const x2=axis==='x'?Math.min(w-1,x+step):x,y2=axis==='x'?y:Math.min(h-1,y+step),j=(y2*w+x2)*4,g2=.299*im[j]+.587*im[j+1]+.114*im[j+2];if(g<92||g>235)dark++;if(Math.abs(g-g2)>48)edge++;n++}scores.push({p,score:(dark/n)*.56+(edge/n)*.44})}
-   const threshold=.43,minGap=Math.max(55,along*.075),cuts=[];let group=[];
-   for(const s of scores){if(s.score>=threshold)group.push(s);else if(group.length){const best=group.reduce((a,b)=>a.score>b.score?a:b);if(!cuts.length||best.p-cuts.at(-1)>minGap)cuts.push(best.p);group=[]}}
-   if(group.length){const best=group.reduce((a,b)=>a.score>b.score?a:b);if(!cuts.length||best.p-cuts.at(-1)>minGap)cuts.push(best.p)}
-   return cuts;
- }
- function projectionCuts(source,r,axis,limit=3){
-   const crop=cropCanvas(source,r.x,r.y,r.w,r.h),ctx=crop.getContext('2d',{willReadFrequently:true}),w=crop.width,h=crop.height,data=ctx.getImageData(0,0,w,h).data,along=axis==='y'?h:w,cross=axis==='y'?w:h,step=Math.max(2,Math.round(Math.min(w,h)/700)),series=[];
-   for(let p=Math.floor(along*.08);p<Math.ceil(along*.92);p+=step){let bright=0,edge=0,text=0,n=0;for(let q=Math.floor(cross*.05);q<Math.ceil(cross*.95);q+=step){const x=axis==='y'?q:p,y=axis==='y'?p:q,i=(y*w+x)*4,g=.299*data[i]+.587*data[i+1]+.114*data[i+2],j=((Math.min(h-1,y+step))*w+Math.min(w-1,x+step))*4,g2=.299*data[j]+.587*data[j+1]+.114*data[j+2];bright+=g;edge+=Math.abs(g-g2);if(g<125)text++;n++}series.push({p,score:(bright/n)/255*.42+(1-Math.min(1,(edge/n)/52))*.43+(1-text/n)*.15})}
-   const mean=series.reduce((s,x)=>s+x.score,0)/Math.max(1,series.length),gap=Math.max(axis==='y'?r.h*.16:r.w*.18,65),candidates=series.filter((x,i,a)=>x.score>=mean+.01&&(!a[i-1]||x.score>=a[i-1].score)&&(!a[i+1]||x.score>=a[i+1].score)).sort((a,b)=>b.score-a.score),cuts=[];
-   for(const c of candidates){if(cuts.every(x=>Math.abs(x-c.p)>gap)){cuts.push(c.p);if(cuts.length>=limit)break}}return {cuts:cuts.sort((a,b)=>a-b),candidates:series.length};
- }
- function textGeometry(source,r){
-   const crop=cropCanvas(source,r.x,r.y,r.w,Math.max(1,Math.min(r.h*.32,260))),ctx=crop.getContext('2d',{willReadFrequently:true}),d=ctx.getImageData(0,0,crop.width,crop.height).data,groups=[];let active=false,start=0;
-   for(let x=0;x<crop.width;x+=4){let dark=0,n=0;for(let y=0;y<crop.height;y+=4){const i=(y*crop.width+x)*4,g=.299*d[i]+.587*d[i+1]+.114*d[i+2];if(g<145)dark++;n++}const hit=dark/n>.09;if(hit&&!active){start=x;active=true}if(active&&(!hit||x>=crop.width-4)){if(x-start>crop.width*.08)groups.push({x:r.x+start,w:x-start});active=false}}return groups;
- }
- function usableGraphArea(source){
-   const W=source.width,H=source.height,ctx=source.getContext('2d',{willReadFrequently:true}),data=ctx.getImageData(0,0,W,H).data,step=Math.max(4,Math.round(Math.min(W,H)/350));
-   const activity=(axis,p)=>{let hits=0,n=0;for(let q=0;q<(axis==='x'?H:W);q+=step){const x=axis==='x'?p:q,y=axis==='x'?q:p,i=(y*W+x)*4,j=((Math.min(H-1,y+step))*W+Math.min(W-1,x+step))*4,g=.299*data[i]+.587*data[i+1]+.114*data[i+2],g2=.299*data[j]+.587*data[j+1]+.114*data[j+2];if(g<225||Math.abs(g-g2)>28)hits++;n++}return hits/Math.max(1,n)};
-   const bounds=(axis,size)=>{const values=[];for(let p=0;p<size;p+=step)values.push({p,a:activity(axis,p)});const useful=values.filter(v=>v.a>.11);if(!useful.length)return [0,size];return [Math.max(0,useful[0].p-step*2),Math.min(size,useful.at(-1).p+step*2)]};const [x1,x2]=bounds('x',W),[y1,y2]=bounds('y',H),candidate={x:x1,y:y1,w:x2-x1,h:y2-y1};return candidate.w*candidate.h>=W*H*.45?candidate:{x:0,y:0,w:W,h:H};
- }
- function recursivePanels(source){
-   const W=source.width,H=source.height,outer=usableGraphArea(source),seg={outerContainers:1,horizontalCandidates:0,rows:[],verticalCandidates:[],verticalCuts:[],candidates:0,finalPanels:0,rejected:[],fallback:false,outer,overlayVisible:false};
-   let horizontal=projectionCuts(source,outer,'y',2);seg.horizontalCandidates=horizontal.candidates;let rowCuts=horizontal.cuts;
-   if(rowCuts.length<1){const old=lineCuts(cropCanvas(source,outer.x,outer.y,outer.w,outer.h),'y');rowCuts=old.slice(0,2);seg.fallback=true}
-   const ys=[outer.y,...rowCuts.map(y=>outer.y+y),outer.y+outer.h].sort((a,b)=>a-b),panels=[];seg.rows=rowCuts.map(y=>Math.round(outer.y+y));
-   for(let i=0;i<ys.length-1;i++){const r={x:outer.x,y:Math.round(ys[i]),w:outer.w,h:Math.round(ys[i+1]-ys[i])};if(r.h<outer.h*.12){seg.rejected.push(`row ${i+1}: too short`);continue}const vertical=projectionCuts(source,r,'x',3),labels=textGeometry(source,r);let cuts=vertical.cuts;
-     if(!cuts.length&&labels.length>1){cuts=labels.slice(1).map(g=>g.x-r.x).filter(x=>x>r.w*.15&&x<r.w*.85);seg.fallback=true}if(!cuts.length){const old=lineCuts(cropCanvas(source,r.x,r.y,r.w,r.h),'x');cuts=old.slice(0,2);if(cuts.length)seg.fallback=true}seg.verticalCandidates.push(vertical.candidates);seg.verticalCuts.push(cuts.map(x=>Math.round(r.x+x)));const xs=[outer.x,...cuts.map(x=>outer.x+x),outer.x+outer.w].sort((a,b)=>a-b);
-     for(let j=0;j<xs.length-1;j++){const p={x:Math.round(xs[j]),y:r.y,w:Math.round(xs[j+1]-xs[j]),h:r.h};seg.candidates++;const trace=traceMetrics(cropCanvas(source,p.x,p.y,p.w,p.h,'gray'));const valid=p.w>=W*.16&&p.h>=H*.12&&trace.activity>.018;if(valid)panels.push(p);else seg.rejected.push(`region ${i+1}.${j+1}: insufficient graph activity`)}}
-   if(panels.length===1&&panels[0].w*panels[0].h>outer.w*outer.h*.7){seg.fallback=true;seg.rejected.push('outer container retained for diagnostics only');const midpoint=Math.round(outer.y+outer.h/2),fallbackRows=[outer.y,midpoint,outer.y+outer.h];panels.length=0;for(let i=0;i<2;i++)panels.push({x:outer.x,y:fallbackRows[i],w:outer.w,h:fallbackRows[i+1]-fallbackRows[i]})}
-   seg.finalPanels=panels.length;return {panels:panels.sort((a,b)=>a.y-b.y||a.x-b.x).slice(0,8),seg};
- }
- function renderSegmentationOverlay(seg){
-   const preview=$('oliverImportPreview'),img=preview?.querySelector('img');if(!preview||!img)return;preview.querySelector('#segmentationOverlay')?.remove();if(!seg.overlayVisible)return;const canvas=document.createElement('canvas');canvas.id='segmentationOverlay';canvas.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none';const host=img.parentElement;host.style.position='relative';host.appendChild(canvas);const draw=()=>{canvas.width=img.clientWidth;canvas.height=img.clientHeight;const sx=canvas.width/seg.outer.w,sy=canvas.height/seg.outer.h,c=canvas.getContext('2d');c.setLineDash([8,5]);c.strokeStyle='#ffbf2f';c.lineWidth=2;c.strokeRect(1,1,canvas.width-2,canvas.height-2);c.setLineDash([]);(seg.rows||[]).forEach(y=>{c.strokeStyle='#00d8ff';c.beginPath();c.moveTo(0,y*sy);c.lineTo(canvas.width,y*sy);c.stroke()});(seg.panels||[]).forEach((p,i)=>{c.strokeStyle='#54ef78';c.lineWidth=3;c.strokeRect(p.x*sx,p.y*sy,p.w*sx,p.h*sy);c.fillStyle='#54ef78';c.fillText(String(i+1),p.x*sx+5,p.y*sy+15)})};if(img.complete)draw();else img.addEventListener('load',draw,{once:true});
- }
- function dynamicVariants(source,r){const labelH=Math.max(64,Math.min(r.h*.30,220)),y=r.y+Math.min(8,r.h*.04);return [cropCanvas(source,r.x,y,r.w,labelH,'contrast',150,1.8),cropCanvas(source,r.x,y,r.w,labelH,'sharpen',150,1.8),cropCanvas(source,r.x,y,r.w,labelH,'adaptive',150,1.55),cropCanvas(source,r.x,y,r.w,labelH,'labels',135,1.55)]}
- async function dynamicLabelOcr(T,source,r,token,budget){
-   const reads=[],variants=dynamicVariants(source,r);for(let i=0;i<variants.length;i++){budget();const result=await T.recognize(variants[i],'eng',{logger:m=>{if(m.status==='recognizing text')setStatus(`Reading detected panel label ${i+1}/${variants.length}: ${Math.round((m.progress||0)*100)}%`,token)},tessedit_pageseg_mode:7,preserve_interword_spaces:'1'});requireActive(token);const text=cleanOcr(result?.data?.text),confidence=Math.round(result?.data?.confidence||0),pid=normalizePid(text);reads.push({text,confidence,pid,pass:i});if(pid&&confidence>=82&&i>=1)break}
-   const grouped=new Map();reads.filter(x=>x.pid).forEach(x=>{const g=grouped.get(x.pid)||{pid:x.pid,hits:0,best:0,text:''};g.hits++;if(x.confidence>=g.best){g.best=x.confidence;g.text=x.text}grouped.set(x.pid,g)});const winner=[...grouped.values()].sort((a,b)=>b.hits-a.hits||b.best-a.best)[0];return winner?{...winner,agreement:winner.hits,totalPasses:reads.length,reads}:{pid:'',text:reads[0]?.text||'',confidence:reads[0]?.confidence||0,agreement:0,totalPasses:reads.length,reads};
- }
- async function analyzeImage(file,token){
-   const started=performance.now(),timing={prepare:0,detect:0,ocr:0,trace:0,total:0,panels:0,confirmed:0,unresolved:0,passes:0,limited:false};const deadline=started+30000;const budget=()=>{requireActive(token);if(performance.now()>deadline){timing.limited=true;throw Object.assign(new Error('30-second processing limit reached'),{name:'TimeoutError'})}};
-   try{setStatus('Image attached. Detecting usable graph area and recursive panel boundaries...',token);let t=performance.now();const T=await loadTesseract();budget();const source=await imageToCanvas(file);budget();imageBuffer=source;window.GraphIntelligenceEngine?.loadImage?.(file);timing.prepare=Math.round(performance.now()-t);t=performance.now();const segmented=recursivePanels(source),rects=segmented.panels;timing.segmentation=segmented.seg;timing.segmentation.panels=rects;timing.detect=Math.round(performance.now()-t);timing.panels=rects.length;renderSegmentationOverlay(timing.segmentation);
-     const panels=[];t=performance.now();for(let i=0;i<rects.length;i++){try{const r=rects[i],ocr=await dynamicLabelOcr(T,source,r,token,budget);timing.passes+=ocr.totalPasses;panels.push({number:i+1,bounds:r,location:panelLocation(r,source.width,source.height),...ocr})}catch(e){if(e.name==='TimeoutError'){timing.limited=true;for(let j=i;j<rects.length;j++)panels.push({number:j+1,bounds:rects[j],location:panelLocation(rects[j],source.width,source.height),pid:'',confidence:0,agreement:0,totalPasses:0,text:'',status:'unresolved'});break}throw e}}timing.ocr=Math.round(performance.now()-t);
-     const seen=new Map();for(const p of panels){if(!p.pid){p.status='unresolved';continue}const prior=seen.get(p.pid);if(prior&&p.confidence<=prior.confidence){p.pid='';p.status='unresolved';p.duplicateSuppressed=true}else{if(prior){prior.pid='';prior.status='unresolved';prior.duplicateSuppressed=true}seen.set(p.pid,p);p.status=p.confidence>=55&&p.agreement>=1?'confirmed':'tentative';if(p.status!=='confirmed')p.pid=''}}
-     t=performance.now();for(const p of panels){if(timing.limited)break;try{budget();const r=p.bounds,graphY=r.y+Math.min(r.h*.28,220),graphH=Math.max(1,r.y+r.h-graphY);p.metrics=traceMetrics(cropCanvas(source,r.x,graphY,r.w,graphH,'gray'))}catch(e){if(e.name==='TimeoutError'){timing.limited=true;break}throw e}}timing.trace=Math.round(performance.now()-t);panels.forEach(p=>p.metrics=p.metrics||{activity:0,switching:0,description:'trace analysis not completed'});timing.confirmed=panels.filter(p=>p.status==='confirmed').length;timing.unresolved=panels.filter(p=>p.status!=='confirmed').length;timing.total=Math.round(performance.now()-started);analysisState={panels,timing};window.GraphIntelligenceEngine?.record?.(timing.segmentation,timing);dynamicDiagnostics(timing);
-     const evidence=panels.map(p=>`Panel ${p.number} (${p.location}): ${p.pid||'PID unresolved'}; ${p.status}; label confidence ${p.confidence||0}%; OCR agreement ${p.agreement||0}/${p.totalPasses||0}; trace activity ${(p.metrics.activity*100).toFixed(1)}%; switching index ${(p.metrics.switching*100).toFixed(1)}%.`).join('\n');const confirmed=panels.filter(p=>p.status==='confirmed');sendFact(`Diagnostic graph image imported: ${file.name}\nDynamic panel detection found ${panels.length} graph region(s). ${confirmed.length} PID label(s) confirmed; ${timing.unresolved} unresolved.\n${evidence}`);const p=$('oliverImportPreview');if(p)p.insertAdjacentHTML('beforeend',`<pre>${esc(evidence)}</pre>`);setStatus(timing.limited?'Dynamic analysis reached its 30-second limit. Completed panel results were preserved.':`Dynamic panel analysis complete: ${panels.length} panel(s), ${confirmed.length} confirmed PID label(s).`,token);
-   }catch(error){timing.limited=timing.limited||error.name==='TimeoutError';timing.total=Math.round(performance.now()-started);dynamicDiagnostics(timing);if(error.name==='TimeoutError'){setStatus('Dynamic analysis reached its 30-second limit. Completed results, if any, were preserved.',token);return}throw error}
- }
- async function phase2BroadOcr(T,source,token){const passes=[],variants=[cropCanvas(source,0,0,source.width,source.height,'normal',150,.8),cropCanvas(source,0,0,source.width,source.height,'contrast',150,.8),cropCanvas(source,0,0,source.width,source.height,'adaptive',150,.8)];for(let i=0;i<variants.length;i++){const result=await T.recognize(variants[i],'eng',{logger:m=>{if(m.status==='recognizing text')setStatus(`Classifying image — OCR pass ${i+1}/${variants.length}: ${Math.round((m.progress||0)*100)}%`,token)},tessedit_pageseg_mode:11,preserve_interword_spaces:'1'});requireActive(token);passes.push({pass:i+1,text:String(result?.data?.text||''),confidence:Math.round(result?.data?.confidence||0),words:(result?.data?.words||[]).map(w=>({text:String(w.text||''),confidence:Math.round(Number(w.confidence||0)),bbox:w.bbox||null}))})}return passes}
- function classifyPhase2(file,source,passes){const raw=passes.map(p=>p.text).join('\n').toLowerCase(),name=String(file.name||'').toLowerCase(),text=`${name} ${raw}`,scores={'Scan-tool graph':0,'Vehicle photo':0,'Component photo':0,'Wiring diagram':0,'Document':0},add=(type,re,points)=>{if(re.test(text))scores[type]+=points};add('Scan-tool graph',/graph|waveform|scope|pid|rpm|fuel trim|stft|ltft|time\/div|freeze frame/,42);add('Wiring diagram',/wiring|circuit|connector|splice|ground|relay|fuse|module|pcm|ecm|pin\s*\d+/,42);add('Document',/invoice|report|repair order|bulletin|procedure|page\s+\d+|document|customer|technician/,38);add('Vehicle photo',/vehicle|vin|odometer|dashboard|front|rear|driver|passenger|license plate/,30);add('Component photo',/component|sensor|solenoid|valve|connector|terminal|bearing|pump|motor|alternator|starter/,27);const lineCount=raw.split(/\n/).filter(x=>x.trim()).length,wordCount=raw.trim().split(/\s+/).filter(Boolean).length,aspect=source.width/source.height,metrics=traceMetrics(cropCanvas(source,0,0,source.width,source.height,'gray',150,.35));if(wordCount>80&&lineCount>10)scores.Document+=35;if(metrics.switching>.045&&lineCount>2)scores['Scan-tool graph']+=28;if(aspect>1.25&&/\b(v|a|hz|ms|rpm|%|°c)\b/i.test(raw))scores['Scan-tool graph']+=18;if(/\b(?:b\d+s\d+|stft|ltft|rpm|maf|ect)\b/i.test(raw))scores['Scan-tool graph']+=35;if(/\b(?:cavity|pin|splice|gnd|b\+|can[- ]?[hl])\b/i.test(raw))scores['Wiring diagram']+=30;const ranked=Object.entries(scores).sort((a,b)=>b[1]-a[1]),top=ranked[0],second=ranked[1],evidence=Math.min(97,Math.round(35+top[1]*.65+(top[1]-second[1])*.35)),uncertain=top[1]<28||top[1]-second[1]<10;return {type:uncertain?'Uncertain':top[0],candidate:top[0],confidence:uncertain?Math.min(59,evidence):Math.max(60,evidence),scores,uncertain,features:{wordCount,lineCount,aspect:Number(aspect.toFixed(2)),traceActivity:Number(metrics.activity.toFixed(3)),switchingIndex:Number(metrics.switching.toFixed(3))}}}
- function trustedOcr(passes){const words=new Map();for(const p of passes)for(const w of p.words||[]){const key=w.text.trim().toLowerCase();if(!key)continue;const item=words.get(key)||{text:w.text,hits:0,best:0};item.hits++;if(w.confidence>item.best){item.best=w.confidence;item.text=w.text}words.set(key,item)}return [...words.values()].filter(w=>w.best>=75||(w.best>=60&&w.hits>=2)).map(w=>w.text).join(' ')}
- function uncertainOcr(passes){const words=new Map();for(const p of passes)for(const w of p.words||[]){const key=w.text.trim().toLowerCase();if(!key)continue;const item=words.get(key)||{text:w.text,hits:0,best:0};item.hits++;item.best=Math.max(item.best,w.confidence);words.set(key,item)}return [...words.values()].filter(w=>w.best<75&&!(w.best>=60&&w.hits>=2)).slice(0,80).map(w=>`[uncertain ${w.best}%: ${w.text}]`)}
- function phase2Reason(type,classification,passes){const trusted=trustedOcr(passes),codes=dtcs(trusted),avg=Math.round(passes.reduce((n,p)=>n+p.confidence,0)/Math.max(1,passes.length));let observations=[],tests=[],base=Math.min(94,Math.round(avg*.55+classification.confidence*.45));if(type==='Vehicle photo'){observations.push('A vehicle-level image was detected; no condition, identity, or failed part is inferred from appearance alone.');tests.push('Capture the affected area or reproduce the symptom, then record the exact operating condition.');base=Math.min(base,72)}else if(type==='Component photo'){observations.push('A component-level image was detected; visual presence alone does not confirm component identity or failure.');tests.push('Confirm the component by service information or connector/pin location, then perform the specified power, ground, signal, or mechanical test.');base=Math.min(base,70)}else if(type==='Wiring diagram'){observations.push('Circuit-style text or geometry was detected. Only high-confidence OCR terms are retained; uncertain pin and wire labels remain unresolved.');tests.push('Verify the circuit identifier in service information, then test source voltage and loaded ground at the relevant connector before condemning a component.');base=Math.min(base,82)}else if(type==='Document'){observations.push(`Document text was detected${codes.length?`; confirmed DTC text includes ${codes.join(', ')}`:''}. Low-confidence fields are not promoted to facts.`);tests.push(codes.length?'Confirm each DTC status and freeze-frame conditions with the scan tool, then follow the highest-priority code test.':'Review the marked uncertain fields and confirm the key specification or finding before using it diagnostically.');base=Math.min(base,86)}else{observations.push(`Scan-tool graph evidence was detected${codes.length?`; confirmed DTC text includes ${codes.join(', ')}`:''}. Graph labels still require per-panel consensus.`);tests.push('Use the recursive graph pipeline to confirm each PID label, then reproduce the concern while recording operating conditions and known-good comparison data.');base=Math.min(base,90)}return {observations,tests,confidence:Math.max(35,base),ocrConfidence:avg,trusted}}
- function renderPhase2(result,passes){const p=$('oliverImportPreview');if(!p)return;const uncertain=result.classification.uncertain?'<span class="phase2-uncertain">Uncertain — technician confirmation required</span>':esc(result.classification.type),raw=passes.map(x=>`--- OCR pass ${x.pass} (${x.confidence}%) ---\n${x.text||'[no text]'}`).join('\n'),uncertainFields=uncertainOcr(passes);p.insertAdjacentHTML('beforeend',`<div class="phase2-result"><strong>Automatic classification:</strong> ${uncertain} <span class="phase2-confidence">${result.classification.confidence}%</span><br><strong>OCR confidence:</strong> <span class="phase2-confidence">${result.reasoning.ocrConfidence}%</span><br><strong>Diagnostic conclusion confidence:</strong> <span class="phase2-confidence">${result.reasoning.confidence}%</span><br><strong>Technician observation:</strong> ${esc(result.reasoning.observations.join(' '))}<br><strong>Recommended next test:</strong> ${esc(result.reasoning.tests.join(' '))}<br><strong>Uncertain OCR fields:</strong> ${uncertainFields.length?esc(uncertainFields.join(' ')):'None detected'}<details class="phase2-raw"><summary>Raw OCR data (preserved; not treated as confirmed)</summary><pre>${esc(raw)}</pre></details></div>`)}
- async function analyzePhase2Image(file,token){setStatus('Image attached. Classifying before diagnostic routing…',token);const T=await loadTesseract();requireActive(token);const source=await imageToCanvas(file);requireActive(token);const passes=await phase2BroadOcr(T,source,token);const classification=classifyPhase2(file,source,passes),route=classification.uncertain?classification.candidate:classification.type,reasoning=phase2Reason(route,classification,passes),result={classification,reasoning,rawOcr:passes.map(p=>({pass:p.pass,confidence:p.confidence,text:p.text,words:p.words}))};analysisState={...analysisState,phase2:result};renderPhase2(result,passes);if(classification.uncertain){sendFact(`Diagnostic image imported: ${file.name}\nAutomatic classification is uncertain (${classification.confidence}%); likely type: ${classification.candidate}. OCR confidence: ${reasoning.ocrConfidence}%. Raw OCR was preserved and no uncertain label was promoted to a fact. Technician confirmation is required.\nObservation: ${reasoning.observations.join(' ')}\nRecommended next test: ${reasoning.tests.join(' ')}\nDiagnostic conclusion confidence: ${reasoning.confidence}%.`);setStatus('Classification is uncertain. Raw OCR is preserved; confirm the image type before relying on conclusions.',token);return}if(classification.type==='Scan-tool graph'){setStatus(`Classified as scan-tool graph (${classification.confidence}%). Routing to recursive segmentation…`,token);await analyzeImage(file,token);return}sendFact(`Diagnostic image imported: ${file.name}\nClassified as ${classification.type} (${classification.confidence}%). OCR confidence: ${reasoning.ocrConfidence}%.\nConfirmed OCR only: ${reasoning.trusted||'No fields met the confirmation threshold.'}\nObservation: ${reasoning.observations.join(' ')}\nRecommended next test: ${reasoning.tests.join(' ')}\nDiagnostic conclusion confidence: ${reasoning.confidence}%. Raw OCR is preserved separately; uncertain labels must not be guessed.`);setStatus(`${classification.type} pipeline complete. OCR ${reasoning.ocrConfidence}%; diagnostic conclusion ${reasoning.confidence}%.`,token)}
  async function handleFile(file){
    if(!file)return;
-   const token=++ocrGeneration;try{analysisController?.abort()}catch(_){}analysisController=new AbortController();revokePreview();imageBuffer=null;analysisState={};
    setStatus(`Loading ${file.name}…`);
    const type=(file.type||'').toLowerCase();
    if(type.startsWith('image/')){
-     activePreviewUrl=URL.createObjectURL(file);
-     previewHtml(`<div><span class="oliver-import-chip">Image</span><span class="oliver-import-chip">${esc(file.name)}</span></div><img alt="Imported diagnostic image" src="${activePreviewUrl}">`);
-     try{await analyzePhase2Image(file,token)}catch(err){if(!active(token))return;
+     const url=URL.createObjectURL(file);
+     previewHtml(`<div><span class="oliver-import-chip">Image</span><span class="oliver-import-chip">${esc(file.name)}</span></div><img alt="Imported diagnostic image" src="${url}">`);
+     try{await analyzeImage(file)}catch(err){
        sendFact(`Diagnostic image attached: ${file.name}. Automatic OCR did not complete: ${err.message}. Keep the current diagnostic conversation active and ask for one specific visible value or label needed next; do not restart the intake.`);
        setStatus('Image preview is ready, but OCR could not complete: '+err.message);
      }
@@ -7648,7 +7570,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
      setStatus('PDF attached. A connected PDF extraction service is needed for automatic reading.');return;
    }
    if(file.size>MAX_TEXT){setStatus('That file is too large for local import. Export a smaller CSV or text report.');return}
-   const text=await file.text();requireActive(token);
+   const text=await file.text();
    const parsed=(/\.csv$/i.test(file.name)||type.includes('csv'))?parseCsv(text):parseText(text,file.name);
    previewHtml(`<div><span class="oliver-import-chip">Data file</span><span class="oliver-import-chip">${esc(file.name)}</span></div><pre>${esc(parsed.preview)}</pre>`);
    sendFact(parsed.summary);
@@ -7681,7 +7603,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    file.onchange=()=>{handleFile(file.files?.[0]).catch(e=>setStatus('Import failed: '+e.message));file.value=''};
    $('oliverImportCameraFile').onchange=()=>{const f=$('oliverImportCameraFile');handleFile(f.files?.[0]).catch(e=>setStatus('Camera import failed: '+e.message));f.value=''};
  }
- const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7P — AI Diagnostic Engine Phase 2';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='AI Diagnostic Engine Phase 2 — automatic image routing ready';};
+ const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7K — Symptom-First OCR Upgrade';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Symptom-first intake and orientation-aware OCR ready';};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
  window.addEventListener('pageshow',()=>setTimeout(apply,40));
  const mo=new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))build()});mo.observe(document.documentElement,{childList:true,subtree:true});
@@ -7691,9 +7613,9 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1081-version-label-sync">
 (()=>{
  const sync=()=>{
-  document.title='Nitros Mobile Technician Portal v10.12.7P — AI Diagnostic Engine Phase 2';
+  document.title='Nitros Mobile Technician Portal v10.12.7K — Symptom-First OCR Upgrade';
   document.querySelectorAll('.sub,.status,header,footer,[class*=version],[id*=version]').forEach(el=>{
-   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.7P');
+   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.7K');
   });
  };
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
@@ -7706,7 +7628,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 <!-- v10.8.6 Startup Freeze Fix: associates OCR words with upper-left, upper-right, lower-left, and lower-right graph panels; asks only for the first unresolved PID or operating condition. -->
 <script id="v1084-release-identity">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7P — AI Diagnostic Engine Phase 2';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7P</strong> · AI Diagnostic Engine Phase 2 · Build 2026-08-04-0615');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7K — Symptom-First OCR Upgrade';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7K</strong> · Startup Freeze Fix · Build 2026-08-01-1512');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
 </script>
 
 
@@ -7720,7 +7642,7 @@ html.nitros-stabilizing body{visibility:hidden}
 <script id="v10120-single-authoritative-diagnostic-state">
 (()=>{
 'use strict';
-const VERSION='10.12.7P',BUILD='2026-08-04-0615',RELEASE='AI Diagnostic Engine Phase 2';
+const VERSION='10.12.7K',BUILD='2026-08-04-0615',RELEASE='Symptom-First OCR Upgrade';
 const STATE_KEY='nitros_diagnostic_case_v10120';
 const LEGACY_KEYS=[
  'nitros_v1052_oliver_transcript','nitros_oliver_active_diagnostic_case_v1060','nitros_oliver_case_v10106','nitros_oliver_case_v10107','nitros_oliver_case_v10109','nitros_oliver_case_v10110','nitros_oliver_case_v10111','nitros_oliver_case_v10112','nitros_oliver_case_v10113','nitros_oliver_case_v10114','nitros_oliver_case_v10143','nitros_oliver_workflow_v10105'
@@ -7766,12 +7688,12 @@ function nextQuestion(){
  if(state.activeDtc==='P0340')return'Intake is complete for P0340. Begin with battery voltage, related cam/crank codes, sensor power and ground, and a cam/crank signal comparison. What is the first verified test result?';
  return`Intake is complete for ${state.activeDtc}. Capture freeze-frame data and perform the least intrusive test that can prove the fault. What is the first verified result?`;
 }
-function reset(){window.resetOcrSessionState?.('authoritative New Case command');state=blank();add('Oliver','New diagnostic case started. What vehicle are we working on?');save()}
+function reset(){state=blank();add('Oliver','New diagnostic case started. What vehicle are we working on?');save()}
 function process(raw){const text=String(raw||'').trim();if(!text)return;add('You',text);const low=text.toLowerCase();
  if(/^(new case|start new case|clear case|start over)$/.test(low)){reset();return}
  const v=parseVehicle(text);if(v){state.vehicle={...state.vehicle,...Object.fromEntries(Object.entries(v).filter(([,x])=>x))};state.stage='dtc';ask(`Vehicle recorded as ${vehicleLabel()}. ${nextQuestion()}`);return}
  const found=codes(text);if(found.length){state.dtcs=found;state.activeDtc=found[0];state.status='';state.complaint='';state.symptoms='';state.previousRepairs='';state.previousTests='';state.liveData='';state.stage='status';ask(`${state.activeDtc} recorded as the active diagnostic code. ${nextQuestion()}`);return}
- // v10.12.7P: symptom-first intake. A technician may begin with a complaint without entering any DTC.
+ // v10.12.7K: symptom-first intake. A technician may begin with a complaint without entering any DTC.
  if(!state.activeDtc&&!state.complaint){
    const controlOnly=/^(yes|no|current|pending|history|stored|intermittent|none|nothing)$/i.test(text);
    if(!controlOnly){state.complaint=text;state.symptoms=text;state.stage='repairs';ask(`Symptom recorded as “${text}.” No diagnostic code is required. ${nextQuestion()}`);return}
@@ -7861,14 +7783,14 @@ window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),pr
 <script id="v10121-login-controller">
 (()=>{
   'use strict';
-  const VERSION='10.12.7P';
+  const VERSION='10.12.7K';
   const PROFILE_KEY='nitros_portal_v8_profile';
   const init=()=>{
-    document.title='Nitros Mobile Technician Portal v10.12.7P — AI Diagnostic Engine Phase 2';
+    document.title='Nitros Mobile Technician Portal v10.12.7K — Symptom-First OCR Upgrade';
     const sub=document.querySelector('header .sub');
-    if(sub) sub.textContent='Mobile Technician Portal v10.12.7P — AI Diagnostic Engine Phase 2';
+    if(sub) sub.textContent='Mobile Technician Portal v10.12.7K — Symptom-First OCR Upgrade';
     const status=document.getElementById('portalLoginStatus');
-    if(status) status.textContent='Version 10.12.7P — AI Diagnostic Engine Phase 2. Enter technician name and an optional 4-digit PIN.';
+    if(status) status.textContent='Version 10.12.7K — Single login controller active. Enter technician name and an optional 4-digit PIN.';
     const button=document.getElementById('portalSignIn');
     if(button){button.disabled=false;button.style.pointerEvents='auto';}
   };
@@ -7877,27 +7799,27 @@ window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),pr
 </script>
 
 <style id="v10122-staged-startup-style">
-/* v10.12.7P never hides the complete application during diagnostic initialization. */
+/* v10.12.7K never hides the complete application during diagnostic initialization. */
 html.nitros-stabilizing body{visibility:visible!important}
 #nitrosStabilizationCover{display:none!important}
 #portalSignIn{position:relative;z-index:1000;pointer-events:auto!important;touch-action:manipulation!important}
 </style>
 <script id="v10122-release-marker">
-(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7P — AI Diagnostic Engine Phase 2';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7P — AI Diagnostic Engine Phase 2';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7P — AI Diagnostic Engine Phase 2. New Case retains the Phase 1 OCR-session reset protection.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
+(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7K — Symptom-First OCR Upgrade';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7K — Symptom-First OCR Upgrade';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7K accepts a symptom without requiring a DTC and adds whole-screen, rotated OCR before panel mapping while preserving the stable diagnostic conversation.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
 </script>
 
 
-<!-- v10.12.7P Development Panel -->
+<!-- v10.12.7K Development Panel -->
 
 <script id="graphIntelligenceEngineV127C">
 window.GraphIntelligenceEngine = {
-  version: "10.12.7P",
+  version: "10.12.7K",
   stages: [
     "Image Imported",
     "Preprocessing",
     "Graph Detection",
     "Panel Extraction",
-    "Per-Panel PID OCR"
+    "OCR (Pending)"
   ],
   state: {
     stage: "Idle",
@@ -7908,11 +7830,7 @@ window.GraphIntelligenceEngine = {
   loadImage(file){
     this.state.imageLoaded = true;
     this.state.stage = "Image Imported";
-    console.log("[Graph Intelligence] image imported", this.state);
-  },
-  record(segmentation,timing){
-    this.state.stage="Runtime analysis complete";this.state.graphLocated=!!segmentation?.outer;this.state.panelsDetected=segmentation?.finalPanels||0;this.state.timing=timing||{};
-    document.getElementById('nitrosRuntimeGraphStatus')?.replaceChildren(document.createTextNode(`${this.state.panelsDetected} final panel(s) detected; ${this.state.timing.total||0} ms total.`));
+    console.log("[Graph Intelligence]", this.state);
   }
 };
 </script>
@@ -7920,7 +7838,7 @@ window.GraphIntelligenceEngine = {
 <script id="developerModeStub">
 window.NitrosDeveloperMode={
  enabled:false,
- build:"10.12.7P",
+ build:"10.12.7K",
  stage:"Idle",
  lastOperation:"None",
  setStage(s){this.stage=s;console.log("[DeveloperMode]",s);}
@@ -7930,11 +7848,11 @@ document.addEventListener("DOMContentLoaded",()=>{
  panel.id="nitrosDeveloperPanel";
  panel.style.margin="12px";
  panel.innerHTML=`
- <summary><strong>Developer Mode (v10.12.7P)</strong></summary>
+ <summary><strong>Developer Mode (v10.12.7K)</strong></summary>
  <div style="padding:8px">
- <p><b>Build:</b> 10.12.7P — AI Diagnostic Engine Phase 2</p>
- <p><b>Graph Status:</b> <span id="nitrosRuntimeGraphStatus">Ready for production image import.</span></p>
- <p><b>Pipeline:</b> Import → usable graph area → recursive rows → per-row columns → per-panel OCR and trace analysis.</p>
+ <p><b>Build:</b> 10.12.7K</p>
+ <p><b>Graph Status:</b> Waiting for image</p>
+ <p><b>Pipeline:</b> Import → Graph Detection → OCR (planned)</p>
  <p><b>Purpose:</b> Development build for Graph Workspace testing.</p>
  </div>`;
  document.body.appendChild(panel);
@@ -7943,25 +7861,27 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 
 <div style="margin:16px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
-<h3>Runtime Segmentation Notes</h3>
+<h3>v10.12.7K Development Notes</h3>
 <ul>
-<li>The production import control runs usable-area detection, recursive segmentation, per-panel OCR, and per-panel trace analysis.</li>
-<li>Developer Mode reports actual runtime panel and timing values after every imported image.</li>
+<li>Graph Intelligence Engine module added (development scaffold).</li>
+<li>Graph processing stages defined.</li>
+<li>Ready for future preprocessing and panel extraction integration.</li>
 </ul>
 </div>
 
 
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
-<h3>Runtime Verification</h3>
+<h3>v10.12.7K Development Preview</h3>
 <ul>
-<li>Updated development branch to v10.12.7P — AI Diagnostic Engine Phase 2.</li>
-<li>Segmentation overlay and diagnostics are generated from the imported image.</li>
-<li>Final panel regions are processed independently.</li>
+<li>Updated development branch to v10.12.7K.</li>
+<li>Added Graph Intelligence pipeline definition.</li>
+<li>Added placeholder debug state for graph-region detection.</li>
+<li>Prepared structure for panel segmentation integration.</li>
 </ul>
 </div>
 
 
-<!-- v10.12.7P Full-Screen Zoom OCR Viewer -->
+<!-- v10.12.7K Full-Screen Zoom OCR Viewer -->
 <style id="v10127j-ocr-viewer-fix">
 /* Restrict the large viewer rules to the diagnostic import preview only. */
 #oliverImportPreview.oliver-import-preview{
@@ -8149,10 +8069,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 })();
 </script>
 
-<!-- v10.12.7P: single pointer-event gesture path prevents iPhone double-processing; pinch-out and pinch-in remain bounded; Fit, Close, and reopen always reset the viewer; OCR still uses the original full-resolution image. -->
-<script id="v10127p-phase2-build-identity">
-(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7P — AI Diagnostic Engine Phase 2';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7P — AI Diagnostic Engine Phase 2';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7P — automatic image classification, confidence-aware OCR, diagnostic observations, and next-test routing.';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7P</strong> · AI Diagnostic Engine Phase 2 · Incremental Build 2026-08-05');const toggle=document.getElementById('oliverImportToggle');if(toggle)toggle.textContent='＋ Import Diagnostic Image or Data';const image=document.getElementById('oliverImportImage');if(image)image.textContent='📷 Automatic Image Analysis';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
-</script>
-<!-- v10.12.7P adds conservative automatic image classification and type-specific routing while preserving the validated runtime and all legacy paths. -->
+<!-- v10.12.7K: single pointer-event gesture path prevents iPhone double-processing; pinch-out and pinch-in remain bounded; Fit, Close, and reopen always reset the viewer; OCR still uses the original full-resolution image. -->
 </body>
 </html>
