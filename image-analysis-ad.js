@@ -1,6 +1,6 @@
-/* Nitros 10.12.7AD clean-room image analysis. No result persistence or legacy fallback. */
+/* Nitros 10.12.7AE active repair order persistence build; clean-room image analysis remains unchanged. */
 (()=>{'use strict';
-  const BUILD='10.12.7AD';
+  const BUILD='10.12.7AE';
   const MAX_TEXT_BYTES=1500000;
   const CATEGORIES=new Set([
     'Automotive Graph / Diagnostic Graph',
@@ -248,7 +248,7 @@
       nitrosCaseId:caseId,nitrosAnalysisSessionId:sessionId,nitrosCaptureRequestId:run?.runId||'None',nitrosAnalysisId:run?.runId||'None',
       nitrosCurrentImageSha:run?.imageHash?`${run.imageHash.slice(0,16)}…`:'None',nitrosAnalyzerSource:result?.source||'CURRENT IMAGE BYTES',nitrosResultId:result?.runId||'None',
       nitrosAnalysisStarted:run?.started||'None',nitrosAnalysisCompleted:run?.completed||'None',nitrosResultDisposition:extra.disposition||'NONE',nitrosResetReason:extra.resetReason||'—',
-      nitrosActiveClassifier:'NitrosCleanRoomImageAnalysisAD / classifyCurrentBytes / 10.12.7AD',nitrosStaleResultLog:lastStaleMessage,
+      nitrosActiveClassifier:'NitrosCleanRoomImageAnalysisAD / classifyCurrentBytes / 10.12.7AE',nitrosStaleResultLog:lastStaleMessage,
       nitrosImageClassification:result?.category||'No image classified.',nitrosClassificationConfidence:result?`${result.confidence}%`:'—',nitrosClassificationEvidence:result?.evidence?.join('; ')||'No image classified.',
       nitrosRuntimeGraphStatus:result?.category==='Automotive Graph / Diagnostic Graph'?`${result.routeResult?.status||'Pending'}`:'Graph analysis not started.',
       nitrosPreviousResultReused:'NO',nitrosResultCacheHit:'NO',nitrosFreshVerification:extra.verification||'Pending',nitrosImageDimensions:run?.dimensions?`${run.dimensions.width} × ${run.dimensions.height}`:'None'
@@ -287,7 +287,7 @@
     updateDeveloper(null,{resetReason:'APP_START'});
   }
 
-  function start(){document.title='Nitros Mobile Technician Portal v10.12.7AD — Clean-Room Image Analysis';buildImportUi()}
+  function start(){document.title='Nitros Mobile Technician Portal v10.12.7AE — Active Repair Order Persistence';buildImportUi()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
   window.addEventListener('pageshow',()=>setTimeout(start,40));
   new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))buildImportUi()}).observe(document.documentElement,{childList:true,subtree:true});

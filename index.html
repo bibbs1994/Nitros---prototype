@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.12.7AD — Clean-Room Image Analysis</title>
+<title>Nitros Mobile Technician Portal v10.12.7AE — Active Repair Order Persistence</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -519,7 +519,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.7AD — Clean-Room Image Analysis</div>
+  <div class="sub">Mobile Technician Portal v10.12.7AE — Active Repair Order Persistence</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -533,7 +533,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.7AD — Clean-Room Image Analysis. Existing conversational and diagnostic evidence features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.7AE — Active Repair Order Persistence. Existing conversational and diagnostic evidence features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -579,7 +579,7 @@ canvas.graph-preview,canvas.ocr-preview{
       <button class="btn primary" data-go="schedule">Appointments & Morning Briefing</button>
       <button class="btn primary" data-go="dashboard">Technician Dashboard</button>
       <button class="btn primary" data-go="jobs">Assigned Jobs</button>
-      <button class="btn secondary" data-go="checkin">New Walk-In / Check-In</button>
+      <button id="newRepairOrder" class="btn secondary" data-go="checkin">New Walk-In / Check-In</button>
       <button class="btn secondary" data-go="history">Customer History</button>
       <button class="btn secondary" data-go="assistant">AI Repair Assistant</button>
       <button id="portalSignOut" class="btn ghost" type="button">Sign Out</button>
@@ -696,7 +696,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.7AD — Clean-Room Image Analysis</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.7AE — Active Repair Order Persistence</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -763,7 +763,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.7AD — Clean-Room Image Analysis</div>
+      <div class="eyebrow">Version 10.12.7AE — Active Repair Order Persistence</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1682,7 +1682,7 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.7AD • Stable Active Jobs handoff • Header safe-area protection • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.7AE • Stable Active Jobs handoff • Header safe-area protection • Evidence-based workflow</div>
 </div>
 
 <script>
@@ -1933,11 +1933,12 @@ canvas.graph-preview,canvas.ocr-preview{
     createEstimateRow();
 
     jobClock={
-      startedAt:null,
+      state:"not_started",
+      originalStartTimestamp:null,
       activeStartedAt:null,
       pauseStartedAt:null,
-      accumulatedActiveMs:0,
-      accumulatedPausedMs:0,
+      activeMs:0,
+      pausedMs:0,
       timeline:[]
     };
 
@@ -1998,6 +1999,7 @@ canvas.graph-preview,canvas.ocr-preview{
   function showScreen(id,pushHistory=true){
     const target=document.getElementById(id) ? id : "home";
     currentScreenId=target;
+    window.dispatchEvent(new CustomEvent("nitros-ro-stage-change",{detail:{id:target}}));
     screens.forEach(s => s.classList.toggle("active", s.id === target));
     window.scrollTo({top:0,behavior:"instant"});
     if(target === "review"){ buildSummary(); requestAnimationFrame(renderValidationCenter); }
@@ -4520,6 +4522,18 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     }
   });
   document.getElementById("retryDecode")?.addEventListener("click",()=>{showScreen("checkin");identifyVehicle();});
+  window.NitrosRepairOrderCore={
+    draftKey:DRAFT_KEY,
+    activePhotoRecord:ACTIVE_PHOTO_RECORD,
+    collectDraft,
+    restoreDraft,
+    resetActiveWorkspace,
+    showScreen,
+    getScreen:()=>currentScreenId,
+    getJobClock:()=>jobClock,
+    setJobClock:value=>{jobClock=value;updateJobClockUI();renderTimeline();},
+    setSaveStatus
+  };
 })();
 
 
@@ -5212,7 +5226,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7AD • diagnostic close-button safe-area and touch stabilization</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7AE • active repair order persistence</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5250,7 +5264,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7AD — Clean-Room Image Analysis</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7AE — Active Repair Order Persistence</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6302,7 +6316,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7AD</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7AE</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -6995,7 +7009,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1031CompletionAssignmentStabilization">
 (()=>{
   'use strict';
-  const BUILD='10.12.7AD';
+  const BUILD='10.12.7AE';
   const $=id=>document.getElementById(id);
   const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||'null');return v??fallback}catch{return fallback}};
   const write=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}};
@@ -7189,12 +7203,12 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 .oliver-active-case-banner button{border:1px solid #60748c;background:#13243a;color:#fff;border-radius:9px;padding:5px 9px;font-weight:800}
 </style>
 <script id="v1060-session-manager-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AD — Clean-Room Image Analysis';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AE — Active Repair Order Persistence';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 adds context awareness: Oliver reads the active case, acknowledges known facts, and asks only for the highest-value missing information. -->
 
 <script id="v1072-completed-prompt-tracking-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AD — Clean-Room Image Analysis';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AE — Active Repair Order Persistence';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 tracks completed prompts, recognizes power-loss symptoms, acknowledges each new fact, and blocks answered intake questions from repeating. -->
 
@@ -7216,14 +7230,14 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 .phase2-result{margin-top:9px;padding:9px;border:1px solid #315879;border-radius:10px;background:#071522;font-size:12px;line-height:1.45}.phase2-result strong{color:#fff}.phase2-confidence{color:#7fe0ff;font-weight:800}.phase2-uncertain{color:#ffd074;font-weight:800}.phase2-raw pre{max-height:150px;overflow:auto;white-space:pre-wrap;color:#b9cce0}
 @media(max-width:520px){.oliver-import-actions{grid-template-columns:1fr}}
 </style>
-<script src="./image-analysis-ad.js?v=10.12.7AD" data-nitros-production-image-analysis="true"></script>
+<script src="./image-analysis-ad.js?v=10.12.7AE" data-nitros-production-image-analysis="true"></script>
 <!-- v10.8.6 adds browser-based image OCR, automatic text extraction, import-to-case handoff, and preserves the active diagnostic conversation. -->
 <script id="v1081-version-label-sync">
 (()=>{
  const sync=()=>{
-  document.title='Nitros Mobile Technician Portal v10.12.7AD — Clean-Room Image Analysis';
+  document.title='Nitros Mobile Technician Portal v10.12.7AE — Active Repair Order Persistence';
   document.querySelectorAll('.sub,.status,header,footer,[class*=version],[id*=version]').forEach(el=>{
-   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.7AD');
+   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.7AE');
   });
  };
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
@@ -7234,9 +7248,9 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 
 
-<!-- v10.12.7AD Startup Freeze Fix: associates OCR words with upper-left, upper-right, lower-left, and lower-right graph panels; asks only for the first unresolved PID or operating condition. -->
+<!-- v10.12.7AE Active Repair Order Persistence: preserves the unchanged clean-room image-analysis baseline. -->
 <script id="v1084-release-identity">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AD — Clean-Room Image Analysis';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7AD — Clean-Room Image Analysis</strong> · Build 2026-08-07');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AE — Active Repair Order Persistence';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7AE — Active Repair Order Persistence</strong> · Build 2026-08-07');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
 </script>
 
 
@@ -7250,7 +7264,7 @@ html.nitros-stabilizing body{visibility:hidden}
 <script id="v10120-single-authoritative-diagnostic-state">
 (()=>{
 'use strict';
-const VERSION='10.12.7AD',BUILD='2026-08-07',RELEASE='Clean-Room Image Analysis';
+const VERSION='10.12.7AE',BUILD='2026-08-07',RELEASE='Active Repair Order Persistence';
 const STATE_KEY='nitros_diagnostic_case_v10120';
 const LEGACY_KEYS=[
  'nitros_v1052_oliver_transcript','nitros_oliver_active_diagnostic_case_v1060','nitros_oliver_case_v10106','nitros_oliver_case_v10107','nitros_oliver_case_v10109','nitros_oliver_case_v10110','nitros_oliver_case_v10111','nitros_oliver_case_v10112','nitros_oliver_case_v10113','nitros_oliver_case_v10114','nitros_oliver_case_v10143','nitros_oliver_workflow_v10105'
@@ -7391,14 +7405,14 @@ window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),pr
 <script id="v10121-login-controller">
 (()=>{
   'use strict';
-  const VERSION='10.12.7AD';
+  const VERSION='10.12.7AE';
   const PROFILE_KEY='nitros_portal_v8_profile';
   const init=()=>{
-    document.title='Nitros Mobile Technician Portal v10.12.7AD — Clean-Room Image Analysis';
+    document.title='Nitros Mobile Technician Portal v10.12.7AE — Active Repair Order Persistence';
     const sub=document.querySelector('header .sub');
-    if(sub) sub.textContent='Mobile Technician Portal v10.12.7AD — Clean-Room Image Analysis';
+    if(sub) sub.textContent='Mobile Technician Portal v10.12.7AE — Active Repair Order Persistence';
     const status=document.getElementById('portalLoginStatus');
-    if(status) status.textContent='Version 10.12.7AD — Clean-Room Image Analysis. Enter technician name and an optional 4-digit PIN.';
+    if(status) status.textContent='Version 10.12.7AE — Active Repair Order Persistence. Enter technician name and an optional 4-digit PIN.';
     const button=document.getElementById('portalSignIn');
     if(button){button.disabled=false;button.style.pointerEvents='auto';}
   };
@@ -7413,7 +7427,7 @@ html.nitros-stabilizing body{visibility:visible!important}
 #portalSignIn{position:relative;z-index:1000;pointer-events:auto!important;touch-action:manipulation!important}
 </style>
 <script id="v10122-release-marker">
-(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AD — Clean-Room Image Analysis';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7AD — Clean-Room Image Analysis';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7AD — Clean-Room Image Analysis. New image imports begin with a hard analysis reset.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
+(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AE — Active Repair Order Persistence';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7AE — Active Repair Order Persistence';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7AE — Active Repair Order Persistence. New image imports begin with a hard analysis reset.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
 </script>
 
 
@@ -7422,7 +7436,7 @@ html.nitros-stabilizing body{visibility:visible!important}
 <script id="developerModeStub">
 window.NitrosDeveloperMode={
  enabled:false,
- build:"10.12.7AD",
+ build:"10.12.7AE",
  stage:"Idle",
  lastOperation:"None",
  setStage(s){this.stage=s;console.log("[DeveloperMode]",s);}
@@ -7432,9 +7446,9 @@ document.addEventListener("DOMContentLoaded",()=>{
  panel.id="nitrosDeveloperPanel";
  panel.style.margin="12px";
  panel.innerHTML=`
- <summary><strong>Developer Mode — Version 10.12.7AD — Clean-Room Image Analysis</strong></summary>
+ <summary><strong>Developer Mode — Version 10.12.7AE — Active Repair Order Persistence</strong></summary>
  <div style="padding:8px">
- <p><b>Build:</b> Version 10.12.7AD — Clean-Room Image Analysis</p>
+ <p><b>Build:</b> Version 10.12.7AE — Active Repair Order Persistence</p>
  <p><b>Case ID:</b> <span id="nitrosCaseId">Pending</span></p>
  <p><b>Analysis Session ID:</b> <span id="nitrosAnalysisSessionId">Pending</span></p>
  <p><b>Analysis Run ID:</b> <span id="nitrosCaptureRequestId">None</span></p>
@@ -7446,7 +7460,7 @@ document.addEventListener("DOMContentLoaded",()=>{
  <p><b>Analysis Completed:</b> <span id="nitrosAnalysisCompleted">None</span></p>
  <p><b>Result accepted/rejected:</b> <span id="nitrosResultDisposition">NONE</span></p>
  <p><b>Reset Reason:</b> <span id="nitrosResetReason">APP_START</span></p>
- <p><b>Active classifier pipeline:</b> <span id="nitrosActiveClassifier">NitrosCleanRoomImageAnalysisAD / 10.12.7AD</span></p>
+ <p><b>Active classifier pipeline:</b> <span id="nitrosActiveClassifier">NitrosCleanRoomImageAnalysisAD / 10.12.7AE</span></p>
  <p><b>Stale-result log:</b> <span id="nitrosStaleResultLog">None</span></p>
  <p><b>Previous Result Reused:</b> <span id="nitrosPreviousResultReused">NO</span></p>
  <p><b>Result Cache Hit:</b> <span id="nitrosResultCacheHit">NO</span></p>
@@ -7457,6 +7471,14 @@ document.addEventListener("DOMContentLoaded",()=>{
  <p><b>Classification evidence:</b> <span id="nitrosClassificationEvidence">No image classified.</span></p>
  <p><b>Graph Status:</b> <span id="nitrosRuntimeGraphStatus">Ready for production image import.</span></p>
  <p><b>Pipeline:</b> Import → hard reset → visual classification gate → graph-only OCR/segmentation/trace analysis.</p>
+ <p><b>Active RO ID:</b> <span id="nitrosPersistenceRoId">None</span></p>
+ <p><b>Persistence DB:</b> <span id="nitrosPersistenceDb">NitrosRepairOrders / unavailable</span></p>
+ <p><b>Last autosave:</b> <span id="nitrosPersistenceAutosave">None</span></p>
+ <p><b>Current workflow stage:</b> <span id="nitrosPersistenceStage">home</span></p>
+ <p><b>Timer state:</b> <span id="nitrosPersistenceTimer">not_started</span></p>
+ <p><b>Restore performed:</b> <span id="nitrosPersistenceRestored">NO</span></p>
+ <p><b>Restore timestamp:</b> <span id="nitrosPersistenceRestoreAt">None</span></p>
+ <p><b>Persistence error:</b> <span id="nitrosPersistenceError">NONE</span></p>
  <p><b>Purpose:</b> Development build for Graph Workspace testing.</p>
  </div>`;
  document.body.appendChild(panel);
@@ -7464,6 +7486,41 @@ document.addEventListener("DOMContentLoaded",()=>{
 });
 </script>
 
+
+<script id="v10127ae-active-ro-persistence">
+(()=>{'use strict';
+ const VERSION='10.12.7AE',SCHEMA_VERSION=1,DB_NAME='NitrosRepairOrders',STORE='repairOrders',POINTER='activeRepairOrderId',core=window.NitrosRepairOrderCore;
+ let db=null,activeId=localStorage.getItem(POINTER)||'',createdAt='',lastError='',restored=false,restoreAt='',persistTimer=null,restoring=false;
+ const $=id=>document.getElementById(id),iso=()=>new Date().toISOString();
+ const uid=()=>`RO-${new Date().toISOString().replace(/\D/g,'').slice(0,14)}-${crypto.randomUUID?.()||Math.random().toString(36).slice(2,10)}`;
+ function diagnostic(){const set=(id,value)=>{const el=$(id);if(el)el.textContent=value},clock=core?.getJobClock?.();set('nitrosPersistenceRoId',activeId||'None');set('nitrosPersistenceDb',`${DB_NAME} / ${db?'ready':'unavailable'}`);set('nitrosPersistenceStage',core?.getScreen?.()||'home');set('nitrosPersistenceTimer',clock?.state||'not_started');set('nitrosPersistenceRestored',restored?'YES':'NO');set('nitrosPersistenceRestoreAt',restoreAt||'None');set('nitrosPersistenceError',lastError||'NONE')}
+ function warn(error){lastError=String(error?.message||error||'Unknown persistence error');console.error('[Nitros Active RO Persistence]',error);diagnostic();core?.setSaveStatus?.('error','Warning — active repair order could not be safely saved')}
+ function request(store,method,arg){return new Promise((resolve,reject)=>{const req=arg===undefined?store[method]():store[method](arg);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error(`${method} failed`))})}
+ function openDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,SCHEMA_VERSION);req.onupgradeneeded=()=>{const next=req.result;if(!next.objectStoreNames.contains(STORE)){const store=next.createObjectStore(STORE,{keyPath:'id'});store.createIndex('status','status',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false})}};req.onsuccess=()=>{db=req.result;db.onversionchange=()=>db.close();diagnostic();resolve(db)};req.onerror=()=>reject(req.error||new Error('IndexedDB open failed'));req.onblocked=()=>reject(new Error('IndexedDB upgrade blocked'))})}
+ async function put(record){if(!db)await openDb();const tx=db.transaction(STORE,'readwrite');await request(tx.objectStore(STORE),'put',record)}
+ async function get(id){if(!id)return null;if(!db)await openDb();return request(db.transaction(STORE,'readonly').objectStore(STORE),'get',id)}
+ async function remove(id){if(!id)return;if(!db)await openDb();const tx=db.transaction(STORE,'readwrite');await request(tx.objectStore(STORE),'delete',id)}
+ function ensureActive(){if(activeId)return activeId;activeId=uid();createdAt=iso();localStorage.setItem(POINTER,activeId);diagnostic();return activeId}
+ function timerRecord(){const clock=core?.getJobClock?.()||{};return {roId:activeId,status:clock.state==='finished'?'stopped':clock.state||'not_started',originalStartTimestamp:clock.originalStartTimestamp||clock.startedAt||clock.timeline?.find(x=>/started/i.test(x.type||''))?.timestamp||clock.activeStartedAt||null,mostRecentResumeTimestamp:clock.activeStartedAt||null,accumulatedElapsedMsBeforeCurrentRun:Number(clock.activeMs||clock.accumulatedActiveMs)||0,accumulatedPausedMs:Number(clock.pausedMs||clock.accumulatedPausedMs)||0,pauseStartedTimestamp:clock.pauseStartedAt||null,lastSavedTimestamp:iso(),timeline:Array.isArray(clock.timeline)?clock.timeline:[]}}
+ function hasMeaningfulData(draft){const f=draft?.fields||{};return Boolean(draft?.selectedVehicle||Object.entries(f).some(([key,value])=>!['arrivalMethod','fuelLevel','brakesStatus','tiresStatus','steeringStatus','fluidsStatus','batteryStatus','lightsStatus','laborSystem','laborRate','authorizationStatus','authorizationMethod','repairStatus'].includes(key)&&String(value??'').trim()))}
+ async function persist(reason='autosave',immediate=false){if(restoring||!core)return;let draft;try{draft=core.collectDraft()}catch(error){warn(error);return}if(!activeId&&!hasMeaningfulData(draft))return;ensureActive();const now=iso();createdAt=createdAt||now;let diagnosticInformation=null;try{diagnosticInformation=JSON.parse(localStorage.getItem('nitros_diagnostic_case_v10120')||'null')}catch(_){}try{await put({schemaVersion:SCHEMA_VERSION,id:activeId,createdAt,updatedAt:now,status:'active',build:VERSION,currentWorkflowStage:draft.screen||core.getScreen()||'customer',customerInformation:{name:draft.fields?.customerName||'',phone:draft.fields?.phone||'',email:draft.fields?.email||''},vehicleInformation:draft.selectedVehicle||{year:draft.fields?.vehicleYear||'',make:draft.fields?.vehicleMake||'',model:draft.fields?.vehicleModel||'',engine:draft.fields?.vehicleEngine||''},vin:draft.fields?.vinInput||draft.selectedVehicle?.vin||'',mileage:draft.fields?.mileage||'',complaint:draft.fields?.concern||'',intakeInformation:draft.fields||{},laborEntries:draft.estimateLines||[],laborTimer:timerRecord(),diagnosticInformation,repairInformation:{status:draft.fields?.repairStatus||'',findings:draft.fields?.technicianFindings||'',recommendations:draft.fields?.repairRecommendations||''},notes:{advisor:draft.fields?.advisorNotes||'',technician:draft.fields?.internalTechnicianNotes||'',findings:draft.fields?.technicianFindings||''},photoStorageReference:core.activePhotoRecord||null,draft,saveReason:reason});lastError='';const el=$('nitrosPersistenceAutosave');if(el)el.textContent=now;diagnostic()}catch(error){warn(error)}}
+ function queue(reason='field change'){clearTimeout(persistTimer);persistTimer=setTimeout(()=>persist(reason),350)}
+ function restoreTimer(saved){if(!saved||!core)return;const state=saved.status==='stopped'?'finished':saved.status,clock=core.getJobClock()||{};const resume=Number(saved.mostRecentResumeTimestamp)||Date.parse(saved.mostRecentResumeTimestamp)||Date.now(),pause=Number(saved.pauseStartedTimestamp)||Date.parse(saved.pauseStartedTimestamp)||Date.now();core.setJobClock({...clock,state,originalStartTimestamp:saved.originalStartTimestamp||null,activeStartedAt:state==='running'?resume:null,pauseStartedAt:state==='paused'?pause:null,activeMs:Number(saved.accumulatedElapsedMsBeforeCurrentRun)||0,pausedMs:Number(saved.accumulatedPausedMs)||0,timeline:Array.isArray(saved.timeline)?saved.timeline:[]})}
+ async function restoreActive(){activeId=localStorage.getItem(POINTER)||'';if(!activeId){diagnostic();return false}try{const record=await get(activeId);if(!record||record.status!=='active'){activeId='';localStorage.removeItem(POINTER);diagnostic();return false}if(Number(record.schemaVersion)>SCHEMA_VERSION)throw new Error(`Stored RO schema ${record.schemaVersion} is newer than supported schema ${SCHEMA_VERSION}`);restoring=true;createdAt=record.createdAt||iso();localStorage.setItem(core.draftKey,JSON.stringify(record.draft||{}));core.restoreDraft(false);restoreTimer(record.laborTimer);const target=record.currentWorkflowStage||record.draft?.screen||'customer';restored=true;restoreAt=iso();restoring=false;if(localStorage.getItem('nitros_portal_v8_profile'))core.showScreen(target,false);else $('portalSignIn')?.addEventListener('click',()=>setTimeout(()=>core.showScreen(target,false),250),{once:true});diagnostic();core.setSaveStatus?.(navigator.onLine?'saved':'offline',`Active repair order ${activeId} restored`);return true}catch(error){restoring=false;warn(error);return false}}
+ async function abandon(reason){const id=activeId;activeId='';createdAt='';localStorage.removeItem(POINTER);diagnostic();try{if(id)await remove(id)}catch(error){warn(error)}console.info(`[Nitros Active RO Persistence] ${reason}`,id)}
+ const roScreens=new Set(['checkin','vehicle','customer','inspection','technician','estimate','workorder','review']);
+ const inRoContext=()=>roScreens.has(core?.getScreen?.());
+ window.addEventListener('nitros-ro-stage-change',event=>{if(roScreens.has(event.detail?.id)){ensureActive();persist('workflow stage',true)}});
+ document.addEventListener('input',event=>{if(inRoContext()&&event.target.matches('input,textarea,select')){ensureActive();queue('field input')}},true);
+ document.addEventListener('change',event=>{if(inRoContext()&&event.target.matches('input,textarea,select')){ensureActive();persist('field change',true)}},true);
+ document.addEventListener('click',event=>{const newButton=event.target.closest('#newRepairOrder');if(newButton&&activeId&&hasMeaningfulData(core.collectDraft())){if(!confirm(`Another unfinished repair order (${activeId}) is active. Starting a new repair order will discard that active draft. Continue?`)){event.preventDefault();event.stopImmediatePropagation();return}abandon('Explicit New Repair Order');core.resetActiveWorkspace();ensureActive();persist('new repair order',true)}else if(newButton&&!activeId){ensureActive();persist('new repair order',true)}if(event.target.closest('#discardDraft')){if(activeId&&!confirm(`Discard unfinished repair order ${activeId}? This cannot be undone.`)){event.preventDefault();event.stopImmediatePropagation();return}abandon('Explicit Discard Repair Order')}},true);
+ $('submitCheckin')?.addEventListener('click',()=>setTimeout(()=>{const ok=$('submitStatus')?.classList.contains('ok')&&!localStorage.getItem(core.draftKey);if(ok)abandon('Complete Repair Order')},900));
+ ['startJob','pauseJob','resumeJob','finishJob'].forEach(id=>$(id)?.addEventListener('click',()=>setTimeout(()=>persist(`timer control ${id}`,true),0)));
+ window.addEventListener('pagehide',()=>persist('pagehide',true));document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persist('background',true)});
+ window.NitrosActiveRepairPersistence={version:VERSION,schemaVersion:SCHEMA_VERSION,getActiveId:()=>activeId,persistNow:()=>persist('manual diagnostic',true),restore:restoreActive,getDiagnostics:()=>({activeId,db:DB_NAME,lastError,restored,restoreAt,stage:core?.getScreen?.(),timer:timerRecord()})};
+ const boot=async()=>{try{await openDb();await restoreActive()}catch(error){warn(error)}diagnostic()};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,120),{once:true});else setTimeout(boot,120);
+})();
+</script>
 
 <div style="margin:16px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Segmentation Notes</h3>
@@ -7477,7 +7534,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>Version 10.12.7AD replaces the production image-analysis runtime with one uncached, byte-bound clean-room classifier and strict run/hash verification.</li>
+<li>Version 10.12.7AE adds durable active repair order persistence while retaining the uncached, byte-bound clean-room classifier and strict run/hash verification.</li>
 <li>Segmentation overlay and diagnostics are generated from the imported image.</li>
 <li>Final panel regions are processed independently.</li>
 </ul>
@@ -7684,11 +7741,11 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <!-- v10.12.7P: single pointer-event gesture path prevents iPhone double-processing; pinch-out and pinch-in remain bounded; Fit, Close, and reopen always reset the viewer; OCR still uses the original full-resolution image. -->
 <script id="v10127p-phase2-build-identity">
-(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AD — Clean-Room Image Analysis';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7AD — Clean-Room Image Analysis';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7AD — Clean-Room Image Analysis. Photographic images require positive automotive subject evidence before automotive classification.';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7AD — Clean-Room Image Analysis</strong> · Build 2026-08-07');const toggle=document.getElementById('oliverImportToggle');if(toggle)toggle.textContent='＋ Import Diagnostic Image or Data';const image=document.getElementById('oliverImportImage');if(image)image.textContent='📷 Automatic Image Analysis';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
+(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AE — Active Repair Order Persistence';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7AE — Active Repair Order Persistence';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7AE — Active Repair Order Persistence. Photographic images require positive automotive subject evidence before automotive classification.';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7AE — Active Repair Order Persistence</strong> · Build 2026-08-07');const toggle=document.getElementById('oliverImportToggle');if(toggle)toggle.textContent='＋ Import Diagnostic Image or Data';const image=document.getElementById('oliverImportImage');if(image)image.textContent='📷 Automatic Image Analysis';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
 </script>
 <script id="v10127x-service-worker-update">
-(()=>{'use strict';if(!('serviceWorker' in navigator))return;const VERSION='10.12.7AD',RELOAD_KEY=`nitros-sw-reloaded-${VERSION}`;let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing||sessionStorage.getItem(RELOAD_KEY)==='1')return;refreshing=true;sessionStorage.setItem(RELOAD_KEY,'1');location.reload()});window.addEventListener('load',async()=>{try{const registration=await navigator.serviceWorker.register(`./sw.js?v=${VERSION}`,{updateViaCache:'none'});await registration.update()}catch(error){console.warn('Nitros service-worker update check failed:',error)}})})();
+(()=>{'use strict';if(!('serviceWorker' in navigator))return;const VERSION='10.12.7AE',RELOAD_KEY=`nitros-sw-reloaded-${VERSION}`;let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing||sessionStorage.getItem(RELOAD_KEY)==='1')return;refreshing=true;sessionStorage.setItem(RELOAD_KEY,'1');location.reload()});window.addEventListener('load',async()=>{try{const registration=await navigator.serviceWorker.register(`./sw.js?v=${VERSION}`,{updateViaCache:'none'});await registration.update()}catch(error){console.warn('Nitros service-worker update check failed:',error)}})})();
 </script>
-<!-- v10.12.7AD clean-room image analysis: legacy runtimes are non-executable; current bytes, run ID, SHA-256, and genuine analyzer evidence are authoritative. -->
+<!-- v10.12.7AE active repair order persistence; clean-room image analysis remains authoritative and unchanged. -->
 </body>
 </html>
