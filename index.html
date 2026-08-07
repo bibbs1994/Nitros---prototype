@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.12.7R — Image Classification Gate Phase 2</title>
+<title>Nitros Mobile Technician Portal v10.12.7S — Image Classification Gate Phase 2</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -480,10 +480,10 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 
 
 <script id="graphDetectionEngineStub">
-/* Nitros Mobile Technician Portal v10.12.7R
+/* Nitros Mobile Technician Portal v10.12.7S
    Runtime: Graph Detection Engine */
 window.GraphDetectionEngine = {
-  version: "10.12.7R",
+  version: "10.12.7S",
   state: {
     originalImage: null,
     graphDetected: false,
@@ -504,7 +504,7 @@ window.GraphDetectionEngine = {
 <script id="graph-intelligence-v10127d">
 window.GraphIntelligenceEngine = window.GraphIntelligenceEngine || {};
 Object.assign(window.GraphIntelligenceEngine,{
- version:"10.12.7R",
+ version:"10.12.7S",
  pipeline:[
   "Image Validation",
   "Graph Region Detection",
@@ -525,7 +525,7 @@ Object.assign(window.GraphIntelligenceEngine,{
 
 <script id="graph-intelligence-v10127e">
 window.GraphIntelligenceEngine=Object.assign(window.GraphIntelligenceEngine||{},{
- version:"10.12.7R",
+ version:"10.12.7S",
  targets:{labelConfidence:90,traceConfidence:90},
  adaptivePreprocess:true,
  panelIndependentProcessing:true,
@@ -550,7 +550,7 @@ canvas.graph-preview,canvas.ocr-preview{
 
 <script id="v10127f-analysis">
 window.GraphIntelligenceEngine=Object.assign(window.GraphIntelligenceEngine||{},{
- version:"10.12.7R",
+ version:"10.12.7S",
  analysisMode:"Prefer Original Resolution",
  developerMetrics:{
    originalResolution:"Pending",
@@ -583,7 +583,7 @@ window.GraphIntelligenceEngine=Object.assign(window.GraphIntelligenceEngine||{},
 </style>
 <script>
 window.GraphIntelligenceEngine=Object.assign(window.GraphIntelligenceEngine||{},{
-version:"10.12.7R",
+version:"10.12.7S",
 viewer:{
 displayWidth:"95%",
 displayHeight:"50vh",
@@ -597,7 +597,7 @@ zoomPlanned:true
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.7R — Image Classification Gate Phase 2</div>
+  <div class="sub">Mobile Technician Portal v10.12.7S — Image Classification Gate Phase 2</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -611,7 +611,7 @@ zoomPlanned:true
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.7R — Image Classification Gate Phase 2. Existing conversational and diagnostic evidence features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.7S — Image Classification Gate Phase 2. Existing conversational and diagnostic evidence features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -774,7 +774,7 @@ zoomPlanned:true
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.7R</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.7S</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -841,7 +841,7 @@ zoomPlanned:true
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.7R</div>
+      <div class="eyebrow">Version 10.12.7S</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -5328,7 +5328,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7R • Image Classification Gate Phase 2</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7S • Image Classification Gate Phase 2</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -7073,7 +7073,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1031CompletionAssignmentStabilization">
 (()=>{
   'use strict';
-  const BUILD='10.12.7R';
+  const BUILD='10.12.7S';
   const $=id=>document.getElementById(id);
   const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||'null');return v??fallback}catch{return fallback}};
   const write=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}};
@@ -7267,12 +7267,12 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 .oliver-active-case-banner button{border:1px solid #60748c;background:#13243a;color:#fff;border-radius:9px;padding:5px 9px;font-weight:800}
 </style>
 <script id="v1060-session-manager-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7R — Image Classification Gate Phase 2';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7S — Image Classification Gate Phase 2';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 adds context awareness: Oliver reads the active case, acknowledges known facts, and asks only for the highest-value missing information. -->
 
 <script id="v1072-completed-prompt-tracking-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7R — Image Classification Gate Phase 2';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7S — Image Classification Gate Phase 2';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 tracks completed prompts, recognizes power-loss symptoms, acknowledges each new fact, and blocks answered intake questions from repeating. -->
 
@@ -7623,7 +7623,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
  }
  async function phase2BroadOcr(T,source,token){const passes=[],variants=[cropCanvas(source,0,0,source.width,source.height,'normal',150,.8),cropCanvas(source,0,0,source.width,source.height,'contrast',150,.8),cropCanvas(source,0,0,source.width,source.height,'adaptive',150,.8)];for(let i=0;i<variants.length;i++){const result=await T.recognize(variants[i],'eng',{logger:m=>{if(m.status==='recognizing text')setStatus(`Classifying image — OCR pass ${i+1}/${variants.length}: ${Math.round((m.progress||0)*100)}%`,token)},tessedit_pageseg_mode:11,preserve_interword_spaces:'1'});requireActive(token);passes.push({pass:i+1,text:String(result?.data?.text||''),confidence:Math.round(result?.data?.confidence||0),words:(result?.data?.words||[]).map(w=>({text:String(w.text||''),confidence:Math.round(Number(w.confidence||0)),bbox:w.bbox||null}))})}return passes}
  function classifyPhase2(file,source,passes){const raw=passes.map(p=>p.text).join('\n').toLowerCase(),name=String(file.name||'').toLowerCase(),text=`${name} ${raw}`,scores={'Scan-tool graph':0,'Vehicle photo':0,'Component photo':0,'Wiring diagram':0,'Document':0},add=(type,re,points)=>{if(re.test(text))scores[type]+=points};add('Scan-tool graph',/graph|waveform|scope|pid|rpm|fuel trim|stft|ltft|time\/div|freeze frame/,42);add('Wiring diagram',/wiring|circuit|connector|splice|ground|relay|fuse|module|pcm|ecm|pin\s*\d+/,42);add('Document',/invoice|report|repair order|bulletin|procedure|page\s+\d+|document|customer|technician/,38);add('Vehicle photo',/vehicle|vin|odometer|dashboard|front|rear|driver|passenger|license plate/,30);add('Component photo',/component|sensor|solenoid|valve|connector|terminal|bearing|pump|motor|alternator|starter/,27);const lineCount=raw.split(/\n/).filter(x=>x.trim()).length,wordCount=raw.trim().split(/\s+/).filter(Boolean).length,aspect=source.width/source.height,metrics=traceMetrics(cropCanvas(source,0,0,source.width,source.height,'gray',150,.35));if(wordCount>80&&lineCount>10)scores.Document+=35;if(metrics.switching>.045&&lineCount>2)scores['Scan-tool graph']+=28;if(aspect>1.25&&/\b(v|a|hz|ms|rpm|%|°c)\b/i.test(raw))scores['Scan-tool graph']+=18;if(/\b(?:b\d+s\d+|stft|ltft|rpm|maf|ect)\b/i.test(raw))scores['Scan-tool graph']+=35;if(/\b(?:cavity|pin|splice|gnd|b\+|can[- ]?[hl])\b/i.test(raw))scores['Wiring diagram']+=30;const ranked=Object.entries(scores).sort((a,b)=>b[1]-a[1]),top=ranked[0],second=ranked[1],evidence=Math.min(97,Math.round(35+top[1]*.65+(top[1]-second[1])*.35)),uncertain=top[1]<28||top[1]-second[1]<10;return {type:uncertain?'Uncertain':top[0],candidate:top[0],confidence:uncertain?Math.min(59,evidence):Math.max(60,evidence),scores,uncertain,features:{wordCount,lineCount,aspect:Number(aspect.toFixed(2)),traceActivity:Number(metrics.activity.toFixed(3)),switchingIndex:Number(metrics.switching.toFixed(3))}}}
- function classifyImageStructure(source){
+ function classifyImageStructure(source,file){
    const scale=Math.min(1,900/source.width),sample=cropCanvas(source,0,0,source.width,source.height,'normal',150,scale);
    const ctx=sample.getContext('2d',{willReadFrequently:true}),w=sample.width,h=sample.height,d=ctx.getImageData(0,0,w,h).data;
    const gray=new Uint8Array(w*h),sat=new Uint8Array(w*h);let colorSum=0,colorful=0,edgeTotal=0,axisEdges=0;
@@ -7639,14 +7639,21 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    const mechanicalStructure=edgeDensity>.105&&axisRatio>.58&&averageSaturation<88&&colorRatio<.34;
    const vehicleProportion=source.width/source.height>1.18&&strongRows>=1&&strongCols>=2;
    const componentDensity=edgeDensity>.16&&axisRatio>.64&&averageSaturation<70;
-   const automotiveIndicators=[['dense rectilinear mechanical structure',mechanicalStructure],['vehicle-like horizontal structure',vehicleProportion&&mechanicalStructure],['underhood/component-like edge density',componentDensity]].filter(x=>x[1]).map(x=>x[0]);
-   const automotiveEvidence=photographTexture&&automotiveIndicators.length>=2;
+   const automotiveTerms=/\b(?:automotive|vehicle|car|truck|brake(?:s|\s*(?:rotor|disc|disk|caliper|pad|hose|line))?|rotor|disc|disk|caliper|brake\s*pad|brake\s*(?:hose|line)|engine|motor|sensor|suspension|steering|strut|shock|control\s*arm|tie\s*rod|ball\s*joint|axle|cv\s*(?:joint|shaft)|drivetrain|transmission|transaxle|differential|driveshaft|wheel\s*hub|bearing|alternator|starter|radiator|compressor|fuel\s*(?:pump|injector)|ignition\s*coil|spark\s*plug)\b/i;
+   const namedAutomotivePart=automotiveTerms.test(String(file?.name||'').replace(/[_-]+/g,' '));
+   let circularComponentCandidates=0;
+   const radii=[.06,.09,.13].map(v=>Math.max(8,Math.round(Math.min(w,h)*v))),angles=16;
+   for(let cy=Math.round(h*.22);cy<=h*.78;cy+=Math.max(12,Math.round(h*.14)))for(let cx=Math.round(w*.18);cx<=w*.82;cx+=Math.max(12,Math.round(w*.13)))for(const radius of radii){if(cx-radius<2||cy-radius<2||cx+radius>=w-2||cy+radius>=h-2)continue;let radialEdges=0;for(let a=0;a<angles;a++){const t=a*Math.PI*2/angles,cos=Math.cos(t),sin=Math.sin(t),x=Math.round(cx+cos*radius),y=Math.round(cy+sin*radius),p=y*w+x,inner=Math.round(y-sin*2)*w+Math.round(x-cos*2),outer=Math.round(y+sin*2)*w+Math.round(x+cos*2);if(Math.abs(gray[p]-gray[inner])+Math.abs(gray[p]-gray[outer])>54)radialEdges++}if(radialEdges>=11)circularComponentCandidates++}
+   const circularMechanicalStructure=circularComponentCandidates>=2&&edgeDensity>.045&&averageSaturation<125;
+   const recognizableMechanicalTexture=edgeDensity>.075&&axisRatio>.46&&averageSaturation<105&&colorRatio<.42;
+   const automotiveIndicators=[['automotive component identified by image name',namedAutomotivePart],['dense rectilinear mechanical structure',mechanicalStructure],['vehicle-like horizontal structure',vehicleProportion&&mechanicalStructure],['underhood/component-like edge density',componentDensity],['circular brake/drivetrain-like mechanical structure',circularMechanicalStructure],['recognizable mechanical component texture',recognizableMechanicalTexture]].filter(x=>x[1]).map(x=>x[0]);
+   const automotiveEvidence=photographTexture&&(namedAutomotivePart||componentDensity||mechanicalStructure||circularMechanicalStructure||(recognizableMechanicalTexture&&vehicleProportion));
    let category='unknown',confidence=45,evidence=[];
    if(graphAllowed){category='Graph / Chart';confidence=Math.min(96,62+graphIndicators.length*7);evidence=graphIndicators}
    else if(automotiveEvidence){category='Automotive Photograph';confidence=Math.min(88,58+automotiveIndicators.length*9);evidence=['photographic image',...automotiveIndicators,'no qualifying graph structure']}
    else if(photographTexture){category='General / Non-Automotive Photograph';confidence=Math.min(91,64+Math.round(Math.min(.6,colorRatio)*35));evidence=['photographic image','no qualifying graph structure','no positive automotive subject evidence']}
    else{category='Unknown / Insufficient Evidence';confidence=Math.max(35,Math.min(59,48-Math.round(graphIndicators.length*3)));evidence=graphIndicators.length?[`insufficient graph evidence (${graphIndicators.join(', ')})`,'no positive automotive subject evidence']:['insufficient photographic or graph evidence','no positive automotive subject evidence']}
-   return {category,confidence,evidence,graphAllowed,automotiveEvidence,indicators:{axisOrGrid,panelBoundaries,repeatedGrid,plottedTraces,timeSeries,mechanicalStructure,vehicleProportion,componentDensity,edgeDensity:Number(edgeDensity.toFixed(3)),axisRatio:Number(axisRatio.toFixed(3)),colorRatio:Number(colorRatio.toFixed(3)),averageSaturation:Number(averageSaturation.toFixed(1))}};
+   return {category,confidence,evidence,graphAllowed,automotiveEvidence,indicators:{axisOrGrid,panelBoundaries,repeatedGrid,plottedTraces,timeSeries,mechanicalStructure,vehicleProportion,componentDensity,namedAutomotivePart,circularMechanicalStructure,recognizableMechanicalTexture,circularComponentCandidates,edgeDensity:Number(edgeDensity.toFixed(3)),axisRatio:Number(axisRatio.toFixed(3)),colorRatio:Number(colorRatio.toFixed(3)),averageSaturation:Number(averageSaturation.toFixed(1))}};
  }
  function updateClassificationDeveloper(classification){window.NitrosDeveloperMode=window.NitrosDeveloperMode||{};window.NitrosDeveloperMode.imageClassification=classification;const category=$('nitrosImageClassification'),confidence=$('nitrosClassificationConfidence'),evidence=$('nitrosClassificationEvidence'),graphStatus=$('nitrosRuntimeGraphStatus');if(category)category.textContent=classification?.category||'Cleared';if(confidence)confidence.textContent=classification?`${classification.confidence}%`:'—';if(evidence)evidence.textContent=classification?.evidence?.join('; ')||'No image classified.';if(graphStatus&&classification)graphStatus.textContent=classification.graphAllowed?'Classification gate passed; graph pipeline started.':'Classification gate stopped graph analysis.'}
  function hardResetImageSession(){analysisState={};imageBuffer=null;window.__nitrosCurrentImageAnalysis=null;try{analysisController?.abort()}catch(_){}analysisController=new AbortController();revokePreview();$('dynamicPanelDiagnostics')?.remove();$('segmentationOverlay')?.remove();if(window.GraphDetectionEngine?.state)Object.assign(window.GraphDetectionEngine.state,{originalImage:null,graphDetected:false,graphBounds:null,panels:[],quality:[],readyForOCR:false});if(window.GraphIntelligenceEngine?.state)Object.assign(window.GraphIntelligenceEngine.state,{stage:'Image classification',imageLoaded:false,graphLocated:false,panelsDetected:0,timing:{}});updateClassificationDeveloper(null);const graphStatus=$('nitrosRuntimeGraphStatus');if(graphStatus)graphStatus.textContent='Previous image analysis cleared; classification pending.'}
@@ -7656,7 +7663,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
  function renderPhase2(result,passes){const p=$('oliverImportPreview');if(!p)return;const uncertain=result.classification.uncertain?'<span class="phase2-uncertain">Uncertain — technician confirmation required</span>':esc(result.classification.type),raw=passes.map(x=>`--- OCR pass ${x.pass} (${x.confidence}%) ---\n${x.text||'[no text]'}`).join('\n'),uncertainFields=uncertainOcr(passes);p.insertAdjacentHTML('beforeend',`<div class="phase2-result"><strong>Automatic classification:</strong> ${uncertain} <span class="phase2-confidence">${result.classification.confidence}%</span><br><strong>OCR confidence:</strong> <span class="phase2-confidence">${result.reasoning.ocrConfidence}%</span><br><strong>Diagnostic conclusion confidence:</strong> <span class="phase2-confidence">${result.reasoning.confidence}%</span><br><strong>Technician observation:</strong> ${esc(result.reasoning.observations.join(' '))}<br><strong>Recommended next test:</strong> ${esc(result.reasoning.tests.join(' '))}<br><strong>Uncertain OCR fields:</strong> ${uncertainFields.length?esc(uncertainFields.join(' ')):'None detected'}<details class="phase2-raw"><summary>Raw OCR data (preserved; not treated as confirmed)</summary><pre>${esc(raw)}</pre></details></div>`)}
  async function analyzePhase2Image(file,token){
    setStatus('Image attached. Running visual classification gate before OCR or graph analysis…',token);
-   const source=await imageToCanvas(file);requireActive(token);const classification=classifyImageStructure(source);analysisState={classification};window.__nitrosCurrentImageAnalysis=analysisState;updateClassificationDeveloper(classification);
+   const source=await imageToCanvas(file);requireActive(token);const classification=classifyImageStructure(source,file);analysisState={classification};window.__nitrosCurrentImageAnalysis=analysisState;updateClassificationDeveloper(classification);
    const p=$('oliverImportPreview');if(p)p.insertAdjacentHTML('beforeend',`<div class="phase2-result"><strong>Detected category:</strong> ${esc(classification.category)} <span class="phase2-confidence">${classification.confidence}%</span><br><strong>Classification evidence:</strong> ${esc(classification.evidence.join('; '))}<br><strong>Graph analysis:</strong> ${classification.graphAllowed?'Gate passed — OCR and graph analysis may start.':'Not started — no graph/chart detected.'}<br><strong>Automotive analysis:</strong> ${classification.automotiveEvidence?'Automotive subject evidence detected.':'Not started — no automotive subject detected.'}</div>`);
    if(!classification.graphAllowed){setStatus(`Detected ${classification.category} (${classification.confidence}%). Graph analysis was not started.`,token);return}
    setStatus(`Detected Graph / Chart (${classification.confidence}%). Gate passed; starting OCR and graph analysis…`,token);await analyzeImage(file,token);
@@ -7716,7 +7723,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    file.onchange=()=>{handleFile(file.files?.[0]).catch(e=>setStatus('Import failed: '+e.message));file.value=''};
    $('oliverImportCameraFile').onchange=()=>{const f=$('oliverImportCameraFile');handleFile(f.files?.[0]).catch(e=>setStatus('Camera import failed: '+e.message));f.value=''};
  }
- const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7R — Image Classification Gate Phase 2';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Image Classification Gate Phase 2 — automotive evidence gate ready';};
+ const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7S — Image Classification Gate Phase 2';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Image Classification Gate Phase 2 — automotive evidence gate ready';};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
  window.addEventListener('pageshow',()=>setTimeout(apply,40));
  const mo=new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))build()});mo.observe(document.documentElement,{childList:true,subtree:true});
@@ -7726,9 +7733,9 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1081-version-label-sync">
 (()=>{
  const sync=()=>{
-  document.title='Nitros Mobile Technician Portal v10.12.7R — Image Classification Gate Phase 2';
+  document.title='Nitros Mobile Technician Portal v10.12.7S — Image Classification Gate Phase 2';
   document.querySelectorAll('.sub,.status,header,footer,[class*=version],[id*=version]').forEach(el=>{
-   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.7R');
+   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.7S');
   });
  };
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
@@ -7741,7 +7748,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 <!-- v10.8.6 Startup Freeze Fix: associates OCR words with upper-left, upper-right, lower-left, and lower-right graph panels; asks only for the first unresolved PID or operating condition. -->
 <script id="v1084-release-identity">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7R — Image Classification Gate Phase 2';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7R</strong> · Image Classification Gate Phase 2 · Build 2026-08-06');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7S — Image Classification Gate Phase 2';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7S</strong> · Image Classification Gate Phase 2 · Build 2026-08-07');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
 </script>
 
 
@@ -7755,7 +7762,7 @@ html.nitros-stabilizing body{visibility:hidden}
 <script id="v10120-single-authoritative-diagnostic-state">
 (()=>{
 'use strict';
-const VERSION='10.12.7R',BUILD='2026-08-06',RELEASE='Image Classification Gate Phase 2';
+const VERSION='10.12.7S',BUILD='2026-08-07',RELEASE='Image Classification Gate Phase 2';
 const STATE_KEY='nitros_diagnostic_case_v10120';
 const LEGACY_KEYS=[
  'nitros_v1052_oliver_transcript','nitros_oliver_active_diagnostic_case_v1060','nitros_oliver_case_v10106','nitros_oliver_case_v10107','nitros_oliver_case_v10109','nitros_oliver_case_v10110','nitros_oliver_case_v10111','nitros_oliver_case_v10112','nitros_oliver_case_v10113','nitros_oliver_case_v10114','nitros_oliver_case_v10143','nitros_oliver_workflow_v10105'
@@ -7896,14 +7903,14 @@ window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),pr
 <script id="v10121-login-controller">
 (()=>{
   'use strict';
-  const VERSION='10.12.7R';
+  const VERSION='10.12.7S';
   const PROFILE_KEY='nitros_portal_v8_profile';
   const init=()=>{
-    document.title='Nitros Mobile Technician Portal v10.12.7R — Image Classification Gate Phase 2';
+    document.title='Nitros Mobile Technician Portal v10.12.7S — Image Classification Gate Phase 2';
     const sub=document.querySelector('header .sub');
-    if(sub) sub.textContent='Mobile Technician Portal v10.12.7R — Image Classification Gate Phase 2';
+    if(sub) sub.textContent='Mobile Technician Portal v10.12.7S — Image Classification Gate Phase 2';
     const status=document.getElementById('portalLoginStatus');
-    if(status) status.textContent='Version 10.12.7R — Image Classification Gate Phase 2. Enter technician name and an optional 4-digit PIN.';
+    if(status) status.textContent='Version 10.12.7S — Image Classification Gate Phase 2. Enter technician name and an optional 4-digit PIN.';
     const button=document.getElementById('portalSignIn');
     if(button){button.disabled=false;button.style.pointerEvents='auto';}
   };
@@ -7918,7 +7925,7 @@ html.nitros-stabilizing body{visibility:visible!important}
 #portalSignIn{position:relative;z-index:1000;pointer-events:auto!important;touch-action:manipulation!important}
 </style>
 <script id="v10122-release-marker">
-(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7R — Image Classification Gate Phase 2';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7R — Image Classification Gate Phase 2';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7R — Image Classification Gate Phase 2. New image imports begin with a hard analysis reset.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
+(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7S — Image Classification Gate Phase 2';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7S — Image Classification Gate Phase 2';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7S — Image Classification Gate Phase 2. New image imports begin with a hard analysis reset.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
 </script>
 
 
@@ -7926,7 +7933,7 @@ html.nitros-stabilizing body{visibility:visible!important}
 
 <script id="graphIntelligenceEngineV127C">
 window.GraphIntelligenceEngine = {
-  version: "10.12.7R",
+  version: "10.12.7S",
   stages: [
     "Image Imported",
     "Preprocessing",
@@ -7955,7 +7962,7 @@ window.GraphIntelligenceEngine = {
 <script id="developerModeStub">
 window.NitrosDeveloperMode={
  enabled:false,
- build:"10.12.7R",
+ build:"10.12.7S",
  stage:"Idle",
  lastOperation:"None",
  setStage(s){this.stage=s;console.log("[DeveloperMode]",s);}
@@ -7965,9 +7972,9 @@ document.addEventListener("DOMContentLoaded",()=>{
  panel.id="nitrosDeveloperPanel";
  panel.style.margin="12px";
  panel.innerHTML=`
- <summary><strong>Developer Mode (v10.12.7R)</strong></summary>
+ <summary><strong>Developer Mode (v10.12.7S)</strong></summary>
  <div style="padding:8px">
- <p><b>Build:</b> 10.12.7R — Image Classification Gate Phase 2</p>
+ <p><b>Build:</b> 10.12.7S — Image Classification Gate Phase 2</p>
  <p><b>Image classification:</b> <span id="nitrosImageClassification">No image classified.</span></p>
  <p><b>Classification confidence:</b> <span id="nitrosClassificationConfidence">—</span></p>
  <p><b>Classification evidence:</b> <span id="nitrosClassificationEvidence">No image classified.</span></p>
@@ -7992,7 +7999,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>Updated local incremental build to v10.12.7R — Image Classification Gate Phase 2.</li>
+<li>Updated local incremental build to v10.12.7S — improved recognition and routing of recognizable automotive components while preserving the graph gate.</li>
 <li>Segmentation overlay and diagnostics are generated from the imported image.</li>
 <li>Final panel regions are processed independently.</li>
 </ul>
@@ -8189,8 +8196,8 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <!-- v10.12.7P: single pointer-event gesture path prevents iPhone double-processing; pinch-out and pinch-in remain bounded; Fit, Close, and reopen always reset the viewer; OCR still uses the original full-resolution image. -->
 <script id="v10127p-phase2-build-identity">
-(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7R — Image Classification Gate Phase 2';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7R — Image Classification Gate Phase 2';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7R — photographic images require positive automotive subject evidence before automotive classification.';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7R</strong> · Image Classification Gate Phase 2 · Build 2026-08-06');const toggle=document.getElementById('oliverImportToggle');if(toggle)toggle.textContent='＋ Import Diagnostic Image or Data';const image=document.getElementById('oliverImportImage');if(image)image.textContent='📷 Automatic Image Analysis';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
+(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7S — Image Classification Gate Phase 2';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7S — Image Classification Gate Phase 2';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7S — photographic images require positive automotive subject evidence before automotive classification.';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7S</strong> · Image Classification Gate Phase 2 · Build 2026-08-07');const toggle=document.getElementById('oliverImportToggle');if(toggle)toggle.textContent='＋ Import Diagnostic Image or Data';const image=document.getElementById('oliverImportImage');if(image)image.textContent='📷 Automatic Image Analysis';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
 </script>
-<!-- v10.12.7R separates general photographs from automotive photographs while preserving the Q graph gate and hard per-image reset. -->
+<!-- v10.12.7S improves automotive-component photo recognition while preserving the R graph gate and hard per-image reset. -->
 </body>
 </html>
