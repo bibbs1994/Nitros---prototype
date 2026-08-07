@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Nitros Mobile Technician Portal v10.12.7AB — Image Classification Gate</title>
+<title>Nitros Mobile Technician Portal v10.12.7AC — Image Classification Gate</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -480,10 +480,10 @@ input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
 
 
 <script id="graphDetectionEngineStub">
-/* Nitros Mobile Technician Portal v10.12.7AB
+/* Nitros Mobile Technician Portal v10.12.7AC
    Runtime: Graph Detection Engine */
 window.GraphDetectionEngine = {
-  version: "10.12.7AB",
+  version: "10.12.7AC",
   state: {
     originalImage: null,
     graphDetected: false,
@@ -504,7 +504,7 @@ window.GraphDetectionEngine = {
 <script id="graph-intelligence-v10127d">
 window.GraphIntelligenceEngine = window.GraphIntelligenceEngine || {};
 Object.assign(window.GraphIntelligenceEngine,{
- version:"10.12.7AB",
+ version:"10.12.7AC",
  pipeline:[
   "Image Validation",
   "Graph Region Detection",
@@ -525,7 +525,7 @@ Object.assign(window.GraphIntelligenceEngine,{
 
 <script id="graph-intelligence-v10127e">
 window.GraphIntelligenceEngine=Object.assign(window.GraphIntelligenceEngine||{},{
- version:"10.12.7AB",
+ version:"10.12.7AC",
  targets:{labelConfidence:90,traceConfidence:90},
  adaptivePreprocess:true,
  panelIndependentProcessing:true,
@@ -550,7 +550,7 @@ canvas.graph-preview,canvas.ocr-preview{
 
 <script id="v10127f-analysis">
 window.GraphIntelligenceEngine=Object.assign(window.GraphIntelligenceEngine||{},{
- version:"10.12.7AB",
+ version:"10.12.7AC",
  analysisMode:"Prefer Original Resolution",
  developerMetrics:{
    originalResolution:"Pending",
@@ -583,7 +583,7 @@ window.GraphIntelligenceEngine=Object.assign(window.GraphIntelligenceEngine||{},
 </style>
 <script>
 window.GraphIntelligenceEngine=Object.assign(window.GraphIntelligenceEngine||{},{
-version:"10.12.7AB",
+version:"10.12.7AC",
 viewer:{
 displayWidth:"95%",
 displayHeight:"50vh",
@@ -597,7 +597,7 @@ zoomPlanned:true
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.7AB — Image Classification Gate</div>
+  <div class="sub">Mobile Technician Portal v10.12.7AC — Image Classification Gate</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -611,7 +611,7 @@ zoomPlanned:true
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.7AB — Image Classification Gate. Existing conversational and diagnostic evidence features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.7AC — Image Classification Gate. Existing conversational and diagnostic evidence features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -774,7 +774,7 @@ zoomPlanned:true
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.7AB — Image Classification Gate</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.7AC — Image Classification Gate</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -841,7 +841,7 @@ zoomPlanned:true
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.7AB — Image Classification Gate</div>
+      <div class="eyebrow">Version 10.12.7AC — Image Classification Gate</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -5328,7 +5328,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7AB — Image Classification Gate</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7AC — Image Classification Gate</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -7073,7 +7073,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1031CompletionAssignmentStabilization">
 (()=>{
   'use strict';
-  const BUILD='10.12.7AB';
+  const BUILD='10.12.7AC';
   const $=id=>document.getElementById(id);
   const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||'null');return v??fallback}catch{return fallback}};
   const write=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}};
@@ -7267,12 +7267,12 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 .oliver-active-case-banner button{border:1px solid #60748c;background:#13243a;color:#fff;border-radius:9px;padding:5px 9px;font-weight:800}
 </style>
 <script id="v1060-session-manager-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AB — Image Classification Gate';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AC — Image Classification Gate';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 adds context awareness: Oliver reads the active case, acknowledges known facts, and asks only for the highest-value missing information. -->
 
 <script id="v1072-completed-prompt-tracking-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AB — Image Classification Gate';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AC — Image Classification Gate';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 tracks completed prompts, recognizes power-loss symptoms, acknowledges each new fact, and blocks answered intake questions from repeating. -->
 
@@ -7299,8 +7299,9 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
  const $=id=>document.getElementById(id);
  const MAX_TEXT=1500000;
  const initialImportStatus='Attach a scan-tool photo, CSV/text export, or PDF. Scan-tool photos will be previewed and OCR-read automatically when internet access is available.';
- let ocrGeneration=0,analysisController=null,activePreviewUrl='',imageBuffer=null,analysisState={},currentImageIdentity=null,analysisRequestSequence=0;
+ let ocrGeneration=0,analysisController=null,activePreviewUrl='',imageBuffer=null,analysisState={},currentImageIdentity=null,analysisRequestSequence=0,analysisCaseId='',analysisSessionId='',analysisResetReason='APP_START',analysisStartedAt='',analysisCompletedAt='',analysisDisposition='NONE',lastStaleRejection='None';
  const newAnalysisId=prefix=>`${prefix}-${globalThis.crypto?.randomUUID?.()||`${Date.now().toString(36)}-${(++analysisRequestSequence).toString(36)}-${Math.random().toString(36).slice(2,10)}`}`;
+ analysisCaseId=newAnalysisId('CASE');analysisSessionId=newAnalysisId('SESSION');
  const active=token=>token===ocrGeneration&&!analysisController?.signal.aborted;
  function stale(){const error=new Error('OCR session was reset');error.name='AbortError';return error}
  function requireActive(token){if(!active(token))throw stale()}
@@ -7311,7 +7312,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    entry.textContent=`OCR session ${ocrGeneration} reset (${reason}): OCR cache cleared • Image buffer empty • Graph buffer empty • Previous results cleared • Active analysis cancelled • New OCR session created`;
  }
  window.resetOcrSessionState=function(reason='New Case'){
-   ocrGeneration++;try{analysisController?.abort()}catch(_){}analysisController=null;revokePreview();imageBuffer=null;analysisState={};currentImageIdentity=null;window.__nitrosCurrentImageAnalysis=null;window.__nitrosCurrentImageIdentity=null;
+   const newCase=/new case|start new vehicle|clear case|start over/i.test(reason),resetCode=newCase?'NEW_CASE':/new image|photo|camera|upload/i.test(reason)?'NEW_PHOTO':'APP_START';ocrGeneration++;try{analysisController?.abort()}catch(_){}analysisController=null;revokePreview();imageBuffer=null;analysisState={};currentImageIdentity=null;window.__nitrosCurrentImageAnalysis=null;window.__nitrosCurrentImageIdentity=null;analysisResetReason=resetCode;analysisStartedAt='';analysisCompletedAt='';analysisDisposition='NONE';lastStaleRejection='None';if(newCase){analysisCaseId=newAnalysisId('CASE');analysisSessionId=newAnalysisId('SESSION')}
    ['oliverImportFile','oliverImportCameraFile','diagImageInput'].forEach(id=>{const el=$(id);if(el)el.value='' });
    const preview=$('oliverImportPreview');if(preview){preview.replaceChildren();preview.classList.remove('open')}
    const status=$('oliverImportStatus');if(status)status.textContent=initialImportStatus;
@@ -7320,8 +7321,8 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    $('ocrDiagnostic')?.classList.add('hidden');window.clearPendingOcrVin?.();
    window.NitrosOCRViewer?.close?.();$('diagViewer')?.classList.remove('active');const diagStage=$('diagViewerStage');if(diagStage)diagStage.replaceChildren();
    ['GraphDetectionEngine','GraphIntelligenceEngine'].forEach(name=>{const engine=window[name];if(engine?.state)Object.keys(engine.state).forEach(key=>{engine.state[key]=typeof engine.state[key]==='boolean'?false:null});if(engine?.metrics)Object.keys(engine.metrics).forEach(key=>{engine.metrics[key]=key==='panelQuality'?[]:key==='traceConfidence'?0:'Pending'})});
-   try{Object.keys(localStorage).filter(key=>/nitros.*(ocr|graph|image|trace|analysis|pid|panel)/i.test(key)).forEach(key=>localStorage.removeItem(key));Object.keys(sessionStorage).filter(key=>/nitros.*(ocr|graph|image|trace|analysis|pid|panel)/i.test(key)).forEach(key=>sessionStorage.removeItem(key))}catch(_){}
-   $('dynamicPanelDiagnostics')?.remove();window.resetImageAnalysisIdentity?.();developerDiagnostic(reason);return ocrGeneration;
+   try{Object.keys(localStorage).filter(key=>/nitros.*(ocr|graph|image|trace|analysis|classif|automotive|capture|request|hash|pid|panel)/i.test(key)).forEach(key=>localStorage.removeItem(key));Object.keys(sessionStorage).filter(key=>/nitros.*(ocr|graph|image|trace|analysis|classif|automotive|capture|request|hash|pid|panel)/i.test(key)).forEach(key=>sessionStorage.removeItem(key))}catch(_){}
+   $('dynamicPanelDiagnostics')?.remove();window.resetImageAnalysisIdentity?.();window.updateAnalysisSessionDeveloper?.();developerDiagnostic(`${resetCode}: ${reason}`);return ocrGeneration;
  };
  function esc(s){return String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}
  function findAnchor(){return $('oliverHubSend')?.parentElement||$('oliverHubTranscript')?.parentElement}
@@ -7618,14 +7619,12 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    try{setStatus('Image attached. Detecting usable graph area and recursive panel boundaries...',token);let t=performance.now();const T=await loadTesseract();budget();const source=await imageToCanvas(file);budget();imageBuffer=source;window.GraphIntelligenceEngine?.loadImage?.(file);timing.prepare=Math.round(performance.now()-t);t=performance.now();const segmented=recursivePanels(source),rects=segmented.panels;timing.segmentation=segmented.seg;timing.segmentation.panels=rects;timing.detect=Math.round(performance.now()-t);timing.panels=rects.length;renderSegmentationOverlay(timing.segmentation);
      const panels=[];t=performance.now();for(let i=0;i<rects.length;i++){try{const r=rects[i],ocr=await dynamicLabelOcr(T,source,r,token,budget);timing.passes+=ocr.totalPasses;panels.push({number:i+1,bounds:r,location:panelLocation(r,source.width,source.height),...ocr})}catch(e){if(e.name==='TimeoutError'){timing.limited=true;for(let j=i;j<rects.length;j++)panels.push({number:j+1,bounds:rects[j],location:panelLocation(rects[j],source.width,source.height),pid:'',confidence:0,agreement:0,totalPasses:0,text:'',status:'unresolved'});break}throw e}}timing.ocr=Math.round(performance.now()-t);
      const seen=new Map();for(const p of panels){if(!p.pid){p.status='unresolved';continue}const prior=seen.get(p.pid);if(prior&&p.confidence<=prior.confidence){p.pid='';p.status='unresolved';p.duplicateSuppressed=true}else{if(prior){prior.pid='';prior.status='unresolved';prior.duplicateSuppressed=true}seen.set(p.pid,p);p.status=p.confidence>=55&&p.agreement>=1?'confirmed':'tentative';if(p.status!=='confirmed')p.pid=''}}
-     t=performance.now();for(const p of panels){if(timing.limited)break;try{budget();const r=p.bounds,graphY=r.y+Math.min(r.h*.28,220),graphH=Math.max(1,r.y+r.h-graphY);p.metrics=traceMetrics(cropCanvas(source,r.x,graphY,r.w,graphH,'gray'))}catch(e){if(e.name==='TimeoutError'){timing.limited=true;break}throw e}}timing.trace=Math.round(performance.now()-t);panels.forEach(p=>p.metrics=p.metrics||{activity:0,switching:0,description:'trace analysis not completed'});timing.confirmed=panels.filter(p=>p.status==='confirmed').length;timing.unresolved=panels.filter(p=>p.status!=='confirmed').length;timing.total=Math.round(performance.now()-started);analysisState={panels,timing};window.GraphIntelligenceEngine?.record?.(timing.segmentation,timing);dynamicDiagnostics(timing);
+     t=performance.now();for(const p of panels){if(timing.limited)break;try{budget();const r=p.bounds,graphY=r.y+Math.min(r.h*.28,220),graphH=Math.max(1,r.y+r.h-graphY);p.metrics=traceMetrics(cropCanvas(source,r.x,graphY,r.w,graphH,'gray'))}catch(e){if(e.name==='TimeoutError'){timing.limited=true;break}throw e}}timing.trace=Math.round(performance.now()-t);panels.forEach(p=>p.metrics=p.metrics||{activity:0,switching:0,description:'trace analysis not completed'});timing.confirmed=panels.filter(p=>p.status==='confirmed').length;timing.unresolved=panels.filter(p=>p.status!=='confirmed').length;timing.total=Math.round(performance.now()-started);analysisState={...analysisState,panels,timing};window.GraphIntelligenceEngine?.record?.(timing.segmentation,timing);dynamicDiagnostics(timing);
      const evidence=panels.map(p=>`Panel ${p.number} (${p.location}): ${p.pid||'PID unresolved'}; ${p.status}; label confidence ${p.confidence||0}%; OCR agreement ${p.agreement||0}/${p.totalPasses||0}; trace activity ${(p.metrics.activity*100).toFixed(1)}%; switching index ${(p.metrics.switching*100).toFixed(1)}%.`).join('\n');const confirmed=panels.filter(p=>p.status==='confirmed');sendFact(`Diagnostic graph image imported: ${file.name}\nDynamic panel detection found ${panels.length} graph region(s). ${confirmed.length} PID label(s) confirmed; ${timing.unresolved} unresolved.\n${evidence}`);const p=$('oliverImportPreview');if(p)p.insertAdjacentHTML('beforeend',`<pre>${esc(evidence)}</pre>`);setStatus(timing.limited?'Dynamic analysis reached its 30-second limit. Completed panel results were preserved.':`Dynamic panel analysis complete: ${panels.length} panel(s), ${confirmed.length} confirmed PID label(s).`,token);
    }catch(error){timing.limited=timing.limited||error.name==='TimeoutError';timing.total=Math.round(performance.now()-started);dynamicDiagnostics(timing);if(error.name==='TimeoutError'){setStatus('Dynamic analysis reached its 30-second limit. Completed results, if any, were preserved.',token);return}throw error}
  }
- async function phase2BroadOcr(T,source,token){const passes=[],variants=[cropCanvas(source,0,0,source.width,source.height,'normal',150,.8),cropCanvas(source,0,0,source.width,source.height,'contrast',150,.8),cropCanvas(source,0,0,source.width,source.height,'adaptive',150,.8)];for(let i=0;i<variants.length;i++){const result=await T.recognize(variants[i],'eng',{logger:m=>{if(m.status==='recognizing text')setStatus(`Classifying image — OCR pass ${i+1}/${variants.length}: ${Math.round((m.progress||0)*100)}%`,token)},tessedit_pageseg_mode:11,preserve_interword_spaces:'1'});requireActive(token);passes.push({pass:i+1,text:String(result?.data?.text||''),confidence:Math.round(result?.data?.confidence||0),words:(result?.data?.words||[]).map(w=>({text:String(w.text||''),confidence:Math.round(Number(w.confidence||0)),bbox:w.bbox||null}))})}return passes}
- function classifyPhase2(file,source,passes){const raw=passes.map(p=>p.text).join('\n').toLowerCase(),name=String(file.name||'').toLowerCase(),text=`${name} ${raw}`,scores={'Scan-tool graph':0,'Vehicle photo':0,'Component photo':0,'Wiring diagram':0,'Document':0},add=(type,re,points)=>{if(re.test(text))scores[type]+=points};add('Scan-tool graph',/graph|waveform|scope|pid|rpm|fuel trim|stft|ltft|time\/div|freeze frame/,42);add('Wiring diagram',/wiring|circuit|connector|splice|ground|relay|fuse|module|pcm|ecm|pin\s*\d+/,42);add('Document',/invoice|report|repair order|bulletin|procedure|page\s+\d+|document|customer|technician/,38);add('Vehicle photo',/vehicle|vin|odometer|dashboard|front|rear|driver|passenger|license plate/,30);add('Component photo',/component|sensor|solenoid|valve|connector|terminal|bearing|pump|motor|alternator|starter/,27);const lineCount=raw.split(/\n/).filter(x=>x.trim()).length,wordCount=raw.trim().split(/\s+/).filter(Boolean).length,aspect=source.width/source.height,metrics=traceMetrics(cropCanvas(source,0,0,source.width,source.height,'gray',150,.35));if(wordCount>80&&lineCount>10)scores.Document+=35;if(metrics.switching>.045&&lineCount>2)scores['Scan-tool graph']+=28;if(aspect>1.25&&/\b(v|a|hz|ms|rpm|%|°c)\b/i.test(raw))scores['Scan-tool graph']+=18;if(/\b(?:b\d+s\d+|stft|ltft|rpm|maf|ect)\b/i.test(raw))scores['Scan-tool graph']+=35;if(/\b(?:cavity|pin|splice|gnd|b\+|can[- ]?[hl])\b/i.test(raw))scores['Wiring diagram']+=30;const ranked=Object.entries(scores).sort((a,b)=>b[1]-a[1]),top=ranked[0],second=ranked[1],evidence=Math.min(97,Math.round(35+top[1]*.65+(top[1]-second[1])*.35)),uncertain=top[1]<28||top[1]-second[1]<10;return {type:uncertain?'Uncertain':top[0],candidate:top[0],confidence:uncertain?Math.min(59,evidence):Math.max(60,evidence),scores,uncertain,features:{wordCount,lineCount,aspect:Number(aspect.toFixed(2)),traceActivity:Number(metrics.activity.toFixed(3)),switchingIndex:Number(metrics.switching.toFixed(3))}}}
  async function fingerprintImageBytes(file){const started=performance.now(),bytes=new Uint8Array(await file.arrayBuffer());if(globalThis.crypto?.subtle){const digest=await crypto.subtle.digest('SHA-256',bytes),hash=[...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');return {algorithm:'SHA-256',hash,bytes:bytes.length,elapsedMs:performance.now()-started,status:'RUN'}}let hash=2166136261;for(const byte of bytes){hash^=byte;hash=Math.imul(hash,16777619)}return {algorithm:'FNV-1a fallback',hash:(hash>>>0).toString(16).padStart(8,'0'),bytes:bytes.length,elapsedMs:performance.now()-started,status:'FALLBACK'} }
- function classificationTelemetryHtml(t){const order=['decoded','scene','automotive','graph','final'],labels={decoded:'Image decoded',scene:'Scene/object analysis invoked',automotive:'Automotive evidence analysis invoked',graph:'Graph-structure check',final:'Final classification'},rows=order.map(key=>{const s=t.stages[key];return `<tr><td>${esc(labels[key])}</td><td>${esc(s.status)}</td><td>${Number(s.elapsedMs||0).toFixed(2)} ms</td><td>${esc(s.analyzer||'—')}</td></tr>`}).join(''),size=t.fileSize<1024?`${t.fileSize} B`:t.fileSize<1048576?`${(t.fileSize/1024).toFixed(1)} KiB`:`${(t.fileSize/1048576).toFixed(2)} MiB`;return `<div class="phase2-result"><strong>Capture / Request ID:</strong> ${esc(t.captureId)} / ${esc(t.requestId)}<br><strong>Result ID:</strong> ${esc(t.resultId)}<br><strong>Selected image fingerprint:</strong> ${esc(t.fingerprint.algorithm)} ${esc(t.fingerprint.hash)}<br><strong>Actual image:</strong> ${t.width} × ${t.height} px · ${t.fileSize} bytes (${size})<br><strong>Execution log:</strong> New image received → fingerprint calculated → new analysis request created → analyzer invoked with current image → result returned → request/fingerprint verified → result displayed<table style="width:100%;margin-top:8px"><thead><tr><th>Stage</th><th>Status</th><th>Elapsed</th><th>Analyzer/function</th></tr></thead><tbody>${rows}</tbody></table><strong>Total processing time:</strong> ${t.totalMs.toFixed(2)} ms</div>`}
+ function classificationTelemetryHtml(t){const order=['decoded','scene','automotive','graph','final'],labels={decoded:'Image decoded',scene:'Scene/object analysis invoked',automotive:'Automotive evidence analysis invoked',graph:'Graph-structure check',final:'Final classification'},rows=order.map(key=>{const s=t.stages[key];return `<tr><td>${esc(labels[key])}</td><td>${esc(s.status)}</td><td>${Number(s.elapsedMs||0).toFixed(2)} ms</td><td>${esc(s.analyzer||'—')}</td></tr>`}).join(''),size=t.fileSize<1024?`${t.fileSize} B`:t.fileSize<1048576?`${(t.fileSize/1024).toFixed(1)} KiB`:`${(t.fileSize/1048576).toFixed(2)} MiB`;return `<div class="phase2-result"><strong>Capture / Analysis / Request ID:</strong> ${esc(t.captureId)} / ${esc(t.analysisId)} / ${esc(t.requestId)}<br><strong>Result ID:</strong> ${esc(t.resultId)}<br><strong>Selected image fingerprint:</strong> ${esc(t.fingerprint.algorithm)} ${esc(t.fingerprint.hash)}<br><strong>Actual image:</strong> ${t.width} × ${t.height} px · ${t.fileSize} bytes (${size})<br><strong>Execution log:</strong> New image received → fingerprint calculated → new analysis request created → analyzer invoked with current image → result returned → captureId/analysisId/imageHash verified → result displayed<table style="width:100%;margin-top:8px"><thead><tr><th>Stage</th><th>Status</th><th>Elapsed</th><th>Analyzer/function</th></tr></thead><tbody>${rows}</tbody></table><strong>Total processing time:</strong> ${t.totalMs.toFixed(2)} ms</div>`}
  function classifyImageStructure(source,file,stageMetrics){
    const sceneStarted=performance.now();
    const scale=Math.min(1,900/source.width),sample=cropCanvas(source,0,0,source.width,source.height,'normal',150,scale);
@@ -7684,17 +7683,15 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    if(i.photographTexture)return {...classification,category:'General / Non-Automotive Photograph',confidence:Math.min(91,68+Math.max(0,6-score)*3),automotiveEvidence:false,evidence:['photographic image','automotive image/object evidence pass completed','insufficient positive automotive subject evidence','no qualifying graph structure'],automotiveDetector};
    return {...classification,category:'Unknown / Insufficient Evidence',confidence:Math.max(35,Math.min(59,classification.confidence)),automotiveEvidence:false,evidence:['graph evidence check completed','automotive image/object evidence pass completed','insufficient positive automotive subject evidence'],automotiveDetector};
  }
- function updateImageIdentityDeveloper(identity){const values={nitrosCaptureRequestId:identity?`${identity.captureId||'Pending'} / ${identity.requestId||'Pending'}`:'None',nitrosCurrentImageSha:identity?.fingerprint||'None',nitrosAnalyzerSource:identity?.analyzerSource||'None',nitrosResultId:identity?.resultId||'None'};Object.entries(values).forEach(([id,value])=>{const el=$(id);if(el)el.textContent=value})}
- window.resetImageAnalysisIdentity=()=>{currentImageIdentity=null;window.__nitrosCurrentImageIdentity=null;updateImageIdentityDeveloper(null);updateClassificationDeveloper(null);const graphStatus=$('nitrosRuntimeGraphStatus');if(graphStatus)graphStatus.textContent='No current image analysis.'};
+ function updateImageIdentityDeveloper(identity){const values={nitrosCaptureRequestId:identity?`${identity.captureId||'Pending'} / ${identity.requestId||'Pending'}`:'None',nitrosAnalysisId:identity?.analysisId||'None',nitrosCurrentImageSha:identity?.fingerprint||'None',nitrosAnalyzerSource:identity?.analyzerSource||'None',nitrosResultId:identity?.resultId||'None'};Object.entries(values).forEach(([id,value])=>{const el=$(id);if(el)el.textContent=value})}
+ window.updateAnalysisSessionDeveloper=()=>{const values={nitrosCaseId:analysisCaseId,nitrosAnalysisSessionId:analysisSessionId,nitrosAnalysisStarted:analysisStartedAt||'None',nitrosAnalysisCompleted:analysisCompletedAt||'None',nitrosResultDisposition:analysisDisposition,nitrosResetReason:analysisResetReason,nitrosActiveClassifier:'NitrosCurrentImageClassifier / classifyImageStructure + detectAutomotiveSubject / 10.12.7AC',nitrosStaleResultLog:lastStaleRejection};Object.entries(values).forEach(([id,value])=>{const el=$(id);if(el)el.textContent=value})};
+ function recordStaleResult(identity,failed){analysisDisposition='STALE RESULT REJECTED';analysisResetReason='STALE_RESULT_REJECTED';lastStaleRejection=`STALE RESULT REJECTED — ${failed.join(', ')} — capture ${identity?.captureId||'unknown'} analysis ${identity?.analysisId||'unknown'}`;window.updateAnalysisSessionDeveloper?.()}
+ window.resetImageAnalysisIdentity=()=>{currentImageIdentity=null;window.__nitrosCurrentImageIdentity=null;updateImageIdentityDeveloper(null);updateClassificationDeveloper(null);window.updateAnalysisSessionDeveloper?.();const graphStatus=$('nitrosRuntimeGraphStatus');if(graphStatus)graphStatus.textContent='No current image analysis.'};
  function updateClassificationDeveloper(classification){window.NitrosDeveloperMode=window.NitrosDeveloperMode||{};window.NitrosDeveloperMode.imageClassification=classification;const category=$('nitrosImageClassification'),confidence=$('nitrosClassificationConfidence'),evidence=$('nitrosClassificationEvidence'),graphStatus=$('nitrosRuntimeGraphStatus');if(category)category.textContent=classification?.category||'Cleared';if(confidence)confidence.textContent=classification?`${classification.confidence}%`:'—';if(evidence)evidence.textContent=classification?.evidence?.join('; ')||'No image classified.';if(graphStatus&&classification)graphStatus.textContent=classification.graphAllowed?'Classification gate passed; graph pipeline started.':'Classification gate stopped graph analysis.'}
  function hardResetImageSession(){analysisState={};imageBuffer=null;window.__nitrosCurrentImageAnalysis=null;try{analysisController?.abort()}catch(_){}analysisController=new AbortController();revokePreview();$('dynamicPanelDiagnostics')?.remove();$('segmentationOverlay')?.remove();if(window.GraphDetectionEngine?.state)Object.assign(window.GraphDetectionEngine.state,{originalImage:null,graphDetected:false,graphBounds:null,panels:[],quality:[],readyForOCR:false});if(window.GraphIntelligenceEngine?.state)Object.assign(window.GraphIntelligenceEngine.state,{stage:'Image classification',imageLoaded:false,graphLocated:false,panelsDetected:0,timing:{}});updateClassificationDeveloper(null);const graphStatus=$('nitrosRuntimeGraphStatus');if(graphStatus)graphStatus.textContent='Previous image analysis cleared; classification pending.'}
- function trustedOcr(passes){const words=new Map();for(const p of passes)for(const w of p.words||[]){const key=w.text.trim().toLowerCase();if(!key)continue;const item=words.get(key)||{text:w.text,hits:0,best:0};item.hits++;if(w.confidence>item.best){item.best=w.confidence;item.text=w.text}words.set(key,item)}return [...words.values()].filter(w=>w.best>=75||(w.best>=60&&w.hits>=2)).map(w=>w.text).join(' ')}
- function uncertainOcr(passes){const words=new Map();for(const p of passes)for(const w of p.words||[]){const key=w.text.trim().toLowerCase();if(!key)continue;const item=words.get(key)||{text:w.text,hits:0,best:0};item.hits++;item.best=Math.max(item.best,w.confidence);words.set(key,item)}return [...words.values()].filter(w=>w.best<75&&!(w.best>=60&&w.hits>=2)).slice(0,80).map(w=>`[uncertain ${w.best}%: ${w.text}]`)}
- function phase2Reason(type,classification,passes){const trusted=trustedOcr(passes),codes=dtcs(trusted),avg=Math.round(passes.reduce((n,p)=>n+p.confidence,0)/Math.max(1,passes.length));let observations=[],tests=[],base=Math.min(94,Math.round(avg*.55+classification.confidence*.45));if(type==='Vehicle photo'){observations.push('A vehicle-level image was detected; no condition, identity, or failed part is inferred from appearance alone.');tests.push('Capture the affected area or reproduce the symptom, then record the exact operating condition.');base=Math.min(base,72)}else if(type==='Component photo'){observations.push('A component-level image was detected; visual presence alone does not confirm component identity or failure.');tests.push('Confirm the component by service information or connector/pin location, then perform the specified power, ground, signal, or mechanical test.');base=Math.min(base,70)}else if(type==='Wiring diagram'){observations.push('Circuit-style text or geometry was detected. Only high-confidence OCR terms are retained; uncertain pin and wire labels remain unresolved.');tests.push('Verify the circuit identifier in service information, then test source voltage and loaded ground at the relevant connector before condemning a component.');base=Math.min(base,82)}else if(type==='Document'){observations.push(`Document text was detected${codes.length?`; confirmed DTC text includes ${codes.join(', ')}`:''}. Low-confidence fields are not promoted to facts.`);tests.push(codes.length?'Confirm each DTC status and freeze-frame conditions with the scan tool, then follow the highest-priority code test.':'Review the marked uncertain fields and confirm the key specification or finding before using it diagnostically.');base=Math.min(base,86)}else{observations.push(`Scan-tool graph evidence was detected${codes.length?`; confirmed DTC text includes ${codes.join(', ')}`:''}. Graph labels still require per-panel consensus.`);tests.push('Use the recursive graph pipeline to confirm each PID label, then reproduce the concern while recording operating conditions and known-good comparison data.');base=Math.min(base,90)}return {observations,tests,confidence:Math.max(35,base),ocrConfidence:avg,trusted}}
- function renderPhase2(result,passes){const p=$('oliverImportPreview');if(!p)return;const uncertain=result.classification.uncertain?'<span class="phase2-uncertain">Uncertain — technician confirmation required</span>':esc(result.classification.type),raw=passes.map(x=>`--- OCR pass ${x.pass} (${x.confidence}%) ---\n${x.text||'[no text]'}`).join('\n'),uncertainFields=uncertainOcr(passes);p.insertAdjacentHTML('beforeend',`<div class="phase2-result"><strong>Automatic classification:</strong> ${uncertain} <span class="phase2-confidence">${result.classification.confidence}%</span><br><strong>OCR confidence:</strong> <span class="phase2-confidence">${result.reasoning.ocrConfidence}%</span><br><strong>Diagnostic conclusion confidence:</strong> <span class="phase2-confidence">${result.reasoning.confidence}%</span><br><strong>Technician observation:</strong> ${esc(result.reasoning.observations.join(' '))}<br><strong>Recommended next test:</strong> ${esc(result.reasoning.tests.join(' '))}<br><strong>Uncertain OCR fields:</strong> ${uncertainFields.length?esc(uncertainFields.join(' ')):'None detected'}<details class="phase2-raw"><summary>Raw OCR data (preserved; not treated as confirmed)</summary><pre>${esc(raw)}</pre></details></div>`)}
  async function analyzePhase2Image(file,token,identity){
-   const totalStarted=performance.now(),telemetry={captureId:identity.captureId,requestId:'Pending',resultId:'Pending',fileSize:file.size,width:0,height:0,fingerprint:null,stages:{decoded:{status:'SKIPPED',elapsedMs:0,analyzer:'imageToCanvas()'},scene:{status:'SKIPPED',elapsedMs:0,analyzer:'classifyImageStructure()'},automotive:{status:'SKIPPED',elapsedMs:0,analyzer:'detectAutomotiveSubject()'},graph:{status:'SKIPPED',elapsedMs:0,analyzer:'classifyImageStructure() graph predicate'},final:{status:'SKIPPED',elapsedMs:0,analyzer:'analyzePhase2Image()'}}};let source,classification;
-   try{telemetry.fingerprint=await fingerprintImageBytes(file);requireActive(token);if(currentImageIdentity!==identity||identity.file!==file)throw new Error('Current image changed before fingerprint verification');identity.fingerprint=telemetry.fingerprint.hash;identity.requestId=newAnalysisId('REQ');identity.analyzerSource='Pending';telemetry.requestId=identity.requestId;window.__nitrosCurrentImageIdentity={captureId:identity.captureId,requestId:identity.requestId,fingerprint:identity.fingerprint,resultId:null};updateImageIdentityDeveloper(identity);setStatus('Fresh fingerprint calculated. New analysis request created; invoking analyzer with current image…',token);await yieldClassificationFrame();requireActive(token);let started=performance.now();source=await imageToCanvas(file);requireActive(token);if(currentImageIdentity!==identity||identity.file!==file)throw new Error('Decoded image does not belong to the current request');telemetry.width=source.width;telemetry.height=source.height;telemetry.stages.decoded={status:'RUN',elapsedMs:performance.now()-started,analyzer:'imageToCanvas(current File)'};identity.analyzerSource='classifyImageStructure(current decoded canvas)';updateImageIdentityDeveloper(identity);classification=classifyImageStructure(source,file,telemetry.stages);if(!classification.graphAllowed){started=performance.now();identity.analyzerSource='detectAutomotiveSubject(current decoded canvas)';updateImageIdentityDeveloper(identity);classification=await detectAutomotiveSubject(source,file,classification,token);telemetry.stages.automotive={status:'RUN',elapsedMs:performance.now()-started,analyzer:classification?.automotiveDetector?.analyzer||'detectAutomotiveSubject(current decoded canvas)'}}else telemetry.stages.automotive={status:'SKIPPED',elapsedMs:0,analyzer:'detectAutomotiveSubject() — graph gate passed'};if(!classification||typeof classification.category!=='string'||!Array.isArray(classification.evidence)||typeof classification.graphAllowed!=='boolean')throw new Error('No valid analyzer result returned');identity.resultId=newAnalysisId('RESULT');classification={...classification,requestId:identity.requestId,imageFingerprint:identity.fingerprint,resultId:identity.resultId};telemetry.resultId=identity.resultId;const verified=currentImageIdentity===identity&&identity.file===file&&identity.captureId===telemetry.captureId&&identity.requestId===telemetry.requestId&&identity.fingerprint===telemetry.fingerprint.hash&&classification.requestId===identity.requestId&&classification.imageFingerprint===identity.fingerprint;if(!verified)throw new Error('Analyzer result request or fingerprint mismatch');started=performance.now();analysisState={classification,requestId:identity.requestId,imageFingerprint:identity.fingerprint,resultId:identity.resultId};window.__nitrosCurrentImageAnalysis=analysisState;window.__nitrosCurrentImageIdentity={captureId:identity.captureId,requestId:identity.requestId,fingerprint:identity.fingerprint,resultId:identity.resultId};updateImageIdentityDeveloper(identity);updateClassificationDeveloper(classification);telemetry.stages.final={status:'RUN',elapsedMs:performance.now()-started,analyzer:'analyzePhase2Image() verified fresh-result routing'};telemetry.totalMs=performance.now()-totalStarted;analysisState.telemetry=telemetry}catch(error){const failed=Object.values(telemetry.stages).find(stage=>stage.status==='SKIPPED');if(failed){failed.status='FAILED';failed.error=error.message}telemetry.fingerprint=telemetry.fingerprint||{algorithm:'Unavailable',hash:'FAILED',status:'FAILED'};telemetry.totalMs=performance.now()-totalStarted;analysisState={};window.__nitrosCurrentImageAnalysis=null;updateClassificationDeveloper(null);identity.analyzerSource='FAILED — no valid analyzer result returned';identity.resultId=null;updateImageIdentityDeveloper(identity);throw error}
+   const totalStarted=performance.now(),telemetry={captureId:identity.captureId,analysisId:identity.analysisId,requestId:'Pending',resultId:'Pending',fileSize:file.size,width:0,height:0,fingerprint:null,stages:{decoded:{status:'SKIPPED',elapsedMs:0,analyzer:'imageToCanvas()'},scene:{status:'SKIPPED',elapsedMs:0,analyzer:'classifyImageStructure()'},automotive:{status:'SKIPPED',elapsedMs:0,analyzer:'detectAutomotiveSubject()'},graph:{status:'SKIPPED',elapsedMs:0,analyzer:'classifyImageStructure() graph predicate'},final:{status:'SKIPPED',elapsedMs:0,analyzer:'analyzePhase2Image()'}}};let source,classification;
+   try{telemetry.fingerprint=await fingerprintImageBytes(file);if(!active(token)||currentImageIdentity!==identity||identity.file!==file){recordStaleResult(identity,['captureId/current file']);return null}identity.fingerprint=telemetry.fingerprint.hash;identity.requestId=newAnalysisId('REQ');identity.analyzerSource='Pending';telemetry.requestId=identity.requestId;window.__nitrosCurrentImageIdentity={captureId:identity.captureId,analysisId:identity.analysisId,requestId:identity.requestId,imageHash:identity.fingerprint,resultId:null};updateImageIdentityDeveloper(identity);setStatus('Fresh fingerprint calculated. New analysis request created; invoking analyzer with current image…',token);await yieldClassificationFrame();if(!active(token)||currentImageIdentity!==identity||identity.file!==file){recordStaleResult(identity,['captureId/analysisId changed before decode']);return null}let started=performance.now();source=await imageToCanvas(file);if(!active(token)||currentImageIdentity!==identity||identity.file!==file){recordStaleResult(identity,['captureId/analysisId changed during decode']);return null}telemetry.width=source.width;telemetry.height=source.height;telemetry.stages.decoded={status:'RUN',elapsedMs:performance.now()-started,analyzer:'imageToCanvas(current File)'};identity.analyzerSource='classifyImageStructure(current decoded canvas)';updateImageIdentityDeveloper(identity);classification=classifyImageStructure(source,file,telemetry.stages);if(!classification.graphAllowed){started=performance.now();identity.analyzerSource='detectAutomotiveSubject(current decoded canvas)';updateImageIdentityDeveloper(identity);classification=await detectAutomotiveSubject(source,file,classification,token);telemetry.stages.automotive={status:'RUN',elapsedMs:performance.now()-started,analyzer:classification?.automotiveDetector?.analyzer||'detectAutomotiveSubject(current decoded canvas)'}}else telemetry.stages.automotive={status:'SKIPPED',elapsedMs:0,analyzer:'detectAutomotiveSubject() — graph gate passed'};if(!classification||typeof classification.category!=='string'||!Array.isArray(classification.evidence)||typeof classification.graphAllowed!=='boolean')throw new Error('No valid analyzer result returned');identity.resultId=newAnalysisId('RESULT');classification={...classification,captureId:identity.captureId,analysisId:identity.analysisId,requestId:identity.requestId,imageHash:identity.fingerprint,resultId:identity.resultId};telemetry.resultId=identity.resultId;const failedChecks=[];if(currentImageIdentity!==identity||classification.captureId!==currentImageIdentity?.captureId)failedChecks.push('captureId');if(classification.analysisId!==currentImageIdentity?.analysisId)failedChecks.push('analysisId');if(classification.imageHash!==currentImageIdentity?.fingerprint)failedChecks.push('imageHash');if(identity.file!==file)failedChecks.push('current image file');if(!active(token))failedChecks.push('analysis generation');if(failedChecks.length){recordStaleResult(identity,failedChecks);return null}started=performance.now();analysisState={classification,captureId:identity.captureId,analysisId:identity.analysisId,requestId:identity.requestId,imageHash:identity.fingerprint,resultId:identity.resultId};window.__nitrosCurrentImageAnalysis=analysisState;window.__nitrosCurrentImageIdentity={captureId:identity.captureId,analysisId:identity.analysisId,requestId:identity.requestId,imageHash:identity.fingerprint,resultId:identity.resultId};analysisCompletedAt=new Date().toISOString();analysisDisposition='ACCEPTED';updateImageIdentityDeveloper(identity);updateClassificationDeveloper(classification);window.updateAnalysisSessionDeveloper?.();telemetry.stages.final={status:'RUN',elapsedMs:performance.now()-started,analyzer:'analyzePhase2Image() verified fresh-result routing'};telemetry.totalMs=performance.now()-totalStarted;analysisState.telemetry=telemetry}catch(error){if(!active(token)||currentImageIdentity!==identity){recordStaleResult(identity,['late asynchronous failure']);return null}const failed=Object.values(telemetry.stages).find(stage=>stage.status==='SKIPPED');if(failed){failed.status='FAILED';failed.error=error.message}telemetry.fingerprint=telemetry.fingerprint||{algorithm:'Unavailable',hash:'FAILED',status:'FAILED'};telemetry.totalMs=performance.now()-totalStarted;analysisState={};window.__nitrosCurrentImageAnalysis=null;updateClassificationDeveloper(null);analysisCompletedAt=new Date().toISOString();analysisDisposition='REJECTED';identity.analyzerSource='FAILED — no valid analyzer result returned';identity.resultId=null;updateImageIdentityDeveloper(identity);window.updateAnalysisSessionDeveloper?.();throw error}
    const p=$('oliverImportPreview');if(p)p.insertAdjacentHTML('beforeend',`<div class="phase2-result"><strong>Detected category:</strong> ${esc(classification.category)} <span class="phase2-confidence">${classification.confidence}%</span><br><strong>Classification evidence:</strong> ${esc(classification.evidence.join('; '))}<br><strong>Graph analysis:</strong> ${classification.graphAllowed?'Gate passed — OCR and graph analysis may start.':'Not started — no graph/chart detected.'}<br><strong>Automotive analysis:</strong> ${classification.automotiveEvidence?'Completed — positive automotive subject evidence detected.':classification.automotiveDetector?.completed?'Completed — insufficient positive automotive subject evidence.':'Not started — image was not classified as a photograph.'}</div>`);
    if(p)p.insertAdjacentHTML('beforeend',classificationTelemetryHtml(telemetry));
    if(!classification.graphAllowed){setStatus(`Detected ${classification.category} (${classification.confidence}%). Graph analysis was not started.`,token);return}
@@ -7708,7 +7705,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    if(isImage)hardResetImageSession();else{try{analysisController?.abort()}catch(_){}analysisController=new AbortController();revokePreview();imageBuffer=null;analysisState={}}
    setStatus(`Loading ${file.name}…`);
    if(isImage){
-     const identity={captureId:newAnalysisId('CAPTURE'),requestId:null,fingerprint:null,resultId:null,analyzerSource:'New image received',file};currentImageIdentity=identity;window.__nitrosCurrentImageIdentity={captureId:identity.captureId,requestId:null,fingerprint:null,resultId:null};updateImageIdentityDeveloper(identity);
+     const identity={captureId:newAnalysisId('CAPTURE'),analysisId:newAnalysisId('ANALYSIS'),requestId:null,fingerprint:null,resultId:null,analyzerSource:'NitrosCurrentImageClassifier — current File bytes/canvas',file};currentImageIdentity=identity;analysisResetReason='NEW_PHOTO';analysisStartedAt=new Date().toISOString();analysisCompletedAt='';analysisDisposition='ANALYZING';lastStaleRejection='None';window.__nitrosCurrentImageIdentity={captureId:identity.captureId,analysisId:identity.analysisId,requestId:null,imageHash:null,resultId:null};updateImageIdentityDeveloper(identity);window.updateAnalysisSessionDeveloper?.();setStatus('Analyzing current image…');
      activePreviewUrl=URL.createObjectURL(file);
      previewHtml(`<div><span class="oliver-import-chip">Image</span><span class="oliver-import-chip">${esc(file.name)}</span></div><img alt="Imported diagnostic image" src="${activePreviewUrl}">`);
      try{await analyzePhase2Image(file,token,identity)}catch(err){if(!active(token))return;
@@ -7756,7 +7753,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
    file.onchange=()=>{handleFile(file.files?.[0]).catch(e=>setStatus('Import failed: '+e.message));file.value=''};
    $('oliverImportCameraFile').onchange=()=>{const f=$('oliverImportCameraFile');handleFile(f.files?.[0]).catch(e=>setStatus('Camera import failed: '+e.message));f.value=''};
  }
- const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AB — Image Classification Gate';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Image Classification Gate — automotive evidence gate ready';};
+ const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AC — Image Classification Gate';build();const s=$('diagState');if(s&&!$('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Image Classification Gate — automotive evidence gate ready';};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
  window.addEventListener('pageshow',()=>setTimeout(apply,40));
  const mo=new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))build()});mo.observe(document.documentElement,{childList:true,subtree:true});
@@ -7766,9 +7763,9 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1081-version-label-sync">
 (()=>{
  const sync=()=>{
-  document.title='Nitros Mobile Technician Portal v10.12.7AB — Image Classification Gate';
+  document.title='Nitros Mobile Technician Portal v10.12.7AC — Image Classification Gate';
   document.querySelectorAll('.sub,.status,header,footer,[class*=version],[id*=version]').forEach(el=>{
-   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.7AB');
+   if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.7AC');
   });
  };
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});else sync();
@@ -7781,7 +7778,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 <!-- v10.8.6 Startup Freeze Fix: associates OCR words with upper-left, upper-right, lower-left, and lower-right graph panels; asks only for the first unresolved PID or operating condition. -->
 <script id="v1084-release-identity">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AB — Image Classification Gate';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7AB — Image Classification Gate</strong> · Build 2026-08-07');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AC — Image Classification Gate';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7AC — Image Classification Gate</strong> · Build 2026-08-07');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
 </script>
 
 
@@ -7795,7 +7792,7 @@ html.nitros-stabilizing body{visibility:hidden}
 <script id="v10120-single-authoritative-diagnostic-state">
 (()=>{
 'use strict';
-const VERSION='10.12.7AB',BUILD='2026-08-07',RELEASE='Image Classification Gate';
+const VERSION='10.12.7AC',BUILD='2026-08-07',RELEASE='Image Classification Gate';
 const STATE_KEY='nitros_diagnostic_case_v10120';
 const LEGACY_KEYS=[
  'nitros_v1052_oliver_transcript','nitros_oliver_active_diagnostic_case_v1060','nitros_oliver_case_v10106','nitros_oliver_case_v10107','nitros_oliver_case_v10109','nitros_oliver_case_v10110','nitros_oliver_case_v10111','nitros_oliver_case_v10112','nitros_oliver_case_v10113','nitros_oliver_case_v10114','nitros_oliver_case_v10143','nitros_oliver_workflow_v10105'
@@ -7936,14 +7933,14 @@ window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),pr
 <script id="v10121-login-controller">
 (()=>{
   'use strict';
-  const VERSION='10.12.7AB';
+  const VERSION='10.12.7AC';
   const PROFILE_KEY='nitros_portal_v8_profile';
   const init=()=>{
-    document.title='Nitros Mobile Technician Portal v10.12.7AB — Image Classification Gate';
+    document.title='Nitros Mobile Technician Portal v10.12.7AC — Image Classification Gate';
     const sub=document.querySelector('header .sub');
-    if(sub) sub.textContent='Mobile Technician Portal v10.12.7AB — Image Classification Gate';
+    if(sub) sub.textContent='Mobile Technician Portal v10.12.7AC — Image Classification Gate';
     const status=document.getElementById('portalLoginStatus');
-    if(status) status.textContent='Version 10.12.7AB — Image Classification Gate. Enter technician name and an optional 4-digit PIN.';
+    if(status) status.textContent='Version 10.12.7AC — Image Classification Gate. Enter technician name and an optional 4-digit PIN.';
     const button=document.getElementById('portalSignIn');
     if(button){button.disabled=false;button.style.pointerEvents='auto';}
   };
@@ -7958,7 +7955,7 @@ html.nitros-stabilizing body{visibility:visible!important}
 #portalSignIn{position:relative;z-index:1000;pointer-events:auto!important;touch-action:manipulation!important}
 </style>
 <script id="v10122-release-marker">
-(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AB — Image Classification Gate';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7AB — Image Classification Gate';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7AB — Image Classification Gate. New image imports begin with a hard analysis reset.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
+(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AC — Image Classification Gate';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7AC — Image Classification Gate';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7AC — Image Classification Gate. New image imports begin with a hard analysis reset.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
 </script>
 
 
@@ -7966,7 +7963,7 @@ html.nitros-stabilizing body{visibility:visible!important}
 
 <script id="graphIntelligenceEngineV127C">
 window.GraphIntelligenceEngine = {
-  version: "10.12.7AB",
+  version: "10.12.7AC",
   stages: [
     "Image Imported",
     "Preprocessing",
@@ -7995,7 +7992,7 @@ window.GraphIntelligenceEngine = {
 <script id="developerModeStub">
 window.NitrosDeveloperMode={
  enabled:false,
- build:"10.12.7AB",
+ build:"10.12.7AC",
  stage:"Idle",
  lastOperation:"None",
  setStage(s){this.stage=s;console.log("[DeveloperMode]",s);}
@@ -8005,13 +8002,22 @@ document.addEventListener("DOMContentLoaded",()=>{
  panel.id="nitrosDeveloperPanel";
  panel.style.margin="12px";
  panel.innerHTML=`
- <summary><strong>Developer Mode — Version 10.12.7AB — Image Classification Gate</strong></summary>
+ <summary><strong>Developer Mode — Version 10.12.7AC — Image Classification Gate</strong></summary>
  <div style="padding:8px">
- <p><b>Build:</b> Version 10.12.7AB — Image Classification Gate</p>
+ <p><b>Build:</b> Version 10.12.7AC — Image Classification Gate</p>
+ <p><b>Case ID:</b> <span id="nitrosCaseId">Pending</span></p>
+ <p><b>Analysis Session ID:</b> <span id="nitrosAnalysisSessionId">Pending</span></p>
  <p><b>Capture / Request ID:</b> <span id="nitrosCaptureRequestId">None</span></p>
+ <p><b>Analysis ID:</b> <span id="nitrosAnalysisId">None</span></p>
  <p><b>Current Image SHA-256:</b> <span id="nitrosCurrentImageSha">None</span></p>
  <p><b>Analyzer Source:</b> <span id="nitrosAnalyzerSource">None</span></p>
  <p><b>Result ID:</b> <span id="nitrosResultId">None</span></p>
+ <p><b>Analysis Started:</b> <span id="nitrosAnalysisStarted">None</span></p>
+ <p><b>Analysis Completed:</b> <span id="nitrosAnalysisCompleted">None</span></p>
+ <p><b>Result accepted/rejected:</b> <span id="nitrosResultDisposition">NONE</span></p>
+ <p><b>Reset Reason:</b> <span id="nitrosResetReason">APP_START</span></p>
+ <p><b>Active classifier pipeline:</b> <span id="nitrosActiveClassifier">NitrosCurrentImageClassifier / 10.12.7AC</span></p>
+ <p><b>Stale-result log:</b> <span id="nitrosStaleResultLog">None</span></p>
  <p><b>Image classification:</b> <span id="nitrosImageClassification">No image classified.</span></p>
  <p><b>Classification confidence:</b> <span id="nitrosClassificationConfidence">—</span></p>
  <p><b>Classification evidence:</b> <span id="nitrosClassificationEvidence">No image classified.</span></p>
@@ -8020,6 +8026,7 @@ document.addEventListener("DOMContentLoaded",()=>{
  <p><b>Purpose:</b> Development build for Graph Workspace testing.</p>
  </div>`;
  document.body.appendChild(panel);
+ window.updateAnalysisSessionDeveloper?.();
 });
 </script>
 
@@ -8036,7 +8043,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>Updated local incremental build to Version 10.12.7AB — Fresh Image / Fresh Classification Fix — binds every displayed result to the current capture, request ID, and SHA-256 fingerprint.</li>
+<li>Updated local incremental build to Version 10.12.7AC — State Isolation / Cache Cleanup — one authoritative classifier with per-image capture/analysis/hash guards and stale-result rejection.</li>
 <li>Segmentation overlay and diagnostics are generated from the imported image.</li>
 <li>Final panel regions are processed independently.</li>
 </ul>
@@ -8243,11 +8250,11 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <!-- v10.12.7P: single pointer-event gesture path prevents iPhone double-processing; pinch-out and pinch-in remain bounded; Fit, Close, and reopen always reset the viewer; OCR still uses the original full-resolution image. -->
 <script id="v10127p-phase2-build-identity">
-(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AB — Image Classification Gate';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7AB — Image Classification Gate';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7AB — Image Classification Gate. Photographic images require positive automotive subject evidence before automotive classification.';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7AB — Image Classification Gate</strong> · Build 2026-08-07');const toggle=document.getElementById('oliverImportToggle');if(toggle)toggle.textContent='＋ Import Diagnostic Image or Data';const image=document.getElementById('oliverImportImage');if(image)image.textContent='📷 Automatic Image Analysis';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
+(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AC — Image Classification Gate';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7AC — Image Classification Gate';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7AC — Image Classification Gate. Photographic images require positive automotive subject evidence before automotive classification.';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7AC — Image Classification Gate</strong> · Build 2026-08-07');const toggle=document.getElementById('oliverImportToggle');if(toggle)toggle.textContent='＋ Import Diagnostic Image or Data';const image=document.getElementById('oliverImportImage');if(image)image.textContent='📷 Automatic Image Analysis';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
 </script>
 <script id="v10127x-service-worker-update">
-(()=>{'use strict';if(!('serviceWorker' in navigator))return;const VERSION='10.12.7AB',RELOAD_KEY=`nitros-sw-reloaded-${VERSION}`;let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing||sessionStorage.getItem(RELOAD_KEY)==='1')return;refreshing=true;sessionStorage.setItem(RELOAD_KEY,'1');location.reload()});window.addEventListener('load',async()=>{try{const registration=await navigator.serviceWorker.register(`./sw.js?v=${VERSION}`,{updateViaCache:'none'});await registration.update()}catch(error){console.warn('Nitros service-worker update check failed:',error)}})})();
+(()=>{'use strict';if(!('serviceWorker' in navigator))return;const VERSION='10.12.7AC',RELOAD_KEY=`nitros-sw-reloaded-${VERSION}`;let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing||sessionStorage.getItem(RELOAD_KEY)==='1')return;refreshing=true;sessionStorage.setItem(RELOAD_KEY,'1');location.reload()});window.addEventListener('load',async()=>{try{const registration=await navigator.serviceWorker.register(`./sw.js?v=${VERSION}`,{updateViaCache:'none'});await registration.update()}catch(error){console.warn('Nitros service-worker update check failed:',error)}})})();
 </script>
-<!-- v10.12.7AB binds each result to a fresh capture/request ID and current-byte SHA-256 while preserving AA classification, graph, preview, zoom, and diagnostic behavior. -->
+<!-- v10.12.7AC consolidates one production classifier and hardens photo/case isolation, stale-result rejection, diagnostics, and obsolete classifier-cache cleanup without tuning AA recognition. -->
 </body>
 </html>
