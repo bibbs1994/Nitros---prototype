@@ -1,6 +1,6 @@
 'use strict';
 
-const VERSION = '10.12.7Y';
+const VERSION = '10.12.7Z';
 const CACHE_PREFIX = 'nitros-mobile-technician-portal-';
 const CACHE_NAME = `${CACHE_PREFIX}${VERSION}`;
 const APP_SHELL = new URL('./index.html', self.registration.scope).href;
