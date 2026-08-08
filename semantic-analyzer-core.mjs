@@ -109,6 +109,36 @@ function cleanStringArray(value, field) {
   return value.map(item => item.trim()).filter(Boolean).slice(0, 24);
 }
 
+function wiringEntries(value) {
+  if (value === null || value === undefined) return [];
+  if (typeof value === 'string') return value.split(/\s*(?:->|→)\s*/).map(item => item.trim()).filter(Boolean);
+  if (Array.isArray(value)) return value.flatMap(wiringEntries);
+  if (typeof value === 'object') {
+    for (const key of ['path','steps','nodes','components','testPoints','connectors']) if (value[key] !== undefined) return wiringEntries(value[key]);
+    return [value];
+  }
+  return [];
+}
+
+export function normalizeWiringField(value) {
+  return wiringEntries(value).map(entry => {
+    if (typeof entry === 'string') return { component: entry.slice(0, 160), terminal: '', wire: '', circuit: '', voltageExpected: '', description: '' };
+    const text = key => typeof entry?.[key] === 'string' || typeof entry?.[key] === 'number' ? String(entry[key]).trim() : '';
+    const component = text('component') || text('name') || text('label') || text('node');
+    const terminal = text('terminal') || text('pin');
+    const wire = text('wire') || text('wireColor') || text('color');
+    const circuit = text('circuit') || text('circuitId');
+    const voltageExpected = text('voltageExpected') || text('expectedVoltage') || text('expected');
+    const description = text('description') || text('detail');
+    if (![component,terminal,wire,circuit,voltageExpected,description].some(Boolean)) return null;
+    return { component: component.slice(0, 160), terminal: terminal.slice(0, 100), wire: wire.slice(0, 100), circuit: circuit.slice(0, 120), voltageExpected: voltageExpected.slice(0, 120), description: description.slice(0, 300) };
+  }).filter(Boolean).slice(0, 24);
+}
+
+function tolerantWiringStrings(value) {
+  return normalizeWiringField(value).map(node => node.component || node.description || [node.terminal,node.wire,node.circuit,node.voltageExpected].filter(Boolean).join(' — ')).filter(Boolean);
+}
+
 function validateAutomotiveComponent(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Component analyzer returned no structured result.');
   if (!['IDENTIFIED', 'UNCERTAIN'].includes(raw.status)) throw new Error('Component analyzer status is invalid.');
@@ -160,13 +190,14 @@ function validateWiringDiagram(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !['READY','INSUFFICIENT_READABILITY'].includes(raw.status)) throw new Error('Wiring diagram analyzer returned no valid structured result.');
   const confidence = normalizeSemanticConfidence(raw.confidence);
   const circuitComponent = typeof raw.circuitComponent === 'string' ? raw.circuitComponent.trim().slice(0, 200) : '';
-  const arrays = Object.fromEntries(['structuralEvidence','detectedComponents','connectorsAndPins','fuses','relays','splices','wireDetails','importantObservations','unreadableFields'].map(field => [field, cleanStringArray(raw[field], field)]));
-  const circuitPaths = Array.isArray(raw.circuitPaths) ? raw.circuitPaths.slice(0, 16).map((path, index) => {
+  const structuralEvidence = cleanStringArray(raw.structuralEvidence, 'structuralEvidence');
+  const arrays = Object.fromEntries(['detectedComponents','connectorsAndPins','fuses','relays','splices','wireDetails','importantObservations','unreadableFields'].map(field => [field, tolerantWiringStrings(raw[field])]));
+  let circuitPaths = Array.isArray(raw.circuitPaths) ? raw.circuitPaths.slice(0, 16).map((path, index) => {
     if (!path || typeof path !== 'object') throw new Error(`Circuit path ${index + 1} is invalid.`);
     const functionConfirmed = Boolean(path.functionConfirmed);
     return { label: String(path.label || `Circuit Leg ${String.fromCharCode(65 + index)}`).slice(0, 80), path: String(path.path || 'Not reliably readable from supplied diagram.').slice(0, 300), function: functionConfirmed ? String(path.function || '').slice(0, 200) : 'Circuit function not reliably confirmed from supplied diagram.', functionConfirmed };
   }) : [];
-  if (arrays.structuralEvidence.length < 2) throw new Error('Wiring diagram classification lacks structural schematic evidence.');
+  if (structuralEvidence.length < 2) throw new Error('Wiring diagram classification lacks structural schematic evidence.');
   const conclusionSet = new Set(['CONTINUE','COMPONENT_PASSES_CURRENT_TESTS','VERIFIED_COMPONENT_FAILURE','VERIFIED_POWER_SUPPLY_FAULT','VERIFIED_GROUND_FAULT','VERIFIED_CONTROL_CIRCUIT_FAULT','VERIFIED_SIGNAL_CIRCUIT_FAULT','POSSIBLE_MODULE_DRIVER_FAULT_FURTHER_TESTING_REQUIRED','INSUFFICIENT_EVIDENCE']);
   const testPlan = Array.isArray(raw.testPlan) ? raw.testPlan.slice(0, 8).map((step, index) => {
     if (!step || typeof step !== 'object') throw new Error(`Wiring test step ${index + 1} is invalid.`);
@@ -176,7 +207,14 @@ function validateWiringDiagram(raw) {
     return { id: String(step.id || `step-${index + 1}`).slice(0, 40), objective: String(step.objective || '').slice(0, 200), tool: String(step.tool || '').slice(0, 120), instructions: String(step.instructions || '').slice(0, 700), redLead: String(step.redLead || '').slice(0, 240), blackLead: String(step.blackLead || '').slice(0, 240), connectorCondition: String(step.connectorCondition || '').slice(0, 160), operatingCondition: String(step.operatingCondition || '').slice(0, 160), loaded: Boolean(step.loaded), expectedBehavior: String(step.expectedBehavior || '').slice(0, 300), evaluationType: String(step.evaluationType || 'OBSERVATION'), expectedMin: Number.isFinite(step.expectedMin) ? step.expectedMin : null, expectedMax: Number.isFinite(step.expectedMax) ? step.expectedMax : null, specificationSource: String(step.specificationSource || 'NONE'), nextOnPass: Number.isInteger(step.nextOnPass) ? step.nextOnPass : null, nextOnFail: Number.isInteger(step.nextOnFail) ? step.nextOnFail : null, passConclusion: step.passConclusion, failConclusion: step.failConclusion };
   }) : [];
   if (raw.status === 'READY' && (!circuitComponent || !testPlan.length)) throw new Error('Readable wiring diagram has no component test plan.');
-  return { status: raw.status, circuitComponent: circuitComponent || 'Not reliably readable from supplied diagram.', confidence, rawConfidence: raw.confidence ?? null, normalizedConfidence: confidence, ...arrays, circuitPaths, safetyWarning: typeof raw.safetyWarning === 'string' ? raw.safetyWarning.trim().slice(0, 600) || null : null, testPlan };
+  const powerPath = normalizeWiringField(raw.powerPath);
+  const groundPath = normalizeWiringField(raw.groundPath);
+  const controlPath = normalizeWiringField(raw.controlPath ?? raw.signalPath);
+  const testPoints = normalizeWiringField(raw.testPoints);
+  if (!circuitPaths.length) circuitPaths = [['Reported power path',powerPath],['Reported ground path',groundPath],['Reported control/signal path',controlPath]].filter(([,nodes]) => nodes.length).map(([label,nodes]) => ({ label, path: nodes.map(node => [node.component,node.terminal,node.wire,node.circuit].filter(Boolean).join(' ')).join(' → '), function: 'Circuit function not reliably confirmed from supplied diagram.', functionConfirmed: false }));
+  const detectedComponents = arrays.detectedComponents.length ? arrays.detectedComponents : tolerantWiringStrings(raw.components);
+  const connectorsAndPins = arrays.connectorsAndPins.length ? arrays.connectorsAndPins : tolerantWiringStrings(raw.connectors);
+  return { status: raw.status, circuitComponent: circuitComponent || 'Not reliably readable from supplied diagram.', confidence, rawConfidence: raw.confidence ?? null, normalizedConfidence: confidence, structuralEvidence, ...arrays, detectedComponents, connectorsAndPins, circuitPaths, powerPath, groundPath, controlPath, testPoints, safetyWarning: typeof raw.safetyWarning === 'string' ? raw.safetyWarning.trim().slice(0, 600) || null : null, testPlan };
 }
 
 function validateSemanticPayload(raw) {

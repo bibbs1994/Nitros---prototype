@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.7AO — Interactive Guided Electrical Testing</title>
+<title>Nitros Mobile Technician Portal v10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.7AO — Interactive Guided Electrical Testing</div>
+  <div class="sub">Mobile Technician Portal v10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.7AO — Interactive Guided Electrical Testing. Existing conversational and diagnostic evidence features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing. Existing conversational and diagnostic evidence features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.7AO — Interactive Guided Electrical Testing</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.7AO — Interactive Guided Electrical Testing</div>
+      <div class="eyebrow">Version 10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -5227,7 +5227,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7AO • interactive guided electrical testing</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7AO • wiring diagram semantic normalization + guided circuit testing</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5265,7 +5265,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7AO — Interactive Guided Electrical Testing</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -7204,12 +7204,12 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 .oliver-active-case-banner button{border:1px solid #60748c;background:#13243a;color:#fff;border-radius:9px;padding:5px 9px;font-weight:800}
 </style>
 <script id="v1060-session-manager-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AO — Interactive Guided Electrical Testing';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Oliver Context Awareness Engine ready — known case facts will not be requested again';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 adds context awareness: Oliver reads the active case, acknowledges known facts, and asks only for the highest-value missing information. -->
 
 <script id="v1072-completed-prompt-tracking-marker">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AO — Interactive Guided Electrical Testing';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing';const s=document.getElementById('diagState');if(s&&!document.getElementById('oliverDiagnosticMode')?.classList.contains('active'))s.textContent='Completed Prompt Tracking ready — answered prompts are locked and the diagnostic conversation advances';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',apply);})();
 </script>
 <!-- v10.8.6 tracks completed prompts, recognizes power-loss symptoms, acknowledges each new fact, and blocks answered intake questions from repeating. -->
 
@@ -7236,7 +7236,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1081-version-label-sync">
 (()=>{
  const sync=()=>{
-  document.title='Nitros Mobile Technician Portal v10.12.7AO — Interactive Guided Electrical Testing';
+  document.title='Nitros Mobile Technician Portal v10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing';
   document.querySelectorAll('.sub,.status,header,footer,[class*=version],[id*=version]').forEach(el=>{
    if(el.children.length===0 && /10\.7\.[012]|10\.8\.0/.test(el.textContent||'')) el.textContent=(el.textContent||'').replace(/10\.7\.[012]|10\.8\.0/g,'10.12.7AO');
   });
@@ -7249,9 +7249,9 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 
 
-<!-- v10.12.7AO Interactive Guided Electrical Testing: preserves AM classification, component, drivetrain, confidence, and payload behavior. -->
+<!-- v10.12.7AO Wiring Diagram Semantic Normalization + Guided Circuit Testing: preserves AM classification, component, drivetrain, confidence, and payload behavior. -->
 <script id="v1084-release-identity">
-(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AO — Interactive Guided Electrical Testing';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7AO — Interactive Guided Electrical Testing</strong> · Build 2026-08-08');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
+(()=>{const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing</strong> · Build 2026-08-08');};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
 </script>
 
 
@@ -7265,7 +7265,7 @@ html.nitros-stabilizing body{visibility:hidden}
 <script id="v10120-single-authoritative-diagnostic-state">
 (()=>{
 'use strict';
-const VERSION='10.12.7AO',BUILD='2026-08-08',RELEASE='Interactive Guided Electrical Testing';
+const VERSION='10.12.7AO',BUILD='2026-08-08',RELEASE='Wiring Diagram Semantic Normalization + Guided Circuit Testing';
 const STATE_KEY='nitros_diagnostic_case_v10120';
 const LEGACY_KEYS=[
  'nitros_v1052_oliver_transcript','nitros_oliver_active_diagnostic_case_v1060','nitros_oliver_case_v10106','nitros_oliver_case_v10107','nitros_oliver_case_v10109','nitros_oliver_case_v10110','nitros_oliver_case_v10111','nitros_oliver_case_v10112','nitros_oliver_case_v10113','nitros_oliver_case_v10114','nitros_oliver_case_v10143','nitros_oliver_workflow_v10105'
@@ -7409,11 +7409,11 @@ window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),pr
   const VERSION='10.12.7AO';
   const PROFILE_KEY='nitros_portal_v8_profile';
   const init=()=>{
-    document.title='Nitros Mobile Technician Portal v10.12.7AO — Interactive Guided Electrical Testing';
+    document.title='Nitros Mobile Technician Portal v10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing';
     const sub=document.querySelector('header .sub');
-    if(sub) sub.textContent='Mobile Technician Portal v10.12.7AO — Interactive Guided Electrical Testing';
+    if(sub) sub.textContent='Mobile Technician Portal v10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing';
     const status=document.getElementById('portalLoginStatus');
-    if(status) status.textContent='Version 10.12.7AO — Interactive Guided Electrical Testing. Enter technician name and an optional 4-digit PIN.';
+    if(status) status.textContent='Version 10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing. Enter technician name and an optional 4-digit PIN.';
     const button=document.getElementById('portalSignIn');
     if(button){button.disabled=false;button.style.pointerEvents='auto';}
   };
@@ -7428,7 +7428,7 @@ html.nitros-stabilizing body{visibility:visible!important}
 #portalSignIn{position:relative;z-index:1000;pointer-events:auto!important;touch-action:manipulation!important}
 </style>
 <script id="v10122-release-marker">
-(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AO — Interactive Guided Electrical Testing';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7AO — Interactive Guided Electrical Testing';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7AO — Interactive Guided Electrical Testing. New image imports begin with a hard analysis reset.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
+(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing. New image imports begin with a hard analysis reset.';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();})();
 </script>
 
 
@@ -7459,9 +7459,9 @@ document.addEventListener("DOMContentLoaded",()=>{
  panel.id="nitrosDeveloperPanel";
  panel.style.margin="12px";
  panel.innerHTML=`
- <summary><strong>Developer Mode — Version 10.12.7AO — Interactive Guided Electrical Testing</strong></summary>
+ <summary><strong>Developer Mode — Version 10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing</strong></summary>
  <div style="padding:8px">
- <p><b>Build:</b> Version 10.12.7AO — Interactive Guided Electrical Testing</p>
+ <p><b>Build:</b> Version 10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing</p>
  <p><b>Case ID:</b> <span id="nitrosCaseId">Pending</span></p>
  <p><b>Analysis Session ID:</b> <span id="nitrosAnalysisSessionId">Pending</span></p>
  <p><b>Analysis Run ID:</b> <span id="nitrosCaptureRequestId">None</span></p>
@@ -7794,7 +7794,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <!-- v10.12.7P: single pointer-event gesture path prevents iPhone double-processing; pinch-out and pinch-in remain bounded; Fit, Close, and reopen always reset the viewer; OCR still uses the original full-resolution image. -->
 <script id="v10127p-phase2-build-identity">
-(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AO — Interactive Guided Electrical Testing';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7AO — Interactive Guided Electrical Testing';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7AO — Interactive Guided Electrical Testing. Automotive schematics receive fresh circuit analysis and evidence-bound guided testing.';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7AO — Interactive Guided Electrical Testing</strong> · Build 2026-08-08');const toggle=document.getElementById('oliverImportToggle');if(toggle)toggle.textContent='＋ Import Diagnostic Image or Data';const image=document.getElementById('oliverImportImage');if(image)image.textContent='📷 Automatic Image Analysis';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
+(()=>{'use strict';const apply=()=>{document.title='Nitros Mobile Technician Portal v10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing';const sub=document.querySelector('header .sub');if(sub)sub.textContent='Mobile Technician Portal v10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing';const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent='Version 10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing. Automotive schematics receive fresh circuit analysis and evidence-bound guided testing.';document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML='<strong>Version 10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing</strong> · Build 2026-08-08');const toggle=document.getElementById('oliverImportToggle');if(toggle)toggle.textContent='＋ Import Diagnostic Image or Data';const image=document.getElementById('oliverImportImage');if(image)image.textContent='📷 Automatic Image Analysis';};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,80));})();
 </script>
 <script id="v10127x-service-worker-update">
 (()=>{'use strict';if(!('serviceWorker' in navigator))return;const VERSION='10.12.7AO',RELOAD_KEY=`nitros-sw-reloaded-${VERSION}`;let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing||sessionStorage.getItem(RELOAD_KEY)==='1')return;refreshing=true;sessionStorage.setItem(RELOAD_KEY,'1');location.reload()});window.addEventListener('load',async()=>{try{const registration=await navigator.serviceWorker.register(`./sw.js?v=${VERSION}`,{updateViaCache:'none'});await registration.update()}catch(error){console.warn('Nitros service-worker update check failed:',error)}})})();

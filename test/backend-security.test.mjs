@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import handler from '../api/semantic-image-analysis.mjs';
 import { MAX_JSON_BYTES, publicError, resetRateLimitsForTests } from '../backend-http-security.mjs';
-import { analyzeSemanticImage, normalizeSemanticConfidence } from '../semantic-analyzer-core.mjs';
+import { analyzeSemanticImage, normalizeSemanticConfidence, normalizeWiringField } from '../semantic-analyzer-core.mjs';
 
 const ORIGIN = 'https://bibbs1994.github.io';
 const drivetrain = (overrides = {}) => ({ applicable: false, candidateType: 'OTHER', engineConnection: 'UNKNOWN', transmissionConnection: 'UNKNOWN', longitudinalShafts: 'UNKNOWN', lateralAxleOutputs: 'UNKNOWN', axleTubes: 'UNKNOWN', location: 'UNKNOWN', powerFlowRole: 'UNKNOWN', distinguishingFeaturesComplete: false, evidence: [], competingCandidate: null, ...overrides });
@@ -18,6 +18,22 @@ test('semantic confidence normalization supports fractional, percentage, string,
   assert.equal(normalizeSemanticConfidence(undefined), null);
   assert.equal(normalizeSemanticConfidence(Number.NaN), null);
   assert.equal(normalizeSemanticConfidence('not provided'), null);
+});
+
+test('wiring fields normalize strings, arrays, object nodes, and wrapped collections', () => {
+  const expectedKeys = ['component','terminal','wire','circuit','voltageExpected','description'];
+  const cases = [
+    ['Battery -> Fuse F12 -> Relay -> Load -> Ground', 5],
+    [['Battery','Fuse F12','Relay'], 3],
+    [[{ component: 'Battery', terminal: 'B+' }, { component: 'Relay', terminal: 87 }], 2],
+    [{ steps: [{ component: 'Fuse F12' }, { component: 'Headlamp' }] }, 2]
+  ];
+  for (const [input,length] of cases) {
+    const normalized = normalizeWiringField(input);
+    assert.equal(normalized.length, length);
+    normalized.forEach(node => assert.deepEqual(Object.keys(node), expectedKeys));
+  }
+  assert.deepEqual(normalizeWiringField({ unusable: true }), []);
 });
 
 function responseMock() {

@@ -136,6 +136,19 @@ test('AO neutral circuit paths and electrical safety gates are enforced', () => 
   assert.doesNotMatch(analyzer, /<strong>Ground path:<\/strong>/);
 });
 
+test('AO wiring parser defensively normalizes legacy semantic field shapes', () => {
+  assert.match(core, /export function normalizeWiringField/);
+  assert.match(core, /\['path','steps','nodes','components','testPoints','connectors'\]/);
+  assert.match(core, /normalizeWiringField\(raw\.powerPath\)/);
+  assert.match(core, /normalizeWiringField\(raw\.groundPath\)/);
+  assert.match(core, /normalizeWiringField\(raw\.controlPath \?\? raw\.signalPath\)/);
+  assert.match(analyzer, /const powerPath=normalizeField\(raw\.powerPath\),groundPath=normalizeField\(raw\.groundPath\)/);
+  assert.match(analyzer, /Normalized power path/);
+  assert.match(analyzer, /Visible test points/);
+  assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
+  assert.match(html, /Version 10\.12\.7AO — Wiring Diagram Semantic Normalization \+ Guided Circuit Testing/);
+});
+
 test('transport diagnostics cover lifecycle, timing, and categorized failures', () => {
   for (const category of ['CONFIGURATION_ERROR','NETWORK_ERROR','CORS_ERROR','HTTP_ERROR','TIMEOUT_ERROR','REQUEST_ABORTED','PAYLOAD_ERROR','RESPONSE_PARSE_ERROR','SEMANTIC_API_ERROR','UNKNOWN_TRANSPORT_ERROR']) {
     assert.ok(analyzer.includes(category), `missing ${category}`);
