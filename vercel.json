@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/semantic-image-analysis.mjs": {
+      "maxDuration": 60
+    }
+  }
+}
