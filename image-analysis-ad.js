@@ -1,14 +1,15 @@
-/* Nitros 10.12.7AE active repair order persistence build; clean-room image analysis remains unchanged. */
+/* Nitros 10.12.7AF genuine semantic image analysis with clean-room transaction isolation. */
 (()=>{'use strict';
-  const BUILD='10.12.7AE';
+  const BUILD='10.12.7AF';
   const MAX_TEXT_BYTES=1500000;
   const CATEGORIES=new Set([
-    'Automotive Graph / Diagnostic Graph',
-    'Automotive Vehicle / Automotive Component Photograph',
-    'Document / Text / Screenshot',
-    'General Photograph',
-    'Unknown / Analysis Unavailable'
+    'AUTOMOTIVE_GRAPH',
+    'AUTOMOTIVE_COMPONENT_OR_VEHICLE',
+    'DOCUMENT_OR_TEXT_SCREENSHOT',
+    'GENERAL_NON_AUTOMOTIVE_PHOTO',
+    'UNKNOWN_OR_ANALYSIS_UNAVAILABLE'
   ]);
+  const CATEGORY_LABELS={AUTOMOTIVE_GRAPH:'Automotive Graph / Diagnostic Graph',AUTOMOTIVE_COMPONENT_OR_VEHICLE:'Automotive Component / Vehicle Photo',DOCUMENT_OR_TEXT_SCREENSHOT:'Document / Text / Screenshot',GENERAL_NON_AUTOMOTIVE_PHOTO:'General / Non-Automotive Photograph',UNKNOWN_OR_ANALYSIS_UNAVAILABLE:'Unknown / Analysis Unavailable'};
   const $=id=>document.getElementById(id);
   const escapeHtml=value=>String(value??'').replace(/[&<>\"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[char]));
   const initialStatus='Attach an image, CSV/text export, or PDF. Every image starts a new uncached analysis run.';
@@ -17,6 +18,7 @@
   let caseId=createId('CASE');
   let sessionId=createId('SESSION');
   let lastStaleMessage='None';
+  let lastStaleRejected=false;
 
   function createId(prefix){
     const random=globalThis.crypto?.randomUUID?.()||`${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
@@ -58,7 +60,11 @@
   }
 
   function abortAndDestroy(reason,{newCase=false,clearPreview=true}={}){
-    try{activeRun?.controller.abort(reason)}catch(_){ }
+    if(activeRun&&!activeRun.controller.signal.aborted){
+      lastStaleRejected=true;
+      lastStaleMessage=`STALE REQUEST INVALIDATED (${reason})`;
+      try{activeRun.controller.abort(reason)}catch(_){ }
+    }
     activeRun=null;
     revokePreview();
     clearRenderedAnalysis({clearPreview});
@@ -106,6 +112,24 @@
     return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,'0')).join('');
   }
 
+  function bytesToBase64(bytes){
+    const view=new Uint8Array(bytes);let binary='';const size=0x8000;
+    for(let offset=0;offset<view.length;offset+=size)binary+=String.fromCharCode(...view.subarray(offset,offset+size));
+    return btoa(binary);
+  }
+
+  function semanticEndpoint(){return document.querySelector('meta[name="nitros-semantic-endpoint"]')?.content?.trim()||'/api/semantic-image-analysis'}
+
+  window.NitrosVisionAnalyzer={
+    endpoint:semanticEndpoint(),
+    async analyzeCurrentImage({bytes,mimeType,runId,imageHash,signal}){
+      const response=await fetch(semanticEndpoint(),{method:'POST',headers:{'Content-Type':'application/json','Cache-Control':'no-store'},body:JSON.stringify({transactionId:runId,imageHash,mimeType,imageBase64:bytesToBase64(bytes)}),signal,cache:'no-store',credentials:'same-origin'});
+      let payload=null;try{payload=await response.json()}catch(_){}
+      if(!response.ok)throw Object.assign(new Error(payload?.error||`Semantic endpoint returned HTTP ${response.status}.`),{transportStatus:payload?.transportStatus||response.status});
+      return {...payload?.semanticResult,transactionId:payload?.transactionId,imageHash:payload?.imageHash,source:payload?.analyzer||'Secure semantic analyzer',transportStatus:payload?.transportStatus||response.status};
+    }
+  };
+
   async function decodeDimensions(bytes,mime,signal){
     if(signal.aborted)throw abortError();
     const bitmap=await createImageBitmap(new Blob([bytes],{type:mime||'application/octet-stream'}));
@@ -115,32 +139,31 @@
     return dimensions;
   }
 
+  function stringArray(raw,name){if(!Array.isArray(raw)||raw.some(item=>typeof item!=='string'))throw new Error(`Semantic response field ${name} is invalid.`);return raw.map(item=>item.trim()).filter(Boolean).slice(0,24)}
   function normalizeVisionResult(raw,run){
-    if(!raw||typeof raw!=='object')return unavailableResult(run,'No semantic vision analyzer returned a result.');
+    if(!raw||typeof raw!=='object')throw new Error('No semantic vision analyzer returned a structured result.');
+    if(raw.transactionId!==run.runId)throw new Error('Semantic result transaction ID does not match the current image.');
+    if(raw.imageHash!==run.imageHash)throw new Error('Semantic result image hash does not match the current image.');
     const category=String(raw.category||'');
-    if(!CATEGORIES.has(category))return unavailableResult(run,'Semantic vision analyzer returned no supported category.');
-    const confidence=Number(raw.confidence);
-    const evidence=Array.isArray(raw.evidence)?raw.evidence.filter(item=>typeof item==='string'&&item.trim()).slice(0,20):[];
-    if(category!=='Unknown / Analysis Unavailable'&&!evidence.length)return unavailableResult(run,'Semantic vision analyzer returned no positive evidence.');
-    return {
-      runId:run.runId,
-      imageHash:run.imageHash,
-      category,
-      confidence:Number.isFinite(confidence)?Math.max(0,Math.min(100,Math.round(confidence))):0,
-      evidence,
-      source:String(raw.source||'NitrosVisionAnalyzer semantic result'),
-      routingData:raw.routingData??null
-    };
+    if(!CATEGORIES.has(category))throw new Error('Semantic vision analyzer returned no supported category.');
+    const confidence=raw.confidence===null?null:Number(raw.confidence);
+    if(confidence!==null&&(!Number.isFinite(confidence)||confidence<0||confidence>100))throw new Error('Semantic confidence is invalid.');
+    const evidence=stringArray(raw.evidence,'evidence'),objects=stringArray(raw.objects,'objects'),automotiveEvidence=stringArray(raw.automotiveEvidence,'automotiveEvidence'),graphEvidence=stringArray(raw.graphEvidence,'graphEvidence'),documentEvidence=stringArray(raw.documentEvidence,'documentEvidence');
+    if(category!=='UNKNOWN_OR_ANALYSIS_UNAVAILABLE'&&!evidence.length)throw new Error('Semantic vision analyzer returned no positive evidence.');
+    if(category==='AUTOMOTIVE_GRAPH'&&graphEvidence.length<2)throw new Error('Graph classification lacks independent structural evidence.');
+    if(category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'&&!automotiveEvidence.length)throw new Error('Automotive classification lacks positive visual evidence.');
+    return {runId:raw.transactionId,imageHash:raw.imageHash,category,confidence:confidence===null?null:Math.round(confidence),objects,evidence,description:String(raw.description||'').trim(),automotiveEvidence,graphEvidence,documentEvidence,source:String(raw.source||'NitrosVisionAnalyzer semantic result'),transportStatus:raw.transportStatus??null,routingData:raw.routingData??null};
   }
 
   function unavailableResult(run,reason){
-    return {runId:run.runId,imageHash:run.imageHash,category:'Unknown / Analysis Unavailable',confidence:0,evidence:[reason],source:'CURRENT IMAGE BYTES — semantic analyzer unavailable',routingData:null};
+    return {runId:run.runId,imageHash:run.imageHash,category:'UNKNOWN_OR_ANALYSIS_UNAVAILABLE',confidence:null,objects:[],evidence:[reason],description:'Semantic image analysis could not be completed.',automotiveEvidence:[],graphEvidence:[],documentEvidence:[],source:'Secure semantic analyzer unavailable',transportStatus:run.analyzer?.transportStatus||null,routingData:null};
   }
 
   async function classifyCurrentBytes(run){
     const analyzer=window.NitrosVisionAnalyzer;
-    if(!analyzer||typeof analyzer.analyzeCurrentImage!=='function')return unavailableResult(run,'No genuine semantic vision analyzer is configured; no object-recognition claims were generated.');
+    if(!analyzer||typeof analyzer.analyzeCurrentImage!=='function')throw new Error('No genuine semantic vision analyzer is configured; no object-recognition claims were generated.');
     const requestBytes=run.bytes.slice(0);
+    run.analyzer.requestStarted=new Date().toISOString();
     const raw=await analyzer.analyzeCurrentImage({
       bytes:requestBytes,
       blob:new Blob([requestBytes],{type:run.mime}),
@@ -150,23 +173,24 @@
       signal:run.controller.signal,
       cache:'no-store'
     });
-    return normalizeVisionResult(raw,run);
+    run.analyzer.requestCompleted=new Date().toISOString();run.analyzer.transportStatus=raw?.transportStatus??null;run.analyzer.resultReceived=true;
+    const normalized=normalizeVisionResult(raw,run);run.analyzer.responseValidated=true;return normalized;
   }
 
   async function routeFreshResult(run,result){
     const payload={bytes:run.bytes.slice(0),mimeType:run.mime,runId:run.runId,imageHash:run.imageHash,signal:run.controller.signal,cache:'no-store',classification:result};
-    if(result.category==='Automotive Graph / Diagnostic Graph'){
+    if(result.category==='AUTOMOTIVE_GRAPH'){
       const analyzer=window.NitrosGraphAnalyzerAD;
       result.route='Graph/OCR';
       result.routeResult=typeof analyzer?.analyzeCurrentImage==='function'?await analyzer.analyzeCurrentImage(payload):{status:'Analysis unavailable',evidence:['No clean-room graph/OCR analyzer is configured.']};
-    }else if(result.category==='Document / Text / Screenshot'){
+    }else if(result.category==='DOCUMENT_OR_TEXT_SCREENSHOT'){
       const analyzer=window.NitrosDocumentAnalyzerAD;
       result.route='Document/OCR';
       result.routeResult=typeof analyzer?.analyzeCurrentImage==='function'?await analyzer.analyzeCurrentImage(payload):{status:'Analysis unavailable',evidence:['No clean-room document/OCR analyzer is configured.']};
-    }else if(result.category==='Automotive Vehicle / Automotive Component Photograph'){
+    }else if(result.category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'){
       result.route='Automotive visual analysis';
       result.routeResult={status:'Completed',evidence:[...result.evidence]};
-    }else if(result.category==='General Photograph'){
+    }else if(result.category==='GENERAL_NON_AUTOMOTIVE_PHOTO'){
       result.route='General visual analysis';
       result.routeResult={status:'Completed',evidence:[...result.evidence]};
     }else{
@@ -181,6 +205,8 @@
     if(result?.runId!==activeRun?.runId)failed.push('Analysis Run ID');
     if(result?.imageHash!==activeRun?.imageHash)failed.push('Image SHA-256');
     if(!failed.length)return false;
+    if(run?.analyzer)run.analyzer.staleRejected=true;
+    lastStaleRejected=true;
     lastStaleMessage=`STALE RESULT REJECTED — RESULT NOT DISPLAYED (${failed.join(', ')})`;
     updateDeveloper(activeRun,{disposition:lastStaleMessage});
     return true;
@@ -190,18 +216,21 @@
     const preview=$('oliverImportPreview');if(!preview)return;
     $('adAnalysisResult')?.remove();
     const host=document.createElement('div');host.id='adAnalysisResult';host.className='phase2-result';
-    host.innerHTML=`<strong>Detected category:</strong> ${escapeHtml(result.category)} <span class="phase2-confidence">${result.confidence}%</span><br><strong>Genuine analyzer evidence:</strong> ${escapeHtml(result.evidence.join('; ')||'None')}<br><strong>Routing:</strong> ${escapeHtml(result.route)} — ${escapeHtml(result.routeResult?.status||'Not started')}<br><strong>Fresh-result verification:</strong> PASS`;
+    const confidence=result.confidence===null?'Confidence unavailable':`${result.confidence}%`;
+    host.innerHTML=`<strong>Detected category:</strong> ${escapeHtml(CATEGORY_LABELS[result.category]||result.category)}<br><strong>Confidence:</strong> <span class="phase2-confidence">${escapeHtml(confidence)}</span><br><strong>Observed objects:</strong> ${escapeHtml(result.objects?.join(', ')||'None reported')}<br><strong>Analyzer evidence:</strong> ${escapeHtml(result.evidence.join('; ')||'None')}<br><strong>Routing:</strong> ${escapeHtml(result.route)} — ${escapeHtml(result.routeResult?.status||'Not started')}<br><strong>Fresh-result verification:</strong> ${result.category==='UNKNOWN_OR_ANALYSIS_UNAVAILABLE'?'FAIL':'PASS'}`;
     preview.appendChild(host);
   }
 
   async function analyzeSelectedImage(file){
     abortAndDestroy('NEW_IMAGE',{clearPreview:true});
-    const run={runId:createId('AD'),controller:new AbortController(),bytes:null,imageHash:'',mime:file.type||'application/octet-stream',started:new Date().toISOString(),completed:'',result:null,dimensions:null,stages:[
+    const run={runId:createId('AD'),controller:new AbortController(),bytes:null,imageHash:'',mime:file.type||'application/octet-stream',started:new Date().toISOString(),completed:'',result:null,dimensions:null,analysisError:'',analyzer:{configured:Boolean(window.NitrosVisionAnalyzer?.analyzeCurrentImage),requestStarted:'',requestCompleted:'',transportStatus:null,resultReceived:false,responseValidated:false,staleRejected:false},stages:[
       {label:'Preparing image…',status:'PENDING'},
       {label:'Hashing image…',status:'PENDING'},
+      {label:'Sending for semantic analysis…',status:'PENDING'},
       {label:'Analyzing image contents…',status:'PENDING'},
       {label:'Classifying…',status:'PENDING'},
-      {label:'Complete',status:'PENDING'}
+      {label:'Fresh-result verification…',status:'PENDING'},
+      {label:'Complete…',status:'PENDING'}
     ]};
     activeRun=run;
     updateDeveloper(run,{disposition:'ANALYZING'});
@@ -214,30 +243,41 @@
       if(!isActive(run))throw abortError();
       run.bytes=sourceBuffer.slice(0);
       run.dimensions=await decodeDimensions(run.bytes,run.mime,run.controller.signal);
-      await stage(run,1);
+      await stage(run,0,'PASS');
+      await stage(run,1,'RUN');
       run.imageHash=await sha256(run.bytes);
       if(!isActive(run))throw abortError();
       window.__nitrosCurrentImageIdentity={runId:run.runId,imageHash:run.imageHash};
       updateDeveloper(run,{disposition:'ANALYZING'});
-      await stage(run,2);
-      const result=await classifyCurrentBytes(run);
+      await stage(run,1,'PASS');
+      await stage(run,2,'RUN');
+      const semanticPromise=classifyCurrentBytes(run);
+      await new Promise(resolve=>setTimeout(resolve,0));
+      await stage(run,2,'PASS');
+      await stage(run,3,'RUN');
+      const result=await semanticPromise;
+      await stage(run,3,'PASS');
       if(!isActive(run)){rejectStale(run,result);return}
-      await stage(run,3);
+      await stage(run,4,'RUN');
       const routed=await routeFreshResult(run,result);
+      await stage(run,4,'PASS');
+      await stage(run,5,'RUN');
       if(rejectStale(run,routed))return;
+      await stage(run,5,'PASS');
       run.result=routed;run.completed=new Date().toISOString();
       window.__nitrosCurrentImageAnalysis={runId:run.runId,imageHash:run.imageHash,result:routed};
       window.NitrosDeveloperMode=window.NitrosDeveloperMode||{};window.NitrosDeveloperMode.imageClassification=routed;
       renderResult(run,routed);
-      await stage(run,4,'PASS');
+      await stage(run,6,'PASS');
       updateDeveloper(run,{disposition:'ACCEPTED',verification:'PASS'});
-      const status=$('oliverImportStatus');if(status)status.textContent=`Complete — ${routed.category}`;
+      const status=$('oliverImportStatus');if(status)status.textContent=`Complete — ${CATEGORY_LABELS[routed.category]||routed.category}`;
     }catch(error){
-      if(error?.name==='AbortError'){lastStaleMessage='STALE RESULT REJECTED — RESULT NOT DISPLAYED';updateDeveloper(activeRun,{disposition:lastStaleMessage});return}
+      if(error?.name==='AbortError'){lastStaleRejected=true;lastStaleMessage='STALE RESULT REJECTED — RESULT NOT DISPLAYED';updateDeveloper(activeRun,{disposition:lastStaleMessage});return}
       if(!isActive(run))return;
-      run.completed=new Date().toISOString();
+      run.completed=new Date().toISOString();run.analysisError=String(error?.message||error);run.analyzer.transportStatus=error?.transportStatus||run.analyzer.transportStatus;
+      const runningStage=run.stages.find(item=>item.status==='RUN');if(runningStage)runningStage.status='FAIL';run.stages[5].status='FAIL';run.stages[6].status='FAIL';renderStages(run);
       const failed=unavailableResult(run,`Analysis failed: ${error.message}`);run.result=failed;
-      if(!rejectStale(run,failed)){renderResult(run,{...failed,route:'Stopped',routeResult:{status:'Analysis unavailable'}});updateDeveloper(run,{disposition:'FAILED',verification:'PASS'})}
+      if(!rejectStale(run,failed)){renderResult(run,{...failed,route:'Stopped',routeResult:{status:'Insufficient evidence'}});updateDeveloper(run,{disposition:'FAILED',verification:'FAIL'})}
       const status=$('oliverImportStatus');if(status)status.textContent='Unknown / Analysis Unavailable';
     }
   }
@@ -248,9 +288,10 @@
       nitrosCaseId:caseId,nitrosAnalysisSessionId:sessionId,nitrosCaptureRequestId:run?.runId||'None',nitrosAnalysisId:run?.runId||'None',
       nitrosCurrentImageSha:run?.imageHash?`${run.imageHash.slice(0,16)}…`:'None',nitrosAnalyzerSource:result?.source||'CURRENT IMAGE BYTES',nitrosResultId:result?.runId||'None',
       nitrosAnalysisStarted:run?.started||'None',nitrosAnalysisCompleted:run?.completed||'None',nitrosResultDisposition:extra.disposition||'NONE',nitrosResetReason:extra.resetReason||'—',
-      nitrosActiveClassifier:'NitrosCleanRoomImageAnalysisAD / classifyCurrentBytes / 10.12.7AE',nitrosStaleResultLog:lastStaleMessage,
-      nitrosImageClassification:result?.category||'No image classified.',nitrosClassificationConfidence:result?`${result.confidence}%`:'—',nitrosClassificationEvidence:result?.evidence?.join('; ')||'No image classified.',
-      nitrosRuntimeGraphStatus:result?.category==='Automotive Graph / Diagnostic Graph'?`${result.routeResult?.status||'Pending'}`:'Graph analysis not started.',
+      nitrosActiveClassifier:'NitrosSemanticImageAnalysisAF / secure pixel endpoint / 10.12.7AF',nitrosStaleResultLog:lastStaleMessage,
+      nitrosImageClassification:result?CATEGORY_LABELS[result.category]||result.category:'No image classified.',nitrosClassificationConfidence:result?(result.confidence===null?'Confidence unavailable':`${result.confidence}%`):'—',nitrosClassificationEvidence:result?.evidence?.join('; ')||'No image classified.',
+      nitrosRuntimeGraphStatus:result?.category==='AUTOMOTIVE_GRAPH'?`${result.routeResult?.status||'Pending'}`:'Graph analysis not started.',
+      nitrosSemanticConfigured:run?.analyzer?.configured?'YES':'NO',nitrosAnalyzerRequestStarted:run?.analyzer?.requestStarted||'None',nitrosAnalyzerRequestCompleted:run?.analyzer?.requestCompleted||'None',nitrosAnalyzerTransportStatus:run?.analyzer?.transportStatus??'None',nitrosSemanticResultReceived:run?.analyzer?.resultReceived?'YES':'NO',nitrosResponseValidated:run?.analyzer?.responseValidated?'YES':'NO',nitrosResultTransactionMatch:result?(result.runId===run?.runId?'PASS':'FAIL'):'Pending',nitrosResultHashMatch:result?(result.imageHash===run?.imageHash?'PASS':'FAIL'):'Pending',nitrosStaleResultRejected:lastStaleRejected?'YES':'NO',nitrosFinalCategory:result?CATEGORY_LABELS[result.category]||result.category:'None',nitrosSemanticRouting:result?.route||'Not started',nitrosAnalysisError:run?.analysisError||'NONE',
       nitrosPreviousResultReused:'NO',nitrosResultCacheHit:'NO',nitrosFreshVerification:extra.verification||'Pending',nitrosImageDimensions:run?.dimensions?`${run.dimensions.width} × ${run.dimensions.height}`:'None'
     };
     Object.entries(values).forEach(([id,value])=>{const element=$(id);if(element)element.textContent=value});
@@ -287,7 +328,7 @@
     updateDeveloper(null,{resetReason:'APP_START'});
   }
 
-  function start(){document.title='Nitros Mobile Technician Portal v10.12.7AE — Active Repair Order Persistence';buildImportUi()}
+  function start(){document.title='Nitros Mobile Technician Portal v10.12.7AF — Genuine Semantic Image Analysis';buildImportUi()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
   window.addEventListener('pageshow',()=>setTimeout(start,40));
   new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))buildImportUi()}).observe(document.documentElement,{childList:true,subtree:true});
