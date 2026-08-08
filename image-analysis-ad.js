@@ -1,6 +1,7 @@
-/* Nitros 10.12.7AH semantic response diagnostics with clean-room transaction isolation. */
+/* Nitros 10.12.7AI semantic pipeline communications diagnostic with clean-room transaction isolation. */
 (()=>{'use strict';
-  const BUILD='10.12.7AH';
+  const BUILD='10.12.7AI';
+  const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
   const MAX_TEXT_BYTES=1500000;
   const CATEGORIES=new Set([
     'AUTOMOTIVE_GRAPH',
@@ -103,6 +104,21 @@
     if(!isActive(run))throw abortError();
   }
 
+  function syncSemanticStages(run){
+    const diag=run.analyzer,server=diag.serverDiagnostic||{},set=(index,status)=>{if(run.stages[index]&&run.stages[index].status!==status)run.stages[index].status=status};
+    if(diag.payloadGenerated)set(2,'PASS');
+    if(diag.fetchStarted&&!diag.responseReceived)set(3,'RUN');
+    if(diag.responseReceived){set(3,'PASS');set(4,'PASS')}else if(diag.outcome==='FAILED'&&diag.fetchStarted){set(3,'FAIL');set(4,'FAIL')}
+    if(server.openaiRequestAttempted)set(5,'PASS');else if(server.requestReceived&&diag.outcome==='FAILED')set(5,'FAIL');
+    if(server.openaiResponseReceived)set(6,'PASS');else if(server.openaiRequestAttempted&&diag.outcome==='FAILED')set(6,'FAIL');
+    if(server.openaiResponseParsed)set(7,'PASS');else if(server.openaiResponseReceived&&diag.outcome==='FAILED')set(7,'FAIL');
+    if(server.semanticOutputPresent)set(8,'PASS');else if(server.openaiResponseParsed&&diag.outcome==='FAILED')set(8,'FAIL');
+    if(diag.pipeline?.CLASSIFICATION_STARTED==='PASS')set(9,'RUN');
+    if(diag.pipeline?.CLASSIFICATION_COMPLETE==='PASS')set(9,'PASS');
+    if(diag.pipeline?.CLASSIFICATION_COMPLETE==='FAIL')set(9,'FAIL');
+    renderStages(run);
+  }
+
   function abortError(){const error=new DOMException('Analysis run superseded','AbortError');return error}
   function isActive(run){return activeRun===run&&!run.controller.signal.aborted}
 
@@ -161,14 +177,16 @@
   }
   function tagDiagnosticError(error,category,details={}){try{Object.assign(error,{diagnosticCategory:category,...details})}catch(_){}return error}
   function createSemanticDiagnostic(mimeType){
-    return {requestId:createId('SA'),imageHash:'Pending',stage:'CREATED',outcome:'PENDING',endpoint:'Not configured',endpointFunction:'NitrosVisionAnalyzer.analyzeCurrentImage',method:'POST',payloadType:'application/json',imagePrepared:false,mimeType:mimeType||'application/octet-stream',imageBytes:0,imageDataAttached:false,payloadGenerated:false,encodedPayloadBytes:0,requestBodyBytes:0,endpointConfigured:false,apiConfigurationPresent:'UNKNOWN',fetchStarted:false,responseReceived:false,responseOk:null,httpStatus:null,httpStatusText:'',responseType:'',responseContentType:'',responseCharacters:0,responseBytes:0,safeResponseBody:'Not received',topLevelKeys:[],semanticResultKeys:[],expectedSemanticFieldsPresent:false,missingSemanticPaths:[],responseId:'',responseTransactionId:'',responseImageHash:'',requestMatches:false,imageHashMatches:false,parseResult:'NOT_STARTED',parsedErrorMessage:'',jsonParseFailure:'',errorCategory:'',errorName:'',errorMessage:'',errorCode:'',networkFailure:false,dnsFailure:false,corsFailure:false,corsPossible:false,timeout:false,aborted:false,malformedUrl:false,missingEndpoint:false,missingApiConfiguration:false,unsupportedRequestBody:false,clientException:false,likelyLayer:'Not started',imagePreparationMs:null,payloadEncodingMs:null,requestStartMs:null,responseReceivedMs:null,responseParsingMs:null,totalMs:null,startedAt:new Date().toISOString(),completedAt:'',pipeline:{REQUEST_SENT:'PENDING',RESPONSE_RECEIVED:'PENDING',RESPONSE_HTTP_OK:'PENDING',RESPONSE_PARSED:'PENDING',SEMANTIC_CONTENT_FOUND:'PENDING',CLASSIFICATION_STARTED:'PENDING',CLASSIFICATION_COMPLETE:'PENDING'}};
+    return {requestId:createId('sem'),imageHash:'Pending',stage:'CREATED',outcome:'PENDING',endpoint:'Not configured',endpointFunction:'NitrosVisionAnalyzer.analyzeCurrentImage',method:'POST',payloadType:'application/json',imagePrepared:false,mimeType:mimeType||'application/octet-stream',imageBytes:0,imageDataAttached:false,payloadGenerated:false,encodedPayloadBytes:0,requestBodyBytes:0,endpointConfigured:false,apiConfigurationPresent:'UNKNOWN',fetchStarted:false,responseReceived:false,responseOk:null,httpStatus:null,httpStatusText:'',responseType:'',responseContentType:'',responseCharacters:0,responseBytes:0,safeResponseBody:'Not received',topLevelKeys:[],semanticResultKeys:[],expectedSemanticFieldsPresent:false,missingSemanticPaths:[],responseId:'',responseTransactionId:'',responseImageHash:'',requestMatches:false,imageHashMatches:false,parseResult:'NOT_STARTED',parsedErrorMessage:'',jsonParseFailure:'',errorCategory:'',errorName:'',errorMessage:'',errorCode:'',networkFailure:false,dnsFailure:false,corsFailure:false,corsPossible:false,timeout:false,aborted:false,malformedUrl:false,missingEndpoint:false,missingApiConfiguration:false,unsupportedRequestBody:false,clientException:false,likelyLayer:'Not started',imagePreparationMs:null,payloadEncodingMs:null,requestStartMs:null,responseReceivedMs:null,responseParsingMs:null,totalMs:null,startedAt:new Date().toISOString(),completedAt:'',serverDiagnostic:null,pipeline:{REQUEST_SENT:'PENDING',RESPONSE_RECEIVED:'PENDING',RESPONSE_HTTP_OK:'PENDING',RESPONSE_PARSED:'PENDING',SEMANTIC_CONTENT_FOUND:'PENDING',CLASSIFICATION_STARTED:'PENDING',CLASSIFICATION_COMPLETE:'PENDING'}};
   }
   function diagnosticSize(bytes){if(!Number.isFinite(bytes)||bytes<=0)return '0 B';const mb=bytes/(1024*1024);return mb>=0.1?`${mb.toFixed(2)} MB`:`${(bytes/1024).toFixed(1)} KB`}
   function formatTransportDiagnostic(diag){
     if(!diag)return 'No semantic request has started.';
     const pass=value=>value?'PASS':diag.outcome==='FAILED'?'FAIL':'PENDING';
     const responseLine=diag.responseReceived?'PASS':'FAIL — NO HTTP RESPONSE RECEIVED';
+    const server=diag.serverDiagnostic||{};
     return [
+      'SEMANTIC PIPELINE DIAGNOSTICS',
       `Semantic Analysis: ${diag.outcome==='FAILED'?'SEMANTIC ANALYSIS FAILED':diag.outcome==='SUCCEEDED'?'SEMANTIC ANALYSIS SUCCEEDED':'IN PROGRESS'}`,
       `Semantic Request ID: ${diag.requestId||'None'}`,
       `Current Image Hash: ${diag.imageHash||'None'}`,
@@ -220,6 +238,29 @@
       `Timing — response parsing: ${diag.responseParsingMs??'Pending'} ms`,
       `Timing — total semantic attempt: ${diag.totalMs??'Pending'} ms`
       ,'',
+      'BROWSER → VERCEL',
+      `Vercel request attempted: ${diag.fetchStarted?'YES':'NO'}`,
+      `Vercel endpoint reached: ${diag.responseReceived?'PASS':diag.outcome==='FAILED'?'FAIL':'PENDING'}`,
+      `Vercel HTTP: ${diag.httpStatus??'No response'}${diag.httpStatusText?` ${diag.httpStatusText}`:''}`,
+      `Request duration: ${diag.responseReceivedMs??diag.totalMs??'Pending'} ms`,
+      `Response Content-Type: ${diag.responseContentType||'None'}`,
+      `Response body received: ${diag.responseCharacters>0?'YES':'NO'}`,
+      `Browser error: ${diag.errorName?`${diag.errorName}: ${diag.errorMessage}`:'None'}`,
+      '',
+      'VERCEL → OPENAI',
+      `Vercel request ID: ${server.requestId||'No server response'}`,
+      `Request received by Vercel: ${server.requestReceived?'PASS':diag.responseReceived?'FAIL':'PENDING'}`,
+      `Image received by server: ${server.imagePayloadFound?'PASS':server.requestReceived?'FAIL':'PENDING'}`,
+      `Server image MIME/bytes/hash: ${server.imageMimeType||'Unknown'} / ${server.imageByteLength??'Unknown'} / ${server.imageHashShort||'Unknown'}`,
+      `OpenAI API credential configured: ${server.openaiCredentialConfigured===true?'YES':server.openaiCredentialConfigured===false?'NO':'UNKNOWN'}`,
+      `OpenAI request attempted: ${server.openaiRequestAttempted?'PASS':server.requestReceived?'NO':'PENDING'}`,
+      `OpenAI response received: ${server.openaiResponseReceived?'PASS':server.openaiRequestAttempted?'FAIL':'PENDING'}`,
+      `OpenAI HTTP status: ${server.openaiHttpStatus??'No response'}`,
+      `OpenAI response parsed: ${server.openaiResponseParsed?'PASS':server.openaiResponseReceived?'FAIL':'PENDING'}`,
+      `Semantic output present: ${server.semanticOutputPresent?'PASS':server.openaiResponseParsed?'FAIL':'PENDING'}`,
+      `Semantic objects returned: ${server.semanticObjectsReturned??'Unknown'}`,
+      `Server stage/error: ${server.stage||'Unknown'} / ${server.errorCategory||'None'} / ${server.errorType||'None'} / ${server.errorCode||'None'} / ${server.errorMessage||'None'}`,
+      '',
       'PIPELINE STATE',
       ...Object.entries(diag.pipeline||{}).map(([name,status])=>`${name}: ${status}`)
     ].join('\n');
@@ -243,13 +284,19 @@
         mark({payloadGenerated:true,imageDataAttached:Boolean(imageBase64),imageBytes:bytes.byteLength,encodedPayloadBytes:imageBase64.length,requestBodyBytes:new TextEncoder().encode(requestBody).byteLength,payloadEncodingMs:elapsed(encodeStarted)});
       }catch(error){mark({outcome:'FAILED',errorCategory:error.diagnosticCategory||'PAYLOAD_ERROR',errorName:error.name,errorMessage:sanitizeDiagnosticText(error.message),unsupportedRequestBody:Boolean(error.unsupportedRequestBody),clientException:true,likelyLayer:'Client payload generation',payloadEncodingMs:elapsed(encodeStarted),totalMs:elapsed(attemptStarted),completedAt:new Date().toISOString()});throw error}
       let response;
+      const requestController=new AbortController();
+      const forwardAbort=()=>requestController.abort(signal?.reason||abortError());
+      if(signal?.aborted)forwardAbort();else signal?.addEventListener('abort',forwardAbort,{once:true});
+      const requestTimer=setTimeout(()=>requestController.abort(new DOMException('Semantic analysis timeout','TimeoutError')),SEMANTIC_REQUEST_TIMEOUT_MS);
       try{
         mark({stage:'FETCH_EXECUTION',fetchStarted:true,requestStarted:new Date().toISOString(),requestStartMs:elapsed(attemptStarted),pipeline:{...diagnostic.pipeline,REQUEST_SENT:'PASS'}});
-        response=await fetch(requestUrl.href,{method:'POST',headers:{'Content-Type':'application/json','Cache-Control':'no-store'},body:requestBody,signal,cache:'no-store',credentials:'same-origin'});
+        response=await fetch(requestUrl.href,{method:'POST',headers:{'Content-Type':'application/json','Cache-Control':'no-store'},body:requestBody,signal:requestController.signal,cache:'no-store',credentials:'same-origin'});
       }catch(error){
         const classification=classifyTransportError(error,{endpoint:requestUrl.href,responseReceived:false});
         mark({...classification,outcome:'FAILED',stage:'FETCH_FAILED',errorCategory:error.diagnosticCategory||classification.category,errorName:sanitizeDiagnosticText(error.name||'Error'),errorMessage:`SEMANTIC_NETWORK_ERROR: ${sanitizeDiagnosticText(error.message||error)}`,errorCode:sanitizeDiagnosticText(error.code||''),clientException:true,responseReceived:false,safeResponseBody:'NO HTTP RESPONSE RECEIVED',pipeline:{...diagnostic.pipeline,RESPONSE_RECEIVED:'FAIL',RESPONSE_HTTP_OK:'FAIL',RESPONSE_PARSED:'FAIL',SEMANTIC_CONTENT_FOUND:'FAIL'},totalMs:elapsed(attemptStarted),completedAt:new Date().toISOString()});
         throw tagDiagnosticError(error,error.diagnosticCategory||classification.category);
+      }finally{
+        clearTimeout(requestTimer);signal?.removeEventListener('abort',forwardAbort);
       }
       mark({stage:'HTTP_RESPONSE_RECEIVED',responseReceived:true,responseOk:response.ok,httpStatus:response.status,httpStatusText:sanitizeDiagnosticText(response.statusText,120),responseType:sanitizeDiagnosticText(response.type||'',80),responseContentType:sanitizeDiagnosticText(response.headers.get('content-type')||'',200),responseReceivedMs:elapsed(attemptStarted),transportStatus:response.status,likelyLayer:'HTTP response received',pipeline:{...diagnostic.pipeline,RESPONSE_RECEIVED:'PASS',RESPONSE_HTTP_OK:response.ok?'PASS':'FAIL'}});
       const parseStarted=performance.now();let responseText='',payload=null;
@@ -258,7 +305,8 @@
         if(!responseText)throw new SyntaxError('Semantic endpoint returned an empty response body.');
         try{payload=JSON.parse(responseText)}catch(error){throw tagDiagnosticError(error,'RESPONSE_PARSE_ERROR',{responseNotJson:true})}
         const semantic=payload?.semanticResult&&typeof payload.semanticResult==='object'&&!Array.isArray(payload.semanticResult)?payload.semanticResult:null;
-        mark({parseResult:'JSON_PARSE_PASS',responseParsingMs:elapsed(parseStarted),responseCharacters:responseText.length,responseBytes,safeResponseBody:safeResponsePreview(payload,responseText),topLevelKeys:payload&&typeof payload==='object'?Object.keys(payload).sort():[],semanticResultKeys:semantic?Object.keys(semantic).sort():[],responseId:sanitizeDiagnosticText(payload?.responseId||payload?.id||'',160),responseTransactionId:sanitizeDiagnosticText(payload?.transactionId||'',160),responseImageHash:typeof payload?.imageHash==='string'?payload.imageHash:'',pipeline:{...diagnostic.pipeline,RESPONSE_PARSED:'PASS'}});
+        const serverDiagnostic=payload?.serverDiagnostic&&typeof payload.serverDiagnostic==='object'?payload.serverDiagnostic:null;
+        mark({parseResult:'JSON_PARSE_PASS',responseParsingMs:elapsed(parseStarted),responseCharacters:responseText.length,responseBytes,safeResponseBody:safeResponsePreview(payload,responseText),topLevelKeys:payload&&typeof payload==='object'?Object.keys(payload).sort():[],semanticResultKeys:semantic?Object.keys(semantic).sort():[],responseId:sanitizeDiagnosticText(payload?.responseId||payload?.id||'',160),responseTransactionId:sanitizeDiagnosticText(payload?.transactionId||'',160),responseImageHash:typeof payload?.imageHash==='string'?payload.imageHash:'',serverDiagnostic,apiConfigurationPresent:serverDiagnostic?.openaiCredentialConfigured===true?'YES':serverDiagnostic?.openaiCredentialConfigured===false?'NO':'UNKNOWN',pipeline:{...diagnostic.pipeline,RESPONSE_PARSED:'PASS'}});
       }
       catch(error){const responseBytes=new TextEncoder().encode(responseText).byteLength,message=`SEMANTIC_PARSE_ERROR: ${sanitizeDiagnosticText(error.message)}`;mark({outcome:'FAILED',stage:'RESPONSE_PARSE_FAILED',errorCategory:'RESPONSE_PARSE_ERROR',errorName:sanitizeDiagnosticText(error.name),errorMessage:message,jsonParseFailure:sanitizeDiagnosticText(error.message),parseResult:error.responseNotJson?'RESPONSE_NOT_JSON':'JSON_PARSE_FAIL',responseCharacters:responseText.length,responseBytes,responseParsingMs:elapsed(parseStarted),safeResponseBody:sanitizeDiagnosticText(responseText,500)||'[EMPTY RESPONSE BODY]',likelyLayer:'HTTP response parsing',pipeline:{...diagnostic.pipeline,RESPONSE_PARSED:'FAIL',SEMANTIC_CONTENT_FOUND:'FAIL'},totalMs:elapsed(attemptStarted),completedAt:new Date().toISOString()});throw tagDiagnosticError(error,'RESPONSE_PARSE_ERROR',{transportStatus:response.status})}
       if(!response.ok){
@@ -272,7 +320,7 @@
       if(!requestMatches)missing.push('transactionId(CURRENT_REQUEST_MISMATCH)');if(!imageHashMatches)missing.push('imageHash(CURRENT_IMAGE_MISMATCH)');
       if(missing.length){const message=`SEMANTIC_RESULT_MISSING: ${missing.join(', ')}`;mark({outcome:'FAILED',stage:'SEMANTIC_CONTENT_MISSING',errorCategory:'SEMANTIC_API_ERROR',errorName:'SemanticResultError',errorMessage:message,parsedErrorMessage:message,missingSemanticPaths:missing,expectedSemanticFieldsPresent:false,requestMatches,imageHashMatches,apiConfigurationPresent:'YES',likelyLayer:'Semantic endpoint response schema',pipeline:{...diagnostic.pipeline,SEMANTIC_CONTENT_FOUND:'FAIL'},totalMs:elapsed(attemptStarted),completedAt:new Date().toISOString()});throw diagnosticError(message,'SEMANTIC_API_ERROR',{transportStatus:response.status})}
       mark({outcome:'SUCCEEDED',stage:'SEMANTIC_RESPONSE_RECEIVED',parseResult:'JSON_PARSE_PASS',expectedSemanticFieldsPresent:true,missingSemanticPaths:[],requestMatches:true,imageHashMatches:true,apiConfigurationPresent:'YES',pipeline:{...diagnostic.pipeline,SEMANTIC_CONTENT_FOUND:'PASS'},totalMs:elapsed(attemptStarted),completedAt:new Date().toISOString()});
-      return {...payload?.semanticResult,transactionId:payload?.transactionId,imageHash:payload?.imageHash,source:payload?.analyzer||'Secure semantic analyzer',transportStatus:payload?.transportStatus||response.status};
+      return {...payload?.semanticResult,transactionId:payload?.transactionId,imageHash:payload?.imageHash,source:payload?.analyzer||'Secure semantic analyzer',transportStatus:payload?.transportStatus||response.status,serverDiagnostic:payload?.serverDiagnostic||null};
     }
   };
 
@@ -321,7 +369,7 @@
       imageHash:run.imageHash,
       signal:run.controller.signal,
       diagnostic:run.analyzer,
-      onDiagnostic:()=>updateDeveloper(run,{disposition:'ANALYZING'}),
+      onDiagnostic:()=>{syncSemanticStages(run);updateDeveloper(run,{disposition:'ANALYZING'})},
       cache:'no-store'
     });
     run.analyzer.requestCompleted=new Date().toISOString();run.analyzer.transportStatus=raw?.transportStatus??null;run.analyzer.resultReceived=true;
@@ -382,8 +430,13 @@
     const run={runId:createId('AD'),controller:new AbortController(),bytes:null,imageHash:'',mime,started:new Date().toISOString(),completed:'',result:null,dimensions:null,analysisError:'',analyzer,stages:[
       {label:'Preparing image…',status:'PENDING'},
       {label:'Hashing image…',status:'PENDING'},
-      {label:'Sending for semantic analysis…',status:'PENDING'},
-      {label:'Analyzing image contents…',status:'PENDING'},
+      {label:'Building semantic request…',status:'PENDING'},
+      {label:'Contacting Vercel endpoint…',status:'PENDING'},
+      {label:'Vercel endpoint response…',status:'PENDING'},
+      {label:'OpenAI request…',status:'PENDING'},
+      {label:'OpenAI response…',status:'PENDING'},
+      {label:'Parsing semantic response…',status:'PENDING'},
+      {label:'Semantic objects received…',status:'PENDING'},
       {label:'Classifying…',status:'PENDING'},
       {label:'Fresh-result verification…',status:'PENDING'},
       {label:'Complete…',status:'PENDING'}
@@ -409,24 +462,18 @@
       updateDeveloper(run,{disposition:'ANALYZING'});
       await stage(run,1,'PASS');
       await stage(run,2,'RUN');
-      const semanticPromise=classifyCurrentBytes(run);
-      await new Promise(resolve=>setTimeout(resolve,0));
-      await stage(run,2,'PASS');
-      await stage(run,3,'RUN');
-      const result=await semanticPromise;
-      await stage(run,3,'PASS');
+      const result=await classifyCurrentBytes(run);
+      syncSemanticStages(run);
       if(!isActive(run)){rejectStale(run,result);return}
-      await stage(run,4,'RUN');
       const routed=await routeFreshResult(run,result);
-      await stage(run,4,'PASS');
-      await stage(run,5,'RUN');
+      await stage(run,10,'RUN');
       if(rejectStale(run,routed))return;
-      await stage(run,5,'PASS');
+      await stage(run,10,'PASS');
       run.result=routed;run.completed=new Date().toISOString();run.analyzer.outcome='SUCCEEDED';run.analyzer.stage='COMPLETE';run.analyzer.requestCompleted=run.analyzer.completedAt||run.completed;
       window.__nitrosCurrentImageAnalysis={runId:run.runId,imageHash:run.imageHash,result:routed};
       window.NitrosDeveloperMode=window.NitrosDeveloperMode||{};window.NitrosDeveloperMode.imageClassification=routed;
       renderResult(run,routed);
-      await stage(run,6,'PASS');
+      await stage(run,11,'PASS');
       updateDeveloper(run,{disposition:'ACCEPTED',verification:'PASS'});
       const status=$('oliverImportStatus');if(status)status.textContent=`Complete — ${CATEGORY_LABELS[routed.category]||routed.category}`;
     }catch(error){
@@ -435,7 +482,7 @@
       run.completed=new Date().toISOString();run.analysisError=run.analyzer.errorMessage||String(error?.message||error);run.analyzer.transportStatus=error?.transportStatus||run.analyzer.transportStatus;
       if(!run.analyzer.errorCategory){const classification=classifyTransportError(error,{endpoint:run.analyzer.endpoint,responseReceived:run.analyzer.responseReceived});Object.assign(run.analyzer,classification,{outcome:'FAILED',stage:'CLIENT_EXCEPTION',errorCategory:error?.diagnosticCategory||classification.category,errorName:sanitizeDiagnosticText(error?.name||'Error'),errorMessage:sanitizeDiagnosticText(error?.message||error),errorCode:sanitizeDiagnosticText(error?.code||''),clientException:true,completedAt:run.completed})}
       run.analyzer.totalMs=run.analyzer.totalMs??Math.max(0,new Date(run.completed)-new Date(run.started));run.analyzer.requestCompleted=run.completed;
-      const runningStage=run.stages.find(item=>item.status==='RUN');if(runningStage)runningStage.status='FAIL';run.stages[5].status='FAIL';run.stages[6].status='FAIL';renderStages(run);
+      syncSemanticStages(run);const runningStage=run.stages.find(item=>item.status==='RUN');if(runningStage)runningStage.status='FAIL';run.stages[10].status='FAIL';run.stages[11].status='FAIL';renderStages(run);
       const failed=unavailableResult(run,`Analysis failed: ${error.message}`);run.result=failed;
       if(!rejectStale(run,failed)){renderResult(run,{...failed,route:'Stopped',routeResult:{status:'Insufficient evidence'}});updateDeveloper(run,{disposition:'FAILED',verification:'FAIL'})}
       const status=$('oliverImportStatus');if(status)status.textContent='Unknown / Analysis Unavailable';
@@ -448,7 +495,7 @@
       nitrosCaseId:caseId,nitrosAnalysisSessionId:sessionId,nitrosCaptureRequestId:run?.runId||'None',nitrosAnalysisId:run?.runId||'None',
       nitrosCurrentImageSha:run?.imageHash?`${run.imageHash.slice(0,16)}…`:'None',nitrosAnalyzerSource:result?.source||'CURRENT IMAGE BYTES',nitrosResultId:result?.runId||'None',
       nitrosAnalysisStarted:run?.started||'None',nitrosAnalysisCompleted:run?.completed||'None',nitrosResultDisposition:extra.disposition||'NONE',nitrosResetReason:extra.resetReason||'—',
-      nitrosActiveClassifier:'NitrosSemanticImageAnalysisAH / semantic response diagnostic / 10.12.7AH',nitrosStaleResultLog:lastStaleMessage,
+      nitrosActiveClassifier:'NitrosSemanticImageAnalysisAI / pipeline communications diagnostic / 10.12.7AI',nitrosStaleResultLog:lastStaleMessage,
       nitrosImageClassification:result?CATEGORY_LABELS[result.category]||result.category:'No image classified.',nitrosClassificationConfidence:result?(result.confidence===null?'Confidence unavailable':`${result.confidence}%`):'—',nitrosClassificationEvidence:result?.evidence?.join('; ')||'No image classified.',
       nitrosRuntimeGraphStatus:result?.category==='AUTOMOTIVE_GRAPH'?`${result.routeResult?.status||'Pending'}`:'Graph analysis not started.',
       nitrosSemanticConfigured:run?.analyzer?.configured?'YES':'NO',nitrosAnalyzerRequestStarted:run?.analyzer?.requestStarted||'None',nitrosAnalyzerRequestCompleted:run?.analyzer?.requestCompleted||'None',nitrosAnalyzerTransportStatus:run?.analyzer?.transportStatus??'None',nitrosSemanticResultReceived:run?.analyzer?.resultReceived?'YES':'NO',nitrosResponseValidated:run?.analyzer?.responseValidated?'YES':'NO',nitrosResultTransactionMatch:result?(result.semanticRequestId===run?.analyzer?.requestId?'PASS':'FAIL'):'Pending',nitrosResultHashMatch:result?(result.imageHash===run?.imageHash?'PASS':'FAIL'):'Pending',nitrosStaleResultRejected:lastStaleRejected?'YES':'NO',nitrosFinalCategory:result?CATEGORY_LABELS[result.category]||result.category:'None',nitrosSemanticRouting:result?.route||'Not started',nitrosAnalysisError:run?.analysisError||'NONE',nitrosSemanticRequestId:run?.analyzer?.requestId||'None',nitrosSemanticErrorCategory:run?.analyzer?.errorCategory||'None',nitrosSemanticTransportDiagnostic:formatTransportDiagnostic(run?.analyzer),
@@ -489,7 +536,7 @@
     updateDeveloper(null,{resetReason:'APP_START'});
   }
 
-  function start(){document.title='Nitros Mobile Technician Portal v10.12.7AH — Semantic Response Diagnostic';buildImportUi()}
+  function start(){document.title='Nitros Mobile Technician Portal v10.12.7AI — Semantic Pipeline Communications Diagnostic';buildImportUi()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
   window.addEventListener('pageshow',()=>setTimeout(start,40));
   new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))buildImportUi()}).observe(document.documentElement,{childList:true,subtree:true});

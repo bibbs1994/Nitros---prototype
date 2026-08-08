@@ -3,19 +3,20 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const root = new URL('../', import.meta.url);
-const [analyzer, html, serviceWorker] = await Promise.all([
+const [analyzer, html, serviceWorker, endpoint] = await Promise.all([
   readFile(new URL('image-analysis-ad.js', root), 'utf8'),
   readFile(new URL('index.html', root), 'utf8'),
-  readFile(new URL('sw.js', root), 'utf8')
+  readFile(new URL('sw.js', root), 'utf8'),
+  readFile(new URL('api/semantic-image-analysis.mjs', root), 'utf8')
 ]);
 
-test('AH build identifiers and production endpoint are consistent', () => {
-  assert.match(analyzer, /const BUILD='10\.12\.7AH'/);
-  assert.match(html, /Version 10\.12\.7AH/);
-  assert.match(html, /image-analysis-ad\.js\?v=10\.12\.7AH/);
+test('AI build identifiers and production endpoint are consistent', () => {
+  assert.match(analyzer, /const BUILD='10\.12\.7AI'/);
+  assert.match(html, /Version 10\.12\.7AI/);
+  assert.match(html, /image-analysis-ad\.js\?v=10\.12\.7AI/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.7AH'/);
-  assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FG]/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.7AI'/);
+  assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGH]/);
 });
 
 test('semantic request preserves the production payload and classification gates', () => {
@@ -35,7 +36,7 @@ test('transport diagnostics cover lifecycle, timing, and categorized failures', 
     assert.ok(analyzer.includes(field), `missing ${field}`);
   }
   assert.match(analyzer, /createSemanticDiagnostic\(mimeType\)/);
-  assert.match(analyzer, /requestId:createId\('SA'\)/);
+  assert.match(analyzer, /requestId:createId\('sem'\)/);
   assert.match(analyzer, /NO HTTP RESPONSE RECEIVED/);
   assert.match(analyzer, /SEMANTIC ANALYSIS FAILED/);
   assert.match(analyzer, /SEMANTIC_NETWORK_ERROR:/);
@@ -53,6 +54,28 @@ test('classification is gated by response, schema, request ID, and image hash', 
   assert.match(analyzer, /payload\?\.imageHash===imageHash/);
   assert.match(analyzer, /expectedSemanticFieldsPresent:true/);
   assert.match(analyzer, /pipeline:\{\.\.\.diagnostic\.pipeline,SEMANTIC_CONTENT_FOUND:'PASS'\}/);
+});
+
+test('visible stages reflect confirmed browser, Vercel, OpenAI, parse, and object evidence', () => {
+  for (const label of ['Building semantic request','Contacting Vercel endpoint','Vercel endpoint response','OpenAI request','OpenAI response','Parsing semantic response','Semantic objects received','Classifying','Fresh-result verification','Complete']) {
+    assert.ok(analyzer.includes(label), `missing ${label}`);
+  }
+  assert.match(analyzer, /if\(diag\.payloadGenerated\)set\(2,'PASS'\)/);
+  assert.match(analyzer, /if\(diag\.responseReceived\)\{set\(3,'PASS'\);set\(4,'PASS'\)\}/);
+  assert.match(analyzer, /if\(server\.openaiRequestAttempted\)set\(5,'PASS'\)/);
+  assert.match(analyzer, /if\(server\.semanticOutputPresent\)set\(8,'PASS'\)/);
+});
+
+test('CORS preflight explicitly allows the production request headers', () => {
+  assert.match(endpoint, /Access-Control-Allow-Headers', 'Content-Type, Cache-Control'/);
+  assert.doesNotMatch(endpoint, /Access-Control-Allow-Origin', '\*'/);
+});
+
+test('semantic transport has a bounded client timeout while preserving image-reset aborts', () => {
+  assert.match(analyzer, /SEMANTIC_REQUEST_TIMEOUT_MS=60_000/);
+  assert.match(analyzer, /new DOMException\('Semantic analysis timeout','TimeoutError'\)/);
+  assert.match(analyzer, /signal\?\.addEventListener\('abort',forwardAbort,\{once:true\}\)/);
+  assert.match(analyzer, /clearTimeout\(requestTimer\)/);
 });
 
 test('response diagnostics retain sanitized structure without semantic values', () => {

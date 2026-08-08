@@ -40,6 +40,7 @@ test('accepts allowed-origin preflight only', async () => {
   await handler(request({ method: 'OPTIONS' }), response);
   assert.equal(response.statusCode, 204);
   assert.equal(response.headers['access-control-allow-origin'], ORIGIN);
+  assert.equal(response.headers['access-control-allow-headers'], 'Content-Type, Cache-Control');
 });
 
 test('rejects an unexpected origin', async () => {
@@ -69,6 +70,8 @@ test('rejects missing required fields before OpenAI transport', async () => {
   await handler(request({ body: JSON.stringify({ transactionId: 'case-1' }) }), response);
   assert.equal(response.statusCode, 400);
   assert.equal(response.payload.code, 'INVALID_REQUEST');
+  assert.equal(response.payload.serverDiagnostic.requestReceived, true);
+  assert.equal(response.payload.serverDiagnostic.openaiRequestAttempted, false);
 });
 
 test('rate limits repeated beta requests', async () => {
@@ -109,6 +112,12 @@ test('valid request reaches mocked server-side OpenAI path without secret disclo
   });
   assert.equal(called, true);
   assert.equal(JSON.stringify(result).includes('test-only-placeholder'), false);
+  assert.equal(result.serverDiagnostic.stage, 'K_SEMANTIC_OUTPUT_EXTRACTED');
+  assert.equal(result.serverDiagnostic.openaiCredentialConfigured, true);
+  assert.equal(result.serverDiagnostic.openaiRequestAttempted, true);
+  assert.equal(result.serverDiagnostic.openaiResponseReceived, true);
+  assert.equal(result.serverDiagnostic.openaiResponseParsed, true);
+  assert.equal(result.serverDiagnostic.semanticOutputPresent, true);
 });
 
 test('raw upstream errors are sanitized', () => {
@@ -183,4 +192,60 @@ test('HTTP response diagnostics log only status and sanitized OpenAI error ident
     errorCode: 'invalid_api_key'
   }]]);
   assert.equal(JSON.stringify(calls).includes(secret), false);
+});
+
+test('OpenAI timeout is explicit and preserves a safe server diagnostic', async () => {
+  const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00]);
+  const body = {
+    transactionId: 'sem-timeout',
+    imageHash: createHash('sha256').update(bytes).digest('hex'),
+    mimeType: 'image/png',
+    imageBase64: bytes.toString('base64')
+  };
+  const originalError = console.error;
+  console.error = () => {};
+  try {
+    await assert.rejects(analyzeSemanticImage(body, {
+      apiKey: 'test-only-placeholder',
+      timeoutMs: 1,
+      fetchImpl: async (_url, options) => new Promise((_resolve, reject) => options.signal.addEventListener('abort', () => reject(options.signal.reason), { once: true }))
+    }), error => {
+      assert.equal(error.statusCode, 502);
+      assert.equal(error.serverDiagnostic.stage, 'H_OPENAI_API_CONTACTED');
+      assert.equal(error.serverDiagnostic.errorCategory, 'OPENAI_TIMEOUT');
+      assert.equal(error.serverDiagnostic.errorMessage, 'Semantic analysis timeout.');
+      assert.equal(error.serverDiagnostic.openaiResponseReceived, false);
+      return true;
+    });
+  } finally {
+    console.error = originalError;
+  }
+});
+
+test('OpenAI HTTP failures expose only sanitized category, status, type, and code', async () => {
+  const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00]);
+  const body = {
+    transactionId: 'sem-auth',
+    imageHash: createHash('sha256').update(bytes).digest('hex'),
+    mimeType: 'image/png',
+    imageBase64: bytes.toString('base64')
+  };
+  const originalInfo = console.info;
+  console.info = () => {};
+  try {
+    await assert.rejects(analyzeSemanticImage(body, {
+      apiKey: 'test-only-placeholder',
+      fetchImpl: async () => ({ ok: false, status: 401, async json() { return { error: { type: 'invalid_request_error', code: 'invalid_api_key', message: 'Authentication failed.' } }; } })
+    }), error => {
+      const diagnostic = error.serverDiagnostic;
+      assert.equal(diagnostic.errorCategory, 'AUTHENTICATION');
+      assert.equal(diagnostic.openaiHttpStatus, 401);
+      assert.equal(diagnostic.errorType, 'invalid_request_error');
+      assert.equal(diagnostic.errorCode, 'invalid_api_key');
+      assert.equal(JSON.stringify(diagnostic).includes('test-only-placeholder'), false);
+      return true;
+    });
+  } finally {
+    console.info = originalInfo;
+  }
 });
