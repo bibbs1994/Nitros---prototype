@@ -6,6 +6,7 @@ import { MAX_JSON_BYTES, publicError, resetRateLimitsForTests } from '../backend
 import { analyzeSemanticImage, normalizeSemanticConfidence } from '../semantic-analyzer-core.mjs';
 
 const ORIGIN = 'https://bibbs1994.github.io';
+const drivetrain = (overrides = {}) => ({ applicable: false, candidateType: 'OTHER', engineConnection: 'UNKNOWN', transmissionConnection: 'UNKNOWN', longitudinalShafts: 'UNKNOWN', lateralAxleOutputs: 'UNKNOWN', axleTubes: 'UNKNOWN', location: 'UNKNOWN', powerFlowRole: 'UNKNOWN', distinguishingFeaturesComplete: false, evidence: [], competingCandidate: null, ...overrides });
 
 test('semantic confidence normalization supports fractional, percentage, string, and missing values', () => {
   assert.equal(normalizeSemanticConfidence(0.95), 95);
@@ -152,7 +153,7 @@ test('automotive category triggers one fresh component request with independent 
         assert.equal(request.input[0].content.filter(item => item.type === 'input_image').length, 1);
         const payload = calls === 1
           ? { category: 'AUTOMOTIVE_COMPONENT_OR_VEHICLE', confidence: 0.99, objects: ['alternator', 'belt'], evidence: ['vented metal housing and pulley are visible'], description: 'Automotive charging component.', automotiveEvidence: ['engine-mounted vented housing with belt-driven pulley'], graphEvidence: [], documentEvidence: [] }
-          : { status: 'IDENTIFIED', primaryComponent: 'Alternator', componentConfidence: 0.94, system: 'Charging system', secondaryComponents: ['serpentine belt', 'pulley'], supportingEvidence: ['vented aluminum housing', 'belt-driven pulley', 'electrical charging connection'], possibleAlternatives: [], uncertaintyReason: null };
+          : { status: 'IDENTIFIED', primaryComponent: 'Alternator', componentConfidence: 0.94, system: 'Charging system', secondaryComponents: ['serpentine belt', 'pulley'], supportingEvidence: ['vented aluminum housing', 'belt-driven pulley', 'electrical charging connection'], possibleAlternatives: [], uncertaintyReason: null, drivetrainDiscrimination: drivetrain() };
         return { ok: true, status: 200, async json() { return { output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(payload) }] }] }; } };
       }
     });
@@ -179,13 +180,51 @@ test('uncertain component response preserves alternatives instead of forcing an 
       calls += 1;
       const payload = calls === 1
         ? { category: 'AUTOMOTIVE_COMPONENT_OR_VEHICLE', confidence: 98, objects: ['housing', 'hose'], evidence: ['automotive housing and hose are visible'], description: 'Partial automotive component.', automotiveEvidence: ['automotive mounting and hose connection'], graphEvidence: [], documentEvidence: [] }
-        : { status: 'UNCERTAIN', primaryComponent: 'Unable to determine exact component', componentConfidence: '0.41', system: 'Engine cooling', secondaryComponents: ['coolant hose'], supportingEvidence: ['partial cast housing and coolant hose'], possibleAlternatives: ['thermostat housing', 'coolant outlet housing'], uncertaintyReason: 'Only a partial component view is visible.' };
+        : { status: 'UNCERTAIN', primaryComponent: 'Unable to determine exact component', componentConfidence: '0.41', system: 'Engine cooling', secondaryComponents: ['coolant hose'], supportingEvidence: ['partial cast housing and coolant hose'], possibleAlternatives: ['thermostat housing', 'coolant outlet housing'], uncertaintyReason: 'Only a partial component view is visible.', drivetrainDiscrimination: drivetrain() };
       return { ok: true, status: 200, async json() { return { output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(payload) }] }] }; } };
     } });
     assert.equal(result.semanticResult.componentIdentification.status, 'UNCERTAIN');
     assert.equal(result.semanticResult.componentIdentification.normalizedComponentConfidence, 41);
     assert.deepEqual(result.semanticResult.componentIdentification.possibleAlternatives, ['thermostat housing', 'coolant outlet housing']);
     assert.match(result.semanticResult.componentIdentification.uncertaintyReason, /partial component view/i);
+  } finally { console.info = originalInfo; }
+});
+
+test('drivetrain discrimination distinguishes four layouts and caps incomplete evidence', async () => {
+  const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00]);
+  const cases = [
+    ['TRANSFER_CASE', 'Transfer Case', drivetrain({ applicable: true, candidateType: 'TRANSFER_CASE', transmissionConnection: 'VISIBLE', longitudinalShafts: 'MULTIPLE', lateralAxleOutputs: 'ABSENT', axleTubes: 'ABSENT', location: 'VEHICLE_CENTERLINE', powerFlowRole: 'TORQUE_DISTRIBUTION', distinguishingFeaturesComplete: true, evidence: ['separate housing behind transmission', 'multiple longitudinal driveline outputs'] })],
+    ['DIFFERENTIAL', 'Differential', drivetrain({ applicable: true, candidateType: 'DIFFERENTIAL', longitudinalShafts: 'ONE', lateralAxleOutputs: 'PRESENT', axleTubes: 'PRESENT', location: 'AXLE_POSITION', powerFlowRole: 'FINAL_DRIVE', distinguishingFeaturesComplete: true, evidence: ['lateral axle outputs toward wheels', 'driveshaft terminates at pinion input'] })],
+    ['TRANSMISSION', 'Transmission', drivetrain({ applicable: true, candidateType: 'TRANSMISSION', engineConnection: 'VISIBLE', transmissionConnection: 'NOT_VISIBLE', longitudinalShafts: 'ONE', lateralAxleOutputs: 'ABSENT', axleTubes: 'ABSENT', location: 'ENGINE_ATTACHED', powerFlowRole: 'PRIMARY_GEARBOX', distinguishingFeaturesComplete: true, evidence: ['bellhousing attached to engine', 'main gearbox case extends rearward'] })],
+    ['TRANSAXLE', 'Transaxle', drivetrain({ applicable: true, candidateType: 'TRANSAXLE', engineConnection: 'VISIBLE', longitudinalShafts: 'NONE', lateralAxleOutputs: 'PRESENT', axleTubes: 'ABSENT', location: 'TRANSVERSE_DRIVETRAIN', powerFlowRole: 'INTEGRATED_GEARBOX_FINAL_DRIVE', distinguishingFeaturesComplete: true, evidence: ['integrated transverse gearbox and final drive', 'lateral CV outputs leave housing'] })]
+  ];
+  const originalInfo = console.info; console.info = () => {};
+  try {
+    for (const [candidateType, primaryComponent, discrimination] of cases) {
+      let calls = 0;
+      const body = { transactionId: `sem-${candidateType.toLowerCase()}`, imageHash: createHash('sha256').update(bytes).digest('hex'), mimeType: 'image/png', imageBase64: bytes.toString('base64') };
+      const result = await analyzeSemanticImage(body, { apiKey: 'test-only-placeholder', fetchImpl: async () => {
+        calls += 1;
+        const payload = calls === 1
+          ? { category: 'AUTOMOTIVE_COMPONENT_OR_VEHICLE', confidence: 99, objects: ['drivetrain housing'], evidence: ['vehicle drivetrain assembly is visible'], description: 'Under-vehicle drivetrain component.', automotiveEvidence: ['drivetrain housing and shaft connections'], graphEvidence: [], documentEvidence: [] }
+          : { status: 'IDENTIFIED', primaryComponent, componentConfidence: 97, system: 'Drivetrain', secondaryComponents: ['driveshaft'], supportingEvidence: discrimination.evidence, possibleAlternatives: [], uncertaintyReason: null, drivetrainDiscrimination: discrimination };
+        return { ok: true, status: 200, async json() { return { output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(payload) }] }] }; } };
+      } });
+      assert.equal(result.semanticResult.componentIdentification.primaryComponent, primaryComponent);
+      assert.equal(result.semanticResult.componentIdentification.drivetrainDiscrimination.candidateType, candidateType);
+      assert.equal(result.semanticResult.componentIdentification.normalizedComponentConfidence, 97);
+    }
+    let calls = 0;
+    const ambiguousBody = { transactionId: 'sem-ambiguous-drivetrain', imageHash: createHash('sha256').update(bytes).digest('hex'), mimeType: 'image/png', imageBase64: bytes.toString('base64') };
+    const ambiguous = await analyzeSemanticImage(ambiguousBody, { apiKey: 'test-only-placeholder', fetchImpl: async () => {
+      calls += 1;
+      const payload = calls === 1
+        ? { category: 'AUTOMOTIVE_COMPONENT_OR_VEHICLE', confidence: 99, objects: ['drivetrain housing'], evidence: ['under-vehicle drivetrain housing'], description: 'Ambiguous drivetrain view.', automotiveEvidence: ['housing and driveshaft'], graphEvidence: [], documentEvidence: [] }
+        : { status: 'UNCERTAIN', primaryComponent: 'Transfer Case', componentConfidence: 95, system: 'Drivetrain', secondaryComponents: ['driveshaft'], supportingEvidence: ['centerline housing with driveshaft'], possibleAlternatives: ['Differential'], uncertaintyReason: 'Lateral outputs and the transmission connection are not visible.', drivetrainDiscrimination: drivetrain({ applicable: true, candidateType: 'TRANSFER_CASE', location: 'VEHICLE_CENTERLINE', longitudinalShafts: 'ONE', powerFlowRole: 'UNKNOWN', distinguishingFeaturesComplete: false, evidence: ['centerline housing and one driveshaft are visible'], competingCandidate: 'Differential' }) };
+      return { ok: true, status: 200, async json() { return { output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(payload) }] }] }; } };
+    } });
+    assert.equal(ambiguous.semanticResult.componentIdentification.normalizedComponentConfidence, 84);
+    assert.deepEqual(ambiguous.semanticResult.componentIdentification.possibleAlternatives, ['Differential']);
   } finally { console.info = originalInfo; }
 });
 

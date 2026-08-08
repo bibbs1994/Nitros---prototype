@@ -1,6 +1,6 @@
-/* Nitros 10.12.7AL specific component identification with clean-room transaction isolation. */
+/* Nitros 10.12.7AM drivetrain component discrimination with clean-room transaction isolation. */
 (()=>{'use strict';
-  const BUILD='10.12.7AL';
+  const BUILD='10.12.7AM';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
   const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
   const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
@@ -393,7 +393,7 @@
     const confidence=raw.normalizedComponentConfidence===null?null:Number(raw.normalizedComponentConfidence??raw.componentConfidence);
     if(confidence!==null&&(!Number.isFinite(confidence)||confidence<0||confidence>100))throw new Error('Component identification confidence is invalid.');
     const supportingEvidence=stringArray(raw.supportingEvidence,'component supportingEvidence'),secondaryComponents=stringArray(raw.secondaryComponents,'secondaryComponents'),possibleAlternatives=stringArray(raw.possibleAlternatives,'possibleAlternatives');
-    return {status:raw.status,primaryComponent:String(raw.primaryComponent||'Unable to determine exact component').trim(),componentConfidence:confidence,rawComponentConfidence:raw.rawComponentConfidence??null,normalizedComponentConfidence:confidence,system:raw.system?String(raw.system).trim():null,secondaryComponents,supportingEvidence,possibleAlternatives,uncertaintyReason:raw.uncertaintyReason?String(raw.uncertaintyReason).trim():null,semanticRequestId:raw.semanticRequestId,imageHash:raw.imageHash};
+    return {status:raw.status,primaryComponent:String(raw.primaryComponent||'Unable to determine exact component').trim(),componentConfidence:confidence,rawComponentConfidence:raw.rawComponentConfidence??null,normalizedComponentConfidence:confidence,system:raw.system?String(raw.system).trim():null,secondaryComponents,supportingEvidence,possibleAlternatives,uncertaintyReason:raw.uncertaintyReason?String(raw.uncertaintyReason).trim():null,drivetrainDiscrimination:raw.drivetrainDiscrimination||null,semanticRequestId:raw.semanticRequestId,imageHash:raw.imageHash};
   }
   function normalizeVisionResult(raw,run){
     if(!raw||typeof raw!=='object')throw new Error('No semantic vision analyzer returned a structured result.');
@@ -580,7 +580,7 @@
       nitrosCaseId:caseId,nitrosAnalysisSessionId:sessionId,nitrosCaptureRequestId:run?.runId||'None',nitrosAnalysisId:run?.runId||'None',
       nitrosCurrentImageSha:run?.imageHash?`${run.imageHash.slice(0,16)}…`:'None',nitrosAnalyzerSource:result?.source||'CURRENT IMAGE BYTES',nitrosResultId:result?.runId||'None',
       nitrosAnalysisStarted:run?.started||'None',nitrosAnalysisCompleted:run?.completed||'None',nitrosResultDisposition:extra.disposition||'NONE',nitrosResetReason:extra.resetReason||'—',
-      nitrosActiveClassifier:'NitrosSemanticImageAnalysisAL / specific component identification / 10.12.7AL',nitrosStaleResultLog:lastStaleMessage,
+      nitrosActiveClassifier:'NitrosSemanticImageAnalysisAM / drivetrain component discrimination / 10.12.7AM',nitrosStaleResultLog:lastStaleMessage,
       nitrosImageClassification:result?CATEGORY_LABELS[result.category]||result.category:'No image classified.',nitrosClassificationConfidence:result?(result.confidence===null?'Not provided':`${result.confidence}%`):'—',nitrosRawConfidence:result?.rawConfidence??'Not provided',nitrosNormalizedConfidence:result?.normalizedConfidence===null||result?.normalizedConfidence===undefined?'Not provided':`${result.normalizedConfidence}%`,nitrosClassificationEvidence:result?.evidence?.join('; ')||'No image classified.',
       nitrosPrimaryComponent:result?.componentIdentification?.primaryComponent||'None',nitrosComponentStatus:result?.componentIdentification?.status||'Not run',nitrosRawComponentConfidence:result?.componentIdentification?.rawComponentConfidence??'Not provided',nitrosNormalizedComponentConfidence:result?.componentIdentification?.normalizedComponentConfidence===null||result?.componentIdentification?.normalizedComponentConfidence===undefined?'Not provided':`${result.componentIdentification.normalizedComponentConfidence}%`,nitrosAutomotiveSystem:result?.componentIdentification?.system||'Not determined',nitrosSecondaryComponents:result?.componentIdentification?.secondaryComponents?.join('; ')||'None',nitrosComponentEvidence:result?.componentIdentification?.supportingEvidence?.join('; ')||'None',nitrosComponentAlternatives:result?.componentIdentification?.possibleAlternatives?.join('; ')||'None',nitrosComponentUncertainty:result?.componentIdentification?.uncertaintyReason||'None',nitrosComponentHashMatch:result?.componentIdentification?(result.componentIdentification.imageHash===run?.imageHash?'PASS':'FAIL'):'Not run',
       nitrosRuntimeGraphStatus:result?.category==='AUTOMOTIVE_GRAPH'?`${result.routeResult?.status||'Pending'}`:'Graph analysis not started.',
@@ -622,7 +622,7 @@
     updateDeveloper(null,{resetReason:'APP_START'});
   }
 
-  function start(){document.title='Nitros Mobile Technician Portal v10.12.7AL — Specific Component Identification';buildImportUi()}
+  function start(){document.title='Nitros Mobile Technician Portal v10.12.7AM — Drivetrain Component Discrimination';buildImportUi()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
   window.addEventListener('pageshow',()=>setTimeout(start,40));
   new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))buildImportUi()}).observe(document.documentElement,{childList:true,subtree:true});

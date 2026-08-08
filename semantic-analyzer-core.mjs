@@ -32,7 +32,7 @@ const semanticSchema = {
 const automotiveComponentSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['status', 'primaryComponent', 'componentConfidence', 'system', 'secondaryComponents', 'supportingEvidence', 'possibleAlternatives', 'uncertaintyReason'],
+  required: ['status', 'primaryComponent', 'componentConfidence', 'system', 'secondaryComponents', 'supportingEvidence', 'possibleAlternatives', 'uncertaintyReason', 'drivetrainDiscrimination'],
   properties: {
     status: { type: 'string', enum: ['IDENTIFIED', 'UNCERTAIN'] },
     primaryComponent: { type: 'string', maxLength: 160 },
@@ -41,7 +41,25 @@ const automotiveComponentSchema = {
     secondaryComponents: { type: 'array', items: { type: 'string' }, maxItems: 12 },
     supportingEvidence: { type: 'array', items: { type: 'string' }, maxItems: 16 },
     possibleAlternatives: { type: 'array', items: { type: 'string' }, maxItems: 8 },
-    uncertaintyReason: { anyOf: [{ type: 'string', maxLength: 500 }, { type: 'null' }] }
+    uncertaintyReason: { anyOf: [{ type: 'string', maxLength: 500 }, { type: 'null' }] },
+    drivetrainDiscrimination: {
+      type: 'object', additionalProperties: false,
+      required: ['applicable', 'candidateType', 'engineConnection', 'transmissionConnection', 'longitudinalShafts', 'lateralAxleOutputs', 'axleTubes', 'location', 'powerFlowRole', 'distinguishingFeaturesComplete', 'evidence', 'competingCandidate'],
+      properties: {
+        applicable: { type: 'boolean' },
+        candidateType: { type: 'string', enum: ['TRANSFER_CASE', 'DIFFERENTIAL', 'TRANSMISSION', 'TRANSAXLE', 'OTHER'] },
+        engineConnection: { type: 'string', enum: ['VISIBLE', 'NOT_VISIBLE', 'UNKNOWN'] },
+        transmissionConnection: { type: 'string', enum: ['VISIBLE', 'NOT_VISIBLE', 'UNKNOWN'] },
+        longitudinalShafts: { type: 'string', enum: ['NONE', 'ONE', 'MULTIPLE', 'UNKNOWN'] },
+        lateralAxleOutputs: { type: 'string', enum: ['PRESENT', 'ABSENT', 'UNKNOWN'] },
+        axleTubes: { type: 'string', enum: ['PRESENT', 'ABSENT', 'UNKNOWN'] },
+        location: { type: 'string', enum: ['ENGINE_ATTACHED', 'VEHICLE_CENTERLINE', 'AXLE_POSITION', 'TRANSVERSE_DRIVETRAIN', 'UNKNOWN'] },
+        powerFlowRole: { type: 'string', enum: ['PRIMARY_GEARBOX', 'TORQUE_DISTRIBUTION', 'FINAL_DRIVE', 'INTEGRATED_GEARBOX_FINAL_DRIVE', 'UNKNOWN'] },
+        distinguishingFeaturesComplete: { type: 'boolean' },
+        evidence: { type: 'array', items: { type: 'string' }, maxItems: 12 },
+        competingCandidate: { anyOf: [{ type: 'string', maxLength: 120 }, { type: 'null' }] }
+      }
+    }
   }
 };
 
@@ -69,7 +87,17 @@ function validateAutomotiveComponent(raw) {
   if (!['IDENTIFIED', 'UNCERTAIN'].includes(raw.status)) throw new Error('Component analyzer status is invalid.');
   const primaryComponent = typeof raw.primaryComponent === 'string' ? raw.primaryComponent.trim().slice(0, 160) : '';
   if (!primaryComponent) throw new Error('Component analyzer returned no primary identification state.');
-  const normalizedConfidence = normalizeSemanticConfidence(raw.componentConfidence);
+  let normalizedConfidence = normalizeSemanticConfidence(raw.componentConfidence);
+  const drivetrain = raw.drivetrainDiscrimination;
+  if (!drivetrain || typeof drivetrain !== 'object' || Array.isArray(drivetrain)) throw new Error('Drivetrain discrimination result is missing.');
+  const drivetrainTypes = ['TRANSFER_CASE', 'DIFFERENTIAL', 'TRANSMISSION', 'TRANSAXLE'];
+  const drivetrainEvidence = cleanStringArray(drivetrain.evidence, 'drivetrainDiscrimination.evidence').slice(0, 12);
+  const primaryKey = primaryComponent.toLowerCase();
+  const namedDrivetrainType = /transfer\s*case/.test(primaryKey) ? 'TRANSFER_CASE' : /transaxle/.test(primaryKey) ? 'TRANSAXLE' : /differential|final\s*drive/.test(primaryKey) ? 'DIFFERENTIAL' : /transmission/.test(primaryKey) ? 'TRANSMISSION' : null;
+  if (drivetrainTypes.includes(drivetrain.candidateType) && !drivetrain.applicable) throw new Error('Drivetrain candidate was not discrimination-checked.');
+  if (namedDrivetrainType && drivetrain.candidateType !== namedDrivetrainType) throw new Error('Primary drivetrain identification conflicts with the discrimination result.');
+  if (drivetrain.applicable && !drivetrainEvidence.length) throw new Error('Drivetrain discrimination has no spatial evidence.');
+  if (drivetrain.applicable && !drivetrain.distinguishingFeaturesComplete && normalizedConfidence !== null) normalizedConfidence = Math.min(84, normalizedConfidence);
   const result = {
     status: raw.status,
     primaryComponent,
@@ -80,7 +108,21 @@ function validateAutomotiveComponent(raw) {
     secondaryComponents: cleanStringArray(raw.secondaryComponents, 'secondaryComponents').slice(0, 12),
     supportingEvidence: cleanStringArray(raw.supportingEvidence, 'supportingEvidence').slice(0, 16),
     possibleAlternatives: cleanStringArray(raw.possibleAlternatives, 'possibleAlternatives').slice(0, 8),
-    uncertaintyReason: typeof raw.uncertaintyReason === 'string' ? raw.uncertaintyReason.trim().slice(0, 500) || null : null
+    uncertaintyReason: typeof raw.uncertaintyReason === 'string' ? raw.uncertaintyReason.trim().slice(0, 500) || null : null,
+    drivetrainDiscrimination: {
+      applicable: Boolean(drivetrain.applicable),
+      candidateType: drivetrainTypes.includes(drivetrain.candidateType) ? drivetrain.candidateType : 'OTHER',
+      engineConnection: String(drivetrain.engineConnection || 'UNKNOWN'),
+      transmissionConnection: String(drivetrain.transmissionConnection || 'UNKNOWN'),
+      longitudinalShafts: String(drivetrain.longitudinalShafts || 'UNKNOWN'),
+      lateralAxleOutputs: String(drivetrain.lateralAxleOutputs || 'UNKNOWN'),
+      axleTubes: String(drivetrain.axleTubes || 'UNKNOWN'),
+      location: String(drivetrain.location || 'UNKNOWN'),
+      powerFlowRole: String(drivetrain.powerFlowRole || 'UNKNOWN'),
+      distinguishingFeaturesComplete: Boolean(drivetrain.distinguishingFeaturesComplete),
+      evidence: drivetrainEvidence,
+      competingCandidate: typeof drivetrain.competingCandidate === 'string' ? drivetrain.competingCandidate.trim().slice(0, 120) || null : null
+    }
   };
   if (result.status === 'IDENTIFIED' && !result.supportingEvidence.length) throw new Error('Component identification has no visible supporting evidence.');
   if (result.status === 'UNCERTAIN' && !result.uncertaintyReason) throw new Error('Component uncertainty reason is missing.');
@@ -243,7 +285,13 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   let componentIdentification = null;
   if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
     const componentStartedAt = Date.now();
-    const componentPrompt = `Identify the primary automotive component visible in this current image using only visible pixels. Do not use filenames, metadata, OCR text alone, prior images, prior cases, cached results, or the category confidence. Return the most specific component supported by visible evidence, its automotive system, secondary visible components, and pixel-supported evidence. Component confidence must be independent from category confidence. If the exact component is not visually defensible, use status UNCERTAIN, set primaryComponent to "Unable to determine exact component", list plausible alternatives only when visually supported, and explain what view or evidence is missing. Never force or invent a component.`;
+    const componentPrompt = `Identify the primary automotive component visible in this current image using only visible pixels. Do not use filenames, metadata, OCR text alone, prior images, prior cases, cached results, or the category confidence. Return the most specific component supported by visible evidence, its automotive system, secondary visible components, and pixel-supported evidence. Component confidence must be independent from category confidence. If the exact component is not visually defensible, use status UNCERTAIN, list visually supported alternatives, explain what view or evidence is missing, and never force or invent a component.
+
+Before finalizing Transfer Case, Differential, Transmission, or Transaxle, complete drivetrainDiscrimination from visible geometry, mounting position, connected shafts, surrounding components, and drivetrain layout—not housing shape alone. Explicitly determine: connection to engine; connection directly behind transmission; driveshaft inputs and outputs; whether multiple longitudinal outputs exist; whether lateral axle/CV outputs or axle tubes lead toward wheels; centerline versus axle position; and whether the visible role is primary gearbox, front/rear torque distribution, final drive, or an integrated gearbox/final drive.
+
+TRANSFER CASE evidence includes a separate gearbox directly attached to or behind the transmission near the vehicle centerline, rear and possibly front driveline outputs, irregular gearbox housing, and absence of lateral axle tubes. Exhaust, heat shields, crossmembers, perimeter bolts, or a nearby driveshaft alone are not sufficient. DIFFERENTIAL evidence includes an axle/final-drive position, lateral axle shafts/CV outputs or axle tubes toward both wheels, and a driveshaft terminating at a pinion/input; perimeter bolts, under-vehicle location, or a nearby driveshaft alone are insufficient. TRANSMISSION evidence includes a large gearbox connected to the engine, bellhousing/main case, pan, cooler lines, connectors, shift mechanism, or transmission crossmember; a transfer case can be secondary behind it. TRANSAXLE evidence includes an integrated transmission/final-drive assembly with lateral CV axles in a transverse/FWD-style layout.
+
+Set distinguishingFeaturesComplete true only when the selected exact drivetrain type has strong visible discriminators. Otherwise lower component confidence, include the closest competing type in possibleAlternatives and drivetrainDiscrimination.competingCandidate, and explain the ambiguity. Supporting evidence must specifically justify the selected primary component. Secondary items such as driveshaft, exhaust, heat shield, crossmember, transmission, differential, CV axle, or suspension must not override the visually dominant intended subject.`;
     markDiagnostic(diagnostic, 'M_COMPONENT_REQUEST_CONSTRUCTED', { componentIdentificationAttempted: true, componentResponseReceived: false, componentResultPresent: false });
     try {
       const componentResponse = await fetchImpl('https://api.openai.com/v1/responses', {

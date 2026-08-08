@@ -11,13 +11,13 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
   readFile(new URL('semantic-analyzer-core.mjs', root), 'utf8')
 ]);
 
-test('AL build identifiers and production endpoint are consistent', () => {
-  assert.match(analyzer, /const BUILD='10\.12\.7AL'/);
-  assert.match(html, /Version 10\.12\.7AL/);
-  assert.match(html, /image-analysis-ad\.js\?v=10\.12\.7AL/);
+test('AM build identifiers and production endpoint are consistent', () => {
+  assert.match(analyzer, /const BUILD='10\.12\.7AM'/);
+  assert.match(html, /Version 10\.12\.7AM/);
+  assert.match(html, /image-analysis-ad\.js\?v=10\.12\.7AM/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.7AL'/);
-  assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJK]/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.7AM'/);
+  assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKL]/);
 });
 
 test('semantic request preserves the production payload and classification gates', () => {
@@ -80,6 +80,15 @@ test('specific component UI is automotive-gated, independently normalized, and h
   assert.match(analyzer, /Component confidence normalized/);
   assert.match(html, /id="nitrosPrimaryComponent"/);
   assert.match(html, /id="nitrosComponentHashMatch"/);
+});
+
+test('drivetrain discrimination uses structured spatial and power-flow evidence', () => {
+  for (const value of ['TRANSFER_CASE','DIFFERENTIAL','TRANSMISSION','TRANSAXLE','engineConnection','transmissionConnection','longitudinalShafts','lateralAxleOutputs','axleTubes','location','powerFlowRole','distinguishingFeaturesComplete','competingCandidate']) assert.ok(core.includes(value), `missing ${value}`);
+  assert.match(core, /Math\.min\(84, normalizedConfidence\)/);
+  assert.match(core, /perimeter bolts, under-vehicle location, or a nearby driveshaft alone are insufficient/);
+  assert.match(core, /TRANSFER CASE evidence includes a separate gearbox directly attached to or behind the transmission/);
+  assert.match(core, /TRANSAXLE evidence includes an integrated transmission\/final-drive assembly/);
+  assert.match(core, /Primary drivetrain identification conflicts with the discrimination result/);
 });
 
 test('transport diagnostics cover lifecycle, timing, and categorized failures', () => {
