@@ -228,6 +228,31 @@ test('drivetrain discrimination distinguishes four layouts and caps incomplete e
   } finally { console.info = originalInfo; }
 });
 
+test('wiring diagram category triggers structured circuit analysis without component identification', async () => {
+  const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00]);
+  const body = { transactionId: 'sem-wiring', imageHash: createHash('sha256').update(bytes).digest('hex'), mimeType: 'image/png', imageBase64: bytes.toString('base64') };
+  let calls = 0; const originalInfo = console.info; console.info = () => {};
+  try {
+    const result = await analyzeSemanticImage(body, { apiKey: 'test-only-placeholder', fetchImpl: async () => {
+      calls += 1;
+      const payload = calls === 1
+        ? { category: 'AUTOMOTIVE_WIRING_DIAGRAM', confidence: 0.98, objects: ['fuse', 'relay', 'motor', 'ground'], evidence: ['connected electrical circuit paths', 'fuse, relay, load, and ground schematic symbols'], description: 'Automotive motor control schematic.', automotiveEvidence: [], graphEvidence: [], documentEvidence: ['schematic connector and terminal labels'] }
+        : { status: 'READY', circuitComponent: 'Cooling fan motor', confidence: 0.94, structuralEvidence: ['connected power and ground circuit paths', 'fuse, relay coil/contact, motor, and ground symbols'], detectedComponents: ['battery feed', 'fuse F1', 'relay R1', 'cooling fan motor', 'ground G1'], connectorsAndPins: ['Motor connector pin 1', 'Motor connector pin 2'], powerPath: ['battery feed', 'fuse F1', 'relay R1 contact', 'cooling fan motor'], controlPath: ['control module', 'relay R1 coil'], groundPath: ['cooling fan motor', 'ground G1'], fuses: ['F1'], relays: ['R1'], splices: [], wireDetails: ['Not reliably readable from supplied diagram.'], importantObservations: ['relay switches motor power'], unreadableFields: ['wire colors not reliably readable from supplied diagram'], safetyWarning: null, testPlan: [
+          { id: 'power', objective: 'Verify motor power feed', tool: 'DVOM', instructions: 'Backprobe motor power with connector plugged in and fan commanded on.', redLead: 'motor connector pin 1', blackLead: 'battery negative', connectorCondition: 'plugged in', operatingCondition: 'key ON, fan commanded ON', loaded: true, expectedBehavior: 'system voltage while commanded', evaluationType: 'POWER_PRESENT', expectedMin: 11, expectedMax: 15, specificationSource: 'ELECTRICAL_PRINCIPLE', nextOnPass: 1, nextOnFail: null, passConclusion: 'CONTINUE', failConclusion: 'VERIFIED_POWER_SUPPLY_FAULT' },
+          { id: 'ground', objective: 'Verify loaded motor ground', tool: 'DVOM', instructions: 'Measure ground-side voltage drop while the fan is commanded on.', redLead: 'motor ground pin', blackLead: 'battery negative', connectorCondition: 'plugged in', operatingCondition: 'key ON, fan commanded ON', loaded: true, expectedBehavior: 'low voltage drop', evaluationType: 'VOLTAGE_DROP_LOW', expectedMin: null, expectedMax: null, specificationSource: 'NONE', nextOnPass: null, nextOnFail: null, passConclusion: 'COMPONENT_PASSES_CURRENT_TESTS', failConclusion: 'VERIFIED_GROUND_FAULT' }
+        ] };
+      return { ok: true, status: 200, async json() { return { output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(payload) }] }] }; } };
+    } });
+    assert.equal(calls, 2);
+    assert.equal(result.semanticResult.category, 'AUTOMOTIVE_WIRING_DIAGRAM');
+    assert.equal(result.semanticResult.componentIdentification, null);
+    assert.equal(result.semanticResult.wiringDiagramAnalysis.circuitComponent, 'Cooling fan motor');
+    assert.equal(result.semanticResult.wiringDiagramAnalysis.testPlan.length, 2);
+    assert.equal(result.semanticResult.wiringDiagramAnalysis.imageHash, body.imageHash);
+    assert.equal(result.serverDiagnostic.wiringDiagramResultPresent, true);
+  } finally { console.info = originalInfo; }
+});
+
 test('raw upstream errors are sanitized', () => {
   const failure = publicError(Object.assign(new Error('internal upstream detail'), { statusCode: 502 }));
   assert.deepEqual(failure, { status: 502, body: { error: 'Image analysis is temporarily unavailable.', code: 'ANALYSIS_UNAVAILABLE' } });

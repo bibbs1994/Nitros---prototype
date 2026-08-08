@@ -11,13 +11,13 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
   readFile(new URL('semantic-analyzer-core.mjs', root), 'utf8')
 ]);
 
-test('AM build identifiers and production endpoint are consistent', () => {
-  assert.match(analyzer, /const BUILD='10\.12\.7AM'/);
-  assert.match(html, /Version 10\.12\.7AM/);
-  assert.match(html, /image-analysis-ad\.js\?v=10\.12\.7AM/);
+test('AN build identifiers and production endpoint are consistent', () => {
+  assert.match(analyzer, /const BUILD='10\.12\.7AN'/);
+  assert.match(html, /Version 10\.12\.7AN/);
+  assert.match(html, /image-analysis-ad\.js\?v=10\.12\.7AN/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.7AM'/);
-  assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKL]/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.7AN'/);
+  assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLM]/);
 });
 
 test('semantic request preserves the production payload and classification gates', () => {
@@ -38,8 +38,8 @@ test('analysis payload is a single bounded metadata-free JPEG copy', () => {
   assert.match(analyzer, /run\.bytes=sourceBuffer\.slice\(0\)/);
   assert.match(analyzer, /payloadImageCount:1/);
   assert.equal((analyzer.match(/imageBase64\}/g)||[]).length, 1);
-  assert.equal((core.match(/type: 'input_image'/g)||[]).length, 2);
-  assert.equal((core.match(/image_url:/g)||[]).length, 2);
+  assert.equal((core.match(/type: 'input_image'/g)||[]).length, 3);
+  assert.equal((core.match(/image_url:/g)||[]).length, 3);
   assert.match(core, /requiredFields = \['transactionId', 'imageHash', 'mimeType', 'imageBase64'\]/);
 });
 
@@ -89,6 +89,21 @@ test('drivetrain discrimination uses structured spatial and power-flow evidence'
   assert.match(core, /TRANSFER CASE evidence includes a separate gearbox directly attached to or behind the transmission/);
   assert.match(core, /TRANSAXLE evidence includes an integrated transmission\/final-drive assembly/);
   assert.match(core, /Primary drivetrain identification conflicts with the discrimination result/);
+});
+
+test('wiring diagrams are structurally gated and expose one-step guided test state', () => {
+  assert.match(core, /'AUTOMOTIVE_WIRING_DIAGRAM'/);
+  assert.match(core, /Automotive words or OCR text alone are insufficient/);
+  assert.match(core, /Wiring diagram classification lacks structural schematic evidence/);
+  assert.match(core, /VERIFY → TEST → ISOLATE → REPAIR → CONFIRM/);
+  assert.match(core, /unsupported numeric specification/);
+  assert.match(analyzer, /category==='AUTOMOTIVE_WIRING_DIAGRAM'/);
+  assert.match(analyzer, /GUIDE COMPONENT TEST/);
+  assert.match(analyzer, /componentTestSession/);
+  assert.match(analyzer, /evaluateGuidedResult\(step,measurement\)/);
+  assert.match(analyzer, /completedTests\.push/);
+  assert.match(analyzer, /Wiring diagram result does not match the current image request/);
+  assert.match(html, /id="nitrosComponentTestSessionId"/);
 });
 
 test('transport diagnostics cover lifecycle, timing, and categorized failures', () => {

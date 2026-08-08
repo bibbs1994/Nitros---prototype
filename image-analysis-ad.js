@@ -1,6 +1,6 @@
-/* Nitros 10.12.7AM drivetrain component discrimination with clean-room transaction isolation. */
+/* Nitros 10.12.7AN wiring diagram and component test guidance with clean-room transaction isolation. */
 (()=>{'use strict';
-  const BUILD='10.12.7AM';
+  const BUILD='10.12.7AN';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
   const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
   const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
@@ -8,12 +8,13 @@
   const MAX_TEXT_BYTES=1500000;
   const CATEGORIES=new Set([
     'AUTOMOTIVE_GRAPH',
+    'AUTOMOTIVE_WIRING_DIAGRAM',
     'AUTOMOTIVE_COMPONENT_OR_VEHICLE',
     'DOCUMENT_OR_TEXT_SCREENSHOT',
     'GENERAL_NON_AUTOMOTIVE_PHOTO',
     'UNKNOWN_OR_ANALYSIS_UNAVAILABLE'
   ]);
-  const CATEGORY_LABELS={AUTOMOTIVE_GRAPH:'Automotive Graph / Diagnostic Graph',AUTOMOTIVE_COMPONENT_OR_VEHICLE:'Automotive Component / Vehicle Photo',DOCUMENT_OR_TEXT_SCREENSHOT:'Document / Text / Screenshot',GENERAL_NON_AUTOMOTIVE_PHOTO:'General / Non-Automotive Photograph',UNKNOWN_OR_ANALYSIS_UNAVAILABLE:'Unknown / Analysis Unavailable'};
+  const CATEGORY_LABELS={AUTOMOTIVE_GRAPH:'Automotive Graph / Diagnostic Graph',AUTOMOTIVE_WIRING_DIAGRAM:'Automotive Wiring Diagram',AUTOMOTIVE_COMPONENT_OR_VEHICLE:'Automotive Component / Vehicle Photo',DOCUMENT_OR_TEXT_SCREENSHOT:'Document / Text / Screenshot',GENERAL_NON_AUTOMOTIVE_PHOTO:'General / Non-Automotive Photograph',UNKNOWN_OR_ANALYSIS_UNAVAILABLE:'Unknown / Analysis Unavailable'};
   const $=id=>document.getElementById(id);
   const escapeHtml=value=>String(value??'').replace(/[&<>\"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[char]));
   const initialStatus='Attach an image, CSV/text export, or PDF. Every image starts a new uncached analysis run.';
@@ -121,6 +122,8 @@
     if(diag.pipeline?.CLASSIFICATION_COMPLETE==='FAIL')set(9,'FAIL');
     if(server.componentIdentificationAttempted){set(10,'PASS');set(11,server.componentResultPresent?'PASS':'FAIL');set(12,server.componentResultPresent?'PASS':'FAIL');set(13,server.componentResultPresent?'PASS':'FAIL')}
     else if(server.componentIdentificationSkipped){set(10,'SKIPPED');set(11,'SKIPPED');set(12,'SKIPPED');set(13,'SKIPPED')}
+    if(server.wiringDiagramAnalysisAttempted){set(14,'PASS');set(15,server.wiringDiagramResultPresent?'PASS':'FAIL');set(16,server.wiringDiagramResultPresent?'PASS':'FAIL')}
+    else if(server.wiringDiagramAnalysisSkipped){set(14,'SKIPPED');set(15,'SKIPPED');set(16,'SKIPPED')}
     renderStages(run);
   }
 
@@ -395,6 +398,14 @@
     const supportingEvidence=stringArray(raw.supportingEvidence,'component supportingEvidence'),secondaryComponents=stringArray(raw.secondaryComponents,'secondaryComponents'),possibleAlternatives=stringArray(raw.possibleAlternatives,'possibleAlternatives');
     return {status:raw.status,primaryComponent:String(raw.primaryComponent||'Unable to determine exact component').trim(),componentConfidence:confidence,rawComponentConfidence:raw.rawComponentConfidence??null,normalizedComponentConfidence:confidence,system:raw.system?String(raw.system).trim():null,secondaryComponents,supportingEvidence,possibleAlternatives,uncertaintyReason:raw.uncertaintyReason?String(raw.uncertaintyReason).trim():null,drivetrainDiscrimination:raw.drivetrainDiscrimination||null,semanticRequestId:raw.semanticRequestId,imageHash:raw.imageHash};
   }
+  function normalizeWiringDiagram(raw,category,run){
+    if(category!=='AUTOMOTIVE_WIRING_DIAGRAM')return null;
+    if(!raw||typeof raw!=='object'||!['READY','INSUFFICIENT_READABILITY','FAILED'].includes(raw.status))throw new Error('Wiring diagram analysis result is missing or invalid.');
+    if(raw.semanticRequestId!==run.analyzer.requestId||raw.imageHash!==run.imageHash)throw new Error('Wiring diagram result does not match the current image request.');
+    const fields=['structuralEvidence','detectedComponents','connectorsAndPins','powerPath','controlPath','groundPath','fuses','relays','splices','wireDetails','importantObservations','unreadableFields'],normalized={};
+    fields.forEach(field=>{normalized[field]=stringArray(raw[field],field)});
+    return {...normalized,status:raw.status,circuitComponent:String(raw.circuitComponent||'Not reliably readable from supplied diagram.').trim(),confidence:raw.normalizedConfidence===null?null:Number(raw.normalizedConfidence??raw.confidence),rawConfidence:raw.rawConfidence??null,normalizedConfidence:raw.normalizedConfidence??null,safetyWarning:raw.safetyWarning?String(raw.safetyWarning).trim():null,testPlan:Array.isArray(raw.testPlan)?raw.testPlan.slice(0,8):[],semanticRequestId:raw.semanticRequestId,imageHash:raw.imageHash};
+  }
   function normalizeVisionResult(raw,run){
     if(!raw||typeof raw!=='object')throw new Error('No semantic vision analyzer returned a structured result.');
     if(raw.transactionId!==run.analyzer.requestId)throw new Error('Semantic result transaction ID does not match the current semantic request.');
@@ -408,7 +419,8 @@
     if(category==='AUTOMOTIVE_GRAPH'&&graphEvidence.length<2)throw new Error('Graph classification lacks independent structural evidence.');
     if(category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'&&!automotiveEvidence.length)throw new Error('Automotive classification lacks positive visual evidence.');
     const componentIdentification=normalizeComponentIdentification(raw.componentIdentification,category,run);
-    return {runId:run.runId,semanticRequestId:raw.transactionId,imageHash:raw.imageHash,category,confidence,rawConfidence:raw.rawConfidence??null,normalizedConfidence:confidence,componentIdentification,objects,evidence,description:String(raw.description||'').trim(),automotiveEvidence,graphEvidence,documentEvidence,source:String(raw.source||'NitrosVisionAnalyzer semantic result'),transportStatus:raw.transportStatus??null,routingData:raw.routingData??null};
+    const wiringDiagramAnalysis=normalizeWiringDiagram(raw.wiringDiagramAnalysis,category,run);
+    return {runId:run.runId,semanticRequestId:raw.transactionId,imageHash:raw.imageHash,category,confidence,rawConfidence:raw.rawConfidence??null,normalizedConfidence:confidence,componentIdentification,wiringDiagramAnalysis,objects,evidence,description:String(raw.description||'').trim(),automotiveEvidence,graphEvidence,documentEvidence,source:String(raw.source||'NitrosVisionAnalyzer semantic result'),transportStatus:raw.transportStatus??null,routingData:raw.routingData??null};
   }
 
   function unavailableResult(run,reason){
@@ -446,6 +458,9 @@
       const analyzer=window.NitrosGraphAnalyzerAD;
       result.route='Graph/OCR';
       result.routeResult=typeof analyzer?.analyzeCurrentImage==='function'?await analyzer.analyzeCurrentImage(payload):{status:'Analysis unavailable',evidence:['No clean-room graph/OCR analyzer is configured.']};
+    }else if(result.category==='AUTOMOTIVE_WIRING_DIAGRAM'){
+      result.route='Wiring diagram / guided component test';
+      result.routeResult={status:result.wiringDiagramAnalysis?.status==='READY'?'Circuit analysis ready':'Insufficient diagram readability',evidence:[...(result.wiringDiagramAnalysis?.structuralEvidence||[])]};
     }else if(result.category==='DOCUMENT_OR_TEXT_SCREENSHOT'){
       const analyzer=window.NitrosDocumentAnalyzerAD;
       result.route='Document/OCR';
@@ -476,6 +491,25 @@
     return true;
   }
 
+  const CONCLUSION_LABELS={CONTINUE:'Continue testing',VERIFIED_COMPONENT_FAILURE:'Verified component failure',VERIFIED_POWER_SUPPLY_FAULT:'Verified power-supply fault',VERIFIED_GROUND_FAULT:'Verified ground fault',VERIFIED_CONTROL_CIRCUIT_FAULT:'Verified control-circuit fault',VERIFIED_SIGNAL_CIRCUIT_FAULT:'Verified signal-circuit fault',POSSIBLE_MODULE_DRIVER_FAULT_FURTHER_TESTING_REQUIRED:'Possible module/driver fault — further testing required',COMPONENT_PASSES_CURRENT_TESTS:'Component passes current tests',INSUFFICIENT_EVIDENCE:'Insufficient evidence'};
+  function evaluateGuidedResult(step,text){
+    const value=String(text||'').trim(),lower=value.toLowerCase(),match=lower.match(/-?\d+(?:\.\d+)?/),numeric=match?Number(match[0]):null;
+    if(numeric!==null&&(step.expectedMin!==null||step.expectedMax!==null)){const min=step.expectedMin??-Infinity,max=step.expectedMax??Infinity;return {status:numeric>=min&&numeric<=max?'PASS':'FAIL',interpretation:`Measured ${value}; expected ${step.expectedBehavior}.`}}
+    const negative=/\b(?:no|none|zero|dead|missing|absent|failed|dim)\b|\bol\b|open circuit|no pulse/.test(lower),positive=/\b(?:good|bright|present|passes|pass|normal|square|pulse|working)\b/.test(lower);
+    if(['POWER_PRESENT','CONTROL_PRESENT','SIGNAL_PRESENT','CONTINUITY_GOOD'].includes(step.evaluationType)){if(negative||numeric===0)return {status:'FAIL',interpretation:`Result does not show the expected ${step.expectedBehavior}.`};if(positive||(numeric!==null&&numeric>0))return {status:'PASS',interpretation:`Result supports ${step.expectedBehavior}.`}}
+    if(step.evaluationType==='GROUND_GOOD'){if(/ground is good|bright|passes|pass/.test(lower))return {status:'PASS',interpretation:'Ground test passes under the stated test condition.'};if(/bad ground|dim|open|ol/.test(lower))return {status:'FAIL',interpretation:'Ground path does not pass the stated test.'}}
+    if(step.evaluationType==='VOLTAGE_DROP_LOW'){if(positive||/low drop/.test(lower))return {status:'PASS',interpretation:'Reported voltage drop passes.'};if(/high drop|excessive/.test(lower))return {status:'FAIL',interpretation:'Reported voltage drop is excessive.'}}
+    return {status:'UNKNOWN',interpretation:`Result recorded as “${value},” but it cannot be compared reliably without clarification or a visible/supplied specification.`};
+  }
+  function renderGuidedTest(run,host){
+    const session=run.componentTestSession;if(!session||!host)return;
+    const completed=session.completedTests.map(item=>`<li>${escapeHtml(item.objective)} — ${escapeHtml(item.measurement)} — ${escapeHtml(item.status)}</li>`).join('');
+    if(session.conclusion&&session.conclusion!=='CONTINUE'){host.innerHTML=`<strong>Diagnostic conclusion:</strong> ${escapeHtml(CONCLUSION_LABELS[session.conclusion]||session.conclusion)}${completed?`<ul>${completed}</ul>`:''}`;return}
+    const step=session.testPlan[session.currentStep];if(!step){session.conclusion='INSUFFICIENT_EVIDENCE';renderGuidedTest(run,host);return}
+    host.innerHTML=`<strong>Current test:</strong> ${escapeHtml(step.objective)}<br><strong>Tool:</strong> ${escapeHtml(step.tool)}<br><strong>Procedure:</strong> ${escapeHtml(step.instructions)}<br><strong>Red lead/probe:</strong> ${escapeHtml(step.redLead)}<br><strong>Black lead/probe:</strong> ${escapeHtml(step.blackLead)}<br><strong>Condition:</strong> ${escapeHtml(step.connectorCondition)}; ${escapeHtml(step.operatingCondition)}; ${step.loaded?'circuit loaded':'loading not required'}<br><strong>Evaluate:</strong> ${escapeHtml(step.expectedBehavior)}${session.lastInterpretation?`<p>${escapeHtml(session.lastInterpretation)}</p>`:''}${completed?`<details><summary>Completed tests</summary><ul>${completed}</ul></details>`:''}<label>Technician result<input class="guided-test-result" type="text" autocomplete="off" placeholder="Example: 12.4 volts, OL, ground is good"></label><button class="oliver-import-action guided-test-submit" type="button">SUBMIT TEST RESULT</button>`;
+    host.querySelector('.guided-test-submit').onclick=()=>{const input=host.querySelector('.guided-test-result'),measurement=input?.value?.trim();if(!measurement)return;const evaluation=evaluateGuidedResult(step,measurement);session.measurements.push(measurement);session.completedTests.push({stepId:step.id,objective:step.objective,measurement,status:evaluation.status,interpretation:evaluation.interpretation});session.lastInterpretation=evaluation.interpretation;if(evaluation.status==='UNKNOWN'){session.nextRecommendedTest=`Clarify result for ${step.objective}`;renderGuidedTest(run,host);return}const conclusion=evaluation.status==='PASS'?step.passConclusion:step.failConclusion,next=evaluation.status==='PASS'?step.nextOnPass:step.nextOnFail;session.hypothesis=CONCLUSION_LABELS[conclusion]||conclusion;if(conclusion&&conclusion!=='CONTINUE'){session.conclusion=conclusion;session.nextRecommendedTest='Confirm repair and rerun the affected circuit operation as appropriate'}else if(Number.isInteger(next)&&session.testPlan[next]){session.currentStep=next;session.nextRecommendedTest=session.testPlan[next].objective}else{session.conclusion='INSUFFICIENT_EVIDENCE';session.nextRecommendedTest='Obtain additional circuit information or a clearer diagram'}renderGuidedTest(run,host);updateDeveloper(run,{disposition:'GUIDED TEST ACTIVE',verification:'PASS'})};
+  }
+
   function renderResult(run,result){
     const preview=$('oliverImportPreview');if(!preview)return;
     $('adAnalysisResult')?.remove();
@@ -487,6 +521,15 @@
       const componentConfidence=component.componentConfidence===null?'Not provided':`${component.componentConfidence}%`,list=items=>items?.length?`<ul>${items.map(item=>`<li>${escapeHtml(item)}</li>`).join('')}</ul>`:'None';
       const section=document.createElement('section');section.className='specific-component-identification';
       section.innerHTML=`<h3>SPECIFIC COMPONENT IDENTIFICATION</h3><strong>Status:</strong> ${escapeHtml(component.status)}<br><strong>Primary component:</strong> ${escapeHtml(component.primaryComponent)}<br><strong>Component confidence:</strong> <span class="phase2-confidence">${escapeHtml(componentConfidence)}</span><br><strong>System:</strong> ${escapeHtml(component.system||'Not determined')}<br><strong>Supporting visual evidence:</strong>${list(component.supportingEvidence)}<strong>Secondary visible components:</strong>${list(component.secondaryComponents)}<strong>Possible identification:</strong>${list(component.possibleAlternatives)}${component.uncertaintyReason?`<strong>Reason:</strong> ${escapeHtml(component.uncertaintyReason)}`:''}`;
+      host.appendChild(section);
+    }
+    const diagram=result.wiringDiagramAnalysis;
+    if(diagram){
+      const list=items=>items?.length?`<ul>${items.map(item=>`<li>${escapeHtml(item)}</li>`).join('')}</ul>`:'Not reliably readable from supplied diagram.',diagramConfidence=diagram.confidence===null?'Not provided':`${diagram.confidence}%`;
+      const section=document.createElement('section');section.className='specific-component-identification wiring-diagram-analysis';
+      section.innerHTML=`<h3>WIRING DIAGRAM ANALYSIS</h3><strong>Status:</strong> ${escapeHtml(diagram.status)}<br><strong>Circuit / Component:</strong> ${escapeHtml(diagram.circuitComponent)}<br><strong>Confidence:</strong> ${escapeHtml(diagramConfidence)}<br><strong>Power path:</strong>${list(diagram.powerPath)}<strong>Control path:</strong>${list(diagram.controlPath)}<strong>Ground path:</strong>${list(diagram.groundPath)}<strong>Visible connectors/pins:</strong>${list(diagram.connectorsAndPins)}<strong>Important circuit observations:</strong>${list(diagram.importantObservations)}<strong>Unreadable/uncertain fields:</strong>${list(diagram.unreadableFields)}${diagram.safetyWarning?`<strong>Safety warning:</strong> ${escapeHtml(diagram.safetyWarning)}<br>`:''}`;
+      if(diagram.status==='READY'&&diagram.testPlan.length){const button=document.createElement('button');button.type='button';button.className='oliver-import-action guide-component-test';button.textContent='GUIDE COMPONENT TEST';const guide=document.createElement('div');guide.className='guided-component-test';button.onclick=()=>{run.componentTestSession={id:createId('WTEST'),uploadedDiagram:{runId:run.runId,imageHash:run.imageHash},imageHash:run.imageHash,semanticRequestId:run.analyzer.requestId,circuitComponent:diagram.circuitComponent,currentStep:0,completedTests:[],measurements:[],hypothesis:'Verify circuit inputs before condemning the component',nextRecommendedTest:diagram.testPlan[0]?.objective||'',conclusion:'CONTINUE',testPlan:diagram.testPlan,lastInterpretation:''};button.remove();renderGuidedTest(run,guide);updateDeveloper(run,{disposition:'GUIDED TEST ACTIVE',verification:'PASS'})};section.append(button,guide)}
+      else section.insertAdjacentHTML('beforeend','<p>Critical connector/pin information is not readable enough for a reliable component test. Please upload a clearer or zoomed section.</p>');
       host.appendChild(section);
     }
     preview.appendChild(host);
@@ -519,6 +562,9 @@
       {label:'Identifying specific component…',status:'PENDING'},
       {label:'Component result received…',status:'PENDING'},
       {label:'Component confidence normalized…',status:'PENDING'},
+      {label:'Wiring diagram confirmed…',status:'PENDING'},
+      {label:'Analyzing visible circuit…',status:'PENDING'},
+      {label:'Component test guidance received…',status:'PENDING'},
       {label:'Fresh-result verification…',status:'PENDING'},
       {label:'Complete…',status:'PENDING'}
     ]};
@@ -549,24 +595,25 @@
       syncSemanticStages(run);
       if(!isActive(run)){rejectStale(run,result);return}
       const routed=await routeFreshResult(run,result);
-      await stage(run,14,'RUN');
+      await stage(run,17,'RUN');
       if(rejectStale(run,routed))return;
-      await stage(run,14,'PASS');
+      await stage(run,17,'PASS');
       run.result=routed;run.completed=new Date().toISOString();run.analyzer.outcome='SUCCEEDED';run.analyzer.stage='COMPLETE';run.analyzer.requestCompleted=run.analyzer.completedAt||run.completed;
       window.__nitrosCurrentImageAnalysis={runId:run.runId,imageHash:run.imageHash,result:routed};
       window.NitrosDeveloperMode=window.NitrosDeveloperMode||{};window.NitrosDeveloperMode.imageClassification=routed;
       renderResult(run,routed);
       const componentFailed=routed.category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'&&routed.componentIdentification?.status==='FAILED';
-      await stage(run,15,componentFailed?'FAIL':'PASS');
-      updateDeveloper(run,{disposition:componentFailed?'COMPONENT IDENTIFICATION FAILED':'ACCEPTED',verification:'PASS'});
-      const status=$('oliverImportStatus');if(status)status.textContent=componentFailed?'Automotive category confirmed — specific component identification failed':`Complete — ${CATEGORY_LABELS[routed.category]||routed.category}`;
+      const diagramFailed=routed.category==='AUTOMOTIVE_WIRING_DIAGRAM'&&routed.wiringDiagramAnalysis?.status==='FAILED';
+      await stage(run,18,componentFailed||diagramFailed?'FAIL':'PASS');
+      updateDeveloper(run,{disposition:componentFailed?'COMPONENT IDENTIFICATION FAILED':diagramFailed?'WIRING DIAGRAM ANALYSIS FAILED':'ACCEPTED',verification:'PASS'});
+      const status=$('oliverImportStatus');if(status)status.textContent=componentFailed?'Automotive category confirmed — specific component identification failed':diagramFailed?'Wiring diagram confirmed — circuit analysis failed':`Complete — ${CATEGORY_LABELS[routed.category]||routed.category}`;
     }catch(error){
       if(error?.name==='AbortError'){lastStaleRejected=true;lastStaleMessage='STALE RESULT REJECTED — RESULT NOT DISPLAYED';updateDeveloper(activeRun,{disposition:lastStaleMessage});return}
       if(!isActive(run))return;
       run.completed=new Date().toISOString();run.analysisError=run.analyzer.errorMessage||String(error?.message||error);run.analyzer.transportStatus=error?.transportStatus||run.analyzer.transportStatus;
       if(!run.analyzer.errorCategory){const classification=classifyTransportError(error,{endpoint:run.analyzer.endpoint,responseReceived:run.analyzer.responseReceived});Object.assign(run.analyzer,classification,{outcome:'FAILED',stage:'CLIENT_EXCEPTION',errorCategory:error?.diagnosticCategory||classification.category,errorName:sanitizeDiagnosticText(error?.name||'Error'),errorMessage:sanitizeDiagnosticText(error?.message||error),errorCode:sanitizeDiagnosticText(error?.code||''),clientException:true,completedAt:run.completed})}
       run.analyzer.totalMs=run.analyzer.totalMs??Math.max(0,new Date(run.completed)-new Date(run.started));run.analyzer.requestCompleted=run.completed;
-      syncSemanticStages(run);const runningStage=run.stages.find(item=>item.status==='RUN');if(runningStage)runningStage.status='FAIL';run.stages[14].status='FAIL';run.stages[15].status='FAIL';renderStages(run);
+      syncSemanticStages(run);const runningStage=run.stages.find(item=>item.status==='RUN');if(runningStage)runningStage.status='FAIL';run.stages[17].status='FAIL';run.stages[18].status='FAIL';renderStages(run);
       const payloadFailure=(run.analyzer.errorCategory||error?.diagnosticCategory)==='PAYLOAD_ERROR';
       if(payloadFailure){run.result=null;renderPayloadFailure();updateDeveloper(run,{disposition:'TRANSPORT/PAYLOAD FAILURE',verification:'FAIL'})}
       else{const failed=unavailableResult(run,`Analysis failed: ${error.message}`);run.result=failed;if(!rejectStale(run,failed)){renderResult(run,{...failed,route:'Stopped',routeResult:{status:'Insufficient evidence'}});updateDeveloper(run,{disposition:'FAILED',verification:'FAIL'})}}
@@ -580,15 +627,17 @@
       nitrosCaseId:caseId,nitrosAnalysisSessionId:sessionId,nitrosCaptureRequestId:run?.runId||'None',nitrosAnalysisId:run?.runId||'None',
       nitrosCurrentImageSha:run?.imageHash?`${run.imageHash.slice(0,16)}…`:'None',nitrosAnalyzerSource:result?.source||'CURRENT IMAGE BYTES',nitrosResultId:result?.runId||'None',
       nitrosAnalysisStarted:run?.started||'None',nitrosAnalysisCompleted:run?.completed||'None',nitrosResultDisposition:extra.disposition||'NONE',nitrosResetReason:extra.resetReason||'—',
-      nitrosActiveClassifier:'NitrosSemanticImageAnalysisAM / drivetrain component discrimination / 10.12.7AM',nitrosStaleResultLog:lastStaleMessage,
+      nitrosActiveClassifier:'NitrosSemanticImageAnalysisAN / wiring diagram and component test guidance / 10.12.7AN',nitrosStaleResultLog:lastStaleMessage,
       nitrosImageClassification:result?CATEGORY_LABELS[result.category]||result.category:'No image classified.',nitrosClassificationConfidence:result?(result.confidence===null?'Not provided':`${result.confidence}%`):'—',nitrosRawConfidence:result?.rawConfidence??'Not provided',nitrosNormalizedConfidence:result?.normalizedConfidence===null||result?.normalizedConfidence===undefined?'Not provided':`${result.normalizedConfidence}%`,nitrosClassificationEvidence:result?.evidence?.join('; ')||'No image classified.',
       nitrosPrimaryComponent:result?.componentIdentification?.primaryComponent||'None',nitrosComponentStatus:result?.componentIdentification?.status||'Not run',nitrosRawComponentConfidence:result?.componentIdentification?.rawComponentConfidence??'Not provided',nitrosNormalizedComponentConfidence:result?.componentIdentification?.normalizedComponentConfidence===null||result?.componentIdentification?.normalizedComponentConfidence===undefined?'Not provided':`${result.componentIdentification.normalizedComponentConfidence}%`,nitrosAutomotiveSystem:result?.componentIdentification?.system||'Not determined',nitrosSecondaryComponents:result?.componentIdentification?.secondaryComponents?.join('; ')||'None',nitrosComponentEvidence:result?.componentIdentification?.supportingEvidence?.join('; ')||'None',nitrosComponentAlternatives:result?.componentIdentification?.possibleAlternatives?.join('; ')||'None',nitrosComponentUncertainty:result?.componentIdentification?.uncertaintyReason||'None',nitrosComponentHashMatch:result?.componentIdentification?(result.componentIdentification.imageHash===run?.imageHash?'PASS':'FAIL'):'Not run',
+      nitrosDiagramStatus:result?.wiringDiagramAnalysis?.status||'Not run',nitrosDiagramConfidence:result?.wiringDiagramAnalysis?.confidence===null||result?.wiringDiagramAnalysis?.confidence===undefined?'Not provided':`${result.wiringDiagramAnalysis.confidence}%`,nitrosDiagramStructuralEvidence:result?.wiringDiagramAnalysis?.structuralEvidence?.join('; ')||'None',nitrosDiagramComponents:result?.wiringDiagramAnalysis?.detectedComponents?.join('; ')||'None',nitrosDiagramConnectors:result?.wiringDiagramAnalysis?.connectorsAndPins?.join('; ')||'None',nitrosDiagramPowerPath:result?.wiringDiagramAnalysis?.powerPath?.join(' → ')||'None',nitrosDiagramGroundPath:result?.wiringDiagramAnalysis?.groundPath?.join(' → ')||'None',nitrosDiagramControlPath:result?.wiringDiagramAnalysis?.controlPath?.join(' → ')||'None',nitrosDiagramUnreadable:result?.wiringDiagramAnalysis?.unreadableFields?.join('; ')||'None',nitrosComponentTestSessionId:run?.componentTestSession?.id||'None',
       nitrosRuntimeGraphStatus:result?.category==='AUTOMOTIVE_GRAPH'?`${result.routeResult?.status||'Pending'}`:'Graph analysis not started.',
       nitrosSemanticConfigured:run?.analyzer?.configured?'YES':'NO',nitrosAnalyzerRequestStarted:run?.analyzer?.requestStarted||'None',nitrosAnalyzerRequestCompleted:run?.analyzer?.requestCompleted||'None',nitrosAnalyzerTransportStatus:run?.analyzer?.transportStatus??'None',nitrosSemanticResultReceived:run?.analyzer?.resultReceived?'YES':'NO',nitrosResponseValidated:run?.analyzer?.responseValidated?'YES':'NO',nitrosResultTransactionMatch:result?(result.semanticRequestId===run?.analyzer?.requestId?'PASS':'FAIL'):'Pending',nitrosResultHashMatch:result?(result.imageHash===run?.imageHash?'PASS':'FAIL'):'Pending',nitrosStaleResultRejected:lastStaleRejected?'YES':'NO',nitrosFinalCategory:result?CATEGORY_LABELS[result.category]||result.category:'None',nitrosSemanticRouting:result?.route||'Not started',nitrosAnalysisError:run?.analysisError||'NONE',nitrosSemanticRequestId:run?.analyzer?.requestId||'None',nitrosSemanticErrorCategory:run?.analyzer?.errorCategory||'None',nitrosSemanticTransportDiagnostic:formatTransportDiagnostic(run?.analyzer),
       nitrosPreviousResultReused:'NO',nitrosResultCacheHit:'NO',nitrosFreshVerification:extra.verification||'Pending',nitrosImageDimensions:run?.dimensions?`${run.dimensions.width} × ${run.dimensions.height}`:'None'
     };
     Object.entries(values).forEach(([id,value])=>{const element=$(id);if(element)element.textContent=value});
     window.NitrosDeveloperMode=window.NitrosDeveloperMode||{};window.NitrosDeveloperMode.semanticTransport=run?.analyzer?JSON.parse(JSON.stringify(run.analyzer)):null;
+    window.NitrosDeveloperMode.componentTestSession=run?.componentTestSession?JSON.parse(JSON.stringify(run.componentTestSession)):null;
   }
   window.updateAnalysisSessionDeveloper=()=>updateDeveloper(activeRun);
 
@@ -622,7 +671,7 @@
     updateDeveloper(null,{resetReason:'APP_START'});
   }
 
-  function start(){document.title='Nitros Mobile Technician Portal v10.12.7AM — Drivetrain Component Discrimination';buildImportUi()}
+  function start(){document.title='Nitros Mobile Technician Portal v10.12.7AN — Wiring Diagram + Component Test Guidance';buildImportUi()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
   window.addEventListener('pageshow',()=>setTimeout(start,40));
   new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))buildImportUi()}).observe(document.documentElement,{childList:true,subtree:true});
