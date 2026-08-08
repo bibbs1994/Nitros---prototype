@@ -104,11 +104,11 @@ test('valid request reaches mocked server-side OpenAI path without secret disclo
     mimeType: 'image/png',
     imageBase64: bytes.toString('base64')
   };
-  let called = false;
+  let calls = 0;
   const result = await analyzeSemanticImage(body, {
     apiKey: 'test-only-placeholder',
     fetchImpl: async (_url, options) => {
-      called = true;
+      calls += 1;
       assert.match(options.headers.Authorization, /^Bearer /);
       return {
         ok: true,
@@ -122,7 +122,7 @@ test('valid request reaches mocked server-side OpenAI path without secret disclo
       };
     }
   });
-  assert.equal(called, true);
+  assert.equal(calls, 1);
   assert.equal(JSON.stringify(result).includes('test-only-placeholder'), false);
   assert.equal(result.serverDiagnostic.stage, 'K_SEMANTIC_OUTPUT_EXTRACTED');
   assert.equal(result.serverDiagnostic.openaiCredentialConfigured, true);
@@ -135,6 +135,58 @@ test('valid request reaches mocked server-side OpenAI path without secret disclo
   assert.equal(result.semanticResult.rawConfidence, 0.95);
   assert.equal(result.semanticResult.normalizedConfidence, 95);
   assert.equal(result.semanticResult.confidence, 95);
+});
+
+test('automotive category triggers one fresh component request with independent confidence', async () => {
+  const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00]);
+  const body = { transactionId: 'sem-component', imageHash: createHash('sha256').update(bytes).digest('hex'), mimeType: 'image/png', imageBase64: bytes.toString('base64') };
+  let calls = 0;
+  const originalInfo = console.info;
+  console.info = () => {};
+  try {
+    const result = await analyzeSemanticImage(body, {
+      apiKey: 'test-only-placeholder',
+      fetchImpl: async (_url, options) => {
+        calls += 1;
+        const request = JSON.parse(options.body);
+        assert.equal(request.input[0].content.filter(item => item.type === 'input_image').length, 1);
+        const payload = calls === 1
+          ? { category: 'AUTOMOTIVE_COMPONENT_OR_VEHICLE', confidence: 0.99, objects: ['alternator', 'belt'], evidence: ['vented metal housing and pulley are visible'], description: 'Automotive charging component.', automotiveEvidence: ['engine-mounted vented housing with belt-driven pulley'], graphEvidence: [], documentEvidence: [] }
+          : { status: 'IDENTIFIED', primaryComponent: 'Alternator', componentConfidence: 0.94, system: 'Charging system', secondaryComponents: ['serpentine belt', 'pulley'], supportingEvidence: ['vented aluminum housing', 'belt-driven pulley', 'electrical charging connection'], possibleAlternatives: [], uncertaintyReason: null };
+        return { ok: true, status: 200, async json() { return { output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(payload) }] }] }; } };
+      }
+    });
+    assert.equal(calls, 2);
+    assert.equal(result.semanticResult.normalizedConfidence, 99);
+    assert.equal(result.semanticResult.componentIdentification.primaryComponent, 'Alternator');
+    assert.equal(result.semanticResult.componentIdentification.rawComponentConfidence, 0.94);
+    assert.equal(result.semanticResult.componentIdentification.normalizedComponentConfidence, 94);
+    assert.equal(result.semanticResult.componentIdentification.semanticRequestId, body.transactionId);
+    assert.equal(result.semanticResult.componentIdentification.imageHash, body.imageHash);
+    assert.notEqual(result.semanticResult.normalizedConfidence, result.semanticResult.componentIdentification.normalizedComponentConfidence);
+    assert.equal(result.serverDiagnostic.componentIdentificationAttempted, true);
+    assert.equal(result.serverDiagnostic.componentResultPresent, true);
+  } finally { console.info = originalInfo; }
+});
+
+test('uncertain component response preserves alternatives instead of forcing an identification', async () => {
+  const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00]);
+  const body = { transactionId: 'sem-uncertain', imageHash: createHash('sha256').update(bytes).digest('hex'), mimeType: 'image/png', imageBase64: bytes.toString('base64') };
+  let calls = 0;
+  const originalInfo = console.info; console.info = () => {};
+  try {
+    const result = await analyzeSemanticImage(body, { apiKey: 'test-only-placeholder', fetchImpl: async () => {
+      calls += 1;
+      const payload = calls === 1
+        ? { category: 'AUTOMOTIVE_COMPONENT_OR_VEHICLE', confidence: 98, objects: ['housing', 'hose'], evidence: ['automotive housing and hose are visible'], description: 'Partial automotive component.', automotiveEvidence: ['automotive mounting and hose connection'], graphEvidence: [], documentEvidence: [] }
+        : { status: 'UNCERTAIN', primaryComponent: 'Unable to determine exact component', componentConfidence: '0.41', system: 'Engine cooling', secondaryComponents: ['coolant hose'], supportingEvidence: ['partial cast housing and coolant hose'], possibleAlternatives: ['thermostat housing', 'coolant outlet housing'], uncertaintyReason: 'Only a partial component view is visible.' };
+      return { ok: true, status: 200, async json() { return { output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(payload) }] }] }; } };
+    } });
+    assert.equal(result.semanticResult.componentIdentification.status, 'UNCERTAIN');
+    assert.equal(result.semanticResult.componentIdentification.normalizedComponentConfidence, 41);
+    assert.deepEqual(result.semanticResult.componentIdentification.possibleAlternatives, ['thermostat housing', 'coolant outlet housing']);
+    assert.match(result.semanticResult.componentIdentification.uncertaintyReason, /partial component view/i);
+  } finally { console.info = originalInfo; }
 });
 
 test('raw upstream errors are sanitized', () => {

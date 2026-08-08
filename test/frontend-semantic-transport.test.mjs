@@ -11,13 +11,13 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
   readFile(new URL('semantic-analyzer-core.mjs', root), 'utf8')
 ]);
 
-test('AK build identifiers and production endpoint are consistent', () => {
-  assert.match(analyzer, /const BUILD='10\.12\.7AK'/);
-  assert.match(html, /Version 10\.12\.7AK/);
-  assert.match(html, /image-analysis-ad\.js\?v=10\.12\.7AK/);
+test('AL build identifiers and production endpoint are consistent', () => {
+  assert.match(analyzer, /const BUILD='10\.12\.7AL'/);
+  assert.match(html, /Version 10\.12\.7AL/);
+  assert.match(html, /image-analysis-ad\.js\?v=10\.12\.7AL/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.7AK'/);
-  assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJ]/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.7AL'/);
+  assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJK]/);
 });
 
 test('semantic request preserves the production payload and classification gates', () => {
@@ -38,8 +38,8 @@ test('analysis payload is a single bounded metadata-free JPEG copy', () => {
   assert.match(analyzer, /run\.bytes=sourceBuffer\.slice\(0\)/);
   assert.match(analyzer, /payloadImageCount:1/);
   assert.equal((analyzer.match(/imageBase64\}/g)||[]).length, 1);
-  assert.equal((core.match(/type: 'input_image'/g)||[]).length, 1);
-  assert.equal((core.match(/image_url:/g)||[]).length, 1);
+  assert.equal((core.match(/type: 'input_image'/g)||[]).length, 2);
+  assert.equal((core.match(/image_url:/g)||[]).length, 2);
   assert.match(core, /requiredFields = \['transactionId', 'imageHash', 'mimeType', 'imageBase64'\]/);
 });
 
@@ -63,6 +63,23 @@ test('semantic confidence is normalized once and exposed safely in Developer Mod
   assert.match(analyzer, /fileInput\.onchange=.*handleFile\(selected\)/);
   assert.match(analyzer, /oliverImportCameraFile'\)\.onchange=.*handleFile\(selected\)/);
   assert.doesNotMatch(analyzer, /confidence\s*(?:\|\||\?\?)\s*(?:0\.01|1)\b/);
+});
+
+test('specific component UI is automotive-gated, independently normalized, and hash-bound', () => {
+  assert.match(core, /semanticResult\.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE'/);
+  assert.match(core, /Component confidence must be independent from category confidence/);
+  assert.match(core, /status: 'FAILED'/);
+  assert.match(analyzer, /category!=='AUTOMOTIVE_COMPONENT_OR_VEHICLE'\)return null/);
+  assert.match(analyzer, /normalizedComponentConfidence/);
+  assert.match(analyzer, /raw\.semanticRequestId!==run\.analyzer\.requestId\|\|raw\.imageHash!==run\.imageHash/);
+  assert.match(core, /semanticRequestId: transactionId, imageHash/);
+  assert.match(analyzer, /SPECIFIC COMPONENT IDENTIFICATION/);
+  assert.match(analyzer, /Automotive category confirmed/);
+  assert.match(analyzer, /Identifying specific component/);
+  assert.match(analyzer, /Component result received/);
+  assert.match(analyzer, /Component confidence normalized/);
+  assert.match(html, /id="nitrosPrimaryComponent"/);
+  assert.match(html, /id="nitrosComponentHashMatch"/);
 });
 
 test('transport diagnostics cover lifecycle, timing, and categorized failures', () => {

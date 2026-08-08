@@ -29,6 +29,22 @@ const semanticSchema = {
   }
 };
 
+const automotiveComponentSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['status', 'primaryComponent', 'componentConfidence', 'system', 'secondaryComponents', 'supportingEvidence', 'possibleAlternatives', 'uncertaintyReason'],
+  properties: {
+    status: { type: 'string', enum: ['IDENTIFIED', 'UNCERTAIN'] },
+    primaryComponent: { type: 'string', maxLength: 160 },
+    componentConfidence: { anyOf: [{ type: 'number', minimum: 0, maximum: 100 }, { type: 'string', pattern: '^\\s*(?:\\d+(?:\\.\\d+)?|\\.\\d+)\\s*%?\\s*$' }, { type: 'null' }] },
+    system: { anyOf: [{ type: 'string', maxLength: 160 }, { type: 'null' }] },
+    secondaryComponents: { type: 'array', items: { type: 'string' }, maxItems: 12 },
+    supportingEvidence: { type: 'array', items: { type: 'string' }, maxItems: 16 },
+    possibleAlternatives: { type: 'array', items: { type: 'string' }, maxItems: 8 },
+    uncertaintyReason: { anyOf: [{ type: 'string', maxLength: 500 }, { type: 'null' }] }
+  }
+};
+
 export function normalizeSemanticConfidence(rawConfidence) {
   if (rawConfidence === null || rawConfidence === undefined) return null;
   let numeric;
@@ -46,6 +62,29 @@ export function normalizeSemanticConfidence(rawConfidence) {
 function cleanStringArray(value, field) {
   if (!Array.isArray(value) || value.some(item => typeof item !== 'string')) throw new Error(`Analyzer field ${field} is invalid.`);
   return value.map(item => item.trim()).filter(Boolean).slice(0, 24);
+}
+
+function validateAutomotiveComponent(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Component analyzer returned no structured result.');
+  if (!['IDENTIFIED', 'UNCERTAIN'].includes(raw.status)) throw new Error('Component analyzer status is invalid.');
+  const primaryComponent = typeof raw.primaryComponent === 'string' ? raw.primaryComponent.trim().slice(0, 160) : '';
+  if (!primaryComponent) throw new Error('Component analyzer returned no primary identification state.');
+  const normalizedConfidence = normalizeSemanticConfidence(raw.componentConfidence);
+  const result = {
+    status: raw.status,
+    primaryComponent,
+    componentConfidence: normalizedConfidence,
+    rawComponentConfidence: raw.componentConfidence ?? null,
+    normalizedComponentConfidence: normalizedConfidence,
+    system: typeof raw.system === 'string' ? raw.system.trim().slice(0, 160) || null : null,
+    secondaryComponents: cleanStringArray(raw.secondaryComponents, 'secondaryComponents').slice(0, 12),
+    supportingEvidence: cleanStringArray(raw.supportingEvidence, 'supportingEvidence').slice(0, 16),
+    possibleAlternatives: cleanStringArray(raw.possibleAlternatives, 'possibleAlternatives').slice(0, 8),
+    uncertaintyReason: typeof raw.uncertaintyReason === 'string' ? raw.uncertaintyReason.trim().slice(0, 500) || null : null
+  };
+  if (result.status === 'IDENTIFIED' && !result.supportingEvidence.length) throw new Error('Component identification has no visible supporting evidence.');
+  if (result.status === 'UNCERTAIN' && !result.uncertaintyReason) throw new Error('Component uncertainty reason is missing.');
+  return result;
 }
 
 function validateSemanticPayload(raw) {
@@ -149,6 +188,7 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   const prompt = `Analyze only the pixels of this current image. Do not use filenames, metadata, prior images, or OCR words as proof of automotive content. Return exactly one category. AUTOMOTIVE_GRAPH requires multiple independent visible graph indicators such as axes or gridlines plus plotted traces, repeated scale markings, panels, legends, or time-series structure. AUTOMOTIVE_COMPONENT_OR_VEHICLE requires positive visible automotive subjects such as a vehicle, brake/engine/suspension component, connector, wiring, dashboard, scan tool, or diagnostic equipment. General photos of animals, people, food, furniture, scenery, or buildings without automotive evidence are GENERAL_NON_AUTOMOTIVE_PHOTO. Documents, screenshots, wiring diagrams, invoices, text screens, and data tables are DOCUMENT_OR_TEXT_SCREENSHOT. Use UNKNOWN_OR_ANALYSIS_UNAVAILABLE when visual evidence is inadequate or conflicting. Evidence and object names must describe visible pixel-supported content. Confidence must reflect the genuine visual classification; use null if a defensible value is unavailable.`;
   markDiagnostic(diagnostic, 'G_OPENAI_REQUEST_CONSTRUCTED', { openaiRequestConstructed: true, openaiModel: MODEL, payloadImageCount: 1 });
   const openAIStartedAt = Date.now();
+  const analysisSignal = AbortSignal.timeout(timeoutMs);
   let openAIResponse;
   try {
     markDiagnostic(diagnostic, 'H_OPENAI_API_CONTACTED', { openaiRequestAttempted: true, openaiResponseReceived: false });
@@ -162,7 +202,7 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
         input: [{ role: 'user', content: [{ type: 'input_text', text: prompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }],
         text: { format: { type: 'json_schema', name: 'nitros_image_semantics', strict: true, schema: semanticSchema } }
       }),
-      signal: AbortSignal.timeout(timeoutMs)
+      signal: analysisSignal
     });
   } catch (error) {
     const timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError' || /timed out|timeout/i.test(String(error?.message || ''));
@@ -199,6 +239,42 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   try { semanticResult = validateSemanticPayload(parsed); }
   catch (error) { throw diagnosticFailure(diagnostic, `Malformed semantic response: ${error.message}`, 502, 'K_SEMANTIC_OUTPUT_EXTRACTED', 'UNEXPECTED_OPENAI_RESPONSE', { semanticOutputPresent: false, transportStatus }); }
   markDiagnostic(diagnostic, 'K_SEMANTIC_OUTPUT_EXTRACTED', { success: true, semanticOutputPresent: true, semanticObjectsReturned: semanticResult.objects.length, errorCategory: null, errorMessage: null });
+
+  let componentIdentification = null;
+  if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
+    const componentStartedAt = Date.now();
+    const componentPrompt = `Identify the primary automotive component visible in this current image using only visible pixels. Do not use filenames, metadata, OCR text alone, prior images, prior cases, cached results, or the category confidence. Return the most specific component supported by visible evidence, its automotive system, secondary visible components, and pixel-supported evidence. Component confidence must be independent from category confidence. If the exact component is not visually defensible, use status UNCERTAIN, set primaryComponent to "Unable to determine exact component", list plausible alternatives only when visually supported, and explain what view or evidence is missing. Never force or invent a component.`;
+    markDiagnostic(diagnostic, 'M_COMPONENT_REQUEST_CONSTRUCTED', { componentIdentificationAttempted: true, componentResponseReceived: false, componentResultPresent: false });
+    try {
+      const componentResponse = await fetchImpl('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: MODEL,
+          store: false,
+          max_output_tokens: 1000,
+          input: [{ role: 'user', content: [{ type: 'input_text', text: componentPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }],
+          text: { format: { type: 'json_schema', name: 'nitros_automotive_component', strict: true, schema: automotiveComponentSchema } }
+        }),
+        signal: analysisSignal
+      });
+      const componentBody = await componentResponse.json().catch(() => null);
+      markDiagnostic(diagnostic, 'N_COMPONENT_RESPONSE_RECEIVED', { componentResponseReceived: true, componentResponseOk: componentResponse.ok, componentHttpStatus: componentResponse.status, componentElapsedMs: Math.max(0, Date.now() - componentStartedAt) });
+      if (!componentResponse.ok) throw Object.assign(new Error(componentBody?.error?.message || `Component request failed with HTTP ${componentResponse.status}.`), { componentErrorCategory: classifyOpenAIError(componentResponse.status, componentBody), componentHttpStatus: componentResponse.status });
+      if (!componentBody) throw new Error('Component response was not valid JSON.');
+      const componentParsed = JSON.parse(extractOutputText(componentBody));
+      componentIdentification = { ...validateAutomotiveComponent(componentParsed), semanticRequestId: transactionId, imageHash };
+      markDiagnostic(diagnostic, 'O_COMPONENT_RESULT_EXTRACTED', { componentResponseParsed: true, componentResultPresent: true, componentConfidenceNormalized: componentIdentification.normalizedComponentConfidence !== null, componentStatus: componentIdentification.status, componentErrorCategory: null, componentErrorMessage: null });
+    } catch (error) {
+      const timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError' || /timed out|timeout/i.test(String(error?.message || ''));
+      const safeMessage = timedOut ? 'Specific component identification timeout.' : sanitizeDiagnosticText(error?.message) || 'Specific component identification failed.';
+      componentIdentification = { status: 'FAILED', primaryComponent: 'Specific component identification failed', componentConfidence: null, rawComponentConfidence: null, normalizedComponentConfidence: null, system: null, secondaryComponents: [], supportingEvidence: [], possibleAlternatives: [], uncertaintyReason: safeMessage, semanticRequestId: transactionId, imageHash };
+      markDiagnostic(diagnostic, 'O_COMPONENT_RESULT_FAILED', { componentIdentificationAttempted: true, componentResponseReceived: Boolean(diagnostic.componentResponseReceived), componentResponseParsed: false, componentResultPresent: false, componentConfidenceNormalized: false, componentErrorCategory: error?.componentErrorCategory || (timedOut ? 'OPENAI_TIMEOUT' : 'COMPONENT_ANALYSIS_ERROR'), componentErrorMessage: safeMessage, componentHttpStatus: error?.componentHttpStatus ?? diagnostic.componentHttpStatus ?? null, componentElapsedMs: Math.max(0, Date.now() - componentStartedAt) });
+    }
+  } else {
+    markDiagnostic(diagnostic, 'K_SEMANTIC_OUTPUT_EXTRACTED', { componentIdentificationAttempted: false, componentIdentificationSkipped: true });
+  }
+  semanticResult.componentIdentification = componentIdentification;
   return {
     transactionId,
     imageHash,
