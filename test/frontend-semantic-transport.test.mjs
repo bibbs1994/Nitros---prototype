@@ -3,20 +3,21 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const root = new URL('../', import.meta.url);
-const [analyzer, html, serviceWorker, endpoint] = await Promise.all([
+const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
   readFile(new URL('image-analysis-ad.js', root), 'utf8'),
   readFile(new URL('index.html', root), 'utf8'),
   readFile(new URL('sw.js', root), 'utf8'),
-  readFile(new URL('api/semantic-image-analysis.mjs', root), 'utf8')
+  readFile(new URL('api/semantic-image-analysis.mjs', root), 'utf8'),
+  readFile(new URL('semantic-analyzer-core.mjs', root), 'utf8')
 ]);
 
-test('AI build identifiers and production endpoint are consistent', () => {
-  assert.match(analyzer, /const BUILD='10\.12\.7AI'/);
-  assert.match(html, /Version 10\.12\.7AI/);
-  assert.match(html, /image-analysis-ad\.js\?v=10\.12\.7AI/);
+test('AJ build identifiers and production endpoint are consistent', () => {
+  assert.match(analyzer, /const BUILD='10\.12\.7AJ'/);
+  assert.match(html, /Version 10\.12\.7AJ/);
+  assert.match(html, /image-analysis-ad\.js\?v=10\.12\.7AJ/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.7AI'/);
-  assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGH]/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.7AJ'/);
+  assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHI]/);
 });
 
 test('semantic request preserves the production payload and classification gates', () => {
@@ -26,6 +27,27 @@ test('semantic request preserves the production payload and classification gates
   assert.doesNotMatch(analyzer, /Authorization\s*:/);
   assert.match(analyzer, /category==='AUTOMOTIVE_GRAPH'&&graphEvidence\.length<2/);
   assert.match(analyzer, /category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'&&!automotiveEvidence\.length/);
+});
+
+test('analysis payload is a single bounded metadata-free JPEG copy', () => {
+  assert.match(analyzer, /ANALYSIS_STAGES=Object\.freeze\(\[\{longDimension:1536,quality:\.78\},\{longDimension:1280,quality:\.72\},\{longDimension:1024,quality:\.68\}\]\)/);
+  assert.match(analyzer, /imageOrientation:'from-image'/);
+  assert.match(analyzer, /canvas\.toBlob\([^;]+,'image\/jpeg',quality\)/);
+  assert.match(analyzer, /MAX_SEMANTIC_REQUEST_BYTES=3\.25\*1024\*1024/);
+  assert.match(analyzer, /run\.analysisBytes\.slice\(0\)/);
+  assert.match(analyzer, /run\.bytes=sourceBuffer\.slice\(0\)/);
+  assert.match(analyzer, /payloadImageCount:1/);
+  assert.equal((analyzer.match(/imageBase64\}/g)||[]).length, 1);
+  assert.equal((core.match(/type: 'input_image'/g)||[]).length, 1);
+  assert.equal((core.match(/image_url:/g)||[]).length, 1);
+  assert.match(core, /requiredFields = \['transactionId', 'imageHash', 'mimeType', 'imageBase64'\]/);
+});
+
+test('payload diagnostics and payload-specific failure are explicit', () => {
+  for (const field of ['originalDimensions','originalImageBytes','analysisDimensions','analysisJpegQuality','encodedPayloadBytes','payloadImageCount','compressionStage']) assert.ok(analyzer.includes(field), `missing ${field}`);
+  assert.match(analyzer, /TRANSPORT\/PAYLOAD FAILURE/);
+  assert.match(analyzer, /Image could not be prepared for analysis\./);
+  assert.match(analyzer, /Semantic classification:<\/strong> Not performed/);
 });
 
 test('transport diagnostics cover lifecycle, timing, and categorized failures', () => {
@@ -62,7 +84,8 @@ test('visible stages reflect confirmed browser, Vercel, OpenAI, parse, and objec
   }
   assert.match(analyzer, /if\(diag\.payloadGenerated\)set\(2,'PASS'\)/);
   assert.match(analyzer, /if\(diag\.responseReceived\)\{set\(3,'PASS'\);set\(4,'PASS'\)\}/);
-  assert.match(analyzer, /if\(server\.openaiRequestAttempted\)set\(5,'PASS'\)/);
+  assert.match(analyzer, /if\(server\.openaiResponseReceived&&server\.openaiResponseOk\)set\(5,'PASS'\)/);
+  assert.doesNotMatch(analyzer, /if\(server\.openaiRequestAttempted\)set\(5,'PASS'\)/);
   assert.match(analyzer, /if\(server\.semanticOutputPresent\)set\(8,'PASS'\)/);
 });
 

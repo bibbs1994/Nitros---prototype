@@ -116,8 +116,10 @@ test('valid request reaches mocked server-side OpenAI path without secret disclo
   assert.equal(result.serverDiagnostic.openaiCredentialConfigured, true);
   assert.equal(result.serverDiagnostic.openaiRequestAttempted, true);
   assert.equal(result.serverDiagnostic.openaiResponseReceived, true);
+  assert.equal(result.serverDiagnostic.openaiResponseOk, true);
   assert.equal(result.serverDiagnostic.openaiResponseParsed, true);
   assert.equal(result.serverDiagnostic.semanticOutputPresent, true);
+  assert.equal(result.serverDiagnostic.payloadImageCount, 1);
 });
 
 test('raw upstream errors are sanitized', () => {

@@ -1,7 +1,10 @@
-/* Nitros 10.12.7AI semantic pipeline communications diagnostic with clean-room transaction isolation. */
+/* Nitros 10.12.7AJ semantic image payload hotfix with clean-room transaction isolation. */
 (()=>{'use strict';
-  const BUILD='10.12.7AI';
+  const BUILD='10.12.7AJ';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
+  const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
+  const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
+  const ANALYSIS_STAGES=Object.freeze([{longDimension:1536,quality:.78},{longDimension:1280,quality:.72},{longDimension:1024,quality:.68}]);
   const MAX_TEXT_BYTES=1500000;
   const CATEGORIES=new Set([
     'AUTOMOTIVE_GRAPH',
@@ -109,8 +112,8 @@
     if(diag.payloadGenerated)set(2,'PASS');
     if(diag.fetchStarted&&!diag.responseReceived)set(3,'RUN');
     if(diag.responseReceived){set(3,'PASS');set(4,'PASS')}else if(diag.outcome==='FAILED'&&diag.fetchStarted){set(3,'FAIL');set(4,'FAIL')}
-    if(server.openaiRequestAttempted)set(5,'PASS');else if(server.requestReceived&&diag.outcome==='FAILED')set(5,'FAIL');
-    if(server.openaiResponseReceived)set(6,'PASS');else if(server.openaiRequestAttempted&&diag.outcome==='FAILED')set(6,'FAIL');
+    if(server.openaiResponseReceived&&server.openaiResponseOk)set(5,'PASS');else if(server.openaiRequestAttempted&&diag.outcome==='FAILED')set(5,'FAIL');
+    if(server.openaiResponseParsed&&server.openaiResponseOk)set(6,'PASS');else if(server.openaiRequestAttempted&&diag.outcome==='FAILED')set(6,'FAIL');
     if(server.openaiResponseParsed)set(7,'PASS');else if(server.openaiResponseReceived&&diag.outcome==='FAILED')set(7,'FAIL');
     if(server.semanticOutputPresent)set(8,'PASS');else if(server.openaiResponseParsed&&diag.outcome==='FAILED')set(8,'FAIL');
     if(diag.pipeline?.CLASSIFICATION_STARTED==='PASS')set(9,'RUN');
@@ -132,6 +135,40 @@
     const view=new Uint8Array(bytes);let binary='';const size=0x8000;
     for(let offset=0;offset<view.length;offset+=size)binary+=String.fromCharCode(...view.subarray(offset,offset+size));
     return btoa(binary);
+  }
+
+  function canvasToJpeg(canvas,quality){
+    return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Analysis JPEG encoding failed.')),'image/jpeg',quality));
+  }
+
+  async function prepareAnalysisImage(originalBytes,mimeType,signal,requestId){
+    if(signal?.aborted)throw abortError();
+    let bitmap;
+    try{bitmap=await createImageBitmap(new Blob([originalBytes],{type:mimeType||'application/octet-stream'}),{imageOrientation:'from-image'})}
+    catch(error){throw diagnosticError('Image could not be prepared for analysis.','PAYLOAD_ERROR',{cause:error})}
+    const originalDimensions={width:bitmap.width,height:bitmap.height};
+    try{
+      for(let index=0;index<ANALYSIS_STAGES.length;index+=1){
+        if(signal?.aborted)throw abortError();
+        const config=ANALYSIS_STAGES[index],scale=Math.min(1,config.longDimension/Math.max(bitmap.width,bitmap.height));
+        const width=Math.max(1,Math.round(bitmap.width*scale)),height=Math.max(1,Math.round(bitmap.height*scale));
+        const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+        const context=canvas.getContext('2d',{alpha:false});
+        if(!context)throw new Error('Image canvas is unavailable.');
+        context.drawImage(bitmap,0,0,width,height);
+        const jpeg=await canvasToJpeg(canvas,config.quality),analysisBytes=await jpeg.arrayBuffer();
+        const encodedSize=4*Math.ceil(analysisBytes.byteLength/3);
+        const requestEnvelopeBytes=new TextEncoder().encode(JSON.stringify({transactionId:requestId,imageHash:'0'.repeat(64),mimeType:'image/jpeg',imageBase64:''})).byteLength;
+        const projectedBodyBytes=requestEnvelopeBytes+encodedSize;
+        if(analysisBytes.byteLength<=MAX_ANALYSIS_IMAGE_BYTES&&projectedBodyBytes<=MAX_SEMANTIC_REQUEST_BYTES){
+          return {bytes:analysisBytes,mimeType:'image/jpeg',originalDimensions,dimensions:{width,height},quality:config.quality,stage:index+1,encodedSize,projectedBodyBytes,payloadImageCount:1};
+        }
+      }
+    }catch(error){
+      if(error?.name==='AbortError'||error?.diagnosticCategory==='PAYLOAD_ERROR')throw error;
+      throw diagnosticError('Image could not be prepared for analysis.','PAYLOAD_ERROR',{cause:error});
+    }finally{bitmap.close?.()}
+    throw diagnosticError('Image could not be prepared for analysis.','PAYLOAD_ERROR',{unsupportedRequestBody:true});
   }
 
   function semanticEndpoint(){return document.querySelector('meta[name="nitros-semantic-endpoint"]')?.content?.trim()||'/api/semantic-image-analysis'}
@@ -177,7 +214,7 @@
   }
   function tagDiagnosticError(error,category,details={}){try{Object.assign(error,{diagnosticCategory:category,...details})}catch(_){}return error}
   function createSemanticDiagnostic(mimeType){
-    return {requestId:createId('sem'),imageHash:'Pending',stage:'CREATED',outcome:'PENDING',endpoint:'Not configured',endpointFunction:'NitrosVisionAnalyzer.analyzeCurrentImage',method:'POST',payloadType:'application/json',imagePrepared:false,mimeType:mimeType||'application/octet-stream',imageBytes:0,imageDataAttached:false,payloadGenerated:false,encodedPayloadBytes:0,requestBodyBytes:0,endpointConfigured:false,apiConfigurationPresent:'UNKNOWN',fetchStarted:false,responseReceived:false,responseOk:null,httpStatus:null,httpStatusText:'',responseType:'',responseContentType:'',responseCharacters:0,responseBytes:0,safeResponseBody:'Not received',topLevelKeys:[],semanticResultKeys:[],expectedSemanticFieldsPresent:false,missingSemanticPaths:[],responseId:'',responseTransactionId:'',responseImageHash:'',requestMatches:false,imageHashMatches:false,parseResult:'NOT_STARTED',parsedErrorMessage:'',jsonParseFailure:'',errorCategory:'',errorName:'',errorMessage:'',errorCode:'',networkFailure:false,dnsFailure:false,corsFailure:false,corsPossible:false,timeout:false,aborted:false,malformedUrl:false,missingEndpoint:false,missingApiConfiguration:false,unsupportedRequestBody:false,clientException:false,likelyLayer:'Not started',imagePreparationMs:null,payloadEncodingMs:null,requestStartMs:null,responseReceivedMs:null,responseParsingMs:null,totalMs:null,startedAt:new Date().toISOString(),completedAt:'',serverDiagnostic:null,pipeline:{REQUEST_SENT:'PENDING',RESPONSE_RECEIVED:'PENDING',RESPONSE_HTTP_OK:'PENDING',RESPONSE_PARSED:'PENDING',SEMANTIC_CONTENT_FOUND:'PENDING',CLASSIFICATION_STARTED:'PENDING',CLASSIFICATION_COMPLETE:'PENDING'}};
+    return {requestId:createId('sem'),imageHash:'Pending',stage:'CREATED',outcome:'PENDING',endpoint:'Not configured',endpointFunction:'NitrosVisionAnalyzer.analyzeCurrentImage',method:'POST',payloadType:'application/json',imagePrepared:false,mimeType:mimeType||'application/octet-stream',imageBytes:0,imageDataAttached:false,payloadGenerated:false,encodedPayloadBytes:0,requestBodyBytes:0,originalDimensions:null,originalImageBytes:0,analysisDimensions:null,analysisJpegQuality:null,compressionStage:null,payloadImageCount:0,endpointConfigured:false,apiConfigurationPresent:'UNKNOWN',fetchStarted:false,responseReceived:false,responseOk:null,httpStatus:null,httpStatusText:'',responseType:'',responseContentType:'',responseCharacters:0,responseBytes:0,safeResponseBody:'Not received',topLevelKeys:[],semanticResultKeys:[],expectedSemanticFieldsPresent:false,missingSemanticPaths:[],responseId:'',responseTransactionId:'',responseImageHash:'',requestMatches:false,imageHashMatches:false,parseResult:'NOT_STARTED',parsedErrorMessage:'',jsonParseFailure:'',errorCategory:'',errorName:'',errorMessage:'',errorCode:'',networkFailure:false,dnsFailure:false,corsFailure:false,corsPossible:false,timeout:false,aborted:false,malformedUrl:false,missingEndpoint:false,missingApiConfiguration:false,unsupportedRequestBody:false,clientException:false,likelyLayer:'Not started',imagePreparationMs:null,payloadEncodingMs:null,requestStartMs:null,responseReceivedMs:null,responseParsingMs:null,totalMs:null,startedAt:new Date().toISOString(),completedAt:'',serverDiagnostic:null,pipeline:{REQUEST_SENT:'PENDING',RESPONSE_RECEIVED:'PENDING',RESPONSE_HTTP_OK:'PENDING',RESPONSE_PARSED:'PENDING',SEMANTIC_CONTENT_FOUND:'PENDING',CLASSIFICATION_STARTED:'PENDING',CLASSIFICATION_COMPLETE:'PENDING'}};
   }
   function diagnosticSize(bytes){if(!Number.isFinite(bytes)||bytes<=0)return '0 B';const mb=bytes/(1024*1024);return mb>=0.1?`${mb.toFixed(2)} MB`:`${(bytes/1024).toFixed(1)} KB`}
   function formatTransportDiagnostic(diag){
@@ -190,6 +227,12 @@
       `Semantic Analysis: ${diag.outcome==='FAILED'?'SEMANTIC ANALYSIS FAILED':diag.outcome==='SUCCEEDED'?'SEMANTIC ANALYSIS SUCCEEDED':'IN PROGRESS'}`,
       `Semantic Request ID: ${diag.requestId||'None'}`,
       `Current Image Hash: ${diag.imageHash||'None'}`,
+      `Original image: ${diag.originalDimensions?`${diag.originalDimensions.width} × ${diag.originalDimensions.height}`:'Pending'} / ${diagnosticSize(diag.originalImageBytes)}`,
+      `Analysis image: ${diag.analysisDimensions?`${diag.analysisDimensions.width} × ${diag.analysisDimensions.height}`:'Pending'}`,
+      `Analysis JPEG quality: ${diag.analysisJpegQuality??'Pending'}`,
+      `Encoded analysis image: ${diagnosticSize(diag.encodedPayloadBytes)}`,
+      `Payload image count: ${diag.payloadImageCount}`,
+      `Compression stage: ${diag.compressionStage??'Pending'}`,
       `Request Start Timestamp: ${diag.requestStarted||diag.startedAt||'None'}`,
       `Current Stage: ${diag.stage||'None'}`,
       '',
@@ -252,6 +295,7 @@
       `Request received by Vercel: ${server.requestReceived?'PASS':diag.responseReceived?'FAIL':'PENDING'}`,
       `Image received by server: ${server.imagePayloadFound?'PASS':server.requestReceived?'FAIL':'PENDING'}`,
       `Server image MIME/bytes/hash: ${server.imageMimeType||'Unknown'} / ${server.imageByteLength??'Unknown'} / ${server.imageHashShort||'Unknown'}`,
+      `Server/OpenAI payload image count: ${server.payloadImageCount??'Unknown'}`,
       `OpenAI API credential configured: ${server.openaiCredentialConfigured===true?'YES':server.openaiCredentialConfigured===false?'NO':'UNKNOWN'}`,
       `OpenAI request attempted: ${server.openaiRequestAttempted?'PASS':server.requestReceived?'NO':'PENDING'}`,
       `OpenAI response received: ${server.openaiResponseReceived?'PASS':server.openaiRequestAttempted?'FAIL':'PENDING'}`,
@@ -281,7 +325,9 @@
         if(!(bytes instanceof ArrayBuffer)||!bytes.byteLength)throw diagnosticError('Image request body is empty or unsupported.','PAYLOAD_ERROR',{unsupportedRequestBody:true});
         imageBase64=bytesToBase64(bytes);
         requestBody=JSON.stringify({transactionId:runId,imageHash,mimeType,imageBase64});
-        mark({payloadGenerated:true,imageDataAttached:Boolean(imageBase64),imageBytes:bytes.byteLength,encodedPayloadBytes:imageBase64.length,requestBodyBytes:new TextEncoder().encode(requestBody).byteLength,payloadEncodingMs:elapsed(encodeStarted)});
+        const requestBodyBytes=new TextEncoder().encode(requestBody).byteLength;
+        if(requestBodyBytes>MAX_SEMANTIC_REQUEST_BYTES)throw diagnosticError('Image could not be prepared for analysis.','PAYLOAD_ERROR',{unsupportedRequestBody:true});
+        mark({payloadGenerated:true,imageDataAttached:Boolean(imageBase64),imageBytes:bytes.byteLength,encodedPayloadBytes:imageBase64.length,requestBodyBytes,payloadImageCount:1,payloadEncodingMs:elapsed(encodeStarted)});
       }catch(error){mark({outcome:'FAILED',errorCategory:error.diagnosticCategory||'PAYLOAD_ERROR',errorName:error.name,errorMessage:sanitizeDiagnosticText(error.message),unsupportedRequestBody:Boolean(error.unsupportedRequestBody),clientException:true,likelyLayer:'Client payload generation',payloadEncodingMs:elapsed(encodeStarted),totalMs:elapsed(attemptStarted),completedAt:new Date().toISOString()});throw error}
       let response;
       const requestController=new AbortController();
@@ -359,12 +405,12 @@
       Object.assign(run.analyzer,{outcome:'FAILED',stage:'CONFIGURATION_FAILED',errorCategory:'CONFIGURATION_ERROR',errorName:'ConfigurationError',errorMessage:'No genuine semantic vision analyzer is configured.',missingEndpoint:true,likelyLayer:'Client analyzer configuration',completedAt:new Date().toISOString()});
       updateDeveloper(run,{disposition:'FAILED'});throw diagnosticError('No genuine semantic vision analyzer is configured; no object-recognition claims were generated.','CONFIGURATION_ERROR');
     }
-    const requestBytes=run.bytes.slice(0);
+    const requestBytes=run.analysisBytes.slice(0);
     run.analyzer.requestStarted=new Date().toISOString();
     const raw=await analyzer.analyzeCurrentImage({
       bytes:requestBytes,
       blob:new Blob([requestBytes],{type:run.mime}),
-      mimeType:run.mime,
+      mimeType:run.analysisMime,
       runId:run.analyzer.requestId,
       imageHash:run.imageHash,
       signal:run.controller.signal,
@@ -423,11 +469,19 @@
     preview.appendChild(host);
   }
 
+  function renderPayloadFailure(){
+    const preview=$('oliverImportPreview');if(!preview)return;
+    $('adAnalysisResult')?.remove();
+    const host=document.createElement('div');host.id='adAnalysisResult';host.className='phase2-result';
+    host.innerHTML='<strong>TRANSPORT/PAYLOAD FAILURE</strong><br>Image could not be prepared for analysis.<br><strong>Semantic classification:</strong> Not performed';
+    preview.appendChild(host);
+  }
+
   async function analyzeSelectedImage(file){
     abortAndDestroy('NEW_IMAGE',{clearPreview:true});
     const mime=file.type||'application/octet-stream',analyzer=createSemanticDiagnostic(mime);
     Object.assign(analyzer,{configured:Boolean(window.NitrosVisionAnalyzer?.analyzeCurrentImage),staleRejected:false,resultReceived:false,responseValidated:false,transportStatus:null,requestStarted:'',requestCompleted:''});
-    const run={runId:createId('AD'),controller:new AbortController(),bytes:null,imageHash:'',mime,started:new Date().toISOString(),completed:'',result:null,dimensions:null,analysisError:'',analyzer,stages:[
+    const run={runId:createId('AD'),controller:new AbortController(),bytes:null,analysisBytes:null,imageHash:'',mime,analysisMime:'image/jpeg',started:new Date().toISOString(),completed:'',result:null,dimensions:null,analysisDimensions:null,analysisError:'',analyzer,stages:[
       {label:'Preparing image…',status:'PENDING'},
       {label:'Hashing image…',status:'PENDING'},
       {label:'Building semantic request…',status:'PENDING'},
@@ -452,12 +506,14 @@
       const sourceBuffer=await file.arrayBuffer();
       if(!isActive(run))throw abortError();
       run.bytes=sourceBuffer.slice(0);
-      run.dimensions=await decodeDimensions(run.bytes,run.mime,run.controller.signal);
+      const prepared=await prepareAnalysisImage(run.bytes,run.mime,run.controller.signal,run.analyzer.requestId);
+      run.dimensions=prepared.originalDimensions;run.analysisDimensions=prepared.dimensions;run.analysisBytes=prepared.bytes;run.analysisMime=prepared.mimeType;
+      Object.assign(run.analyzer,{originalDimensions:prepared.originalDimensions,originalImageBytes:run.bytes.byteLength,analysisDimensions:prepared.dimensions,analysisJpegQuality:prepared.quality,compressionStage:prepared.stage,encodedPayloadBytes:prepared.encodedSize,requestBodyBytes:prepared.projectedBodyBytes,payloadImageCount:prepared.payloadImageCount,mimeType:prepared.mimeType,imageBytes:prepared.bytes.byteLength,imagePrepared:true,imagePreparationMs:elapsed(preparationStarted),stage:'ANALYSIS_IMAGE_PREPARED'});
       await stage(run,0,'PASS');
       await stage(run,1,'RUN');
-      run.imageHash=await sha256(run.bytes);
+      run.imageHash=await sha256(run.analysisBytes);
       if(!isActive(run))throw abortError();
-      Object.assign(run.analyzer,{imagePrepared:true,imagePreparationMs:elapsed(preparationStarted),mimeType:run.mime,imageHash:run.imageHash,stage:'IMAGE_PREPARED'});
+      Object.assign(run.analyzer,{imageHash:run.imageHash,stage:'IMAGE_PREPARED'});
       window.__nitrosCurrentImageIdentity={runId:run.runId,imageHash:run.imageHash};
       updateDeveloper(run,{disposition:'ANALYZING'});
       await stage(run,1,'PASS');
@@ -483,9 +539,10 @@
       if(!run.analyzer.errorCategory){const classification=classifyTransportError(error,{endpoint:run.analyzer.endpoint,responseReceived:run.analyzer.responseReceived});Object.assign(run.analyzer,classification,{outcome:'FAILED',stage:'CLIENT_EXCEPTION',errorCategory:error?.diagnosticCategory||classification.category,errorName:sanitizeDiagnosticText(error?.name||'Error'),errorMessage:sanitizeDiagnosticText(error?.message||error),errorCode:sanitizeDiagnosticText(error?.code||''),clientException:true,completedAt:run.completed})}
       run.analyzer.totalMs=run.analyzer.totalMs??Math.max(0,new Date(run.completed)-new Date(run.started));run.analyzer.requestCompleted=run.completed;
       syncSemanticStages(run);const runningStage=run.stages.find(item=>item.status==='RUN');if(runningStage)runningStage.status='FAIL';run.stages[10].status='FAIL';run.stages[11].status='FAIL';renderStages(run);
-      const failed=unavailableResult(run,`Analysis failed: ${error.message}`);run.result=failed;
-      if(!rejectStale(run,failed)){renderResult(run,{...failed,route:'Stopped',routeResult:{status:'Insufficient evidence'}});updateDeveloper(run,{disposition:'FAILED',verification:'FAIL'})}
-      const status=$('oliverImportStatus');if(status)status.textContent='Unknown / Analysis Unavailable';
+      const payloadFailure=(run.analyzer.errorCategory||error?.diagnosticCategory)==='PAYLOAD_ERROR';
+      if(payloadFailure){run.result=null;renderPayloadFailure();updateDeveloper(run,{disposition:'TRANSPORT/PAYLOAD FAILURE',verification:'FAIL'})}
+      else{const failed=unavailableResult(run,`Analysis failed: ${error.message}`);run.result=failed;if(!rejectStale(run,failed)){renderResult(run,{...failed,route:'Stopped',routeResult:{status:'Insufficient evidence'}});updateDeveloper(run,{disposition:'FAILED',verification:'FAIL'})}}
+      const status=$('oliverImportStatus');if(status)status.textContent=payloadFailure?'Image could not be prepared for analysis.':'Unknown / Analysis Unavailable';
     }
   }
 
@@ -495,7 +552,7 @@
       nitrosCaseId:caseId,nitrosAnalysisSessionId:sessionId,nitrosCaptureRequestId:run?.runId||'None',nitrosAnalysisId:run?.runId||'None',
       nitrosCurrentImageSha:run?.imageHash?`${run.imageHash.slice(0,16)}…`:'None',nitrosAnalyzerSource:result?.source||'CURRENT IMAGE BYTES',nitrosResultId:result?.runId||'None',
       nitrosAnalysisStarted:run?.started||'None',nitrosAnalysisCompleted:run?.completed||'None',nitrosResultDisposition:extra.disposition||'NONE',nitrosResetReason:extra.resetReason||'—',
-      nitrosActiveClassifier:'NitrosSemanticImageAnalysisAI / pipeline communications diagnostic / 10.12.7AI',nitrosStaleResultLog:lastStaleMessage,
+      nitrosActiveClassifier:'NitrosSemanticImageAnalysisAJ / semantic image payload hotfix / 10.12.7AJ',nitrosStaleResultLog:lastStaleMessage,
       nitrosImageClassification:result?CATEGORY_LABELS[result.category]||result.category:'No image classified.',nitrosClassificationConfidence:result?(result.confidence===null?'Confidence unavailable':`${result.confidence}%`):'—',nitrosClassificationEvidence:result?.evidence?.join('; ')||'No image classified.',
       nitrosRuntimeGraphStatus:result?.category==='AUTOMOTIVE_GRAPH'?`${result.routeResult?.status||'Pending'}`:'Graph analysis not started.',
       nitrosSemanticConfigured:run?.analyzer?.configured?'YES':'NO',nitrosAnalyzerRequestStarted:run?.analyzer?.requestStarted||'None',nitrosAnalyzerRequestCompleted:run?.analyzer?.requestCompleted||'None',nitrosAnalyzerTransportStatus:run?.analyzer?.transportStatus??'None',nitrosSemanticResultReceived:run?.analyzer?.resultReceived?'YES':'NO',nitrosResponseValidated:run?.analyzer?.responseValidated?'YES':'NO',nitrosResultTransactionMatch:result?(result.semanticRequestId===run?.analyzer?.requestId?'PASS':'FAIL'):'Pending',nitrosResultHashMatch:result?(result.imageHash===run?.imageHash?'PASS':'FAIL'):'Pending',nitrosStaleResultRejected:lastStaleRejected?'YES':'NO',nitrosFinalCategory:result?CATEGORY_LABELS[result.category]||result.category:'None',nitrosSemanticRouting:result?.route||'Not started',nitrosAnalysisError:run?.analysisError||'NONE',nitrosSemanticRequestId:run?.analyzer?.requestId||'None',nitrosSemanticErrorCategory:run?.analyzer?.errorCategory||'None',nitrosSemanticTransportDiagnostic:formatTransportDiagnostic(run?.analyzer),
@@ -536,7 +593,7 @@
     updateDeveloper(null,{resetReason:'APP_START'});
   }
 
-  function start(){document.title='Nitros Mobile Technician Portal v10.12.7AI — Semantic Pipeline Communications Diagnostic';buildImportUi()}
+  function start(){document.title='Nitros Mobile Technician Portal v10.12.7AJ — Semantic Image Payload Hotfix';buildImportUi()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
   window.addEventListener('pageshow',()=>setTimeout(start,40));
   new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))buildImportUi()}).observe(document.documentElement,{childList:true,subtree:true});
