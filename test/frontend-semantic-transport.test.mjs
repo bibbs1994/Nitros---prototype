@@ -11,13 +11,13 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
   readFile(new URL('semantic-analyzer-core.mjs', root), 'utf8')
 ]);
 
-test('AN build identifiers and production endpoint are consistent', () => {
-  assert.match(analyzer, /const BUILD='10\.12\.7AN'/);
-  assert.match(html, /Version 10\.12\.7AN/);
-  assert.match(html, /image-analysis-ad\.js\?v=10\.12\.7AN/);
+test('AO build identifiers and production endpoint are consistent', () => {
+  assert.match(analyzer, /const BUILD='10\.12\.7AO'/);
+  assert.match(html, /Version 10\.12\.7AO/);
+  assert.match(html, /image-analysis-ad\.js\?v=10\.12\.7AO/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.7AN'/);
-  assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLM]/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.7AO'/);
+  assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
 test('semantic request preserves the production payload and classification gates', () => {
@@ -98,12 +98,42 @@ test('wiring diagrams are structurally gated and expose one-step guided test sta
   assert.match(core, /VERIFY → TEST → ISOLATE → REPAIR → CONFIRM/);
   assert.match(core, /unsupported numeric specification/);
   assert.match(analyzer, /category==='AUTOMOTIVE_WIRING_DIAGRAM'/);
-  assert.match(analyzer, /GUIDE COMPONENT TEST/);
+  assert.match(analyzer, /START GUIDED COMPONENT TEST/);
   assert.match(analyzer, /componentTestSession/);
   assert.match(analyzer, /evaluateGuidedResult\(step,measurement\)/);
   assert.match(analyzer, /completedTests\.push/);
   assert.match(analyzer, /Wiring diagram result does not match the current image request/);
   assert.match(html, /id="nitrosComponentTestSessionId"/);
+});
+
+test('AO guided electrical testing does not verify a fault from one ambiguous reading', () => {
+  assert.match(analyzer, /numeric!==null.*status:'INCONCLUSIVE'/);
+  assert.match(analyzer, /That reading alone does not verify a fault/);
+  assert.match(analyzer, /Fault not yet verified\. Additional circuit testing required/);
+  assert.match(analyzer, /verificationSupported\(session,step\)/);
+  assert.match(analyzer, /failed\.length>=2/);
+  assert.match(analyzer, /confidenceState:'NOT TESTED'/);
+  for (const state of ['NOT TESTED','TESTING','SUSPECTED','SUPPORTED BY TEST RESULTS','VERIFIED','PASSED']) assert.ok(analyzer.includes(state), `missing confidence state ${state}`);
+});
+
+test('AO guided tests capture exact conditions and a structured evidence log', () => {
+  for (const field of ['testNumber','component','circuitPin','ignitionState','connectorState','meterMode','redLeadLocation','blackLeadLocation','technicianReading','expectedBehavior','interpretation','result','timestamp']) assert.ok(analyzer.includes(field), `missing evidence field ${field}`);
+  assert.match(analyzer, /guided-test-confirm/);
+  assert.match(analyzer, /Confirm the exact test conditions before the reading can be interpreted/);
+  assert.match(analyzer, /Diagnostic evidence log/);
+  assert.match(analyzer, /START GUIDED COMPONENT TEST/);
+});
+
+test('AO neutral circuit paths and electrical safety gates are enforced', () => {
+  assert.match(core, /circuitPaths/);
+  assert.match(core, /Circuit function not reliably confirmed from supplied diagram/);
+  assert.match(core, /Do not label a two-wire resistive sensor as conventional power and ground/);
+  assert.match(core, /attempts resistance or continuity testing without an explicit de-energized condition/);
+  assert.match(analyzer, /TEST BLOCKED — INVALID TEST CONDITION/);
+  assert.match(analyzer, /Circuit must be de-energized before resistance\/continuity testing/);
+  assert.match(analyzer, /<strong>Circuit paths:<\/strong>/);
+  assert.doesNotMatch(analyzer, /<strong>Power path:<\/strong>/);
+  assert.doesNotMatch(analyzer, /<strong>Ground path:<\/strong>/);
 });
 
 test('transport diagnostics cover lifecycle, timing, and categorized failures', () => {

@@ -66,7 +66,7 @@ const automotiveComponentSchema = {
 
 const wiringDiagramSchema = {
   type: 'object', additionalProperties: false,
-  required: ['status','circuitComponent','confidence','structuralEvidence','detectedComponents','connectorsAndPins','powerPath','controlPath','groundPath','fuses','relays','splices','wireDetails','importantObservations','unreadableFields','safetyWarning','testPlan'],
+  required: ['status','circuitComponent','confidence','structuralEvidence','detectedComponents','connectorsAndPins','circuitPaths','fuses','relays','splices','wireDetails','importantObservations','unreadableFields','safetyWarning','testPlan'],
   properties: {
     status: { type: 'string', enum: ['READY','INSUFFICIENT_READABILITY'] },
     circuitComponent: { type: 'string', maxLength: 200 },
@@ -74,9 +74,9 @@ const wiringDiagramSchema = {
     structuralEvidence: { type: 'array', items: { type: 'string' }, maxItems: 16 },
     detectedComponents: { type: 'array', items: { type: 'string' }, maxItems: 24 },
     connectorsAndPins: { type: 'array', items: { type: 'string' }, maxItems: 24 },
-    powerPath: { type: 'array', items: { type: 'string' }, maxItems: 16 },
-    controlPath: { type: 'array', items: { type: 'string' }, maxItems: 16 },
-    groundPath: { type: 'array', items: { type: 'string' }, maxItems: 16 },
+    circuitPaths: { type: 'array', maxItems: 16, items: { type: 'object', additionalProperties: false, required: ['label','path','function','functionConfirmed'], properties: {
+      label: { type: 'string', maxLength: 80 }, path: { type: 'string', maxLength: 300 }, function: { type: 'string', maxLength: 200 }, functionConfirmed: { type: 'boolean' }
+    } } },
     fuses: { type: 'array', items: { type: 'string' }, maxItems: 12 },
     relays: { type: 'array', items: { type: 'string' }, maxItems: 12 },
     splices: { type: 'array', items: { type: 'string' }, maxItems: 12 },
@@ -160,17 +160,23 @@ function validateWiringDiagram(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !['READY','INSUFFICIENT_READABILITY'].includes(raw.status)) throw new Error('Wiring diagram analyzer returned no valid structured result.');
   const confidence = normalizeSemanticConfidence(raw.confidence);
   const circuitComponent = typeof raw.circuitComponent === 'string' ? raw.circuitComponent.trim().slice(0, 200) : '';
-  const arrays = Object.fromEntries(['structuralEvidence','detectedComponents','connectorsAndPins','powerPath','controlPath','groundPath','fuses','relays','splices','wireDetails','importantObservations','unreadableFields'].map(field => [field, cleanStringArray(raw[field], field)]));
+  const arrays = Object.fromEntries(['structuralEvidence','detectedComponents','connectorsAndPins','fuses','relays','splices','wireDetails','importantObservations','unreadableFields'].map(field => [field, cleanStringArray(raw[field], field)]));
+  const circuitPaths = Array.isArray(raw.circuitPaths) ? raw.circuitPaths.slice(0, 16).map((path, index) => {
+    if (!path || typeof path !== 'object') throw new Error(`Circuit path ${index + 1} is invalid.`);
+    const functionConfirmed = Boolean(path.functionConfirmed);
+    return { label: String(path.label || `Circuit Leg ${String.fromCharCode(65 + index)}`).slice(0, 80), path: String(path.path || 'Not reliably readable from supplied diagram.').slice(0, 300), function: functionConfirmed ? String(path.function || '').slice(0, 200) : 'Circuit function not reliably confirmed from supplied diagram.', functionConfirmed };
+  }) : [];
   if (arrays.structuralEvidence.length < 2) throw new Error('Wiring diagram classification lacks structural schematic evidence.');
   const conclusionSet = new Set(['CONTINUE','COMPONENT_PASSES_CURRENT_TESTS','VERIFIED_COMPONENT_FAILURE','VERIFIED_POWER_SUPPLY_FAULT','VERIFIED_GROUND_FAULT','VERIFIED_CONTROL_CIRCUIT_FAULT','VERIFIED_SIGNAL_CIRCUIT_FAULT','POSSIBLE_MODULE_DRIVER_FAULT_FURTHER_TESTING_REQUIRED','INSUFFICIENT_EVIDENCE']);
   const testPlan = Array.isArray(raw.testPlan) ? raw.testPlan.slice(0, 8).map((step, index) => {
     if (!step || typeof step !== 'object') throw new Error(`Wiring test step ${index + 1} is invalid.`);
     if ((step.expectedMin !== null || step.expectedMax !== null) && step.specificationSource === 'NONE') throw new Error(`Wiring test step ${index + 1} contains an unsupported numeric specification.`);
+    if (/ohm|resistance|continuity/i.test(`${step.tool} ${step.instructions} ${step.evaluationType}`) && !/key\s*off|de-energized|deenergized/i.test(`${step.instructions} ${step.operatingCondition}`)) throw new Error(`Wiring test step ${index + 1} attempts resistance or continuity testing without an explicit de-energized condition.`);
     if (!conclusionSet.has(step.passConclusion) || !conclusionSet.has(step.failConclusion)) throw new Error(`Wiring test step ${index + 1} conclusion is invalid.`);
     return { id: String(step.id || `step-${index + 1}`).slice(0, 40), objective: String(step.objective || '').slice(0, 200), tool: String(step.tool || '').slice(0, 120), instructions: String(step.instructions || '').slice(0, 700), redLead: String(step.redLead || '').slice(0, 240), blackLead: String(step.blackLead || '').slice(0, 240), connectorCondition: String(step.connectorCondition || '').slice(0, 160), operatingCondition: String(step.operatingCondition || '').slice(0, 160), loaded: Boolean(step.loaded), expectedBehavior: String(step.expectedBehavior || '').slice(0, 300), evaluationType: String(step.evaluationType || 'OBSERVATION'), expectedMin: Number.isFinite(step.expectedMin) ? step.expectedMin : null, expectedMax: Number.isFinite(step.expectedMax) ? step.expectedMax : null, specificationSource: String(step.specificationSource || 'NONE'), nextOnPass: Number.isInteger(step.nextOnPass) ? step.nextOnPass : null, nextOnFail: Number.isInteger(step.nextOnFail) ? step.nextOnFail : null, passConclusion: step.passConclusion, failConclusion: step.failConclusion };
   }) : [];
   if (raw.status === 'READY' && (!circuitComponent || !testPlan.length)) throw new Error('Readable wiring diagram has no component test plan.');
-  return { status: raw.status, circuitComponent: circuitComponent || 'Not reliably readable from supplied diagram.', confidence, rawConfidence: raw.confidence ?? null, normalizedConfidence: confidence, ...arrays, safetyWarning: typeof raw.safetyWarning === 'string' ? raw.safetyWarning.trim().slice(0, 600) || null : null, testPlan };
+  return { status: raw.status, circuitComponent: circuitComponent || 'Not reliably readable from supplied diagram.', confidence, rawConfidence: raw.confidence ?? null, normalizedConfidence: confidence, ...arrays, circuitPaths, safetyWarning: typeof raw.safetyWarning === 'string' ? raw.safetyWarning.trim().slice(0, 600) || null : null, testPlan };
 }
 
 function validateSemanticPayload(raw) {
@@ -369,9 +375,9 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
   let wiringDiagramAnalysis = null;
   if (semanticResult.category === 'AUTOMOTIVE_WIRING_DIAGRAM') {
     const diagramStartedAt = Date.now();
-    const diagramPrompt = `Analyze only the currently supplied automotive wiring diagram pixels. Extract only readable or reliably inferable circuit structure. Never invent OEM connector names, pin numbers, wire colors, circuit numbers, voltages, or specifications. For anything not reliably readable, include "Not reliably readable from supplied diagram." in unreadableFields. Identify the principal circuit/component, schematic structural evidence, components, power path, control path, ground path, connectors/pins, fuses, relays, splices, wire details, and important observations. If critical detail is blurry, cropped, or too small, use INSUFFICIENT_READABILITY and explain what close-up is needed.
+    const diagramPrompt = `Analyze only the currently supplied automotive wiring diagram pixels. Extract only readable or reliably inferable circuit structure. Never invent OEM connector names, pin numbers, wire colors, circuit numbers, voltages, specifications, or circuit functions. For anything not reliably readable, include "Not reliably readable from supplied diagram." in unreadableFields. Identify the principal circuit/component, schematic structural evidence, components, neutral circuit paths, connectors/pins, fuses, relays, splices, wire details, and important observations. For each circuit path, set functionConfirmed true only when its function is visibly labeled or otherwise unambiguously established by the diagram; otherwise use neutral Circuit Leg A/B naming and exactly "Circuit function not reliably confirmed from supplied diagram." Do not label a two-wire resistive sensor as conventional power and ground merely from typical design, wire color, pin number, or position. If critical detail is blurry, cropped, or too small, use INSUFFICIENT_READABILITY and explain what close-up is needed.
 
-Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLATE → REPAIR → CONFIRM, but do not present them all to the technician at once; the client will reveal one test at a time. Prefer loaded voltage-drop or operational checks over resistance testing where appropriate. Each step must specify tool, probe locations, connector state, key/engine condition, loading, expected behavior, branch indices, and evidence-based conclusions. Provide exact numeric limits only when visible in the diagram, supplied by the technician, or established electrical principle, and identify that source. Never advise blind power jumpers, energized resistance tests, unsafe SRS probing, or loading communication lines. Do not condemn a component merely because a DTC or label names it.`;
+Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLATE → REPAIR → CONFIRM, but do not present them all to the technician at once; the client will reveal one test at a time. Prefer loaded voltage-drop or operational checks over resistance testing where appropriate. Each step must specify meter/tool mode, exact red and black probe locations, connector state, key/engine condition, loading, expected behavior, branch indices, and evidence-based conclusions. Provide exact numeric limits only when visible in the diagram, supplied by the technician, or established electrical principle, and identify that source. A single ambiguous voltage reading must be INCONCLUSIVE and must never verify a fault. Distinguish normal module pull-up from a short to battery voltage. Only use a VERIFIED conclusion after an isolation test proves the named fault; external circuits and components must be ruled out before suggesting a module fault. Never advise blind power jumpers, energized resistance/continuity tests, unsafe SRS probing, or loading communication lines. Every resistance or continuity instruction must explicitly say "Key OFF. Circuit must be de-energized before resistance/continuity testing." Do not condemn a component merely because a DTC or label names it.`;
     markDiagnostic(diagnostic, 'P_WIRING_ANALYSIS_REQUESTED', { wiringDiagramAnalysisAttempted: true, wiringDiagramResponseReceived: false, wiringDiagramResultPresent: false });
     try {
       const diagramResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 2200, input: [{ role: 'user', content: [{ type: 'input_text', text: diagramPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }], text: { format: { type: 'json_schema', name: 'nitros_wiring_diagram', strict: true, schema: wiringDiagramSchema } } }), signal: analysisSignal });
@@ -383,7 +389,7 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
       markDiagnostic(diagnostic, 'R_WIRING_ANALYSIS_EXTRACTED', { wiringDiagramResponseParsed: true, wiringDiagramResultPresent: true, wiringDiagramStatus: wiringDiagramAnalysis.status, wiringDiagramErrorMessage: null });
     } catch (error) {
       const safeMessage = sanitizeDiagnosticText(error?.message) || 'Wiring diagram analysis failed.';
-      wiringDiagramAnalysis = { status: 'FAILED', circuitComponent: 'Wiring diagram analysis failed', confidence: null, rawConfidence: null, normalizedConfidence: null, structuralEvidence: [], detectedComponents: [], connectorsAndPins: [], powerPath: [], controlPath: [], groundPath: [], fuses: [], relays: [], splices: [], wireDetails: [], importantObservations: [], unreadableFields: [safeMessage], safetyWarning: null, testPlan: [], semanticRequestId: transactionId, imageHash };
+      wiringDiagramAnalysis = { status: 'FAILED', circuitComponent: 'Wiring diagram analysis failed', confidence: null, rawConfidence: null, normalizedConfidence: null, structuralEvidence: [], detectedComponents: [], connectorsAndPins: [], circuitPaths: [], fuses: [], relays: [], splices: [], wireDetails: [], importantObservations: [], unreadableFields: [safeMessage], safetyWarning: null, testPlan: [], semanticRequestId: transactionId, imageHash };
       markDiagnostic(diagnostic, 'R_WIRING_ANALYSIS_FAILED', { wiringDiagramAnalysisAttempted: true, wiringDiagramResponseParsed: false, wiringDiagramResultPresent: false, wiringDiagramErrorMessage: safeMessage, wiringDiagramElapsedMs: Math.max(0, Date.now() - diagramStartedAt) });
     }
   } else markDiagnostic(diagnostic, diagnostic.stage, { wiringDiagramAnalysisAttempted: false, wiringDiagramAnalysisSkipped: true });
