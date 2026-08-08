@@ -3,9 +3,21 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import handler from '../api/semantic-image-analysis.mjs';
 import { MAX_JSON_BYTES, publicError, resetRateLimitsForTests } from '../backend-http-security.mjs';
-import { analyzeSemanticImage } from '../semantic-analyzer-core.mjs';
+import { analyzeSemanticImage, normalizeSemanticConfidence } from '../semantic-analyzer-core.mjs';
 
 const ORIGIN = 'https://bibbs1994.github.io';
+
+test('semantic confidence normalization supports fractional, percentage, string, and missing values', () => {
+  assert.equal(normalizeSemanticConfidence(0.95), 95);
+  assert.equal(normalizeSemanticConfidence(95), 95);
+  assert.equal(normalizeSemanticConfidence('0.95'), 95);
+  assert.equal(normalizeSemanticConfidence('95%'), 95);
+  assert.equal(normalizeSemanticConfidence(92.0), 92);
+  assert.equal(normalizeSemanticConfidence(null), null);
+  assert.equal(normalizeSemanticConfidence(undefined), null);
+  assert.equal(normalizeSemanticConfidence(Number.NaN), null);
+  assert.equal(normalizeSemanticConfidence('not provided'), null);
+});
 
 function responseMock() {
   return {
@@ -103,7 +115,7 @@ test('valid request reaches mocked server-side OpenAI path without secret disclo
         status: 200,
         async json() {
           return { output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify({
-            category: 'GENERAL_NON_AUTOMOTIVE_PHOTO', confidence: 95, objects: ['test object'], evidence: ['visible test evidence'],
+            category: 'GENERAL_NON_AUTOMOTIVE_PHOTO', confidence: 0.95, objects: ['test object'], evidence: ['visible test evidence'],
             description: 'A test response.', automotiveEvidence: [], graphEvidence: [], documentEvidence: []
           }) }] }] };
         }
@@ -120,6 +132,9 @@ test('valid request reaches mocked server-side OpenAI path without secret disclo
   assert.equal(result.serverDiagnostic.openaiResponseParsed, true);
   assert.equal(result.serverDiagnostic.semanticOutputPresent, true);
   assert.equal(result.serverDiagnostic.payloadImageCount, 1);
+  assert.equal(result.semanticResult.rawConfidence, 0.95);
+  assert.equal(result.semanticResult.normalizedConfidence, 95);
+  assert.equal(result.semanticResult.confidence, 95);
 });
 
 test('raw upstream errors are sanitized', () => {

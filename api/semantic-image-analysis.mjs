@@ -7,7 +7,7 @@ function safeServerDiagnostic(diagnostic = {}) {
 }
 
 export default async function handler(request, response) {
-  const diagnostic = { diagnosticVersion: '10.12.7AJ', success: false, stage: 'A_REQUEST_RECEIVED', requestReceived: true, methodAccepted: false, requestBodyParsed: false, imagePayloadFound: false, imagePayloadValid: false, payloadImageCount: 0, openaiCredentialConfigured: null, openaiRequestConstructed: false, openaiRequestAttempted: false, openaiResponseReceived: false, openaiResponseOk: false, openaiResponseParsed: false, semanticOutputPresent: false, responseReturned: false };
+  const diagnostic = { diagnosticVersion: '10.12.7AK', success: false, stage: 'A_REQUEST_RECEIVED', requestReceived: true, methodAccepted: false, requestBodyParsed: false, imagePayloadFound: false, imagePayloadValid: false, payloadImageCount: 0, openaiCredentialConfigured: null, openaiRequestConstructed: false, openaiRequestAttempted: false, openaiResponseReceived: false, openaiResponseOk: false, openaiResponseParsed: false, semanticOutputPresent: false, responseReturned: false };
   response.setHeader('Cache-Control', 'no-store');
   response.setHeader('Vary', 'Origin');
   response.setHeader('X-Content-Type-Options', 'nosniff');

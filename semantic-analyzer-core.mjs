@@ -19,7 +19,7 @@ const semanticSchema = {
   required: ['category', 'confidence', 'objects', 'evidence', 'description', 'automotiveEvidence', 'graphEvidence', 'documentEvidence'],
   properties: {
     category: { type: 'string', enum: ALLOWED_CATEGORIES },
-    confidence: { anyOf: [{ type: 'number', minimum: 0, maximum: 100 }, { type: 'null' }] },
+    confidence: { anyOf: [{ type: 'number', minimum: 0, maximum: 100 }, { type: 'string', pattern: '^\\s*(?:\\d+(?:\\.\\d+)?|\\.\\d+)\\s*%?\\s*$' }, { type: 'null' }] },
     objects: { type: 'array', items: { type: 'string' }, maxItems: 24 },
     evidence: { type: 'array', items: { type: 'string' }, maxItems: 24 },
     description: { type: 'string', maxLength: 1200 },
@@ -29,6 +29,20 @@ const semanticSchema = {
   }
 };
 
+export function normalizeSemanticConfidence(rawConfidence) {
+  if (rawConfidence === null || rawConfidence === undefined) return null;
+  let numeric;
+  if (typeof rawConfidence === 'number') numeric = rawConfidence;
+  else if (typeof rawConfidence === 'string') {
+    const cleaned = rawConfidence.trim().replace(/%$/, '').trim();
+    if (!cleaned || !/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(cleaned)) return null;
+    numeric = Number(cleaned);
+  } else return null;
+  if (!Number.isFinite(numeric) || numeric < 0) return null;
+  if (numeric <= 1) numeric *= 100;
+  return Math.round(Math.min(100, numeric));
+}
+
 function cleanStringArray(value, field) {
   if (!Array.isArray(value) || value.some(item => typeof item !== 'string')) throw new Error(`Analyzer field ${field} is invalid.`);
   return value.map(item => item.trim()).filter(Boolean).slice(0, 24);
@@ -37,10 +51,12 @@ function cleanStringArray(value, field) {
 function validateSemanticPayload(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Analyzer returned no structured semantic object.');
   if (!ALLOWED_CATEGORIES.includes(raw.category)) throw new Error('Analyzer returned an unsupported category.');
-  if (raw.confidence !== null && (!Number.isFinite(raw.confidence) || raw.confidence < 0 || raw.confidence > 100)) throw new Error('Analyzer confidence is invalid.');
+  const normalizedConfidence = normalizeSemanticConfidence(raw.confidence);
   const result = {
     category: raw.category,
-    confidence: raw.confidence === null ? null : Math.round(raw.confidence),
+    confidence: normalizedConfidence,
+    rawConfidence: raw.confidence ?? null,
+    normalizedConfidence,
     objects: cleanStringArray(raw.objects, 'objects'),
     evidence: cleanStringArray(raw.evidence, 'evidence'),
     description: typeof raw.description === 'string' ? raw.description.trim().slice(0, 1200) : '',

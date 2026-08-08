@@ -11,13 +11,13 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
   readFile(new URL('semantic-analyzer-core.mjs', root), 'utf8')
 ]);
 
-test('AJ build identifiers and production endpoint are consistent', () => {
-  assert.match(analyzer, /const BUILD='10\.12\.7AJ'/);
-  assert.match(html, /Version 10\.12\.7AJ/);
-  assert.match(html, /image-analysis-ad\.js\?v=10\.12\.7AJ/);
+test('AK build identifiers and production endpoint are consistent', () => {
+  assert.match(analyzer, /const BUILD='10\.12\.7AK'/);
+  assert.match(html, /Version 10\.12\.7AK/);
+  assert.match(html, /image-analysis-ad\.js\?v=10\.12\.7AK/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.7AJ'/);
-  assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHI]/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.7AK'/);
+  assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJ]/);
 });
 
 test('semantic request preserves the production payload and classification gates', () => {
@@ -48,6 +48,21 @@ test('payload diagnostics and payload-specific failure are explicit', () => {
   assert.match(analyzer, /TRANSPORT\/PAYLOAD FAILURE/);
   assert.match(analyzer, /Image could not be prepared for analysis\./);
   assert.match(analyzer, /Semantic classification:<\/strong> Not performed/);
+});
+
+test('semantic confidence is normalized once and exposed safely in Developer Mode', () => {
+  assert.match(core, /export function normalizeSemanticConfidence\(rawConfidence\)/);
+  assert.match(core, /if \(numeric <= 1\) numeric \*= 100/);
+  assert.match(core, /rawConfidence: raw\.confidence \?\? null/);
+  assert.match(core, /normalizedConfidence/);
+  assert.doesNotMatch(analyzer, /Math\.round\(confidence\)/);
+  assert.match(analyzer, /rawConfidence:raw\.rawConfidence\?\?null/);
+  assert.match(analyzer, /result\.confidence===null\?'Not provided'/);
+  assert.match(html, /id="nitrosRawConfidence"/);
+  assert.match(html, /id="nitrosNormalizedConfidence"/);
+  assert.match(analyzer, /fileInput\.onchange=.*handleFile\(selected\)/);
+  assert.match(analyzer, /oliverImportCameraFile'\)\.onchange=.*handleFile\(selected\)/);
+  assert.doesNotMatch(analyzer, /confidence\s*(?:\|\||\?\?)\s*(?:0\.01|1)\b/);
 });
 
 test('transport diagnostics cover lifecycle, timing, and categorized failures', () => {
