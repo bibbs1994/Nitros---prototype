@@ -115,3 +115,72 @@ test('raw upstream errors are sanitized', () => {
   const failure = publicError(Object.assign(new Error('internal upstream detail'), { statusCode: 502 }));
   assert.deepEqual(failure, { status: 502, body: { error: 'Image analysis is temporarily unavailable.', code: 'ANALYSIS_UNAVAILABLE' } });
 });
+
+test('transport diagnostics redact secrets and image data', async () => {
+  const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00]);
+  const body = {
+    transactionId: 'diagnostic-transport',
+    imageHash: createHash('sha256').update(bytes).digest('hex'),
+    mimeType: 'image/png',
+    imageBase64: bytes.toString('base64')
+  };
+  const secret = 'sk-proj-test-secret-value';
+  const encodedData = 'A'.repeat(96);
+  const failure = Object.assign(new Error(`Bearer ${secret} data:image/png;base64,${encodedData}`), {
+    code: 'UND_ERR_CONNECT_TIMEOUT',
+    cause: Object.assign(new Error(`OPENAI_API_KEY=${secret}`), { code: 'ETIMEDOUT' })
+  });
+  const calls = [];
+  const originalError = console.error;
+  console.error = (...args) => calls.push(args);
+  try {
+    await assert.rejects(analyzeSemanticImage(body, {
+      apiKey: secret,
+      fetchImpl: async () => { throw failure; }
+    }), error => error === failure);
+  } finally {
+    console.error = originalError;
+  }
+  assert.equal(calls.length, 1);
+  const [label, fields] = calls[0];
+  assert.equal(label, 'OpenAI transport failure');
+  assert.deepEqual(Object.keys(fields), ['errorName', 'errorMessage', 'errorCode', 'causeName', 'causeCode', 'causeMessage', 'elapsedMs', 'responseReceived']);
+  assert.equal(fields.responseReceived, false);
+  assert.equal(typeof fields.elapsedMs, 'number');
+  const logged = JSON.stringify(calls);
+  assert.equal(logged.includes(secret), false);
+  assert.equal(logged.includes(encodedData), false);
+  assert.equal(logged.includes(body.imageBase64), false);
+});
+
+test('HTTP response diagnostics log only status and sanitized OpenAI error identifiers', async () => {
+  const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00]);
+  const body = {
+    transactionId: 'diagnostic-http',
+    imageHash: createHash('sha256').update(bytes).digest('hex'),
+    mimeType: 'image/png',
+    imageBase64: bytes.toString('base64')
+  };
+  const secret = 'sk-proj-upstream-secret';
+  const calls = [];
+  const originalInfo = console.info;
+  console.info = (...args) => calls.push(args);
+  try {
+    await assert.rejects(analyzeSemanticImage(body, {
+      apiKey: secret,
+      fetchImpl: async () => ({
+        ok: false,
+        status: 401,
+        async json() { return { error: { type: 'invalid_request_error', code: 'invalid_api_key', message: `Never log ${secret}` } }; }
+      })
+    }));
+  } finally {
+    console.info = originalInfo;
+  }
+  assert.deepEqual(calls, [['OpenAI upstream response', {
+    upstreamStatus: 401,
+    errorType: 'invalid_request_error',
+    errorCode: 'invalid_api_key'
+  }]]);
+  assert.equal(JSON.stringify(calls).includes(secret), false);
+});

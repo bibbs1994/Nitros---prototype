@@ -62,6 +62,17 @@ function extractOutputText(response) {
   throw new Error('OpenAI returned no structured output text.');
 }
 
+function sanitizeDiagnosticText(value) {
+  if (value === undefined || value === null) return null;
+  return String(value)
+    .replace(/Bearer\s+\S+/gi, 'Bearer [REDACTED]')
+    .replace(/\bsk-(?:proj-)?[A-Za-z0-9_-]+/g, '[REDACTED_API_KEY]')
+    .replace(/OPENAI_API_KEY\s*[=:]\s*\S+/gi, 'OPENAI_API_KEY=[REDACTED]')
+    .replace(/data:image\/[A-Za-z0-9.+-]+;base64,[A-Za-z0-9+/=]+/gi, '[REDACTED_IMAGE_DATA]')
+    .replace(/\b[A-Za-z0-9+/]{64,}={0,2}\b/g, '[REDACTED_ENCODED_DATA]')
+    .slice(0, 500);
+}
+
 export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_API_KEY, fetchImpl = fetch } = {}) {
   if (!apiKey) throw Object.assign(new Error('Semantic analyzer is not configured on the server.'), { statusCode: 503 });
   const fields = body && typeof body === 'object' && !Array.isArray(body) ? Object.keys(body) : [];
@@ -92,19 +103,40 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   if (createHash('sha256').update(bytes).digest('hex') !== imageHash) throw Object.assign(new Error('Server image hash verification failed.'), { statusCode: 409 });
 
   const prompt = `Analyze only the pixels of this current image. Do not use filenames, metadata, prior images, or OCR words as proof of automotive content. Return exactly one category. AUTOMOTIVE_GRAPH requires multiple independent visible graph indicators such as axes or gridlines plus plotted traces, repeated scale markings, panels, legends, or time-series structure. AUTOMOTIVE_COMPONENT_OR_VEHICLE requires positive visible automotive subjects such as a vehicle, brake/engine/suspension component, connector, wiring, dashboard, scan tool, or diagnostic equipment. General photos of animals, people, food, furniture, scenery, or buildings without automotive evidence are GENERAL_NON_AUTOMOTIVE_PHOTO. Documents, screenshots, wiring diagrams, invoices, text screens, and data tables are DOCUMENT_OR_TEXT_SCREENSHOT. Use UNKNOWN_OR_ANALYSIS_UNAVAILABLE when visual evidence is inadequate or conflicting. Evidence and object names must describe visible pixel-supported content. Confidence must reflect the genuine visual classification; use null if a defensible value is unavailable.`;
-  const openAIResponse = await fetchImpl('https://api.openai.com/v1/responses', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: MODEL,
-      store: false,
-      max_output_tokens: 1400,
-      input: [{ role: 'user', content: [{ type: 'input_text', text: prompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }],
-      text: { format: { type: 'json_schema', name: 'nitros_image_semantics', strict: true, schema: semanticSchema } }
-    })
-  });
+  const openAIStartedAt = Date.now();
+  let openAIResponse;
+  try {
+    openAIResponse = await fetchImpl('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: MODEL,
+        store: false,
+        max_output_tokens: 1400,
+        input: [{ role: 'user', content: [{ type: 'input_text', text: prompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }],
+        text: { format: { type: 'json_schema', name: 'nitros_image_semantics', strict: true, schema: semanticSchema } }
+      })
+    });
+  } catch (error) {
+    console.error('OpenAI transport failure', {
+      errorName: sanitizeDiagnosticText(error?.name),
+      errorMessage: sanitizeDiagnosticText(error?.message),
+      errorCode: sanitizeDiagnosticText(error?.code),
+      causeName: sanitizeDiagnosticText(error?.cause?.name),
+      causeCode: sanitizeDiagnosticText(error?.cause?.code),
+      causeMessage: sanitizeDiagnosticText(error?.cause?.message),
+      elapsedMs: Math.max(0, Date.now() - openAIStartedAt),
+      responseReceived: false
+    });
+    throw error;
+  }
   const transportStatus = openAIResponse.status;
   const responseBody = await openAIResponse.json().catch(() => null);
+  console.info('OpenAI upstream response', {
+    upstreamStatus: transportStatus,
+    errorType: sanitizeDiagnosticText(responseBody?.error?.type),
+    errorCode: sanitizeDiagnosticText(responseBody?.error?.code)
+  });
   if (!openAIResponse.ok) {
     const safeMessage = responseBody?.error?.message || `OpenAI request failed with HTTP ${transportStatus}.`;
     throw Object.assign(new Error(safeMessage), { statusCode: 502, transportStatus });
