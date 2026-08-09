@@ -49,8 +49,8 @@ test('authoritative processing applies vehicle, every DTC, and concern before re
   assert.match(processSource,/if\(v\|\|found\.length\)/);
 });
 
-test('AX preserves authoritative persistence and one service-worker authority',()=>{
+test('AY preserves authoritative persistence and one service-worker authority',()=>{
   assert.match(html,/const STATE_KEY='nitros_diagnostic_case_v10120'/);
   assert.equal((html.match(/navigator\.serviceWorker\.register\(/g)||[]).length,1);
-  assert.match(html,/version:'10\.12\.7AX'/);
+  assert.match(html,/version:'10\.12\.7AY'/);
 });

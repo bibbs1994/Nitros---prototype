@@ -19,7 +19,7 @@ function harness(){
   `)();
 }
 
-test('AU DTC and vehicle canonicalization remains present in AX',()=>{
+test('AU DTC and vehicle canonicalization remains present in AY',()=>{
   assert.match(html,/const DTC_PATTERN=.*\[0-9A-FO\]/);
   assert.match(html,/replace\(\/O\/g,'0'\)/);
   assert.match(html,/function parseVehicle\(text\)/);
@@ -40,15 +40,15 @@ test('power and ground passes persist and advance one test at a time',()=>{
   assert.match(h.responses.at(-1),/Next we'll test Cam Signal Activity/i);
 });
 
-test('signal failure routes to isolation without discarding prior passes',()=>{
+test('signal failure commits and advances to the next pending required test',()=>{
   const h=harness();h.ensureGuidedState();
   h.handleGuidedFinding('Found 5v on the cam power side');
   h.handleGuidedFinding('Ground checks out');
   h.handleGuidedFinding('No signal');
   const guided=h.state.diagnosticTestState;
   assert.deepEqual(guided.tests.slice(0,3).map(item=>item.status),['pass','pass','fail']);
-  assert.equal(guided.currentTestId,'cam-signal-isolation');
-  assert.match(h.responses.at(-1),/signal circuit or sensor/i);
+  assert.equal(guided.currentTestId,'cam-correlation');
+  assert.match(h.responses.at(-1),/cam and crank correlation/i);
   assert.doesNotMatch(h.responses.at(-1),/pin \d|wire color|connector [A-Z0-9]/i);
 });
 
@@ -77,7 +77,7 @@ test('guided state survives the same JSON persistence used by the authoritative 
   assert.equal(restored.diagnosticTestState.currentTestId,'cam-signal');
 });
 
-test('AX engine is authoritative, guarded, and exposes compact debug state',()=>{
+test('AY engine is authoritative, guarded, and exposes compact debug state',()=>{
   assert.match(html,/diagnosticTestState:null/);
   assert.match(html,/localStorage\.setItem\(STATE_KEY,JSON\.stringify\(state\)\)/);
   assert.match(html,/state\.stage==='diagnostic'.*handleGuidedFinding\(text\)/);
@@ -102,7 +102,7 @@ test('actual good and bad ground readings evaluate only after measurement intent
   assert.equal(good.state.diagnosticTestState.currentTestId,'cam-signal');
   const bad=atGround();bad.handleGuidedFinding('I measured 0.42 V.');
   assert.equal(bad.state.diagnosticTestState.tests[1].status,'fail');
-  assert.equal(bad.state.diagnosticTestState.currentTestId,'cam-ground-isolation');
+  assert.equal(bad.state.diagnosticTestState.currentTestId,'cam-signal');
 });
 
 test('questions, numbered specifications, procedures, and uncertain claims cannot complete a test',()=>{
@@ -136,9 +136,23 @@ test('failing ground reply also uses the frozen completed-test identity',()=>{
   const h=atGround();h.handleGuidedFinding('I measured 0.4 V');
   const completed=h.state.diagnosticTestState.lastCompletedResult;
   assert.equal(completed.testId,'cam-ground');assert.equal(completed.status,'fail');
-  assert.equal(h.state.diagnosticTestState.currentTestId,'cam-ground-isolation');
+  assert.equal(h.state.diagnosticTestState.currentTestId,'cam-signal');
   assert.match(h.state.lastReply,/Cam Sensor Ground fails/);
   assert.doesNotMatch(h.state.lastReply,/Ground Circuit Isolation is inconclusive/i);
+});
+
+test('committed AX power failure cannot be downgraded while parked on isolation',()=>{
+  const h=harness(),guided=h.ensureGuidedState(),power=guided.tests.find(item=>item.id==='cam-power-reference'),isolation=guided.tests.find(item=>item.id==='cam-power-isolation');
+  Object.assign(power,{status:'fail',technicianFinding:'No voltage',interpretedValue:0,unit:'V',timestamp:'2026-08-09T12:00:00.000Z',source:'technician-input'});guided.currentTestId='cam-power-isolation';guided.nextRecommendedTest='cam-power-isolation';
+  h.handleGuidedFinding('I measured 5.0 V on the power side.');
+  assert.equal(power.status,'fail');
+  assert.equal(isolation.status,'pending');
+  assert.equal(guided.lastCompletedResult.testId,'cam-power-reference');
+  assert.equal(guided.lastCompletedResult.status,'fail');
+  assert.equal(guided.currentTestId,'cam-ground');
+  assert.match(h.state.lastReply,/Power\/Reference fails/);
+  assert.match(h.state.lastReply,/cam sensor ground/i);
+  assert.doesNotMatch(h.state.lastReply,/inconclusive|actual measurement|Power\/Reference Feed Isolation/i);
 });
 
 test('rapid duplicate delivery cannot reinterpret one reading against the next test',()=>{
