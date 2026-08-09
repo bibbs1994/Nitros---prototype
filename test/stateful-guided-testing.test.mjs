@@ -19,7 +19,7 @@ function harness(){
   `)();
 }
 
-test('AU DTC and vehicle canonicalization remains present in AY',()=>{
+test('AU DTC and vehicle canonicalization remains present in AZ',()=>{
   assert.match(html,/const DTC_PATTERN=.*\[0-9A-FO\]/);
   assert.match(html,/replace\(\/O\/g,'0'\)/);
   assert.match(html,/function parseVehicle\(text\)/);
@@ -77,7 +77,7 @@ test('guided state survives the same JSON persistence used by the authoritative 
   assert.equal(restored.diagnosticTestState.currentTestId,'cam-signal');
 });
 
-test('AY engine is authoritative, guarded, and exposes compact debug state',()=>{
+test('AZ engine is authoritative, guarded, and exposes compact debug state',()=>{
   assert.match(html,/diagnosticTestState:null/);
   assert.match(html,/localStorage\.setItem\(STATE_KEY,JSON\.stringify\(state\)\)/);
   assert.match(html,/state\.stage==='diagnostic'.*handleGuidedFinding\(text\)/);
@@ -188,4 +188,24 @@ test('diagnostic text repair produces clean Unicode and preserves engineering sy
   const clean='≥ ± – — “ ” ° Ω µ 40 mV 0–5 V';
   assert.equal(h.repairDiagnosticText(clean),clean);
   assert.doesNotMatch(h.responses.join(' '),/Ã¢â‚¬|â€œ|â€|�/);
+});
+
+function atCorrelation(){const h=harness(),guided=h.ensureGuidedState();for(const id of ['cam-power-reference','cam-ground','cam-signal']){const record=guided.tests.find(item=>item.id===id);Object.assign(record,{status:'pass',technicianFinding:'Verified',timestamp:'2026-08-09T12:00:00.000Z',source:'technician-input'})}guided.currentTestId='cam-correlation';guided.nextRecommendedTest='cam-correlation';return h}
+
+test('cam/crank correlation technician-language pass variants commit and advance once',()=>{
+  const inputs=['Cam and crank signals are synchronized correctly while cranking','Cam and crank signals are synchronize correctly while cranking','cam and crank are in sync','the signals line up correctly','correlation looks correct','Cam and crank signal is synchronized','They are synchronized while cranking','The cam and crank signals match'];
+  for(const input of inputs){const h=atCorrelation();h.handleGuidedFinding(input);const guided=h.state.diagnosticTestState,correlation=guided.tests.find(item=>item.id==='cam-correlation');assert.equal(correlation.status,'pass',input);assert.equal(guided.currentTestId,'cam-further-isolation',input);assert.deepEqual(guided.tests.slice(0,3).map(item=>item.status),['pass','pass','pass'],input);assert.equal(guided.lastCompletedResult.testId,'cam-correlation',input);assert.match(h.state.lastReply,/Cam\/Crank Correlation passes/,input);assert.match(h.state.lastReply,/Further Circuit\/Component Isolation/,input);assert.match(h.state.lastReply,/report the measured result/i,input);assert.doesNotMatch(h.state.lastReply,/do not have a confirmed result/i,input)}
+});
+
+test('correlation negation takes precedence and cannot be classified as pass',()=>{
+  const inputs=['cam and crank are not synchronized','they are out of sync','the signals do not line up','correlation is incorrect','cam and crank timing is off','the relationship is wrong',"the signals don't match"];
+  for(const input of inputs){const h=atCorrelation();h.handleGuidedFinding(input);const guided=h.state.diagnosticTestState,correlation=guided.tests.find(item=>item.id==='cam-correlation');assert.equal(correlation.status,'fail',input);assert.notEqual(correlation.status,'pass',input);assert.equal(guided.currentTestId,'cam-further-isolation',input);assert.match(h.state.lastReply,/Cam\/Crank Correlation fails/,input)}
+});
+
+test('ambiguous correlation response remains uncommitted on the current test',()=>{
+  const h=atCorrelation(),guided=h.state.diagnosticTestState,correlation=guided.tests.find(item=>item.id==='cam-correlation');h.handleGuidedFinding("maybe they're okay");assert.equal(correlation.status,'pending');assert.equal(guided.currentTestId,'cam-correlation');assert.match(h.state.lastReply,/do not have a confirmed result/i)
+});
+
+test('repeated correlation pass observation cannot duplicate or double-advance',()=>{
+  const h=atCorrelation(),input='Cam and crank signals are synchronize correctly while cranking';h.handleGuidedFinding(input);const guided=h.state.diagnosticTestState,reply=h.state.lastReply,count=h.responses.length;h.handleGuidedFinding(input);assert.equal(h.responses.length,count);assert.equal(h.state.lastReply,reply);assert.equal(guided.currentTestId,'cam-further-isolation');assert.equal(guided.tests.filter(item=>item.id==='cam-correlation'&&item.status==='pass').length,1);assert.equal(guided.tests.find(item=>item.id==='cam-further-isolation').status,'pending')
 });
