@@ -174,6 +174,16 @@ test('natural spoken readings and qualitative signal observations remain valid',
   assert.equal(h.state.diagnosticTestState.currentTestId,'cam-correlation');
 });
 
+test('cam signal activity natural-language variants pass only at the activity checkpoint',()=>{
+  const inputs=['Kim voltage switching from 0.2 to 4.8 oscillating','Cam signal toggles between 0.2 and 4.8 volts','The waveform is pulsing high and low',"I'm seeing it toggle high and low"];
+  for(const input of inputs){const h=atGround();h.handleGuidedFinding('I measured 0.04 V');h.handleGuidedFinding(input);const guided=h.state.diagnosticTestState,signal=guided.tests.find(item=>item.id==='cam-signal'),correlation=guided.tests.find(item=>item.id==='cam-correlation');assert.equal(signal.status,'pass',input);assert.equal(signal.technicianFinding,input);assert.equal(guided.currentTestId,'cam-correlation',input);assert.equal(correlation.status,'in_progress',input);const completed=guided.tests.filter(item=>['pass','fail'].includes(item.status)).length;h.handleGuidedFinding(input);assert.equal(guided.currentTestId,'cam-correlation',input);assert.equal(guided.tests.filter(item=>['pass','fail'].includes(item.status)).length,completed,input)}
+});
+
+test('cam signal activity negation and static voltage never pass',()=>{
+  const inputs=['Cam signal is not switching','Cam signal is stuck at 4.8 volts','No cam signal, flat line','There is voltage','4.8 volts'];
+  for(const input of inputs){const h=harness(),test=h.GUIDED_WORKFLOWS.P0340.tests[2],result=h.interpretFinding(test,input);assert.notEqual(result.result,'pass',input)}
+});
+
 test('natural decimal phrases normalize as actual measurements',()=>{
   const h=harness(),ground=h.GUIDED_WORKFLOWS.P0340.tests[1];
   for(const input of ['Point zero four volts.','I got .04.','Meter says .04 volts.','Zero point zero four.']){
