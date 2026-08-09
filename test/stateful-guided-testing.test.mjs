@@ -19,7 +19,7 @@ function harness(){
   `)();
 }
 
-test('AU DTC and vehicle canonicalization remains present in AZ',()=>{
+test('AU DTC and vehicle canonicalization remains present in BA',()=>{
   assert.match(html,/const DTC_PATTERN=.*\[0-9A-FO\]/);
   assert.match(html,/replace\(\/O\/g,'0'\)/);
   assert.match(html,/function parseVehicle\(text\)/);
@@ -77,7 +77,7 @@ test('guided state survives the same JSON persistence used by the authoritative 
   assert.equal(restored.diagnosticTestState.currentTestId,'cam-signal');
 });
 
-test('AZ engine is authoritative, guarded, and exposes compact debug state',()=>{
+test('BA engine is authoritative, guarded, and exposes compact debug state',()=>{
   assert.match(html,/diagnosticTestState:null/);
   assert.match(html,/localStorage\.setItem\(STATE_KEY,JSON\.stringify\(state\)\)/);
   assert.match(html,/state\.stage==='diagnostic'.*handleGuidedFinding\(text\)/);
@@ -146,7 +146,7 @@ test('committed AX power failure cannot be downgraded while parked on isolation'
   Object.assign(power,{status:'fail',technicianFinding:'No voltage',interpretedValue:0,unit:'V',timestamp:'2026-08-09T12:00:00.000Z',source:'technician-input'});guided.currentTestId='cam-power-isolation';guided.nextRecommendedTest='cam-power-isolation';
   h.handleGuidedFinding('I measured 5.0 V on the power side.');
   assert.equal(power.status,'fail');
-  assert.equal(isolation.status,'pending');
+  assert.equal(isolation.status,'in_progress');
   assert.equal(guided.lastCompletedResult.testId,'cam-power-reference');
   assert.equal(guided.lastCompletedResult.status,'fail');
   assert.equal(guided.currentTestId,'cam-ground');
@@ -161,7 +161,7 @@ test('rapid duplicate delivery cannot reinterpret one reading against the next t
   assert.equal(h.responses.length,count);
   assert.equal(h.state.lastReply,reply);
   assert.equal(h.state.diagnosticTestState.currentTestId,'cam-signal');
-  assert.equal(h.state.diagnosticTestState.tests[2].status,'pending');
+  assert.equal(h.state.diagnosticTestState.tests[2].status,'in_progress');
 });
 
 test('natural spoken readings and qualitative signal observations remain valid',()=>{
@@ -203,9 +203,13 @@ test('correlation negation takes precedence and cannot be classified as pass',()
 });
 
 test('ambiguous correlation response remains uncommitted on the current test',()=>{
-  const h=atCorrelation(),guided=h.state.diagnosticTestState,correlation=guided.tests.find(item=>item.id==='cam-correlation');h.handleGuidedFinding("maybe they're okay");assert.equal(correlation.status,'pending');assert.equal(guided.currentTestId,'cam-correlation');assert.match(h.state.lastReply,/do not have a confirmed result/i)
+  const h=atCorrelation(),guided=h.state.diagnosticTestState,correlation=guided.tests.find(item=>item.id==='cam-correlation');h.handleGuidedFinding("maybe they're okay");assert.equal(correlation.status,'in_progress');assert.equal(guided.currentTestId,'cam-correlation');assert.match(h.state.lastReply,/do not have a confirmed result/i)
 });
 
 test('repeated correlation pass observation cannot duplicate or double-advance',()=>{
-  const h=atCorrelation(),input='Cam and crank signals are synchronize correctly while cranking';h.handleGuidedFinding(input);const guided=h.state.diagnosticTestState,reply=h.state.lastReply,count=h.responses.length;h.handleGuidedFinding(input);assert.equal(h.responses.length,count);assert.equal(h.state.lastReply,reply);assert.equal(guided.currentTestId,'cam-further-isolation');assert.equal(guided.tests.filter(item=>item.id==='cam-correlation'&&item.status==='pass').length,1);assert.equal(guided.tests.find(item=>item.id==='cam-further-isolation').status,'pending')
+  const h=atCorrelation(),input='Cam and crank signals are synchronize correctly while cranking';h.handleGuidedFinding(input);const guided=h.state.diagnosticTestState,reply=h.state.lastReply,count=h.responses.length;h.handleGuidedFinding(input);assert.equal(h.responses.length,count);assert.equal(h.state.lastReply,reply);assert.equal(guided.currentTestId,'cam-further-isolation');assert.equal(guided.tests.filter(item=>item.id==='cam-correlation'&&item.status==='pass').length,1);assert.equal(guided.tests.find(item=>item.id==='cam-further-isolation').status,'in_progress')
+});
+
+test('post-correlation PASS activates required isolation and cannot render Complete',()=>{
+  const h=atCorrelation();h.handleGuidedFinding('Cam and crank signals are synchronized correctly while cranking');const guided=h.state.diagnosticTestState,correlation=guided.tests.find(item=>item.id==='cam-correlation'),isolation=guided.tests.find(item=>item.id==='cam-further-isolation');assert.equal(correlation.status,'pass');assert.equal(isolation.status,'in_progress');assert.equal(guided.currentTestId,'cam-further-isolation');assert.equal(guided.lastCompletedResult.testName,'Cam/Crank Correlation');assert.match(h.state.lastReply,/Further Circuit\/Component Isolation/);assert.match(h.state.lastReply,/perform the next circuit or component isolation check/i);assert.doesNotMatch(h.state.lastReply,/Guided checks are complete|repair decision/i)
 });

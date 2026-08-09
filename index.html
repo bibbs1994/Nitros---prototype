@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.7AZ — Cam/Crank Correlation Natural-Language Result Recognition Hardening</title>
+<title>Nitros Mobile Technician Portal v10.12.7BA — Post-Correlation PASS Routing / Circuit Isolation Transition</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.7AZ — Cam/Crank Correlation Natural-Language Result Recognition Hardening</div>
+  <div class="sub">Mobile Technician Portal v10.12.7BA — Post-Correlation PASS Routing / Circuit Isolation Transition</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.7AZ — Cam/Crank Correlation Natural-Language Result Recognition Hardening. Existing conversational and diagnostic evidence features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.7BA — Post-Correlation PASS Routing / Circuit Isolation Transition. Existing conversational and diagnostic evidence features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.7AZ — Cam/Crank Correlation Natural-Language Result Recognition Hardening</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.7BA — Post-Correlation PASS Routing / Circuit Isolation Transition</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.7AZ — Cam/Crank Correlation Natural-Language Result Recognition Hardening</div>
+      <div class="eyebrow">Version 10.12.7BA — Post-Correlation PASS Routing / Circuit Isolation Transition</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1683,13 +1683,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.7AZ • Cam/Crank Correlation Natural-Language Result Recognition Hardening • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.7BA • Post-Correlation PASS Routing / Circuit Isolation Transition • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.12.7AZ',
-  release:'Cam/Crank Correlation Natural-Language Result Recognition Hardening',
+  version:'10.12.7BA',
+  release:'Post-Correlation PASS Routing / Circuit Isolation Transition',
   buildDate:'2026-08-09',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -5284,7 +5284,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7AZ • Cam/Crank Correlation Natural-Language Result Recognition Hardening</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7BA • Post-Correlation PASS Routing / Circuit Isolation Transition</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5322,7 +5322,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7AZ — Cam/Crank Correlation Natural-Language Result Recognition Hardening</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7BA — Post-Correlation PASS Routing / Circuit Isolation Transition</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6347,7 +6347,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7AZ</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7BA</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -7322,21 +7322,22 @@ function parseVehicle(text){const t=normalize(text);const y=(t.match(/\b(19\d{2}
 function concern(text){return (String(text||'').match(/\b(rough idle|runs? rough|stall(?:s|ing)?|no[- ]start|hard start(?:ing)?|hesitat(?:es|ion|ing)|loss of power|low power|misfir(?:e|es|ing)|overheat(?:s|ing)?|(?:check engine|service engine|MIL) light)\b/i)||[])[1]||''}
 const GUIDED_WORKFLOWS={
  P0340:{id:'p0340-camshaft-position-circuit',tests:[
-  {id:'cam-power-reference',name:'Power/Reference',kind:'reference-voltage',expectedResult:'approximately 5 V',comparator:'range',minimum:4.5,maximum:5.5,prompt:'Test the cam sensor power/reference and give me the measured voltage.',failNext:'cam-power-isolation'},
-  {id:'cam-ground',name:'Cam Sensor Ground',kind:'ground-integrity',expectedResult:'0.1 V',comparator:'<=',maximum:0.1,prompt:'Test the cam sensor ground and give me the result or measurement.',failNext:'cam-ground-isolation'},
-  {id:'cam-signal',name:'Cam Signal Activity',kind:'signal-activity',prompt:'Check whether the cam signal is switching and tell me the result.',failNext:'cam-signal-isolation'},
-  {id:'cam-correlation',name:'Cam/Crank Correlation',kind:'signal-correlation',prompt:'Using verified repair information, compare cam and crank correlation and report the result.'},
-  {id:'cam-further-isolation',name:'Further Circuit/Component Isolation',kind:'circuit-isolation',prompt:'Using verified repair information, perform the next circuit or component isolation check and report the measured result.'},
-  {id:'cam-power-isolation',name:'Power/Reference Feed Isolation',kind:'circuit-isolation',isolation:true,parentTestId:'cam-power-reference',prompt:'Using verified repair information, isolate the power/reference feed and report the measured result.'},
-  {id:'cam-ground-isolation',name:'Ground Circuit Isolation',kind:'circuit-isolation',isolation:true,parentTestId:'cam-ground',prompt:'Using verified repair information, isolate the ground circuit and report the measured result.'},
-  {id:'cam-signal-isolation',name:'Signal/Sensor Circuit Isolation',kind:'circuit-isolation',isolation:true,parentTestId:'cam-signal',prompt:'With power and ground verified, use verified repair information to isolate the signal circuit or sensor and report the result.'}
+  {id:'cam-power-reference',name:'Power/Reference',kind:'reference-voltage',required:true,expectedResult:'approximately 5 V',comparator:'range',minimum:4.5,maximum:5.5,prompt:'Test the cam sensor power/reference and give me the measured voltage.',failNext:'cam-power-isolation'},
+  {id:'cam-ground',name:'Cam Sensor Ground',kind:'ground-integrity',required:true,expectedResult:'0.1 V',comparator:'<=',maximum:0.1,prompt:'Test the cam sensor ground and give me the result or measurement.',failNext:'cam-ground-isolation'},
+  {id:'cam-signal',name:'Cam Signal Activity',kind:'signal-activity',required:true,prompt:'Check whether the cam signal is switching and tell me the result.',failNext:'cam-signal-isolation'},
+  {id:'cam-correlation',name:'Cam/Crank Correlation',kind:'signal-correlation',required:true,prompt:'Using verified repair information, compare cam and crank correlation and report the result.'},
+  {id:'cam-further-isolation',name:'Further Circuit/Component Isolation',kind:'circuit-isolation',required:true,prompt:'Using verified repair information, perform the next circuit or component isolation check and report the measured result.'},
+  {id:'cam-power-isolation',name:'Power/Reference Feed Isolation',kind:'circuit-isolation',required:false,isolation:true,parentTestId:'cam-power-reference',prompt:'Using verified repair information, isolate the power/reference feed and report the measured result.'},
+  {id:'cam-ground-isolation',name:'Ground Circuit Isolation',kind:'circuit-isolation',required:false,isolation:true,parentTestId:'cam-ground',prompt:'Using verified repair information, isolate the ground circuit and report the measured result.'},
+  {id:'cam-signal-isolation',name:'Signal/Sensor Circuit Isolation',kind:'circuit-isolation',required:false,isolation:true,parentTestId:'cam-signal',prompt:'With power and ground verified, use verified repair information to isolate the signal circuit or sensor and report the result.'}
  ]}
 };
 function workflowDefinition(){return GUIDED_WORKFLOWS[state.activeDtc]||null}
 function emptyTest(def){return {id:def.id,name:def.name,status:'pending',technicianFinding:'',interpretedValue:null,unit:'',timestamp:'',source:''}}
-function ensureGuidedState(){const workflow=workflowDefinition();if(!workflow)return null;let guided=state.diagnosticTestState;if(!guided||guided.workflowId!==workflow.id){guided={workflowId:workflow.id,currentTestId:workflow.tests[0].id,tests:workflow.tests.map(emptyTest),lastFinding:null,nextRecommendedTest:workflow.tests[0].id};state.diagnosticTestState=guided}return guided}
+function ensureGuidedState(){const workflow=workflowDefinition();if(!workflow)return null;let guided=state.diagnosticTestState;if(!guided||guided.workflowId!==workflow.id){guided={workflowId:workflow.id,currentTestId:workflow.tests[0].id,tests:workflow.tests.map(emptyTest),lastFinding:null,nextRecommendedTest:workflow.tests[0].id};state.diagnosticTestState=guided}activateTest(guided,testDefinition(guided.currentTestId));return guided}
 function testDefinition(id){return workflowDefinition()?.tests.find(test=>test.id===id)||null}
 function testRecord(id){return state.diagnosticTestState?.tests.find(test=>test.id===id)||null}
+function activateTest(guided,definition){if(!guided)return null;guided.currentTestId=definition?.id||'';guided.nextRecommendedTest=definition?.id||'';const record=definition?guided.tests.find(test=>test.id===definition.id):null;if(record?.status==='pending')record.status='in_progress';return definition||null}
 const FINDING_INTENT={ACTUAL:'ACTUAL_MEASUREMENT',SPEC:'EXPECTED_SPECIFICATION',QUESTION:'QUESTION',PROCEDURE:'PROCEDURE',UNCERTAIN:'UNCERTAIN_INSUFFICIENT',QUALITATIVE:'QUALITATIVE_ACTUAL_RESULT'};
 const NUMBER_WORDS={zero:'0',one:'1',two:'2',three:'3',four:'4',five:'5',six:'6',seven:'7',eight:'8',nine:'9'};
 function normalizeFinding(text){let value=String(text||'').trim().toLowerCase().replace(/[’]/g,"'");value=value.replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine)?\s*point\s+((?:zero|one|two|three|four|five|six|seven|eight|nine)(?:\s+(?:zero|one|two|three|four|five|six|seven|eight|nine))*)\b/g,(_,whole,fraction)=>`${whole?NUMBER_WORDS[whole]:'0'}.${fraction.split(/\s+/).map(word=>NUMBER_WORDS[word]).join('')}`);value=value.replace(/\bforty\s+millivolts?\b/g,'40 mv').replace(/\bzero\b/g,'0').replace(/\bone\b/g,'1').replace(/\btwo\b/g,'2').replace(/\bthree\b/g,'3').replace(/\bfour\b/g,'4').replace(/\bfive\b/g,'5').replace(/\bsix\b/g,'6').replace(/\bseven\b/g,'7').replace(/\beight\b/g,'8').replace(/\bnine\b/g,'9').replace(/\btwelve\b/g,'12').replace(/\bmillivolts?\b/gi,'mv').replace(/\bvolts?\b|\bvdc\b/gi,'v');return value.replace(/\s+/g,' ').trim()}
@@ -7350,13 +7351,13 @@ function interpretFinding(test,text){const normalized=normalizeFinding(text),int
  else if(test.kind==='circuit-isolation'){if(open)result='fail';else if(positive)result='pass'}
  return {normalized,intent,value,unit:value!==null?'V':open?'continuity':'',result,understood}
 }
-function nextPendingTest(afterId){const workflow=workflowDefinition(),start=workflow.tests.findIndex(test=>test.id===afterId);return workflow.tests.slice(start+1).find(test=>!test.isolation&&testRecord(test.id)?.status==='pending')||null}
+function nextPendingTest(afterId){const workflow=workflowDefinition(),start=workflow.tests.findIndex(test=>test.id===afterId);return workflow.tests.slice(start+1).find(test=>test.required!==false&&testRecord(test.id)?.status==='pending')||null}
 let lastDiagnosticTransition={raw:'',at:0};
 function completedResultExplanation(snapshot,interpretation){if(snapshot.kind==='ground-integrity'&&interpretation.value!==null)return`the measurement is ${interpretation.result==='pass'?'at or below':'above'} the ${snapshot.expectedResult} maximum`;if(snapshot.kind==='reference-voltage'&&interpretation.value!==null)return`the measurement is ${interpretation.result==='pass'?'within':'outside'} the expected ${snapshot.expectedResult} range`;return`the verified observation is ${interpretation.result}`}
 function completedResultReply(result){const observed=result.actualObservedMeasurement!==null?`${Number(result.actualObservedMeasurement.toFixed(4))} ${result.unit}. `:'';if(result.status==='inconclusive')return`${result.testName} is inconclusive. Give me the actual measurement or a clear pass/fail observation for this test.`;const outcome=result.status==='pass'?'passes':'fails',why=result.explanatoryResultText?` because ${result.explanatoryResultText}`:'';if(result.status==='fail')return`${observed}${result.testName} ${outcome}${why}. ${result.nextTestPrompt||'Stop here and verify the applicable repair information before further isolation.'}`;return`${observed}${result.testName} ${outcome}${why}. ${result.nextTestName?`Next we'll test ${result.nextTestName}. ${result.nextTestPrompt}`:'Guided checks are complete. Review the stored results before making a repair decision.'}`}
-function committedIsolationTransition(guided,definition,text,receivedAt){if(!definition.isolation||!definition.parentTestId)return false;const parentDefinition=testDefinition(definition.parentTestId),parentRecord=testRecord(definition.parentTestId);if(!parentDefinition||!parentRecord||!['pass','fail'].includes(parentRecord.status))return false;const next=nextPendingTest(parentDefinition.id),completed=Object.freeze({testId:parentDefinition.id,testName:parentDefinition.name,workflowId:guided.workflowId,workflowName:workflowName(),expectedResult:parentDefinition.expectedResult||'',comparator:parentDefinition.comparator||'',actualObservedMeasurement:parentRecord.interpretedValue,unit:parentRecord.unit||'',status:parentRecord.status,explanatoryResultText:`the committed ${parentDefinition.name} result remains authoritative`,nextTestId:next?.id||'',nextTestName:next?.name||'',nextTestPrompt:next?.prompt||'',rawObservation:text,normalizedObservation:normalizeFinding(text),intent:'AUTHORITATIVE_COMMITTED_RESULT',timestamp:new Date().toISOString()});guided.currentTestId=completed.nextTestId;guided.nextRecommendedTest=completed.nextTestId;guided.lastCompletedResult={...completed};lastDiagnosticTransition={raw:text,at:receivedAt};ask(completedResultReply(completed));return true}
+function committedIsolationTransition(guided,definition,text,receivedAt){if(!definition.isolation||!definition.parentTestId)return false;const parentDefinition=testDefinition(definition.parentTestId),parentRecord=testRecord(definition.parentTestId);if(!parentDefinition||!parentRecord||!['pass','fail'].includes(parentRecord.status))return false;const next=nextPendingTest(parentDefinition.id),completed=Object.freeze({testId:parentDefinition.id,testName:parentDefinition.name,workflowId:guided.workflowId,workflowName:workflowName(),expectedResult:parentDefinition.expectedResult||'',comparator:parentDefinition.comparator||'',actualObservedMeasurement:parentRecord.interpretedValue,unit:parentRecord.unit||'',status:parentRecord.status,explanatoryResultText:`the committed ${parentDefinition.name} result remains authoritative`,nextTestId:next?.id||'',nextTestName:next?.name||'',nextTestPrompt:next?.prompt||'',rawObservation:text,normalizedObservation:normalizeFinding(text),intent:'AUTHORITATIVE_COMMITTED_RESULT',timestamp:new Date().toISOString()});activateTest(guided,next);guided.lastCompletedResult={...completed};lastDiagnosticTransition={raw:text,at:receivedAt};ask(completedResultReply(completed));return true}
 function handleGuidedFinding(text){const guided=ensureGuidedState(),definition=testDefinition(guided?.currentTestId),record=testRecord(guided?.currentTestId);if(!guided||!definition||!record)return false;const receivedAt=Date.now();if(lastDiagnosticTransition.raw===text&&receivedAt-lastDiagnosticTransition.at<1200)return true;if(guided.lastCompletedResult?.testId==='cam-correlation'&&guided.lastCompletedResult.rawObservation===text&&['pass','fail'].includes(guided.lastCompletedResult.status))return true;if(committedIsolationTransition(guided,definition,text,receivedAt))return true;const snapshot=Object.freeze({id:definition.id,name:definition.name,kind:definition.kind,workflowId:guided.workflowId,workflowName:workflowName(),expectedResult:definition.expectedResult||'',comparator:definition.comparator||'',minimum:definition.minimum??null,maximum:definition.maximum??null}),interpretation=interpretFinding(snapshot,text),accepted=interpretation.intent===FINDING_INTENT.ACTUAL||interpretation.intent===FINDING_INTENT.QUALITATIVE;if(!accepted){const target=snapshot.comparator==='<='?`≤ ${snapshot.expectedResult}`:snapshot.expectedResult||'the requested observed result',reply=interpretation.intent===FINDING_INTENT.QUESTION||interpretation.intent===FINDING_INTENT.SPEC?`Correct - ${target} is the target specification. Now perform the test and tell me the actual measurement.`:interpretation.intent===FINDING_INTENT.PROCEDURE?'That describes the test procedure. Perform it and tell me the actual result.':`I do not have a confirmed result yet. Give me the actual measurement or direct observation for ${snapshot.name}.`;ask(reply);return true}
- const timestamp=new Date().toISOString(),provisional={testId:snapshot.id,testName:snapshot.name,workflowId:snapshot.workflowId,workflowName:snapshot.workflowName,expectedResult:snapshot.expectedResult,comparator:snapshot.comparator,actualObservedMeasurement:interpretation.value,unit:interpretation.unit,status:interpretation.result,explanatoryResultText:completedResultExplanation(snapshot,interpretation),rawObservation:text,normalizedObservation:interpretation.normalized,intent:interpretation.intent,timestamp};Object.assign(record,{status:provisional.status,technicianFinding:text,interpretedValue:provisional.actualObservedMeasurement,unit:provisional.unit,timestamp,source:'technician-input'});const next=['pass','fail'].includes(provisional.status)?nextPendingTest(snapshot.id):definition;guided.currentTestId=next?.id||'';guided.nextRecommendedTest=next?.id||'';const completed=Object.freeze({...provisional,nextTestId:next?.id||'',nextTestName:next?.name||'',nextTestPrompt:next?.prompt||''}),reply=completedResultReply(completed);guided.lastFinding={raw:text,normalized:completed.normalizedObservation,intent:completed.intent,matchedTestId:completed.testId,interpretedValue:completed.actualObservedMeasurement,unit:completed.unit,result:completed.status,timestamp};guided.lastCompletedResult={...completed};state.liveData=(state.liveData?state.liveData+' | ':'')+text;lastDiagnosticTransition={raw:text,at:receivedAt};ask(reply);return true
+ const timestamp=new Date().toISOString(),provisional={testId:snapshot.id,testName:snapshot.name,workflowId:snapshot.workflowId,workflowName:snapshot.workflowName,expectedResult:snapshot.expectedResult,comparator:snapshot.comparator,actualObservedMeasurement:interpretation.value,unit:interpretation.unit,status:interpretation.result,explanatoryResultText:completedResultExplanation(snapshot,interpretation),rawObservation:text,normalizedObservation:interpretation.normalized,intent:interpretation.intent,timestamp};Object.assign(record,{status:provisional.status,technicianFinding:text,interpretedValue:provisional.actualObservedMeasurement,unit:provisional.unit,timestamp,source:'technician-input'});const next=['pass','fail'].includes(provisional.status)?nextPendingTest(snapshot.id):definition;activateTest(guided,next);const completed=Object.freeze({...provisional,nextTestId:next?.id||'',nextTestName:next?.name||'',nextTestPrompt:next?.prompt||''}),reply=completedResultReply(completed);guided.lastFinding={raw:text,normalized:completed.normalizedObservation,intent:completed.intent,matchedTestId:completed.testId,interpretedValue:completed.actualObservedMeasurement,unit:completed.unit,result:completed.status,timestamp};guided.lastCompletedResult={...completed};state.liveData=(state.liveData?state.liveData+' | ':'')+text;lastDiagnosticTransition={raw:text,at:receivedAt};ask(reply);return true
 }
 function repairDiagnosticText(text){return String(text??'').replaceAll('Ã¢â‚¬Å“','“').replaceAll('Ã¢â‚¬Â','”').replaceAll('â€œ','“').replaceAll('â€','”').replaceAll('â€”','—').replaceAll('â€“','–').replaceAll('â‰¤','≤').replaceAll('â‰¥','≥').replaceAll('Â±','±').replaceAll('Â°','°').replaceAll('Î©','Ω').replaceAll('Âµ','µ')}
 function add(who,text){state.history.push({who,text:repairDiagnosticText(text),at:new Date().toISOString()});if(state.history.length>200)state.history=state.history.slice(-200)}
@@ -7415,7 +7416,7 @@ function process(raw){const text=String(raw||'').trim();if(!text)return;add('You
 function renderTranscript(){const tr=$('oliverHubTranscript');if(!tr)return;rendering=true;tr.innerHTML=state.history.map(m=>`<div class="oliver-line ${m.who==='You'?'user':'oliver'}"><strong>${esc(m.who)}:</strong> ${esc(repairDiagnosticText(m.text))}</div>`).join('');tr.scrollTop=tr.scrollHeight;rendering=false}
 function renderStatus(){let box=$('nitrosAuthoritativeStatus');const tr=$('oliverHubTranscript');if(!tr)return;if(!box){box=document.createElement('div');box.id='nitrosAuthoritativeStatus';tr.insertAdjacentElement('afterend',box)}box.innerHTML=`<strong>Authoritative Diagnostic State — v${VERSION}</strong><br>Case: ${esc(state.id)}<br>Vehicle: ${esc(vehicleLabel()||'Blank')}<br>Active DTC: ${esc(state.activeDtc||'None')}<br>Workflow: ${esc(workflowName())}<br>Stage: ${esc(state.stage)}`}
 function stamp(){document.title=`Nitros Mobile Technician Portal v${VERSION} — ${RELEASE}`;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${VERSION} — ${RELEASE}`;document.querySelectorAll('.nitros-build-identity').forEach(e=>e.innerHTML=`<strong>Version ${VERSION} — ${RELEASE}</strong> · Build ${BUILD}`);const title=$('unifiedOliverTitle');if(title)title.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">Version ${VERSION} — ${RELEASE} · Build ${BUILD}</span>`;document.documentElement.dataset.nitrosReady=VERSION}
-function renderGuidedStatus(){const box=$('nitrosAuthoritativeStatus'),guided=state.diagnosticTestState;if(!box||!guided)return;const current=testRecord(guided.currentTestId),completed=guided.tests.filter(test=>test.status==='pass'||test.status==='fail'),previous=completed[completed.length-1],workflow=workflowDefinition(),progress=workflow?workflow.tests.filter(test=>!test.isolation).map(test=>{const record=testRecord(test.id),mark=record?.status==='pass'?'PASS':record?.status==='fail'?'FAIL':guided.currentTestId===test.id?'CURRENT':'PENDING';return`${test.name.replace('Cam Sensor ','').replace('Cam ','')} ${mark}`}).join(' | '):'';box.innerHTML+=`<br>Current Test: ${esc(current?.name||'Complete')}<br>Previous Result: ${esc(previous?`${previous.name} - ${previous.status.toUpperCase()}`:'None')}<br><span style="font-size:12px">${esc(progress)}</span>`;if(guided.lastFinding){box.dataset.avNormalizedFinding=guided.lastFinding.normalized||'';box.dataset.avMatchedTestId=guided.lastFinding.matchedTestId||'';box.dataset.avInterpretedValue=guided.lastFinding.interpretedValue??'';box.dataset.avUnit=guided.lastFinding.unit||'';box.dataset.avResult=guided.lastFinding.result||'';box.dataset.avNextTestId=guided.nextRecommendedTest||''}}
+function renderGuidedStatus(){const box=$('nitrosAuthoritativeStatus'),guided=state.diagnosticTestState;if(!box||!guided)return;const current=testRecord(guided.currentTestId),completed=guided.tests.filter(test=>test.status==='pass'||test.status==='fail'),previous=completed[completed.length-1],workflow=workflowDefinition(),progress=workflow?workflow.tests.filter(test=>test.required!==false).map(test=>{const record=testRecord(test.id),mark=record?.status==='pass'?'PASS':record?.status==='fail'?'FAIL':guided.currentTestId===test.id?'IN PROGRESS':'PENDING';return`${test.name.replace('Cam Sensor ','').replace('Cam ','')} ${mark}`}).join(' | '):'';box.innerHTML+=`<br>Current Test: ${esc(current?.name||'Complete')}<br>Previous Result: ${esc(previous?`${previous.name} - ${previous.status.toUpperCase()}`:'None')}<br><span style="font-size:12px">${esc(progress)}</span>`;if(guided.lastFinding){box.dataset.avNormalizedFinding=guided.lastFinding.normalized||'';box.dataset.avMatchedTestId=guided.lastFinding.matchedTestId||'';box.dataset.avInterpretedValue=guided.lastFinding.interpretedValue??'';box.dataset.avUnit=guided.lastFinding.unit||'';box.dataset.avResult=guided.lastFinding.result||'';box.dataset.avNextTestId=guided.nextRecommendedTest||''}}
 function renderAll(){stamp();renderTranscript();renderStatus();renderGuidedStatus()}
 function install(){
  stamp();
@@ -7658,7 +7659,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.7AZ</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.7BA</strong></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>
 <li>Service Worker Script URL: <strong id="nitrosRuntimeSwUrl">Checking</strong></li>
