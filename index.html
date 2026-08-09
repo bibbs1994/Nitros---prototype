@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.7AP — GPS Evidence Metadata + Verification</title>
+<title>Nitros Mobile Technician Portal v10.12.7AQ — GPS Evidence Propagation</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -1712,7 +1712,7 @@ window.NitrosGpsEvidence=(()=>{
   function label(gps){return ({verified:"GPS Verified",unavailable:"GPS Unavailable","permission-denied":"Location Permission Denied",timeout:"GPS Timeout",error:"GPS Error","timeout/error":"GPS Timeout/Error","not-captured":"GPS Not Recorded"})[gps?.status]||"GPS Not Recorded";}
   function html(gps,escape){
     const safe=escape||((v)=>String(v??""));
-    if(!gps||!gps.status)return "Location: GPS Not Recorded";
+    if(!gps||gps.status!=="verified")return "Location: GPS Not Recorded";
     let text=label(gps);
     if(gps.status==="verified"&&Number.isFinite(gps.latitude)&&Number.isFinite(gps.longitude))text+=`<br>${safe(gps.latitude.toFixed(6))}, ${safe(gps.longitude.toFixed(6))}<br>Accuracy: ${Number.isFinite(gps.accuracyMeters)?`&plusmn;${safe(Math.round(gps.accuracyMeters))} m`:"Unavailable"}<br>GPS captured: ${safe(new Date(gps.capturedAt).toLocaleString())}`;
     return text;
@@ -4415,7 +4415,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
         odometer:activePhotoEvidence.photoOdometer?.originalName||document.getElementById("photoOdometer").files[0]?.name||"",
         vinLabel:activePhotoEvidence.photoVin?.originalName||document.getElementById("photoVin").files[0]?.name||""
       },
-      photoEvidence:persistedPhotos.map(item=>({fieldId:item.fieldId,label:item.label,capturedAt:item.capturedAt,technician:item.technician,vin:item.vin,repairOrder:item.repairOrder,deviceIdentity:item.deviceIdentity,originalName:item.originalName,storedSize:item.storedSize})),
+      photoEvidence:persistedPhotos.map(item=>({evidenceId:item.evidenceId||item.fieldId,fieldId:item.fieldId,label:item.label,capturedAt:item.capturedAt,gps:item.gps,technician:item.technician,technicianId:item.technicianId,vin:item.vin,repairOrder:item.repairOrder,caseId:item.caseId,appointmentId:item.appointmentId,deviceIdentity:item.deviceIdentity,originalName:item.originalName,storedSize:item.storedSize})),
       inspectionNotes:document.getElementById("inspectionNotes").value.trim(),
       technicianInspection:{
         technician:document.getElementById("technicianName").value.trim(),
@@ -7047,7 +7047,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1031CompletionAssignmentStabilization">
 (()=>{
   'use strict';
-  const BUILD='10.12.7AP';
+  const BUILD='10.12.7AQ';
   const $=id=>document.getElementById(id);
   const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||'null');return v??fallback}catch{return fallback}};
   const write=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}};
@@ -7268,7 +7268,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 .phase2-result{margin-top:9px;padding:9px;border:1px solid #315879;border-radius:10px;background:#071522;font-size:12px;line-height:1.45}.phase2-result strong{color:#fff}.phase2-confidence{color:#7fe0ff;font-weight:800}.phase2-uncertain{color:#ffd074;font-weight:800}.phase2-raw pre{max-height:150px;overflow:auto;white-space:pre-wrap;color:#b9cce0}
 @media(max-width:520px){.oliver-import-actions{grid-template-columns:1fr}}
 </style>
-<script src="./image-analysis-ad.js?v=10.12.7AP" data-nitros-production-image-analysis="true"></script>
+<script src="./image-analysis-ad.js?v=10.12.7AQ" data-nitros-production-image-analysis="true"></script>
 <!-- v10.8.6 adds browser-based image OCR, automatic text extraction, import-to-case handoff, and preserves the active diagnostic conversation. -->
 <script id="v1081-version-label-sync">
 (()=>{
@@ -7486,7 +7486,7 @@ html.nitros-stabilizing body{visibility:visible!important}
 <script id="developerModeStub">
 window.NitrosDeveloperMode={
  enabled:false,
- build:"10.12.7AP",
+ build:"10.12.7AQ",
  stage:"Idle",
  lastOperation:"None",
  setStage(s){this.stage=s;console.log("[DeveloperMode]",s);}
@@ -7837,9 +7837,9 @@ document.addEventListener("DOMContentLoaded",()=>{
 <script id="v10127x-service-worker-update">
 (()=>{'use strict';if(!('serviceWorker' in navigator))return;const VERSION='10.12.7AO',RELOAD_KEY=`nitros-sw-reloaded-${VERSION}`;let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing||sessionStorage.getItem(RELOAD_KEY)==='1')return;refreshing=true;sessionStorage.setItem(RELOAD_KEY,'1');location.reload()});window.addEventListener('load',async()=>{try{const registration=await navigator.serviceWorker.register(`./sw.js?v=${VERSION}`,{updateViaCache:'none'});await registration.update()}catch(error){console.warn('Nitros service-worker update check failed:',error)}})})();
 </script>
-<!-- v10.12.7AP GPS Evidence Metadata + Verification; established workflow and diagnostic behavior remain unchanged. -->
-<script id="v10127ap-build-identity">
-(()=>{'use strict';const VERSION='10.12.7AP',RELEASE='GPS Evidence Metadata + Verification';const apply=()=>{document.title=`Nitros Mobile Technician Portal v${VERSION} — ${RELEASE}`;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${VERSION} — ${RELEASE}`;const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent=`Version ${VERSION} — ${RELEASE}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>Version ${VERSION} — ${RELEASE}</strong> · Build 2026-08-09`);};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,100));if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register(`./sw.js?v=${VERSION}`,{updateViaCache:'none'}).then(r=>r.update()).catch(e=>console.warn('Nitros service-worker update check failed:',e)));})();
+<!-- v10.12.7AQ GPS Evidence Propagation; established workflow and diagnostic behavior remain unchanged. -->
+<script id="v10127aq-build-identity">
+(()=>{'use strict';const VERSION='10.12.7AQ',RELEASE='GPS Evidence Propagation';const apply=()=>{document.title=`Nitros Mobile Technician Portal v${VERSION} — ${RELEASE}`;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${VERSION} — ${RELEASE}`;const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent=`Version ${VERSION} — ${RELEASE}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>Version ${VERSION} — ${RELEASE}</strong> · Build 2026-08-09`);};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,100));if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register(`./sw.js?v=${VERSION}`,{updateViaCache:'none'}).then(r=>r.update()).catch(e=>console.warn('Nitros service-worker update check failed:',e)));})();
 </script>
 </body>
 </html>
