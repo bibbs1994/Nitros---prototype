@@ -11,12 +11,12 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
   readFile(new URL('semantic-analyzer-core.mjs', root), 'utf8')
 ]);
 
-test('AS app build keeps the proven AO analyzer and production endpoint', () => {
+test('AT app build keeps the proven AO analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.7AO'/);
-  assert.match(html, /10\.12\.7AS/);
+  assert.match(html, /10\.12\.7AT/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.7AS'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.7AT'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -146,7 +146,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.7AS'/);
+  assert.match(html, /version:'10\.12\.7AT'/);
 });
 
 test('transport diagnostics cover lifecycle, timing, and categorized failures', () => {
