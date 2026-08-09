@@ -5,20 +5,21 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const start=html.indexOf('const GUIDED_WORKFLOWS=');
 const end=html.indexOf('function add(',start);
-assert.ok(start>=0&&end>start,'AV guided-test engine was not found');
+assert.ok(start>=0&&end>start,'AX guided-test engine was not found');
 const source=html.slice(start,end);
 
 function harness(){
   return Function(`
-    let state={activeDtc:'P0340',diagnosticTestState:null,liveData:'',vehicle:{year:'2014',make:'Toyota',model:'Camry',engine:''}};
+    let state={activeDtc:'P0340',diagnosticTestState:null,liveData:'',lastReply:'',vehicle:{year:'2014',make:'Toyota',model:'Camry',engine:''}};
     const responses=[];
-    function ask(text){responses.push(text)}
+    function workflowName(){return 'Camshaft Position Circuit'}
+    function ask(text){state.lastReply=text;responses.push(text)}
     ${source}
     return {state,responses,ensureGuidedState,handleGuidedFinding,interpretFinding,normalizeFinding,classifyFindingIntent,repairDiagnosticText,FINDING_INTENT,GUIDED_WORKFLOWS};
   `)();
 }
 
-test('AU DTC and vehicle canonicalization remains present in AV',()=>{
+test('AU DTC and vehicle canonicalization remains present in AX',()=>{
   assert.match(html,/const DTC_PATTERN=.*\[0-9A-FO\]/);
   assert.match(html,/replace\(\/O\/g,'0'\)/);
   assert.match(html,/function parseVehicle\(text\)/);
@@ -30,13 +31,13 @@ test('power and ground passes persist and advance one test at a time',()=>{
   h.handleGuidedFinding('Found 5v on the cam power side');
   assert.equal(h.state.diagnosticTestState.tests[0].status,'pass');
   assert.equal(h.state.diagnosticTestState.currentTestId,'cam-ground');
-  assert.match(h.responses.at(-1),/Next, test the cam sensor ground/i);
+  assert.match(h.responses.at(-1),/Next we'll test Cam Sensor Ground/i);
   assert.doesNotMatch(h.responses.at(-1),/signal.*correlation/i);
   h.handleGuidedFinding('Ground is good');
   assert.equal(h.state.diagnosticTestState.tests[0].status,'pass');
   assert.equal(h.state.diagnosticTestState.tests[1].status,'pass');
   assert.equal(h.state.diagnosticTestState.currentTestId,'cam-signal');
-  assert.match(h.responses.at(-1),/cam signal is switching/i);
+  assert.match(h.responses.at(-1),/Next we'll test Cam Signal Activity/i);
 });
 
 test('signal failure routes to isolation without discarding prior passes',()=>{
@@ -76,7 +77,7 @@ test('guided state survives the same JSON persistence used by the authoritative 
   assert.equal(restored.diagnosticTestState.currentTestId,'cam-signal');
 });
 
-test('AV engine is authoritative, guarded, and exposes compact debug state',()=>{
+test('AX engine is authoritative, guarded, and exposes compact debug state',()=>{
   assert.match(html,/diagnosticTestState:null/);
   assert.match(html,/localStorage\.setItem\(STATE_KEY,JSON\.stringify\(state\)\)/);
   assert.match(html,/state\.stage==='diagnostic'.*handleGuidedFinding\(text\)/);
@@ -87,9 +88,9 @@ test('AV engine is authoritative, guarded, and exposes compact debug state',()=>
 function atGround(){const h=harness();h.ensureGuidedState();h.handleGuidedFinding('I measured 5 V');assert.equal(h.state.diagnosticTestState.currentTestId,'cam-ground');return h}
 
 test('expected ground specification does not mutate or advance the test state',()=>{
-  const h=atGround(),before=JSON.stringify(h.state);
+  const h=atGround(),before=JSON.stringify(h.state.diagnosticTestState);
   h.handleGuidedFinding('I should have less than 0.1 V on the ground.');
-  assert.equal(JSON.stringify(h.state),before);
+  assert.equal(JSON.stringify(h.state.diagnosticTestState),before);
   assert.equal(h.state.diagnosticTestState.currentTestId,'cam-ground');
   assert.match(h.responses.at(-1),/target specification.*actual measurement/i);
   assert.match(h.responses.at(-1),/≤ 0\.1 V/);
@@ -106,10 +107,47 @@ test('actual good and bad ground readings evaluate only after measurement intent
 
 test('questions, numbered specifications, procedures, and uncertain claims cannot complete a test',()=>{
   for(const input of ['Should I have less than 0.1 volts?','Should be 5 V.','The specification is 0.1 volts maximum.','I need less than 0.1 V.','Anything under 100 mV is good.','I should backprobe the connector.','Looks okay.']){
-    const h=atGround(),before=JSON.stringify(h.state);h.handleGuidedFinding(input);
-    assert.equal(JSON.stringify(h.state),before,input);
+    const h=atGround(),before=JSON.stringify(h.state.diagnosticTestState);h.handleGuidedFinding(input);
+    assert.equal(JSON.stringify(h.state.diagnosticTestState),before,input);
     assert.equal(h.state.diagnosticTestState.currentTestId,'cam-ground',input);
   }
+});
+
+test('completed ground result freezes reply identity before advancing to signal',()=>{
+  const h=atGround();h.handleGuidedFinding('Should I have less than 0.1 V on the ground?');
+  assert.equal(h.state.diagnosticTestState.currentTestId,'cam-ground');
+  h.handleGuidedFinding('I measured 0.04 V');
+  const completed=h.state.diagnosticTestState.lastCompletedResult;
+  assert.equal(completed.testId,'cam-ground');
+  assert.equal(completed.testName,'Cam Sensor Ground');
+  assert.equal(completed.workflowName,'Camshaft Position Circuit');
+  assert.equal(completed.expectedResult,'0.1 V');
+  assert.equal(completed.comparator,'<=');
+  assert.equal(completed.actualObservedMeasurement,0.04);
+  assert.equal(completed.status,'pass');
+  assert.equal(completed.nextTestId,'cam-signal');
+  assert.equal(h.state.diagnosticTestState.currentTestId,'cam-signal');
+  assert.match(h.state.lastReply,/0\.04 V\. Cam Sensor Ground passes/);
+  assert.match(h.state.lastReply,/Next we'll test Cam Signal Activity/);
+  assert.doesNotMatch(h.state.lastReply,/Cam Signal Activity is inconclusive/i);
+});
+
+test('failing ground reply also uses the frozen completed-test identity',()=>{
+  const h=atGround();h.handleGuidedFinding('I measured 0.4 V');
+  const completed=h.state.diagnosticTestState.lastCompletedResult;
+  assert.equal(completed.testId,'cam-ground');assert.equal(completed.status,'fail');
+  assert.equal(h.state.diagnosticTestState.currentTestId,'cam-ground-isolation');
+  assert.match(h.state.lastReply,/Cam Sensor Ground fails/);
+  assert.doesNotMatch(h.state.lastReply,/Ground Circuit Isolation is inconclusive/i);
+});
+
+test('rapid duplicate delivery cannot reinterpret one reading against the next test',()=>{
+  const h=atGround();h.handleGuidedFinding('I measured 0.04 V');const reply=h.state.lastReply,count=h.responses.length;
+  h.handleGuidedFinding('I measured 0.04 V');
+  assert.equal(h.responses.length,count);
+  assert.equal(h.state.lastReply,reply);
+  assert.equal(h.state.diagnosticTestState.currentTestId,'cam-signal');
+  assert.equal(h.state.diagnosticTestState.tests[2].status,'pending');
 });
 
 test('natural spoken readings and qualitative signal observations remain valid',()=>{
