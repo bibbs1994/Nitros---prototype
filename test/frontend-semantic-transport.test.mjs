@@ -11,12 +11,12 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
   readFile(new URL('semantic-analyzer-core.mjs', root), 'utf8')
 ]);
 
-test('AQ app build keeps the proven AO analyzer and production endpoint', () => {
+test('AR app build keeps the proven AO analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.7AO'/);
-  assert.match(html, /10\.12\.7AQ/);
-  assert.match(html, /image-analysis-ad\.js\?v=10\.12\.7AQ/);
+  assert.match(html, /10\.12\.7AR/);
+  assert.match(html, /image-analysis-ad\.js\?v=10\.12\.7AR/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.7AQ'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.7AR'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
