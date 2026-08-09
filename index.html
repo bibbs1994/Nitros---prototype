@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing</title>
+<title>Nitros Mobile Technician Portal v10.12.7AP — GPS Evidence Metadata + Verification</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -1687,6 +1687,39 @@ canvas.graph-preview,canvas.ocr-preview{
 </div>
 
 <script>
+// v10.12.7AP: GPS belongs to the Nitros evidence record, never only to image EXIF.
+window.NitrosGpsEvidence=(()=>{
+  "use strict";
+  const TIMEOUT_MS=10000;
+  let last={attempted:false,status:"not-captured",latitude:null,longitude:null,accuracyMeters:null,capturedAt:null,errorCode:null,errorMessage:null};
+  function publish(gps){
+    last=gps;window.dispatchEvent(new CustomEvent("nitros:gps-evidence",{detail:gps}));
+    const out=document.getElementById("nitrosGpsDiagnostic");
+    if(out)out.textContent=JSON.stringify(gps,null,2);
+    return gps;
+  }
+  function failure(status,code,message){return publish({attempted:true,status,latitude:null,longitude:null,accuracyMeters:null,capturedAt:new Date().toISOString(),errorCode:code??null,errorMessage:message||null});}
+  function capture(){
+    if(!window.isSecureContext)return Promise.resolve(failure("unavailable","INSECURE_CONTEXT","Geolocation requires a secure context."));
+    if(!navigator.geolocation)return Promise.resolve(failure("unavailable","UNSUPPORTED","Geolocation is not available on this device."));
+    publish({...last,attempted:true,status:"requesting",errorCode:null,errorMessage:null});
+    return new Promise(resolve=>{try{navigator.geolocation.getCurrentPosition(
+      position=>resolve(publish({attempted:true,status:"verified",latitude:position.coords.latitude,longitude:position.coords.longitude,accuracyMeters:position.coords.accuracy,capturedAt:new Date(position.timestamp||Date.now()).toISOString(),errorCode:null,errorMessage:null})),
+      error=>resolve(failure(error?.code===1?"permission-denied":error?.code===2?"unavailable":"timeout/error",error?.code??"UNKNOWN",error?.message||"Location could not be obtained.")),
+      {enableHighAccuracy:true,timeout:TIMEOUT_MS,maximumAge:0}
+    )}catch(error){resolve(failure("timeout/error","EXCEPTION",error?.message||"Location request failed."))}});
+  }
+  function label(gps){return ({verified:"GPS Verified",unavailable:"GPS Unavailable","permission-denied":"Permission Denied","timeout/error":"GPS Timeout/Error","not-captured":"Not captured"})[gps?.status]||"Not captured";}
+  function html(gps,escape){
+    const safe=escape||((v)=>String(v??""));
+    if(!gps||!gps.status)return "Location: Not captured";
+    let text=`Location: ${label(gps)}`;
+    if(gps.status==="verified"&&Number.isFinite(gps.latitude)&&Number.isFinite(gps.longitude))text+=`<br>Coordinates: ${safe(gps.latitude.toFixed(6))}, ${safe(gps.longitude.toFixed(6))}<br>Accuracy: &plusmn;${safe(Math.round(gps.accuracyMeters))} m<br>GPS captured: ${safe(new Date(gps.capturedAt).toLocaleString())}`;
+    return text;
+  }
+  return {capture,label,html,getLast:()=>({...last})};
+})();
+
 (() => {
   "use strict";
 
@@ -1735,13 +1768,13 @@ canvas.graph-preview,canvas.ocr-preview{
     canvas.getContext("2d").drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close?.();
     return await new Promise(resolve=>canvas.toBlob(blob=>resolve(blob||file),"image/jpeg",.82));
   }
-  function currentPhotoIdentity(){return {technician:portalProfile()?.name||document.getElementById("technicianName")?.value.trim()||document.getElementById("assignedTechnician")?.value.trim()||"Not entered",vin:selectedVehicle?.vin||document.getElementById("vinInput")?.value.trim().toUpperCase()||"Not entered",repairOrder:document.getElementById("roNumber")?.value.trim()||document.getElementById("workOrderNumber")?.value.trim()||"Pending",deviceIdentity:navigator.userAgent};}
+  function currentPhotoIdentity(){const profile=portalProfile(),technician=profile?.name||document.getElementById("technicianName")?.value.trim()||document.getElementById("assignedTechnician")?.value.trim()||"Not entered";return {technician,technicianId:profile?.technicianId||profile?.id||technician,vin:selectedVehicle?.vin||document.getElementById("vinInput")?.value.trim().toUpperCase()||"Not entered",repairOrder:document.getElementById("roNumber")?.value.trim()||document.getElementById("workOrderNumber")?.value.trim()||"Pending",caseId:localStorage.getItem("nitros_active_repair_id")||null,appointmentId:localStorage.getItem("nitros_active_appointment_id")||null,deviceIdentity:navigator.userAgent};}
   async function savePhotoEvidence(fieldId,file){
     const status=document.getElementById("activePhotoEvidenceStatus");
     try{
       if(status){status.className="status";status.textContent=`Saving ${PHOTO_FIELDS[fieldId]||"photo"} on this device…`;}
-      const blob=await compressPhoto(file),identity=currentPhotoIdentity(),capturedAt=new Date().toISOString();
-      const entry={key:`${ACTIVE_PHOTO_RECORD}:${fieldId}`,recordId:ACTIVE_PHOTO_RECORD,fieldId,label:PHOTO_FIELDS[fieldId]||fieldId,blob,mimeType:blob.type||file.type||"image/jpeg",originalName:file.name||`${fieldId}.jpg`,originalSize:file.size||0,storedSize:blob.size||0,capturedAt,...identity};
+      const capturedAt=new Date().toISOString(),[blob,gps]=await Promise.all([compressPhoto(file),window.NitrosGpsEvidence.capture()]),identity=currentPhotoIdentity();
+      const entry={key:`${ACTIVE_PHOTO_RECORD}:${fieldId}`,recordId:ACTIVE_PHOTO_RECORD,fieldId,label:PHOTO_FIELDS[fieldId]||fieldId,blob,mimeType:blob.type||file.type||"image/jpeg",originalName:file.name||`${fieldId}.jpg`,originalSize:file.size||0,storedSize:blob.size||0,capturedAt,gps,...identity};
       await photoDbPut(entry);activePhotoEvidence[fieldId]={...entry,blob:undefined};await renderActivePhotoEvidence();scheduleDraftSave();
     }catch(error){console.error("Photo evidence save failed",error);if(status){status.className="status bad";status.textContent="Photo could not be saved. Check browser storage and try again.";}}
   }
@@ -1752,11 +1785,12 @@ canvas.graph-preview,canvas.ocr-preview{
     const when=item.capturedAt?new Date(item.capturedAt).toLocaleString():"Time unavailable";
     return `<div class="evidence-card"><button class="open-evidence-photo" type="button" data-photo-url="${url}" aria-label="Enlarge ${escapeHtml(item.label||"photo")}" style="padding:0;border:0;background:none;width:100%"><img src="${url}" alt="${escapeHtml(item.label||"Repair-order photo")}"></button><div class="evidence-body"><div class="evidence-title">${escapeHtml(item.label||item.fieldId)}</div><div class="evidence-meta">${escapeHtml(when)}<br>Technician: ${escapeHtml(item.technician||"Not entered")}<br>RO: ${escapeHtml(item.repairOrder||"Pending")} • VIN: ${escapeHtml(item.vin||"Not entered")}</div>${allowDelete?`<div class="evidence-actions"><button class="btn secondary small open-evidence-photo" type="button" data-photo-url="${url}">Enlarge</button><button class="btn ghost small delete-active-photo" type="button" data-field-id="${escapeHtml(item.fieldId)}">Remove</button></div>`:`<div class="evidence-actions"><button class="btn secondary small open-evidence-photo" type="button" data-photo-url="${url}">Enlarge</button><button class="btn ghost small" type="button" disabled>Saved Evidence</button></div>`}</div></div>`;
   }
+  function appendGpsToEvidenceCards(container,items){container.querySelectorAll(".evidence-meta").forEach((meta,index)=>{meta.insertAdjacentHTML("beforeend",`<br>${window.NitrosGpsEvidence.html(items[index]?.gps,escapeHtml)}`);});}
   async function renderActivePhotoEvidence(){
     const grid=document.getElementById("activePhotoEvidenceGrid"),status=document.getElementById("activePhotoEvidenceStatus");if(!grid)return;
     releasePhotoUrls();const items=await photoDbList(ACTIVE_PHOTO_RECORD);items.sort((a,b)=>(a.fieldId||"").localeCompare(b.fieldId||""));
     if(!items.length){grid.innerHTML="";if(status){status.className="status";status.textContent="No photographic evidence has been saved for this active repair order yet.";}return;}
-    grid.innerHTML=items.map(item=>{const url=URL.createObjectURL(item.blob);photoObjectUrls.push(url);return evidenceCardHtml(item,url,true)}).join("");
+    grid.innerHTML=items.map(item=>{const url=URL.createObjectURL(item.blob);photoObjectUrls.push(url);return evidenceCardHtml(item,url,true)}).join("");appendGpsToEvidenceCards(grid,items);
     if(status){status.className="status ok";status.textContent=`${items.length} photo${items.length===1?"":"s"} saved on this device for the active repair order.`;}
   }
   async function persistActivePhotosToRecord(recordId){
@@ -1768,7 +1802,7 @@ canvas.graph-preview,canvas.ocr-preview{
   async function openPhotoEvidenceManager(recordId,title){
     const modal=document.getElementById("photoEvidenceModal"),grid=document.getElementById("photoModalGrid"),status=document.getElementById("photoModalStatus");
     modal.classList.remove("hidden");document.getElementById("photoModalTitle").textContent=title||"Repair-order photos";grid.innerHTML="";status.className="status";status.textContent="Loading saved photographic evidence…";
-    try{releasePhotoUrls();const items=await photoDbList(recordId);if(!items.length){status.className="status warn";status.textContent="No saved photographic evidence was found for this repair order on this device.";return;}grid.innerHTML=items.map(item=>{const url=URL.createObjectURL(item.blob);photoObjectUrls.push(url);return evidenceCardHtml(item,url,false)}).join("");status.className="status ok";status.textContent=`${items.length} saved photo${items.length===1?"":"s"} found for this repair order.`;}catch(error){status.className="status bad";status.textContent="Saved photos could not be opened on this device.";}
+    try{releasePhotoUrls();const items=await photoDbList(recordId);if(!items.length){status.className="status warn";status.textContent="No saved photographic evidence was found for this repair order on this device.";return;}grid.innerHTML=items.map(item=>{const url=URL.createObjectURL(item.blob);photoObjectUrls.push(url);return evidenceCardHtml(item,url,false)}).join("");appendGpsToEvidenceCards(grid,items);status.className="status ok";status.textContent=`${items.length} saved photo${items.length===1?"":"s"} found for this repair order.`;}catch(error){status.className="status bad";status.textContent="Saved photos could not be opened on this device.";}
   }
 
   let autoScanTimer = null;
@@ -4618,7 +4652,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     const allowedScreens=new Set(["technician","estimate","workorder","review"]);
     const btn=document.getElementById("floatingEvidenceButton"), modal=document.getElementById("smartEvidenceModal");
     const input=document.getElementById("evidencePhotoInput"), preview=document.getElementById("evidencePreview"), canvas=document.getElementById("annotationCanvas"), wrap=document.getElementById("annotationWrap");
-    let originalBlob=null, drawing=false, startX=0,startY=0,mode="freehand",snapshot=null;
+    let originalBlob=null,pendingGps=null,pendingCapturedAt=null,drawing=false,startX=0,startY=0,mode="freehand",snapshot=null;
     const ctx=canvas?.getContext("2d");
     function openDb(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB_NAME,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE,{keyPath:"key"})};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
     async function put(entry){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(entry);tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
@@ -4627,12 +4661,12 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     function currentScreen(){return document.querySelector(".screen.active")?.id||"home"}
     function updateButton(){btn?.classList.toggle("visible",allowedScreens.has(currentScreen()))}
     const observer=new MutationObserver(updateButton);document.querySelectorAll(".screen").forEach(s=>observer.observe(s,{attributes:true,attributeFilter:["class"]}));updateButton();
-    function identity(){const profile=(()=>{try{return JSON.parse(localStorage.getItem("nitros_portal_v8_profile")||"null")}catch(e){return null}})();return {technician:profile?.name||document.getElementById("technicianName")?.value.trim()||document.getElementById("assignedTechnician")?.value.trim()||"Not entered",vin:document.getElementById("vinInput")?.value.trim().toUpperCase()||"Not entered",repairOrder:document.getElementById("roNumber")?.value.trim()||document.getElementById("workOrderNumber")?.value.trim()||"Pending",deviceIdentity:navigator.userAgent}}
+    function identity(){const profile=(()=>{try{return JSON.parse(localStorage.getItem("nitros_portal_v8_profile")||"null")}catch(e){return null}})();return {technician:profile?.name||document.getElementById("technicianName")?.value.trim()||document.getElementById("assignedTechnician")?.value.trim()||"Not entered",vin:document.getElementById("vinInput")?.value.trim().toUpperCase()||"Not entered",repairOrder:document.getElementById("roNumber")?.value.trim()||document.getElementById("workOrderNumber")?.value.trim()||"Pending",deviceIdentity:navigator.userAgent,gps:pendingGps,photoCaptureTimestamp:pendingCapturedAt}}
     function openModal(){modal.classList.remove("hidden");renderTimeline();document.getElementById("evidenceTitle").focus()}
     function closeModal(){modal.classList.add("hidden")}
     btn?.addEventListener("click",openModal);document.getElementById("closeSmartEvidence")?.addEventListener("click",closeModal);
     function fitCanvas(){if(!preview.naturalWidth)return;const r=wrap.getBoundingClientRect();canvas.width=Math.max(1,Math.round(r.width));canvas.height=Math.max(1,Math.round(r.height));ctx.lineWidth=4;ctx.lineCap="round";ctx.strokeStyle="#ff3b30"}
-    input?.addEventListener("change",async()=>{const file=input.files?.[0];if(!file)return;originalBlob=await compress(file);preview.src=URL.createObjectURL(originalBlob);preview.onload=()=>{document.getElementById("annotationSection").classList.remove("hidden");requestAnimationFrame(fitCanvas)};const st=document.getElementById("evidencePhotoStatus");st.className="status ok";st.textContent="Photo loaded. Add optional markings, then save."});
+    input?.addEventListener("change",async()=>{const file=input.files?.[0];if(!file)return;pendingCapturedAt=new Date().toISOString();[originalBlob,pendingGps]=await Promise.all([compress(file),window.NitrosGpsEvidence.capture()]);preview.src=URL.createObjectURL(originalBlob);preview.onload=()=>{document.getElementById("annotationSection").classList.remove("hidden");requestAnimationFrame(fitCanvas)};const st=document.getElementById("evidencePhotoStatus");st.className="status ok";st.textContent=`Photo loaded. Location: ${window.NitrosGpsEvidence.label(pendingGps)}. Add optional markings, then save.`});
     window.addEventListener("resize",()=>{if(!document.getElementById("annotationSection")?.classList.contains("hidden"))fitCanvas()});
     document.querySelectorAll(".annotation-mode").forEach(b=>b.addEventListener("click",()=>{mode=b.dataset.mode;document.querySelectorAll(".annotation-mode").forEach(x=>x.classList.toggle("primary",x===b))}));
     document.getElementById("clearAnnotations")?.addEventListener("click",()=>ctx.clearRect(0,0,canvas.width,canvas.height));
@@ -4969,9 +5003,11 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     function status(text,cls='status'){const x=el('partsRequestStatus');if(x){x.className=cls;x.textContent=text}}
     function statusClass(x){return ['Received','Ready to Install'].includes(x.officeStatus)?'ready':x.priority==='safety-critical'?'safety':x.priority==='customer-waiting'?'waiting':''}
     function render(){const list=read().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)),queued=list.filter(x=>['Request Sent','Office Reviewing','Customer Approval Pending'].includes(x.officeStatus)),ordered=list.filter(x=>['Ordered','Back Ordered'].includes(x.officeStatus)),ready=list.filter(x=>['Received','Ready to Install'].includes(x.officeStatus));if(el('partsRequestTotal'))el('partsRequestTotal').textContent=list.length;if(el('partsRequestQueued'))el('partsRequestQueued').textContent=queued.length;if(el('partsRequestOrdered'))el('partsRequestOrdered').textContent=ordered.length;if(el('partsRequestReady'))el('partsRequestReady').textContent=ready.length;if(el('partsRequestBadge')){el('partsRequestBadge').textContent=`${list.length} request${list.length===1?'':'s'}`;el('partsRequestBadge').className=`sync-badge ${queued.length?'pending':'ready'}`};const box=el('partsRequestList');if(!box)return;if(!list.length){box.innerHTML='<div class="command-empty">No parts requests recorded yet. Create one to test the technician workflow locally.</div>';status('No parts requests have been created on this device.');return}box.innerHTML=list.map(r=>`<div class="parts-request-card ${statusClass(r)}"><div class="office-update-head"><div><div class="parts-request-title">${esc(r.quantity)} × ${esc(r.description)}</div><div class="parts-request-meta">${esc(r.ro)} • ${esc(r.vehicle||'Vehicle not selected')} • ${esc(r.customer||'Customer not selected')}</div></div><div class="office-update-time">${fmt(r.createdAt)}</div></div><div class="parts-request-reason"><strong>Reason:</strong> ${esc(r.reason)}</div>${r.notes?`<div class="parts-request-reason"><strong>Notes:</strong> ${esc(r.notes)}</div>`:''}<div class="parts-request-badges"><span class="parts-request-badge ${r.priority==='safety-critical'?'safety':'priority'}">${esc(r.priorityLabel)}</span><span class="parts-request-badge status">${esc(r.officeStatus)}</span>${r.partNumber?`<span class="parts-request-badge">Part # ${esc(r.partNumber)}</span>`:''}<span class="parts-request-badge">${r.photos?.length||0} photo${r.photos?.length===1?'':'s'}</span></div>${r.photos?.length?`<div class="parts-photo-preview">${r.photos.map(p=>`<img src="${p.dataUrl}" alt="Parts request evidence: ${esc(p.name)}">`).join('')}</div>`:''}<div class="parts-request-meta">VIN ${esc(r.vin||'not recorded')} • Technician ${esc(r.technician)} • Status is read-only on mobile</div><div class="parts-request-buttons"><button class="btn secondary small" data-part-copy="${r.id}">Copy Request</button><button class="btn ghost small" data-part-export="${r.id}">Export One</button><button class="btn ghost small" data-part-delete="${r.id}">Delete</button></div></div>`).join('');status(`${list.length} parts request${list.length===1?' is':'s are'} stored locally. ${queued.length} await office action.`,queued.length?'status warn':'status ok')}
+    function decoratePhotoLocations(){const box=el('partsRequestList'),records=read().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));box?.querySelectorAll('.parts-request-card').forEach((card,index)=>card.querySelectorAll('.parts-photo-preview img').forEach((img,photoIndex)=>{if(img.dataset.gpsDecorated)return;img.dataset.gpsDecorated='1';const meta=document.createElement('small');meta.className='evidence-meta';meta.innerHTML=window.NitrosGpsEvidence.html(records[index]?.photos?.[photoIndex]?.gps,esc);img.insertAdjacentElement('afterend',meta)}));}
+    const partsListObserver=new MutationObserver(decoratePhotoLocations);if(el('partsRequestList'))partsListObserver.observe(el('partsRequestList'),{childList:true,subtree:true});
     function clearForm(){['partsRequestDescription','partsRequestNumber','partsRequestReason','partsRequestNotes'].forEach(id=>{if(el(id))el(id).value=''});if(el('partsRequestQuantity'))el('partsRequestQuantity').value='1';if(el('partsRequestPriority'))el('partsRequestPriority').value='normal';if(el('partsRequestPhotos'))el('partsRequestPhotos').value='';selectedPhotos=[];renderPreview()}
     function renderPreview(){const box=el('partsRequestPhotoPreview');if(box)box.innerHTML=selectedPhotos.map(p=>`<img src="${p.dataUrl}" alt="Selected evidence photo: ${esc(p.name)}">`).join('')}
-    async function loadPhotos(files){const chosen=[...files].slice(0,5);selectedPhotos=await Promise.all(chosen.map(file=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve({name:file.name,type:file.type,size:file.size,dataUrl:reader.result});reader.onerror=reject;reader.readAsDataURL(file)})));renderPreview();status(`${selectedPhotos.length} evidence photo${selectedPhotos.length===1?'':'s'} selected. They will be stored with this parts request.`,'status ok')}
+    async function loadPhotos(files){const chosen=[...files].slice(0,5);selectedPhotos=await Promise.all(chosen.map(async file=>{const capturedAt=new Date().toISOString(),[dataUrl,gps]=await Promise.all([new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)}),window.NitrosGpsEvidence.capture()]);return {name:file.name,type:file.type,size:file.size,dataUrl,capturedAt,gps}}));renderPreview();status(`${selectedPhotos.length} evidence photo${selectedPhotos.length===1?'':'s'} selected. They will be stored with this parts request.`,'status ok')}
     function save(){const description=el('partsRequestDescription')?.value.trim(),reason=el('partsRequestReason')?.value.trim(),quantity=Math.max(1,parseInt(el('partsRequestQuantity')?.value||'1',10)||1);if(!description){status('Enter the part needed before sending the request.','status bad');el('partsRequestDescription')?.focus();return}if(!reason){status('Enter the reason the part is needed. This is required documentation.','status bad');el('partsRequestReason')?.focus();return}const priority=el('partsRequestPriority')?.value||'normal',labels={'normal':'Normal','customer-waiting':'Customer Waiting','vehicle-disabled':'Vehicle Disabled','safety-critical':'Safety Critical'},now=new Date().toISOString(),request={id:`PART-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,description,partNumber:el('partsRequestNumber')?.value.trim()||'',quantity,priority,priorityLabel:labels[priority],reason,notes:el('partsRequestNotes')?.value.trim()||'',photos:selectedPhotos,createdAt:now,updatedAt:now,officeStatus:'Request Sent',syncState:'queued',...identity()};write([...read(),request]);clearForm();status('Parts request sent to the office queue. Purchasing details remain office-only.','status ok');document.getElementById('refreshCommandCenter')?.click()}
     function download(payload,name){const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
     function exportAll(){download({schema:'nitros-parts-request-package',version:'8.1.7',createdAt:new Date().toISOString(),partsRequests:read()},`Nitros_v8.1.7_Parts_Requests_${new Date().toISOString().replace(/[:.]/g,'-')}.json`);status('Parts request package exported.','status ok')}
@@ -7010,7 +7046,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 <script id="v1031CompletionAssignmentStabilization">
 (()=>{
   'use strict';
-  const BUILD='10.12.7AO';
+  const BUILD='10.12.7AP';
   const $=id=>document.getElementById(id);
   const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||'null');return v??fallback}catch{return fallback}};
   const write=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}};
@@ -7231,7 +7267,7 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 .phase2-result{margin-top:9px;padding:9px;border:1px solid #315879;border-radius:10px;background:#071522;font-size:12px;line-height:1.45}.phase2-result strong{color:#fff}.phase2-confidence{color:#7fe0ff;font-weight:800}.phase2-uncertain{color:#ffd074;font-weight:800}.phase2-raw pre{max-height:150px;overflow:auto;white-space:pre-wrap;color:#b9cce0}
 @media(max-width:520px){.oliver-import-actions{grid-template-columns:1fr}}
 </style>
-<script src="./image-analysis-ad.js?v=10.12.7AO" data-nitros-production-image-analysis="true"></script>
+<script src="./image-analysis-ad.js?v=10.12.7AP" data-nitros-production-image-analysis="true"></script>
 <!-- v10.8.6 adds browser-based image OCR, automatic text extraction, import-to-case handoff, and preserves the active diagnostic conversation. -->
 <script id="v1081-version-label-sync">
 (()=>{
@@ -7449,7 +7485,7 @@ html.nitros-stabilizing body{visibility:visible!important}
 <script id="developerModeStub">
 window.NitrosDeveloperMode={
  enabled:false,
- build:"10.12.7AO",
+ build:"10.12.7AP",
  stage:"Idle",
  lastOperation:"None",
  setStage(s){this.stage=s;console.log("[DeveloperMode]",s);}
@@ -7463,6 +7499,7 @@ document.addEventListener("DOMContentLoaded",()=>{
  <div style="padding:8px">
  <p><b>Build:</b> Version 10.12.7AO — Wiring Diagram Semantic Normalization + Guided Circuit Testing</p>
  <p><b>Case ID:</b> <span id="nitrosCaseId">Pending</span></p>
+ <p><b>GPS evidence diagnostic:</b></p><pre id="nitrosGpsDiagnostic">{"attempted":false,"status":"not-captured"}</pre>
  <p><b>Analysis Session ID:</b> <span id="nitrosAnalysisSessionId">Pending</span></p>
  <p><b>Analysis Run ID:</b> <span id="nitrosCaptureRequestId">None</span></p>
  <p><b>Run binding:</b> <span id="nitrosAnalysisId">None</span></p>
@@ -7799,6 +7836,9 @@ document.addEventListener("DOMContentLoaded",()=>{
 <script id="v10127x-service-worker-update">
 (()=>{'use strict';if(!('serviceWorker' in navigator))return;const VERSION='10.12.7AO',RELOAD_KEY=`nitros-sw-reloaded-${VERSION}`;let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing||sessionStorage.getItem(RELOAD_KEY)==='1')return;refreshing=true;sessionStorage.setItem(RELOAD_KEY,'1');location.reload()});window.addEventListener('load',async()=>{try{const registration=await navigator.serviceWorker.register(`./sw.js?v=${VERSION}`,{updateViaCache:'none'});await registration.update()}catch(error){console.warn('Nitros service-worker update check failed:',error)}})})();
 </script>
-<!-- v10.12.7AO wiring diagram and guided component testing; AM drivetrain, component, confidence, payload, classification, and persistence remain unchanged. -->
+<!-- v10.12.7AP GPS Evidence Metadata + Verification; established workflow and diagnostic behavior remain unchanged. -->
+<script id="v10127ap-build-identity">
+(()=>{'use strict';const VERSION='10.12.7AP',RELEASE='GPS Evidence Metadata + Verification';const apply=()=>{document.title=`Nitros Mobile Technician Portal v${VERSION} — ${RELEASE}`;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${VERSION} — ${RELEASE}`;const status=document.getElementById('portalLoginStatus');if(status&&!/recovery mode/i.test(status.textContent||''))status.textContent=`Version ${VERSION} — ${RELEASE}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>Version ${VERSION} — ${RELEASE}</strong> · Build 2026-08-09`);};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();window.addEventListener('pageshow',()=>setTimeout(apply,100));if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register(`./sw.js?v=${VERSION}`,{updateViaCache:'none'}).then(r=>r.update()).catch(e=>console.warn('Nitros service-worker update check failed:',e)));})();
+</script>
 </body>
 </html>
