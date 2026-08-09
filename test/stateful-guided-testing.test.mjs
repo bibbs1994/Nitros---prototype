@@ -14,7 +14,7 @@ function harness(){
     const responses=[];
     function ask(text){responses.push(text)}
     ${source}
-    return {state,responses,ensureGuidedState,handleGuidedFinding,interpretFinding,normalizeFinding,GUIDED_WORKFLOWS};
+    return {state,responses,ensureGuidedState,handleGuidedFinding,interpretFinding,normalizeFinding,classifyFindingIntent,repairDiagnosticText,FINDING_INTENT,GUIDED_WORKFLOWS};
   `)();
 }
 
@@ -82,4 +82,58 @@ test('AV engine is authoritative, guarded, and exposes compact debug state',()=>
   assert.match(html,/state\.stage==='diagnostic'.*handleGuidedFinding\(text\)/);
   assert.match(html,/verified repair information/);
   for(const field of ['avNormalizedFinding','avMatchedTestId','avInterpretedValue','avUnit','avResult','avNextTestId'])assert.match(html,new RegExp(field));
+});
+
+function atGround(){const h=harness();h.ensureGuidedState();h.handleGuidedFinding('I measured 5 V');assert.equal(h.state.diagnosticTestState.currentTestId,'cam-ground');return h}
+
+test('expected ground specification does not mutate or advance the test state',()=>{
+  const h=atGround(),before=JSON.stringify(h.state);
+  h.handleGuidedFinding('I should have less than 0.1 V on the ground.');
+  assert.equal(JSON.stringify(h.state),before);
+  assert.equal(h.state.diagnosticTestState.currentTestId,'cam-ground');
+  assert.match(h.responses.at(-1),/target specification.*actual measurement/i);
+  assert.match(h.responses.at(-1),/≤ 0\.1 V/);
+});
+
+test('actual good and bad ground readings evaluate only after measurement intent',()=>{
+  const good=atGround();good.handleGuidedFinding('I measured 0.04 V.');
+  assert.equal(good.state.diagnosticTestState.tests[1].status,'pass');
+  assert.equal(good.state.diagnosticTestState.currentTestId,'cam-signal');
+  const bad=atGround();bad.handleGuidedFinding('I measured 0.42 V.');
+  assert.equal(bad.state.diagnosticTestState.tests[1].status,'fail');
+  assert.equal(bad.state.diagnosticTestState.currentTestId,'cam-ground-isolation');
+});
+
+test('questions, numbered specifications, procedures, and uncertain claims cannot complete a test',()=>{
+  for(const input of ['Should I have less than 0.1 volts?','Should be 5 V.','The specification is 0.1 volts maximum.','I need less than 0.1 V.','Anything under 100 mV is good.','I should backprobe the connector.','Looks okay.']){
+    const h=atGround(),before=JSON.stringify(h.state);h.handleGuidedFinding(input);
+    assert.equal(JSON.stringify(h.state),before,input);
+    assert.equal(h.state.diagnosticTestState.currentTestId,'cam-ground',input);
+  }
+});
+
+test('natural spoken readings and qualitative signal observations remain valid',()=>{
+  const h=atGround();h.handleGuidedFinding("I'm getting forty millivolts.");
+  assert.equal(h.state.diagnosticTestState.tests[1].interpretedValue,0.04);
+  assert.equal(h.state.diagnosticTestState.tests[1].status,'pass');
+  h.handleGuidedFinding('The signal is switching.');
+  assert.equal(h.state.diagnosticTestState.tests[2].status,'pass');
+  assert.equal(h.state.diagnosticTestState.currentTestId,'cam-correlation');
+});
+
+test('natural decimal phrases normalize as actual measurements',()=>{
+  const h=harness(),ground=h.GUIDED_WORKFLOWS.P0340.tests[1];
+  for(const input of ['Point zero four volts.','I got .04.','Meter says .04 volts.','Zero point zero four.']){
+    const result=h.interpretFinding(ground,input);assert.equal(result.intent,h.FINDING_INTENT.ACTUAL,input);assert.equal(result.value,0.04,input);assert.equal(result.result,'pass',input);
+  }
+  const power=h.interpretFinding(h.GUIDED_WORKFLOWS.P0340.tests[0],"I've got five point one volts.");
+  assert.equal(power.value,5.1);assert.equal(power.result,'pass');
+});
+
+test('diagnostic text repair produces clean Unicode and preserves engineering symbols',()=>{
+  const h=harness();
+  assert.equal(h.repairDiagnosticText('â€œ5.2 Vâ€ â€” â‰¤ 0.1 V'),'“5.2 V” — ≤ 0.1 V');
+  const clean='≥ ± – — “ ” ° Ω µ 40 mV 0–5 V';
+  assert.equal(h.repairDiagnosticText(clean),clean);
+  assert.doesNotMatch(h.responses.join(' '),/Ã¢â‚¬|â€œ|â€|�/);
 });
