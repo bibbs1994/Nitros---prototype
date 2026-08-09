@@ -184,6 +184,21 @@ test('cam signal activity negation and static voltage never pass',()=>{
   for(const input of inputs){const h=harness(),test=h.GUIDED_WORKFLOWS.P0340.tests[2],result=h.interpretFinding(test,input);assert.notEqual(result.result,'pass',input)}
 });
 
+test('cam signal activity acknowledgements preserve both voltage endpoints and switching terminology',()=>{
+  const cases=[
+    ['Cam voltage switching from 0.02 to 4.8 volts',/Cam signal is switching from 0\.02 V to 4\.8 V\./],
+    ['Signal goes from about 0 to 5 volts',/Cam signal is switching from 0 V to 5 V\./],
+    ['I have 0.1 low and 4.9 high',/Cam signal is switching from 0\.1 V to 4\.9 V\./],
+    ['Cam signal is switching between 0.04 and 4.7 volts',/Cam signal is switching from 0\.04 V to 4\.7 V\./],
+    ['Kim signal toggles from 0.02 to 4.8 V',/Cam signal is toggling from 0\.02 V to 4\.8 V\./]
+  ];
+  for(const [input,summary] of cases){const h=atGround();h.handleGuidedFinding('I measured 0.04 V');h.handleGuidedFinding(input);const guided=h.state.diagnosticTestState;assert.match(h.state.lastReply,summary,input);assert.match(h.state.lastReply,/Cam Signal Activity passes\. Next we'll test Cam\/Crank Correlation\./,input);assert.equal(guided.currentTestId,'cam-correlation',input);assert.equal(guided.tests[2].technicianFinding,input,input);const count=guided.tests.filter(item=>['pass','fail'].includes(item.status)).length;h.handleGuidedFinding(input);assert.equal(guided.currentTestId,'cam-correlation',input);assert.equal(guided.tests.filter(item=>['pass','fail'].includes(item.status)).length,count,input)}
+});
+
+test('single-value cam signal observations retain the existing acknowledgement behavior',()=>{
+  const h=atGround();h.handleGuidedFinding('I measured 0.04 V');h.handleGuidedFinding('Cam signal switching at 4.8 volts');assert.match(h.state.lastReply,/^4\.8 V\. Cam Signal Activity passes\./);assert.equal(h.state.diagnosticTestState.currentTestId,'cam-correlation')
+});
+
 test('natural decimal phrases normalize as actual measurements',()=>{
   const h=harness(),ground=h.GUIDED_WORKFLOWS.P0340.tests[1];
   for(const input of ['Point zero four volts.','I got .04.','Meter says .04 volts.','Zero point zero four.']){
