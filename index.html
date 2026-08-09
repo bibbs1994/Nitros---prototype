@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.7BC — Deterministic Circuit Isolation Test Selection</title>
+<title>Nitros Mobile Technician Portal v10.12.7BD — Verified Repair Information Intake + Diagnostic Resume</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.7BC — Deterministic Circuit Isolation Test Selection</div>
+  <div class="sub">Mobile Technician Portal v10.12.7BD — Verified Repair Information Intake + Diagnostic Resume</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.7BC — Deterministic Circuit Isolation Test Selection. Existing conversational and diagnostic evidence features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.7BD — Verified Repair Information Intake + Diagnostic Resume. Existing conversational and diagnostic evidence features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.7BC — Deterministic Circuit Isolation Test Selection</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.7BD — Verified Repair Information Intake + Diagnostic Resume</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.7BC — Deterministic Circuit Isolation Test Selection</div>
+      <div class="eyebrow">Version 10.12.7BD — Verified Repair Information Intake + Diagnostic Resume</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1683,13 +1683,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.7BC • Deterministic Circuit Isolation Test Selection • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.7BD • Verified Repair Information Intake + Diagnostic Resume • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.12.7BC',
-  release:'Deterministic Circuit Isolation Test Selection',
+  version:'10.12.7BD',
+  release:'Verified Repair Information Intake + Diagnostic Resume',
   buildDate:'2026-08-09',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -5284,7 +5284,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7BC • Deterministic Circuit Isolation Test Selection</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7BD • Verified Repair Information Intake + Diagnostic Resume</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5322,7 +5322,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7BC — Deterministic Circuit Isolation Test Selection</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7BD — Verified Repair Information Intake + Diagnostic Resume</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6347,7 +6347,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7BC</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7BD</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -7308,7 +7308,7 @@ const LEGACY_KEYS=[
  'nitros_v1052_oliver_transcript','nitros_oliver_active_diagnostic_case_v1060','nitros_oliver_case_v10106','nitros_oliver_case_v10107','nitros_oliver_case_v10109','nitros_oliver_case_v10110','nitros_oliver_case_v10111','nitros_oliver_case_v10112','nitros_oliver_case_v10113','nitros_oliver_case_v10114','nitros_oliver_case_v10143','nitros_oliver_workflow_v10105'
 ];
 const $=id=>document.getElementById(id);
-const blank=()=>({schema:1,id:'CASE-'+Date.now(),vehicle:{year:'',make:'',model:'',engine:''},dtcs:[],activeDtc:'',status:'',complaint:'',symptoms:'',previousRepairs:'',previousTests:'',liveData:'',verifiedRepairInformation:null,stage:'vehicle',diagnosticTestState:null,lastReply:'',history:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
+const blank=()=>({schema:1,id:'CASE-'+Date.now(),vehicle:{year:'',make:'',model:'',engine:''},dtcs:[],activeDtc:'',status:'',complaint:'',symptoms:'',previousRepairs:'',previousTests:'',liveData:'',verifiedRepairInformation:null,repairInformationRequired:false,repairInformationLoaded:false,repairInformationSource:'',repairInformationLoadedAt:'',repairInformationEvidence:[],stage:'vehicle',diagnosticTestState:null,lastReply:'',history:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
 let state=load();let rendering=false;
 function load(){try{const x=JSON.parse(localStorage.getItem(STATE_KEY)||'null');return x&&x.schema===1?Object.assign(blank(),x,{vehicle:Object.assign(blank().vehicle,x.vehicle||{}),history:Array.isArray(x.history)?x.history:[],dtcs:Array.isArray(x.dtcs)?x.dtcs:[]}):blank()}catch(_){return blank()}}
 function save(){state.updatedAt=new Date().toISOString();localStorage.setItem(STATE_KEY,JSON.stringify(state));renderAll()}
@@ -7359,8 +7359,12 @@ function interpretFinding(test,text){const normalized=normalizeFinding(text),int
 }
 function nextPendingTest(afterId){const workflow=workflowDefinition(),start=workflow.tests.findIndex(test=>test.id===afterId);return workflow.tests.slice(start+1).find(test=>test.required!==false&&testRecord(test.id)?.status==='pending')||null}
 function verifiedIsolationTest(guided){const info=state.verifiedRepairInformation,tests=Array.isArray(info?.isolationTests)?info.isolationTests:[],vehicle=vehicleLabel().toLowerCase();const item=tests.find(test=>test?.verified===true&&Array.isArray(test.dtcs)&&test.dtcs.includes(state.activeDtc)&&(!test.vehicle||vehicle.includes(String(test.vehicle).toLowerCase()))&&test.id&&test.name&&test.componentOrCircuit&&test.testLocation&&test.method&&test.criterion&&test.requestedResult&&!guided.tests.some(record=>record.id===`verified-${test.id}`&&['pass','fail'].includes(record.status)));if(!item)return null;return Object.freeze({id:`verified-${item.id}`,name:String(item.name),kind:'circuit-isolation',required:true,verifiedSource:String(info.source||item.source||'Loaded verified repair information'),componentOrCircuit:String(item.componentOrCircuit),testLocation:String(item.testLocation),method:String(item.method),criterion:String(item.criterion),requestedResult:String(item.requestedResult),comparator:['<=','>=','range'].includes(item.comparator)?item.comparator:'',minimum:Number.isFinite(item.minimum)?item.minimum:null,maximum:Number.isFinite(item.maximum)?item.maximum:null,expectedResult:String(item.criterion),prompt:`Next test: ${item.componentOrCircuit}. Test at ${item.testLocation}. Use ${item.method}. Expected result: ${item.criterion}. ${item.requestedResult}`})}
-function isolationSelection(guided){const selected=verifiedIsolationTest(guided);guided.selectedIsolationTest=selected?{...selected}:null;return selected||testDefinition('verified-repair-information-required')}
+function isolationSelection(guided){const selected=verifiedIsolationTest(guided);guided.selectedIsolationTest=selected?{...selected}:null;if(selected){state.repairInformationRequired=false;state.repairInformationLoaded=true}else{state.repairInformationRequired=true;state.repairInformationLoaded=false}return selected||testDefinition('verified-repair-information-required')}
 function nextTestForResult(definition,result){if(definition.kind!=='signal-correlation')return nextPendingTest(definition.id);const routedId=result==='pass'?definition.passNext:result==='fail'?definition.failNext:'';return routedId==='verified-isolation'?isolationSelection(state.diagnosticTestState):routedId?testDefinition(routedId):nextPendingTest(definition.id)}
+function importedIsolationTests(detail){const imported=detail?.parsedData;if(imported?.schema==='nitros-verified-repair-information'&&Array.isArray(imported.isolationTests)){const dtcs=Array.isArray(imported.dtcs)?imported.dtcs:[],vehicle=String(imported.vehicle||''),source=String(imported.source||detail.fileName||'Imported verified repair information');return {source,tests:imported.isolationTests.map((test,index)=>({...test,id:String(test.id||`imported-step-${index+1}`),verified:test.verified===true,dtcs:Array.isArray(test.dtcs)?test.dtcs:dtcs,vehicle:test.vehicle||vehicle})),missing:[]}}
+ const diagram=detail?.analysis?.wiringDiagramAnalysis,cmpApplicable=/\b(?:cmp|camshaft|cam position|cam sensor)\b/i.test(String(diagram?.circuitComponent||''));if(detail?.kind==='image-analysis'&&detail.analysis?.category==='AUTOMOTIVE_WIRING_DIAGRAM'&&diagram?.status==='READY'&&cmpApplicable&&Array.isArray(diagram.testPlan)){const tests=diagram.testPlan.map((step,index)=>{const location=[step.redLead,step.blackLead].filter(value=>value&&!/not reliably readable/i.test(value)).join(' to '),method=[step.tool,step.instructions,step.connectorCondition,step.operatingCondition].filter(value=>value&&!/not reliably readable/i.test(value)).join('; '),numeric=['DIAGRAM','TECHNICIAN_SPEC'].includes(step.specificationSource)&&(Number.isFinite(step.expectedMin)||Number.isFinite(step.expectedMax)),criterion=[step.expectedBehavior,numeric&&Number.isFinite(step.expectedMin)?`minimum ${step.expectedMin}`:'',numeric&&Number.isFinite(step.expectedMax)?`maximum ${step.expectedMax}`:''].filter(Boolean).join('; ');return {id:String(step.id||`diagram-step-${index+1}`),verified:true,dtcs:[state.activeDtc],vehicle:vehicleLabel(),name:String(step.objective||`Verified CMP isolation step ${index+1}`),componentOrCircuit:String(step.objective||diagram.circuitComponent),testLocation:location,method,criterion,comparator:numeric&&Number.isFinite(step.expectedMin)&&Number.isFinite(step.expectedMax)?'range':numeric&&Number.isFinite(step.expectedMax)?'<=':numeric&&Number.isFinite(step.expectedMin)?'>=':'',minimum:numeric&&Number.isFinite(step.expectedMin)?step.expectedMin:null,maximum:numeric&&Number.isFinite(step.expectedMax)?step.expectedMax:null,requestedResult:`Report the measured result${numeric?' with units':' and whether it passes the stated criterion'}.`}}).filter(test=>test.testLocation&&test.method&&test.criterion);return {source:`${detail.fileName||'Imported wiring diagram'} · image ${String(detail.imageHash||'').slice(0,16)}`,tests,missing:tests.length?[]:['Readable CMP test points','A complete test method and conditions','An expected result or PASS/FAIL criterion']}}
+ return {source:String(detail?.fileName||'Imported diagnostic evidence'),tests:[],missing:Array.isArray(detail?.missingInformation)&&detail.missingInformation.length?detail.missingInformation:['CMP connector or test-point identification','Test method and operating/connector conditions','Expected result or specification']}}
+function handleRepairInformationImport(detail){const guided=state.diagnosticTestState,definition=testDefinition(guided?.currentTestId);if(!guided||definition?.kind!=='repair-information-required')return false;const completedBefore=JSON.stringify(guided.tests.filter(test=>['pass','fail'].includes(test.status)&&test.id!=='verified-repair-information-required')),before={caseId:state.id,vehicle:JSON.stringify(state.vehicle),activeDtc:state.activeDtc,workflowId:guided.workflowId},normalized=importedIsolationTests(detail),validTests=normalized.tests.filter(test=>test.verified===true&&test.dtcs.includes(state.activeDtc)&&test.id&&test.name&&test.componentOrCircuit&&test.testLocation&&test.method&&test.criterion&&test.requestedResult),at=String(detail?.importedAt||new Date().toISOString());state.repairInformationEvidence=Array.isArray(state.repairInformationEvidence)?state.repairInformationEvidence:[];state.repairInformationEvidence.push({source:normalized.source,kind:String(detail?.kind||'unknown'),fileName:String(detail?.fileName||''),importedAt:at,imageHash:String(detail?.imageHash||''),usable:validTests.length>0});state.repairInformationEvidence=state.repairInformationEvidence.slice(-20);state.repairInformationSource=normalized.source;if(validTests.length){state.verifiedRepairInformation={source:normalized.source,caseId:state.id,loadedAt:at,isolationTests:validTests};state.repairInformationLoaded=true;state.repairInformationRequired=false;state.repairInformationLoadedAt=at;const gate=testRecord('verified-repair-information-required');Object.assign(gate,{status:'pass',technicianFinding:`Verified repair information loaded from ${normalized.source}`,timestamp:at,source:'diagnostic-import'});const selected=isolationSelection(guided);activateTest(guided,selected);if(state.id!==before.caseId||JSON.stringify(state.vehicle)!==before.vehicle||state.activeDtc!==before.activeDtc||guided.workflowId!==before.workflowId||JSON.stringify(guided.tests.filter(test=>['pass','fail'].includes(test.status)&&test.id!=='verified-repair-information-required'))!==completedBefore)throw new Error('Repair information import attempted to replace authoritative case history.');ask(`Repair information loaded. Continuing the CMP circuit diagnosis. ${selected.prompt}`);return true}state.repairInformationLoaded=false;state.repairInformationRequired=true;state.repairInformationLoadedAt='';const missing=normalized.missing.join(', ');ask(`The imported material is associated with this case, but it does not contain enough verified CMP isolation information to continue. Still required: ${missing}. Load a matching wiring diagram or diagnostic procedure that clearly provides those details.`);return true}
 let lastDiagnosticTransition={raw:'',at:0};
 function completedResultExplanation(snapshot,interpretation){if(snapshot.kind==='ground-integrity'&&interpretation.value!==null)return`the measurement is ${interpretation.result==='pass'?'at or below':'above'} the ${snapshot.expectedResult} maximum`;if(snapshot.kind==='reference-voltage'&&interpretation.value!==null)return`the measurement is ${interpretation.result==='pass'?'within':'outside'} the expected ${snapshot.expectedResult} range`;return`the verified observation is ${interpretation.result}`}
 function completedResultReply(result){const observed=result.actualObservedMeasurement!==null?`${Number(result.actualObservedMeasurement.toFixed(4))} ${result.unit}. `:'';if(result.status==='inconclusive')return`${result.testName} is inconclusive. Give me the actual measurement or a clear pass/fail observation for this test.`;const outcome=result.status==='pass'?'passes':'fails',why=result.explanatoryResultText?` because ${result.explanatoryResultText}`:'';if(result.status==='fail')return`${observed}${result.testName} ${outcome}${why}. ${result.nextTestPrompt||'Stop here and verify the applicable repair information before further isolation.'}`;return`${observed}${result.testName} ${outcome}${why}. ${result.nextTestName?`Next we'll test ${result.nextTestName}. ${result.nextTestPrompt}`:'Guided checks are complete. Review the stored results before making a repair decision.'}`}
@@ -7423,7 +7427,7 @@ function process(raw){const text=String(raw||'').trim();if(!text)return;add('You
  ask(`Finding recorded: “${text}.” Continue with the next verified measurement or say “new case” to start another vehicle.`)
 }
 function renderTranscript(){const tr=$('oliverHubTranscript');if(!tr)return;rendering=true;tr.innerHTML=state.history.map(m=>`<div class="oliver-line ${m.who==='You'?'user':'oliver'}"><strong>${esc(m.who)}:</strong> ${esc(repairDiagnosticText(m.text))}</div>`).join('');tr.scrollTop=tr.scrollHeight;rendering=false}
-function renderStatus(){let box=$('nitrosAuthoritativeStatus');const tr=$('oliverHubTranscript');if(!tr)return;if(!box){box=document.createElement('div');box.id='nitrosAuthoritativeStatus';tr.insertAdjacentElement('afterend',box)}box.innerHTML=`<strong>Authoritative Diagnostic State — v${VERSION}</strong><br>Case: ${esc(state.id)}<br>Vehicle: ${esc(vehicleLabel()||'Blank')}<br>Active DTC: ${esc(state.activeDtc||'None')}<br>Workflow: ${esc(workflowName())}<br>Stage: ${esc(state.stage)}`}
+function renderStatus(){let box=$('nitrosAuthoritativeStatus');const tr=$('oliverHubTranscript');if(!tr)return;if(!box){box=document.createElement('div');box.id='nitrosAuthoritativeStatus';tr.insertAdjacentElement('afterend',box)}const repairInformation=state.repairInformationLoaded?'LOADED':state.repairInformationRequired?'REQUIRED':'NOT REQUIRED';box.innerHTML=`<strong>Authoritative Diagnostic State — v${VERSION}</strong><br>Case: ${esc(state.id)}<br>Vehicle: ${esc(vehicleLabel()||'Blank')}<br>Active DTC: ${esc(state.activeDtc||'None')}<br>Workflow: ${esc(workflowName())}<br>Stage: ${esc(state.stage)}<br>Repair Information: ${repairInformation}${state.repairInformationSource?` — ${esc(state.repairInformationSource)}`:''}`}
 function stamp(){document.title=`Nitros Mobile Technician Portal v${VERSION} — ${RELEASE}`;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${VERSION} — ${RELEASE}`;document.querySelectorAll('.nitros-build-identity').forEach(e=>e.innerHTML=`<strong>Version ${VERSION} — ${RELEASE}</strong> · Build ${BUILD}`);const title=$('unifiedOliverTitle');if(title)title.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">Version ${VERSION} — ${RELEASE} · Build ${BUILD}</span>`;document.documentElement.dataset.nitrosReady=VERSION}
 function renderGuidedStatus(){const box=$('nitrosAuthoritativeStatus'),guided=state.diagnosticTestState;if(!box||!guided)return;const current=testRecord(guided.currentTestId),currentDefinition=testDefinition(guided.currentTestId),completed=guided.tests.filter(test=>test.status==='pass'||test.status==='fail'),previous=completed[completed.length-1],workflow=workflowDefinition(),progress=workflow?workflow.tests.filter(test=>test.required!==false).map(test=>{const record=testRecord(test.id),mark=record?.status==='pass'?'PASS':record?.status==='fail'?'FAIL':guided.currentTestId===test.id?(currentDefinition?.kind==='repair-information-required'?'REQUIRED':'IN PROGRESS'):'PENDING';return`${test.name.replace('Cam Sensor ','').replace('Cam ','')} ${mark}`}).join(' | '):'';box.innerHTML+=`<br>Current Test: ${esc(current?.name||'Complete')}<br>Previous Result: ${esc(previous?`${previous.name} - ${previous.status.toUpperCase()}`:'None')}<br><span style="font-size:12px">${esc(progress)}</span>`;if(guided.lastFinding){box.dataset.avNormalizedFinding=guided.lastFinding.normalized||'';box.dataset.avMatchedTestId=guided.lastFinding.matchedTestId||'';box.dataset.avInterpretedValue=guided.lastFinding.interpretedValue??'';box.dataset.avUnit=guided.lastFinding.unit||'';box.dataset.avResult=guided.lastFinding.result||'';box.dataset.avNextTestId=guided.nextRecommendedTest||''}}
 function renderAll(){stamp();renderTranscript();renderStatus();renderGuidedStatus()}
@@ -7478,7 +7482,8 @@ function boot(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else setTimeout(boot,0);
 window.addEventListener('pageshow',()=>{revealLogin();if(!bootFinished)setTimeout(boot,0)});
-window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),process,reset};
+window.addEventListener('nitros:diagnostic-import',event=>handleRepairInformationImport(event.detail));
+window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),process,reset,importRepairInformation:handleRepairInformationImport};
 })();
 </script>
 
@@ -7668,7 +7673,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.7BC</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.7BD</strong></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>
 <li>Service Worker Script URL: <strong id="nitrosRuntimeSwUrl">Checking</strong></li>

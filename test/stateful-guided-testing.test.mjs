@@ -10,17 +10,17 @@ const source=html.slice(start,end);
 
 function harness(activeDtc='P0340'){
   return Function(`
-    let state={schema:1,id:'CASE-PRESERVE-342',activeDtc:${JSON.stringify(activeDtc)},dtcs:[${JSON.stringify(activeDtc)}],stage:'diagnostic',diagnosticTestState:null,liveData:'Prior verified evidence',verifiedRepairInformation:null,lastReply:'',history:[{who:'Oliver',text:'Prior evidence',at:'2026-08-09T11:00:00.000Z'}],vehicle:{year:'2012',make:'Toyota',model:'Camry',engine:''}};
+    let state={schema:1,id:'CASE-PRESERVE-342',activeDtc:${JSON.stringify(activeDtc)},dtcs:[${JSON.stringify(activeDtc)}],stage:'diagnostic',diagnosticTestState:null,liveData:'Prior verified evidence',verifiedRepairInformation:null,repairInformationRequired:false,repairInformationLoaded:false,repairInformationSource:'',repairInformationLoadedAt:'',repairInformationEvidence:[],lastReply:'',history:[{who:'Oliver',text:'Prior evidence',at:'2026-08-09T11:00:00.000Z'}],vehicle:{year:'2012',make:'Toyota',model:'Camry',engine:''}};
     const responses=[];
     function workflowName(){return 'Camshaft Position Circuit'}
     function vehicleLabel(){return [state.vehicle.year,state.vehicle.make,state.vehicle.model,state.vehicle.engine].filter(Boolean).join(' ')}
     function ask(text){state.lastReply=text;responses.push(text)}
     ${source}
-    return {state,responses,ensureGuidedState,handleGuidedFinding,interpretFinding,normalizeFinding,classifyFindingIntent,repairDiagnosticText,FINDING_INTENT,GUIDED_WORKFLOWS};
+    return {state,responses,ensureGuidedState,handleGuidedFinding,handleRepairInformationImport,interpretFinding,normalizeFinding,classifyFindingIntent,repairDiagnosticText,FINDING_INTENT,GUIDED_WORKFLOWS};
   `)();
 }
 
-test('AU DTC and vehicle canonicalization remains present in BC',()=>{
+test('AU DTC and vehicle canonicalization remains present in BD',()=>{
   assert.match(html,/const DTC_PATTERN=.*\[0-9A-FO\]/);
   assert.match(html,/replace\(\/O\/g,'0'\)/);
   assert.match(html,/function parseVehicle\(text\)/);
@@ -78,7 +78,7 @@ test('guided state survives the same JSON persistence used by the authoritative 
   assert.equal(restored.diagnosticTestState.currentTestId,'cam-signal');
 });
 
-test('BC engine is authoritative, guarded, and exposes compact debug state',()=>{
+test('BD engine is authoritative, guarded, and exposes compact debug state',()=>{
   assert.match(html,/diagnosticTestState:null/);
   assert.match(html,/localStorage\.setItem\(STATE_KEY,JSON\.stringify\(state\)\)/);
   assert.match(html,/\['diagnostic','circuit-isolation','mechanical-diagnosis'\]\.includes\(state\.stage\).*handleGuidedFinding\(text\)/);
@@ -250,4 +250,25 @@ test('verified DTC-applicable repair information selects a concrete isolation te
 
 test('repair-information gate and completed PASS history survive JSON reload',()=>{
   const h=atCorrelation();h.handleGuidedFinding('Cam and crank are synchronized');const restored=JSON.parse(JSON.stringify(h.state));assert.equal(restored.stage,'circuit-isolation');assert.equal(restored.diagnosticTestState.currentTestId,'verified-repair-information-required');assert.equal(restored.diagnosticTestState.tests.find(item=>item.id==='verified-repair-information-required').status,'pending');assert.deepEqual(restored.diagnosticTestState.tests.slice(0,4).map(item=>item.status),['pass','pass','pass','pass'])
+});
+
+test('BD sufficient imported repair information attaches to the active case and resumes exactly once',()=>{
+  const h=atCorrelation();h.handleGuidedFinding('Cam and crank are synchronized');const before={id:h.state.id,vehicle:structuredClone(h.state.vehicle),dtc:h.state.activeDtc,workflow:h.state.diagnosticTestState.workflowId,passes:h.state.diagnosticTestState.tests.slice(0,4).map(test=>test.status)};
+  const detail={kind:'text-data',fileName:'camry-p0340-procedure.json',importedAt:'2026-08-09T15:00:00.000Z',parsedData:{schema:'nitros-verified-repair-information',source:'Verified service procedure',dtcs:['P0340'],vehicle:'2012 Toyota Camry',isolationTests:[{id:'cmp-continuity',verified:true,name:'CMP Signal Circuit Continuity',componentOrCircuit:'Check CMP signal circuit continuity',testLocation:'verified test point A to verified test point B',method:'Key OFF continuity test using the imported connector conditions',criterion:'0.5 Ω maximum',comparator:'<=',maximum:0.5,requestedResult:'Tell me the measured resistance with units.'}]}};
+  assert.equal(h.handleRepairInformationImport(detail),true);const guided=h.state.diagnosticTestState,gate=guided.tests.find(test=>test.id==='verified-repair-information-required');
+  assert.equal(h.state.id,before.id);assert.deepEqual(h.state.vehicle,before.vehicle);assert.equal(h.state.activeDtc,before.dtc);assert.equal(guided.workflowId,before.workflow);assert.deepEqual(guided.tests.slice(0,4).map(test=>test.status),before.passes);
+  assert.equal(h.state.repairInformationRequired,false);assert.equal(h.state.repairInformationLoaded,true);assert.equal(h.state.repairInformationSource,'Verified service procedure');assert.equal(h.state.repairInformationLoadedAt,detail.importedAt);assert.equal(h.state.verifiedRepairInformation.caseId,before.id);assert.equal(h.state.repairInformationEvidence.at(-1).usable,true);assert.equal(gate.status,'pass');
+  assert.equal(guided.currentTestId,'verified-cmp-continuity');assert.match(h.state.lastReply,/Repair information loaded\. Continuing the CMP circuit diagnosis/);assert.match(h.state.lastReply,/verified test point A to verified test point B/);assert.doesNotMatch(h.state.lastReply,/Power\/Reference|Cam Sensor Ground|Signal Activity|Cam\/Crank Correlation passes/);
+  const current=guided.currentTestId,count=guided.tests.length;assert.equal(h.handleRepairInformationImport(detail),false);assert.equal(guided.currentTestId,current);assert.equal(guided.tests.length,count);
+});
+
+test('BD insufficient import remains required, preserves history, and records case evidence',()=>{
+  const h=atCorrelation();h.handleGuidedFinding('Correlation looks good');const before=JSON.stringify(h.state.diagnosticTestState.tests.slice(0,4)),caseId=h.state.id;
+  assert.equal(h.handleRepairInformationImport({kind:'pdf-attachment',fileName:'partial.pdf',importedAt:'2026-08-09T15:05:00.000Z',usableContent:false,missingInformation:['Readable connector/test-point details','Expected result or specification']}),true);
+  assert.equal(h.state.id,caseId);assert.equal(JSON.stringify(h.state.diagnosticTestState.tests.slice(0,4)),before);assert.equal(h.state.diagnosticTestState.currentTestId,'verified-repair-information-required');assert.equal(h.state.repairInformationRequired,true);assert.equal(h.state.repairInformationLoaded,false);assert.equal(h.state.repairInformationLoadedAt,'');assert.equal(h.state.repairInformationEvidence.at(-1).usable,false);assert.match(h.state.lastReply,/does not contain enough verified CMP isolation information/);assert.match(h.state.lastReply,/Readable connector\/test-point details, Expected result or specification/);
+});
+
+test('BD authoritative repair-information fields render and New Case clears them',()=>{
+  for(const field of ['repairInformationRequired','repairInformationLoaded','repairInformationSource','repairInformationLoadedAt','repairInformationEvidence'])assert.match(html,new RegExp(field));
+  assert.match(html,/Repair Information: \$\{repairInformation\}/);assert.match(html,/function reset\(\).*state=blank\(\)/);assert.match(html,/importRepairInformation:handleRepairInformationImport/);
 });

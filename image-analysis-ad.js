@@ -562,7 +562,7 @@
     abortAndDestroy('NEW_IMAGE',{clearPreview:true});
     const mime=file.type||'application/octet-stream',analyzer=createSemanticDiagnostic(mime);
     Object.assign(analyzer,{configured:Boolean(window.NitrosVisionAnalyzer?.analyzeCurrentImage),staleRejected:false,resultReceived:false,responseValidated:false,transportStatus:null,requestStarted:'',requestCompleted:''});
-    const run={runId:createId('AD'),controller:new AbortController(),bytes:null,analysisBytes:null,imageHash:'',mime,analysisMime:'image/jpeg',started:new Date().toISOString(),completed:'',result:null,dimensions:null,analysisDimensions:null,analysisError:'',analyzer,stages:[
+    const run={runId:createId('AD'),fileName:file.name||'Imported diagnostic image',controller:new AbortController(),bytes:null,analysisBytes:null,imageHash:'',mime,analysisMime:'image/jpeg',started:new Date().toISOString(),completed:'',result:null,dimensions:null,analysisDimensions:null,analysisError:'',analyzer,stages:[
       {label:'Preparing image…',status:'PENDING'},
       {label:'Hashing image…',status:'PENDING'},
       {label:'Building semantic request…',status:'PENDING'},
@@ -616,6 +616,7 @@
       run.result=routed;run.completed=new Date().toISOString();run.analyzer.outcome='SUCCEEDED';run.analyzer.stage='COMPLETE';run.analyzer.requestCompleted=run.analyzer.completedAt||run.completed;
       window.__nitrosCurrentImageAnalysis={runId:run.runId,imageHash:run.imageHash,result:routed};
       window.NitrosDeveloperMode=window.NitrosDeveloperMode||{};window.NitrosDeveloperMode.imageClassification=routed;
+      window.dispatchEvent(new CustomEvent('nitros:diagnostic-import',{detail:{kind:'image-analysis',fileName:run.fileName,importedAt:run.completed,imageHash:run.imageHash,analysis:routed}}));
       renderResult(run,routed);
       const componentFailed=routed.category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'&&routed.componentIdentification?.status==='FAILED';
       const diagramFailed=routed.category==='AUTOMOTIVE_WIRING_DIAGRAM'&&routed.wiringDiagramAnalysis?.status==='FAILED';
@@ -657,15 +658,16 @@
   window.updateAnalysisSessionDeveloper=()=>updateDeveloper(activeRun);
 
   function sendFact(text){const input=$('oliverHubInput'),send=$('oliverHubSend');if(!input||!send)return false;input.value=text;send.click();return true}
+  function publishImport(detail){window.dispatchEvent(new CustomEvent('nitros:diagnostic-import',{detail:{importedAt:new Date().toISOString(),...detail}}))}
   function parseTextFile(text,name){const codes=[...new Set((String(text).toUpperCase().match(/\b[PCBU][0-9A-F]{4}\b/g)||[]))].slice(0,24);const summary=[`Imported diagnostic file ${name}`];if(codes.length)summary.push(`DTCs found: ${codes.join(', ')}`);summary.push(String(text).replace(/\s+/g,' ').slice(0,1200));return {summary:summary.join('. '),preview:String(text).slice(0,5000)}}
   function previewData(html){const preview=$('oliverImportPreview');if(preview){preview.innerHTML=html;preview.classList.add('open')}}
   async function handleFile(file){
     if(!file)return;
     if((file.type||'').toLowerCase().startsWith('image/'))return analyzeSelectedImage(file);
     abortAndDestroy('NON_IMAGE_IMPORT',{clearPreview:true});
-    if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){previewData(`<pre>PDF attached: ${escapeHtml(file.name)}. Local PDF extraction is unavailable.</pre>`);sendFact(`Attached diagnostic PDF: ${file.name}.`);return}
+    if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){previewData(`<pre>PDF attached: ${escapeHtml(file.name)}. Local PDF extraction is unavailable.</pre>`);sendFact(`Attached diagnostic PDF: ${file.name}.`);publishImport({kind:'pdf-attachment',fileName:file.name,usableContent:false,missingInformation:['Readable connector/test-point details','Test method and conditions','Expected result or specification']});return}
     if(file.size>MAX_TEXT_BYTES)throw new Error('File is too large for local import.');
-    const parsed=parseTextFile(await file.text(),file.name);previewData(`<pre>${escapeHtml(parsed.preview)}</pre>`);sendFact(parsed.summary);
+    const rawText=await file.text(),parsed=parseTextFile(rawText,file.name);let parsedData=null;try{parsedData=JSON.parse(rawText)}catch(_){}previewData(`<pre>${escapeHtml(parsed.preview)}</pre>`);sendFact(parsed.summary);publishImport({kind:'text-data',fileName:file.name,text:rawText.slice(0,20000),parsedData});
   }
 
   function findAnchor(){return $('oliverHubSend')?.parentElement||$('oliverHubTranscript')?.parentElement}
