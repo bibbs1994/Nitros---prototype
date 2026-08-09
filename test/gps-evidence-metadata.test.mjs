@@ -26,11 +26,11 @@ test('GPS persists in the shared photo store and record copies',()=>{
   assert.match(html,/NitrosGpsEvidence\.html\(item\?\.gps/);
 });
 
-test('AQ GPS diagnostics remain present in the AU deployment',()=>{
+test('AQ GPS diagnostics remain present in the AV deployment',()=>{
   assert.match(html,/id="nitrosGpsDiagnostic"/);
   assert.match(html,/nitros-single-build-and-service-worker-authority/);
-  assert.match(html,/DTC Character Canonicalization \/ Speech-Text Hardening/);
-  assert.match(sw,/const VERSION = '10\.12\.7AU'/);
+  assert.match(html,/Diagnostic Finding Interpretation \+ Stateful Guided Testing/);
+  assert.match(sw,/const VERSION = '10\.12\.7AV'/);
 });
 
 test('check-in and RO serialization propagates each saved photo GPS snapshot',()=>{
