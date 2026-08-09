@@ -11,12 +11,12 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
   readFile(new URL('semantic-analyzer-core.mjs', root), 'utf8')
 ]);
 
-test('BE app build keeps the proven AO analyzer and production endpoint', () => {
+test('BF app build keeps the proven AO analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.7AO'/);
-  assert.match(html, /10\.12\.7BE/);
+  assert.match(html, /10\.12\.7BF/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.7BE'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.7BF'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -65,12 +65,15 @@ test('semantic confidence is normalized once and exposed safely in Developer Mod
   assert.doesNotMatch(analyzer, /confidence\s*(?:\|\||\?\?)\s*(?:0\.01|1)\b/);
 });
 
-test('BD diagnostic imports publish validated image results and attachment metadata to the active case handler',()=>{
-  assert.match(analyzer,/CustomEvent\('nitros:diagnostic-import'.*kind:'image-analysis'.*analysis:routed/);
+test('BF diagnostic imports require a visible explicit case-verification action',()=>{
+  assert.match(analyzer,/publishImport\(\{kind:'image-analysis'.*analysis:routed/);
   assert.match(analyzer,/publishImport\(\{kind:'text-data'.*parsedData/);
-  assert.match(analyzer,/publishImport\(\{kind:'pdf-attachment'.*usableContent:false.*missingInformation/);
+  assert.match(analyzer,/publishImport\(\{kind:'pdf-attachment'.*fileSize/);
+  assert.match(analyzer,/id="oliverUseVerifiedRepairInfo"[^>]*hidden>Use as Verified Repair Information/);
+  assert.match(analyzer,/nitros:verify-repair-information/);
   assert.match(html,/addEventListener\('nitros:diagnostic-import'.*handleRepairInformationImport\(event\.detail\)/);
-  assert.match(html,/NitrosDiagnosticV10120=.*importRepairInformation:handleRepairInformationImport/);
+  assert.match(html,/addEventListener\('nitros:verify-repair-information'.*verifyPendingRepairInformation/);
+  assert.match(html,/NitrosDiagnosticV10120=.*verifyRepairInformation:verifyPendingRepairInformation/);
 });
 
 test('specific component UI is automotive-gated, independently normalized, and hash-bound', () => {
@@ -154,7 +157,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.7BE'/);
+  assert.match(html, /version:'10\.12\.7BF'/);
 });
 
 test('transport diagnostics cover lifecycle, timing, and categorized failures', () => {

@@ -24,6 +24,7 @@
   let sessionId=createId('SESSION');
   let lastStaleMessage='None';
   let lastStaleRejected=false;
+  let lastDiagnosticImport=null;
 
   function createId(prefix){
     const random=globalThis.crypto?.randomUUID?.()||`${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
@@ -83,6 +84,7 @@
     abortAndDestroy(reason,{newCase,clearPreview:true});
     ['oliverImportFile','oliverImportCameraFile','diagImageInput'].forEach(id=>{const input=$(id);if(input)input.value=''});
     const status=$('oliverImportStatus');if(status)status.textContent=initialStatus;
+    lastDiagnosticImport=null;const verifyButton=$('oliverUseVerifiedRepairInfo');if(verifyButton)verifyButton.hidden=true;
     const raw=$('ocrRawText');if(raw)raw.textContent='No OCR scan has been completed.';
     const edit=$('ocrVinEdit');if(edit)edit.value='';
     $('ocrDiagnostic')?.classList.add('hidden');
@@ -562,7 +564,7 @@
     abortAndDestroy('NEW_IMAGE',{clearPreview:true});
     const mime=file.type||'application/octet-stream',analyzer=createSemanticDiagnostic(mime);
     Object.assign(analyzer,{configured:Boolean(window.NitrosVisionAnalyzer?.analyzeCurrentImage),staleRejected:false,resultReceived:false,responseValidated:false,transportStatus:null,requestStarted:'',requestCompleted:''});
-    const run={runId:createId('AD'),fileName:file.name||'Imported diagnostic image',controller:new AbortController(),bytes:null,analysisBytes:null,imageHash:'',mime,analysisMime:'image/jpeg',started:new Date().toISOString(),completed:'',result:null,dimensions:null,analysisDimensions:null,analysisError:'',analyzer,stages:[
+    const run={runId:createId('AD'),fileName:file.name||'Imported diagnostic image',fileSize:Number(file.size)||0,controller:new AbortController(),bytes:null,analysisBytes:null,imageHash:'',mime,analysisMime:'image/jpeg',started:new Date().toISOString(),completed:'',result:null,dimensions:null,analysisDimensions:null,analysisError:'',analyzer,stages:[
       {label:'Preparing image…',status:'PENDING'},
       {label:'Hashing image…',status:'PENDING'},
       {label:'Building semantic request…',status:'PENDING'},
@@ -616,7 +618,7 @@
       run.result=routed;run.completed=new Date().toISOString();run.analyzer.outcome='SUCCEEDED';run.analyzer.stage='COMPLETE';run.analyzer.requestCompleted=run.analyzer.completedAt||run.completed;
       window.__nitrosCurrentImageAnalysis={runId:run.runId,imageHash:run.imageHash,result:routed};
       window.NitrosDeveloperMode=window.NitrosDeveloperMode||{};window.NitrosDeveloperMode.imageClassification=routed;
-      window.dispatchEvent(new CustomEvent('nitros:diagnostic-import',{detail:{kind:'image-analysis',fileName:run.fileName,importedAt:run.completed,imageHash:run.imageHash,analysis:routed}}));
+      publishImport({kind:'image-analysis',fileName:run.fileName,fileSize:run.fileSize,importedAt:run.completed,imageHash:run.imageHash,analysis:routed});
       renderResult(run,routed);
       const componentFailed=routed.category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'&&routed.componentIdentification?.status==='FAILED';
       const diagramFailed=routed.category==='AUTOMOTIVE_WIRING_DIAGRAM'&&routed.wiringDiagramAnalysis?.status==='FAILED';
@@ -658,16 +660,16 @@
   window.updateAnalysisSessionDeveloper=()=>updateDeveloper(activeRun);
 
   function sendFact(text){const input=$('oliverHubInput'),send=$('oliverHubSend');if(!input||!send)return false;input.value=text;send.click();return true}
-  function publishImport(detail){window.dispatchEvent(new CustomEvent('nitros:diagnostic-import',{detail:{importedAt:new Date().toISOString(),...detail}}))}
+  function publishImport(detail){lastDiagnosticImport={importedAt:new Date().toISOString(),...detail};window.dispatchEvent(new CustomEvent('nitros:diagnostic-import',{detail:lastDiagnosticImport}));const button=$('oliverUseVerifiedRepairInfo'),diagnosticState=window.NitrosDiagnosticV10120?.getState?.();if(button)button.hidden=!(diagnosticState?.repairInformationRequired&&diagnosticState?.pendingRepairInformation?.eligible)}
   function parseTextFile(text,name){const codes=[...new Set((String(text).toUpperCase().match(/\b[PCBU][0-9A-F]{4}\b/g)||[]))].slice(0,24);const summary=[`Imported diagnostic file ${name}`];if(codes.length)summary.push(`DTCs found: ${codes.join(', ')}`);summary.push(String(text).replace(/\s+/g,' ').slice(0,1200));return {summary:summary.join('. '),preview:String(text).slice(0,5000)}}
   function previewData(html){const preview=$('oliverImportPreview');if(preview){preview.innerHTML=html;preview.classList.add('open')}}
   async function handleFile(file){
     if(!file)return;
     if((file.type||'').toLowerCase().startsWith('image/'))return analyzeSelectedImage(file);
     abortAndDestroy('NON_IMAGE_IMPORT',{clearPreview:true});
-    if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){previewData(`<pre>PDF attached: ${escapeHtml(file.name)}. Local PDF extraction is unavailable.</pre>`);sendFact(`Attached diagnostic PDF: ${file.name}.`);publishImport({kind:'pdf-attachment',fileName:file.name,usableContent:false,missingInformation:['Readable connector/test-point details','Test method and conditions','Expected result or specification']});return}
+    if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){previewData(`<pre>PDF attached: ${escapeHtml(file.name)}. Local PDF extraction is unavailable.</pre>`);sendFact(`Attached diagnostic PDF: ${file.name}.`);publishImport({kind:'pdf-attachment',fileName:file.name,fileSize:Number(file.size)||0});return}
     if(file.size>MAX_TEXT_BYTES)throw new Error('File is too large for local import.');
-    const rawText=await file.text(),parsed=parseTextFile(rawText,file.name);let parsedData=null;try{parsedData=JSON.parse(rawText)}catch(_){}previewData(`<pre>${escapeHtml(parsed.preview)}</pre>`);sendFact(parsed.summary);publishImport({kind:'text-data',fileName:file.name,text:rawText.slice(0,20000),parsedData});
+    const rawText=await file.text(),parsed=parseTextFile(rawText,file.name);let parsedData=null;try{parsedData=JSON.parse(rawText)}catch(_){}previewData(`<pre>${escapeHtml(parsed.preview)}</pre>`);sendFact(parsed.summary);publishImport({kind:'text-data',fileName:file.name,fileSize:Number(file.size)||0,text:rawText.slice(0,20000),parsedData});
   }
 
   function findAnchor(){return $('oliverHubSend')?.parentElement||$('oliverHubTranscript')?.parentElement}
@@ -675,7 +677,7 @@
     if($('oliverDiagnosticImport'))return;
     const anchor=findAnchor();if(!anchor)return;
     const wrap=document.createElement('div');wrap.className='oliver-import-row';wrap.id='oliverDiagnosticImport';
-    wrap.innerHTML=`<button id="oliverImportToggle" class="oliver-import-btn" type="button">＋ Import Diagnostic Image or Data</button><div id="oliverImportPanel" class="oliver-import-panel"><div class="oliver-import-actions"><button class="oliver-import-action" id="oliverImportImage" type="button">📷 Automatic Image Analysis</button><button class="oliver-import-action" id="oliverImportData" type="button">📊 CSV / Text Data</button><button class="oliver-import-action" id="oliverImportPdf" type="button">📄 PDF Report</button><button class="oliver-import-action" id="oliverImportCamera" type="button">📱 Use Camera</button></div><input id="oliverImportFile" type="file" hidden><input id="oliverImportCameraFile" type="file" accept="image/*" capture="environment" hidden><div id="oliverImportStatus" class="oliver-import-status">${initialStatus}</div><div id="oliverImportPreview" class="oliver-import-preview"></div></div>`;
+    wrap.innerHTML=`<button id="oliverImportToggle" class="oliver-import-btn" type="button">＋ Import Diagnostic Image or Data</button><div id="oliverImportPanel" class="oliver-import-panel"><div class="oliver-import-actions"><button class="oliver-import-action" id="oliverImportImage" type="button">📷 Automatic Image Analysis</button><button class="oliver-import-action" id="oliverImportData" type="button">📊 CSV / Text Data</button><button class="oliver-import-action" id="oliverImportPdf" type="button">📄 PDF Report</button><button class="oliver-import-action" id="oliverImportCamera" type="button">📱 Use Camera</button></div><button class="oliver-import-action" id="oliverUseVerifiedRepairInfo" type="button" hidden>Use as Verified Repair Information</button><input id="oliverImportFile" type="file" hidden><input id="oliverImportCameraFile" type="file" accept="image/*" capture="environment" hidden><div id="oliverImportStatus" class="oliver-import-status">${initialStatus}</div><div id="oliverImportPreview" class="oliver-import-preview"></div></div>`;
     anchor.insertAdjacentElement('afterend',wrap);
     $('oliverImportToggle').onclick=()=>$('oliverImportPanel').classList.toggle('open');
     const fileInput=$('oliverImportFile');
@@ -683,6 +685,7 @@
     $('oliverImportData').onclick=()=>{fileInput.accept='.csv,.txt,.json,text/csv,text/plain,application/json';fileInput.click()};
     $('oliverImportPdf').onclick=()=>{fileInput.accept='.pdf,application/pdf';fileInput.click()};
     $('oliverImportCamera').onclick=()=>$('oliverImportCameraFile').click();
+    $('oliverUseVerifiedRepairInfo').onclick=()=>{if(!lastDiagnosticImport)return;window.dispatchEvent(new CustomEvent('nitros:verify-repair-information',{detail:{importedAt:lastDiagnosticImport.importedAt,fileName:lastDiagnosticImport.fileName}}));const accepted=window.NitrosDiagnosticV10120?.getState?.()?.repairInformation?.status==='verified';if(accepted){$('oliverUseVerifiedRepairInfo').hidden=true;const status=$('oliverImportStatus');if(status)status.textContent='Verified repair information attached to the active diagnostic case.'}};
     fileInput.onchange=()=>{const selected=fileInput.files?.[0];fileInput.value='';handleFile(selected).catch(error=>{const status=$('oliverImportStatus');if(status)status.textContent=`Import failed: ${error.message}`})};
     $('oliverImportCameraFile').onchange=event=>{const input=event.currentTarget,selected=input.files?.[0];input.value='';handleFile(selected).catch(error=>{const status=$('oliverImportStatus');if(status)status.textContent=`Camera import failed: ${error.message}`})};
     updateDeveloper(null,{resetReason:'APP_START'});
