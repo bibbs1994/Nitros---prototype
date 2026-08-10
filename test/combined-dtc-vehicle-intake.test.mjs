@@ -49,8 +49,45 @@ test('authoritative processing applies vehicle, every DTC, and concern before re
   assert.match(processSource,/if\(v\|\|found\.length\)/);
 });
 
+function statusHarness(input){
+  const statusStart=html.indexOf('function diagnosticStatus('),processStart=html.indexOf('function process(',statusStart),processEnd=html.indexOf('function renderTranscript(',processStart);
+  assert.ok(statusStart>=0&&processStart>statusStart&&processEnd>processStart,'status intake functions were not found');
+  return Function(`
+    let state={activeDtc:'P0340',dtcs:['P0340'],status:'',stage:'status',additionalTesting:{active:false},history:[]};
+    const replies=[];
+    function add(){} function ask(text){replies.push(text)} function isDiagnosticComplete(){return false}
+    function ensureGuidedState(){throw new Error('guided testing must not run during status intake')}
+    function handleGuidedFinding(){throw new Error('guided finding must not run during status intake')}
+    function parseVehicle(){throw new Error('vehicle parsing must not run for a status answer')}
+    function codes(){throw new Error('repeated DTC must not be processed as new intake')}
+    function concern(){throw new Error('concern parsing must not run for a status answer')}
+    function nextQuestion(){return state.status?'What is the customer complaint?':\`Is \${state.activeDtc} current, pending, history, or intermittent?\`}
+    ${html.slice(statusStart,processEnd)}
+    process(${JSON.stringify(input)});
+    return {state,replies};
+  `)();
+}
+
+test('VO recognizes all four diagnostic status values in natural technician replies',()=>{
+  for(const [input,expected] of [['P0340 is current.','current'],["It's current",'current'],['Current','current'],['The code is pending','pending'],["It's a history code",'history'],['The code is historical','history'],['Intermittent','intermittent']]){
+    const result=statusHarness(input);
+    assert.equal(result.state.status,expected,input);
+    assert.equal(result.state.stage,'complaint',input);
+    assert.equal(result.replies.length,1,input);
+    assert.match(result.replies[0],new RegExp(`Code status recorded as ${expected}\\. What is the customer complaint\\?`),input);
+    assert.doesNotMatch(result.replies[0],/current, pending, history, or intermittent/i,input);
+  }
+});
+
+test('VO leaves genuinely ambiguous status answers at the status question',()=>{
+  const result=statusHarness('I need to check that');
+  assert.equal(result.state.status,'');
+  assert.equal(result.state.stage,'status');
+  assert.match(result.replies[0],/Is P0340 current, pending, history, or intermittent\?/);
+});
+
 test('BF preserves authoritative persistence and one service-worker authority',()=>{
   assert.match(html,/const STATE_KEY='nitros_diagnostic_case_v10120'/);
   assert.equal((html.match(/navigator\.serviceWorker\.register\(/g)||[]).length,1);
-  assert.match(html,/version:'10\.12\.7VN'/);
+  assert.match(html,/version:'10\.12\.7VO'/);
 });

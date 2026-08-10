@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.7VN — No-Fault-Found Diagnostic Exit</title>
+<title>Nitros Mobile Technician Portal v10.12.7VO — Diagnostic Status Recognition + State Advance Fix</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.7VN — No-Fault-Found Diagnostic Exit</div>
+  <div class="sub">Mobile Technician Portal v10.12.7VO — Diagnostic Status Recognition + State Advance Fix</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.7VN — No-Fault-Found Diagnostic Exit. Existing conversational and diagnostic evidence features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.7VO — Diagnostic Status Recognition + State Advance Fix. Existing conversational and diagnostic evidence features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.7VN — No-Fault-Found Diagnostic Exit</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.7VO — Diagnostic Status Recognition + State Advance Fix</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.7VN — No-Fault-Found Diagnostic Exit</div>
+      <div class="eyebrow">Version 10.12.7VO — Diagnostic Status Recognition + State Advance Fix</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1683,13 +1683,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.7VN • No-Fault-Found Diagnostic Exit • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.7VO • Diagnostic Status Recognition + State Advance Fix • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.12.7VN',
-  release:'No-Fault-Found Diagnostic Exit',
+  version:'10.12.7VO',
+  release:'Diagnostic Status Recognition + State Advance Fix',
   buildDate:'2026-08-10',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -5284,7 +5284,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7VN • No-Fault-Found Diagnostic Exit</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7VO • Diagnostic Status Recognition + State Advance Fix</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5322,7 +5322,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7VN — No-Fault-Found Diagnostic Exit</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7VO — Diagnostic Status Recognition + State Advance Fix</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6347,7 +6347,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7VN</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7VO</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -7413,10 +7413,15 @@ function nextQuestion(){
  return`Intake is complete for ${state.activeDtc}. Capture freeze-frame data and perform the least intrusive test that can prove the fault. What is the first verified result?`;
 }
 function reset(){window.resetOcrSessionState?.('authoritative New Case command');state=blank();add('Oliver','New diagnostic case started. What vehicle are we working on?');save()}
+function diagnosticStatus(text){const match=String(text||'').toLowerCase().match(/\b(current|pending|history|historical|stored|intermittent)\b/);if(!match)return'';return match[1]==='stored'||match[1]==='historical'?'history':match[1]}
 function process(raw){const text=String(raw||'').trim();if(!text)return;add('You',text);const low=text.toLowerCase();
  if(/^(new case|start new case|clear case|start over)$/.test(low)){reset();return}
  if(state.additionalTesting?.active&&isDiagnosticComplete()){state.additionalTesting.notes=Array.isArray(state.additionalTesting.notes)?state.additionalTesting.notes:[];state.additionalTesting.notes.push({text,at:new Date().toISOString()});state.additionalTesting.notes=state.additionalTesting.notes.slice(-50);ask(`Additional investigation note recorded without changing the completed results: “${text}” Import supporting evidence or deliberately choose the next diagnostic direction when ready.`);return}
  if(['diagnostic','circuit-isolation','mechanical-diagnosis','repair-decision'].includes(state.stage)&&state.activeDtc&&ensureGuidedState()&&handleGuidedFinding(text))return
+ if(state.stage==='status'||(!state.status&&state.activeDtc)){
+   const selectedStatus=diagnosticStatus(text);if(selectedStatus){state.status=selectedStatus;state.stage='complaint';ask(`Code status recorded as ${state.status}. ${nextQuestion()}`);return}
+   ask(nextQuestion());return
+ }
  const v=parseVehicle(text),found=codes(text),reportedConcern=concern(text);
  if(v)state.vehicle={...state.vehicle,...Object.fromEntries(Object.entries(v).filter(([,x])=>x))};
  if(found.length){const changed=state.activeDtc!==found[0];state.dtcs=[...new Set([...found,...state.dtcs])];state.activeDtc=found[0];state.status='';state.previousRepairs='';state.previousTests='';state.liveData='';if(changed)state.diagnosticTestState=null}
@@ -7426,10 +7431,6 @@ function process(raw){const text=String(raw||'').trim();if(!text)return;add('You
  if(!state.activeDtc&&!state.complaint){
    const controlOnly=/^(yes|no|current|pending|history|stored|intermittent|none|nothing)$/i.test(text);
    if(!controlOnly){state.complaint=text;state.symptoms=text;state.stage='repairs';ask(`Symptom recorded as “${text}.” No diagnostic code is required. ${nextQuestion()}`);return}
- }
- if(state.stage==='status'||(!state.status&&state.activeDtc)){
-   const m=low.match(/\b(current|pending|history|stored|intermittent)\b/);if(m){state.status=m[1]==='stored'?'history':m[1];state.stage='complaint';ask(`Code status recorded as ${state.status}. ${nextQuestion()}`);return}
-   ask(nextQuestion());return
  }
  if(!state.complaint){state.complaint=text;state.stage='symptoms';ask(`Customer complaint recorded as “${text}.” ${nextQuestion()}`);return}
  if(!state.symptoms){state.symptoms=/^(none|no|no symptoms|runs perfectly|mil only)$/i.test(text)?'None reported':text;state.stage='repairs';ask(`Drivability symptoms recorded as “${state.symptoms}.” ${nextQuestion()}`);return}
@@ -7696,7 +7697,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.7VN</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.7VO</strong></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>
 <li>Service Worker Script URL: <strong id="nitrosRuntimeSwUrl">Checking</strong></li>
