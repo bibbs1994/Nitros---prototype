@@ -434,3 +434,23 @@ test('VL completed authoritative state rejects diagram-import regression and rem
 test('VL repair-decision action uses the canonical conclusion without reopening a test',()=>{
   const h=completedRepairDecision(),guided=h.state.diagnosticTestState,before=JSON.stringify(guided.tests);assert.equal(h.continueToRepairDecision(),true);assert.equal(JSON.stringify(guided.tests),before);assert.equal(h.state.stage,'repair-decision');assert.equal(guided.currentTestId,'');assert.match(h.state.lastReply,/Diagnostic testing is complete/i);
 });
+
+test('VM all-PASS P0340 conclusion is explicitly evidence-bound with no component failure confirmed',()=>{
+  const h=completedRepairDecision(),guided=h.state.diagnosticTestState,before=JSON.stringify(guided.tests);h.state.complaint='intermittent MIL';h.state.symptoms='None reported';h.handleGuidedFinding('What should be repaired?');const reply=h.state.lastReply;
+  assert.match(reply,/DIAGNOSTIC TESTING COMPLETE/);assert.match(reply,/Outcome: NO COMPONENT FAILURE CONFIRMED/);assert.match(reply,/completed circuit testing did not identify an electrical circuit failure/i);assert.match(reply,/Power\/Reference, Cam Sensor Ground, Cam Signal Activity, Cam\/Crank Correlation, Verified Repair Information Required, CMP Signal Circuit Continuity passed/);assert.match(reply,/has not proven the CMP sensor itself defective/i);assert.doesNotMatch(reply,/replace (?:the )?(?:camshaft position sensor|CMP sensor|ECM|PCM)/i);
+  assert.equal(JSON.stringify(guided.tests),before);assert.equal(h.state.stage,'repair-decision');assert.equal(guided.currentTestId,'');
+});
+
+test('VM conclusion integrates stored case context and verified repair information only as support',()=>{
+  const h=completedRepairDecision();h.state.status='intermittent';h.state.complaint='MIL';h.state.symptoms='No drivability symptoms';h.handleGuidedFinding("What's the diagnostic conclusion?");const reply=h.state.lastReply;
+  assert.match(reply,/Case context: Active DTC P0340; code status intermittent; complaint MIL; symptoms No drivability symptoms/);assert.match(reply,/verified-procedure\.pdf is reference material used as supporting context, not independent proof of component failure/i);assert.equal(h.state.repairInformation.status,'verified');
+});
+
+test('VM next action remains a deliberate repair-decision choice and starts no electrical test',()=>{
+  const h=completedRepairDecision(),guided=h.state.diagnosticTestState,before=JSON.stringify(guided.tests);h.handleGuidedFinding('What do we do now?');const reply=h.state.lastReply;
+  assert.match(reply,/Next action: remain at repair decision and deliberately select the next diagnostic direction/i);assert.match(reply,/No additional test has been started/i);assert.doesNotMatch(reply,/perform the test|give me the measurement|Next test:/i);assert.equal(JSON.stringify(guided.tests),before);assert.equal(guided.currentTestId,'');assert.equal(guided.nextRecommendedTest,'');assert.equal(h.state.stage,'repair-decision');
+});
+
+test('VM ordinary repair question cannot bypass the completion-and-evidence gate',()=>{
+  const h=awaitingContinuity(),guided=h.state.diagnosticTestState;h.handleGuidedFinding('What should be repaired?');assert.notEqual(h.state.stage,'repair-decision');assert.equal(guided.currentTestId,'verified-cmp-signal-circuit-continuity');assert.doesNotMatch(h.state.lastReply,/Outcome: (?:CONFIRMED FAILURE|SUPPORTED REPAIR DECISION|NO COMPONENT FAILURE CONFIRMED)/);
+});
