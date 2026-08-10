@@ -16,7 +16,7 @@ function harness(activeDtc='P0340'){
     function vehicleLabel(){return [state.vehicle.year,state.vehicle.make,state.vehicle.model,state.vehicle.engine].filter(Boolean).join(' ')}
     function ask(text){state.lastReply=text;responses.push(text)}
     ${source}
-    return {state,responses,ensureGuidedState,handleGuidedFinding,handleRepairInformationImport,verifyPendingRepairInformation,interpretFinding,normalizeFinding,classifyFindingIntent,repairDiagnosticText,repairDecisionReply,diagnosticCompletionGate,missingRepairDecisionEvidence,FINDING_INTENT,GUIDED_WORKFLOWS};
+    return {state,responses,ensureGuidedState,handleGuidedFinding,handleRepairInformationImport,verifyPendingRepairInformation,interpretFinding,normalizeFinding,classifyFindingIntent,repairDiagnosticText,repairDecisionReply,diagnosticConclusion,diagnosticCompletionGate,missingRepairDecisionEvidence,FINDING_INTENT,GUIDED_WORKFLOWS};
   `)();
 }
 
@@ -372,7 +372,7 @@ test('VJ CMP continuity accepts passing numeric resistance with or without an ex
 
 test('VJ CMP continuity stores a failing numeric resistance and enters the supported circuit-fault decision path',()=>{
   const h=awaitingContinuity(),guided=h.state.diagnosticTestState,record=guided.tests.find(test=>test.id==='verified-cmp-signal-circuit-continuity');h.handleGuidedFinding('I measured 1.4 ohms');
-  assert.equal(record.status,'fail');assert.equal(record.interpretedValue,1.4);assert.equal(record.unit,'Ω');assert.equal(record.technicianFinding,'I measured 1.4 ohms');assert.equal(guided.currentTestId,'');assert.equal(h.state.stage,'repair-decision');assert.match(h.state.lastReply,/failed evidence supports a repair decision focused on CMP Signal Circuit Continuity/i);
+  assert.equal(record.status,'fail');assert.equal(record.interpretedValue,1.4);assert.equal(record.unit,'Ω');assert.equal(record.technicianFinding,'I measured 1.4 ohms');assert.equal(guided.currentTestId,'');assert.equal(h.state.stage,'repair-decision');assert.match(h.state.lastReply,/failure in the CMP signal circuit continuity path/i);
 });
 
 test('VJ CMP continuity accepts natural-language PASS and open-circuit failure variants',()=>{
@@ -388,4 +388,36 @@ test("VJ what's next while continuity is truly pending requests only that result
 test("VJ stored completion wins over a stale current-test pointer and cannot replay or reopen the prompt",()=>{
   const h=completedRepairDecision(),guided=h.state.diagnosticTestState,record=guided.tests.find(test=>test.id==='verified-cmp-signal-circuit-continuity'),before=JSON.stringify(guided.tests);guided.currentTestId=record.id;guided.nextRecommendedTest=record.id;h.state.stage='circuit-isolation';h.handleGuidedFinding("What's next?");
   assert.equal(record.status,'pass');assert.equal(JSON.stringify(guided.tests),before);assert.equal(guided.currentTestId,'');assert.equal(guided.nextRecommendedTest,'');assert.equal(h.state.stage,'repair-decision');assert.match(h.state.lastReply,/Diagnostic testing is complete/i);assert.doesNotMatch(h.state.lastReply,/still awaiting|Next test:|perform the test/i);
+});
+
+function failedContinuityDecision(){const h=awaitingContinuity();h.handleGuidedFinding('open circuit');return h}
+
+test('VK continuity FAIL conclusion identifies the circuit path without condemning a component',()=>{
+  const h=failedContinuityDecision(),reply=h.state.lastReply;
+  assert.match(reply,/Diagnostic finding: testing identified a failure in the CMP signal circuit continuity path/i);
+  assert.match(reply,/exact open or high-resistance location/i);
+  assert.match(reply,/sensor, ECM\/PCM, connector, wire, or terminal/i);
+  assert.doesNotMatch(reply,/replace (?:the )?(?:camshaft position sensor|ECM|PCM|connector|wire|terminal)/i);
+  assert.equal(h.state.stage,'repair-decision');assert.equal(h.state.diagnosticTestState.currentTestId,'');assert.equal(h.state.diagnosticTestState.lastCompletedResult.testName,'CMP Signal Circuit Continuity');assert.equal(h.state.diagnosticTestState.lastCompletedResult.status,'fail');
+});
+
+test('VK continuity PASS conclusion does not fabricate a failure or repair recommendation',()=>{
+  const h=completedRepairDecision(),reply=h.state.lastReply;
+  assert.match(reply,/all required tests are complete/i);assert.match(reply,/Did not prove: that the camshaft position sensor/i);assert.match(reply,/do not replace a part from this evidence alone/i);assert.doesNotMatch(reply,/identified a failure|replace the camshaft position sensor/i);
+});
+
+test('VK mixed conclusion accurately incorporates stored PASS and FAIL evidence',()=>{
+  const h=failedContinuityDecision(),reply=h.state.lastReply,ids=['cam-power-reference','cam-ground','cam-signal','cam-correlation','verified-repair-information-required','verified-cmp-signal-circuit-continuity'];
+  assert.deepEqual(ids.map(id=>h.state.diagnosticTestState.tests.find(test=>test.id===id)?.status),['pass','pass','pass','pass','pass','fail']);
+  for(const name of ['Power/Reference','Cam Sensor Ground','Cam Signal Activity','Cam/Crank Correlation','Verified Repair Information Required'])assert.match(reply,new RegExp(name.replace('/','\\/')));
+  assert.match(reply,/CMP Signal Circuit Continuity failed/i);
+});
+
+test('VK verified repair information remains reference material rather than component-failure proof',()=>{
+  const h=failedContinuityDecision();assert.equal(h.state.repairInformation.status,'verified');assert.match(h.state.lastReply,/Verified repair information is reference material, not independent proof that a component failed/i);
+});
+
+test('VK repair-decision conclusion persists with authoritative state across JSON refresh and resume',()=>{
+  const h=failedContinuityDecision(),restored=JSON.parse(JSON.stringify(h.state));
+  assert.equal(restored.stage,'repair-decision');assert.equal(restored.diagnosticTestState.currentTestId,'');assert.equal(restored.diagnosticTestState.tests.find(test=>test.id==='verified-cmp-signal-circuit-continuity').status,'fail');assert.equal(restored.repairInformation.status,'verified');assert.equal(restored.diagnosticTestState.diagnosticConclusion,h.state.lastReply);assert.match(restored.diagnosticTestState.diagnosticConclusion,/CMP signal circuit continuity path/i);
 });
