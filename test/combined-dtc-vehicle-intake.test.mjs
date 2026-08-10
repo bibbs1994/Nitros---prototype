@@ -112,8 +112,8 @@ test('VO leaves genuinely ambiguous status answers at the status question',()=>{
   assert.match(result.replies[0],/Is P0340 current, pending, history, or intermittent\?/);
 });
 
-test('V3 preserves authoritative persistence and one service-worker authority',()=>{
+test('V4 preserves authoritative persistence and one service-worker authority',()=>{
   assert.match(html,/const STATE_KEY='nitros_diagnostic_case_v10120'/);
   assert.equal((html.match(/navigator\.serviceWorker\.register\(/g)||[]).length,1);
-  assert.match(html,/version:'10\.12\.7V3'/);
+  assert.match(html,/version:'10\.12\.7V4'/);
 });

@@ -174,6 +174,26 @@ test('natural spoken readings and qualitative signal observations remain valid',
   assert.equal(h.state.diagnosticTestState.currentTestId,'cam-correlation');
 });
 
+test('V4 current ground test consumes direct natural-language voltage-drop measurements',()=>{
+  const variants=['Cam sensor ground voltage drop is 0.04 V.','Cam sensor ground voltage drop is 0.04 volts.','Ground voltage drop: 0.04 V','I got forty millivolts'];
+  for(const input of variants){const h=atGround();h.handleGuidedFinding(input);const guided=h.state.diagnosticTestState,ground=guided.tests[1];assert.equal(ground.status,'pass',input);assert.equal(ground.interpretedValue,0.04,input);assert.equal(ground.unit,'V',input);assert.equal(ground.technicianFinding,input,input);assert.equal(guided.currentTestId,'cam-signal',input);assert.match(h.state.lastReply,/0\.04 V\. Cam Sensor Ground passes.+Next we'll test Cam Signal Activity\./,input);assert.doesNotMatch(h.state.lastReply,/do not have a confirmed result/i,input)}
+});
+
+test('V4 generic current-test ingestion normalizes diagnostic measurement units and applies configured criteria',()=>{
+  const h=harness(),cases=[
+    [{kind:'generic',comparator:'<=',maximum:0.05},'Current draw is 40 milliamps',0.04,'A','pass'],
+    [{kind:'generic',comparator:'range',minimum:950,maximum:1050},'Frequency is 1 kilohertz',1000,'Hz','pass'],
+    [{kind:'generic',comparator:'>=',minimum:40},'Fuel pressure is 42 psi',42,'psi','pass'],
+    [{kind:'generic',comparator:'<=',maximum:100},'Temperature is 105 degrees celsius',105,'°C','fail'],
+    [{kind:'generic',comparator:'<=',maximum:1},'Resistance is 1.2 kilohms',1200,'Ω','fail']
+  ];
+  for(const [definition,input,value,unit,result] of cases){const parsed=h.interpretFinding(definition,input);assert.equal(parsed.intent,h.FINDING_INTENT.ACTUAL,input);assert.equal(parsed.value,value,input);assert.equal(parsed.unit,unit,input);assert.equal(parsed.result,result,input)}
+});
+
+test('V4 measurement ingestion remains fail closed without a numeric value or direct observation',()=>{
+  const h=atGround();h.handleGuidedFinding('The ground circuit needs more testing');assert.equal(h.state.diagnosticTestState.tests[1].status,'in_progress');assert.equal(h.state.diagnosticTestState.currentTestId,'cam-ground');assert.match(h.state.lastReply,/actual measurement or direct observation/i)
+});
+
 test('cam signal activity natural-language variants pass only at the activity checkpoint',()=>{
   const inputs=['Kim voltage switching from 0.2 to 4.8 oscillating','Cam signal toggles between 0.2 and 4.8 volts','The waveform is pulsing high and low',"I'm seeing it toggle high and low"];
   for(const input of inputs){const h=atGround();h.handleGuidedFinding('I measured 0.04 V');h.handleGuidedFinding(input);const guided=h.state.diagnosticTestState,signal=guided.tests.find(item=>item.id==='cam-signal'),correlation=guided.tests.find(item=>item.id==='cam-correlation');assert.equal(signal.status,'pass',input);assert.equal(signal.technicianFinding,input);assert.equal(guided.currentTestId,'cam-correlation',input);assert.equal(correlation.status,'in_progress',input);const completed=guided.tests.filter(item=>['pass','fail'].includes(item.status)).length;h.handleGuidedFinding(input);assert.equal(guided.currentTestId,'cam-correlation',input);assert.equal(guided.tests.filter(item=>['pass','fail'].includes(item.status)).length,completed,input)}

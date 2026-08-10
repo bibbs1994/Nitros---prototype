@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.7V3 — Direct AI Diagnostic Combined Intake</title>
+<title>Nitros Mobile Technician Portal v10.12.7V4 — Diagnostic Measurement Result Ingestion Fix</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.7V3 — Direct AI Diagnostic Combined Intake</div>
+  <div class="sub">Mobile Technician Portal v10.12.7V4 — Diagnostic Measurement Result Ingestion Fix</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.7V3 — Direct AI Diagnostic Combined Intake. Existing conversational and diagnostic evidence features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.7V4 — Diagnostic Measurement Result Ingestion Fix. Existing conversational and diagnostic evidence features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.7V3 — Direct AI Diagnostic Combined Intake</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.7V4 — Diagnostic Measurement Result Ingestion Fix</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.7V3 — Direct AI Diagnostic Combined Intake</div>
+      <div class="eyebrow">Version 10.12.7V4 — Diagnostic Measurement Result Ingestion Fix</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1683,13 +1683,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.7V3 • Direct AI Diagnostic Combined Intake • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.7V4 • Diagnostic Measurement Result Ingestion Fix • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.12.7V3',
-  release:'Direct AI Diagnostic Combined Intake',
+  version:'10.12.7V4',
+  release:'Diagnostic Measurement Result Ingestion Fix',
   buildDate:'2026-08-10',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -5284,7 +5284,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7V3 • Direct AI Diagnostic Combined Intake</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7V4 • Diagnostic Measurement Result Ingestion Fix</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5322,7 +5322,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7V3 — Direct AI Diagnostic Combined Intake</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7V4 — Diagnostic Measurement Result Ingestion Fix</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6347,7 +6347,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7V3</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7V4</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -7356,16 +7356,18 @@ function testRecord(id){return state.diagnosticTestState?.tests.find(test=>test.
 function activateTest(guided,definition){if(!guided)return null;guided.currentTestId=definition?.id||'';guided.nextRecommendedTest=definition?.id||'';let record=definition?guided.tests.find(test=>test.id===definition.id):null;if(definition&&!record){record=emptyTest(definition);guided.tests.push(record)}if(record?.status==='pending'&&!['repair-information-required','repair-information-review'].includes(definition?.kind))record.status='in_progress';if(['circuit-isolation','repair-information-required','repair-information-review'].includes(definition?.kind))state.stage='circuit-isolation';else if(definition?.kind==='mechanical-diagnosis')state.stage='mechanical-diagnosis';return definition||null}
 const FINDING_INTENT={ACTUAL:'ACTUAL_MEASUREMENT',SPEC:'EXPECTED_SPECIFICATION',QUESTION:'QUESTION',PROCEDURE:'PROCEDURE',UNCERTAIN:'UNCERTAIN_INSUFFICIENT',QUALITATIVE:'QUALITATIVE_ACTUAL_RESULT'};
 const NUMBER_WORDS={zero:'0',one:'1',two:'2',three:'3',four:'4',five:'5',six:'6',seven:'7',eight:'8',nine:'9'};
-function normalizeFinding(text){let value=String(text||'').trim().toLowerCase().replace(/[’]/g,"'");value=value.replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine)?\s*point\s+((?:zero|one|two|three|four|five|six|seven|eight|nine)(?:\s+(?:zero|one|two|three|four|five|six|seven|eight|nine))*)\b/g,(_,whole,fraction)=>`${whole?NUMBER_WORDS[whole]:'0'}.${fraction.split(/\s+/).map(word=>NUMBER_WORDS[word]).join('')}`);value=value.replace(/\bforty\s+millivolts?\b/g,'40 mv').replace(/\bzero\b/g,'0').replace(/\bone\b/g,'1').replace(/\btwo\b/g,'2').replace(/\bthree\b/g,'3').replace(/\bfour\b/g,'4').replace(/\bfive\b/g,'5').replace(/\bsix\b/g,'6').replace(/\bseven\b/g,'7').replace(/\beight\b/g,'8').replace(/\bnine\b/g,'9').replace(/\btwelve\b/g,'12').replace(/\bmillivolts?\b/gi,'mv').replace(/\bvolts?\b|\bvdc\b/gi,'v');return value.replace(/\s+/g,' ').trim()}
+function normalizeFinding(text){let value=String(text||'').trim().toLowerCase().replace(/[’]/g,"'");value=value.replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine)?\s*point\s+((?:zero|one|two|three|four|five|six|seven|eight|nine)(?:\s+(?:zero|one|two|three|four|five|six|seven|eight|nine))*)\b/g,(_,whole,fraction)=>`${whole?NUMBER_WORDS[whole]:'0'}.${fraction.split(/\s+/).map(word=>NUMBER_WORDS[word]).join('')}`);value=value.replace(/\bforty\s+millivolts?\b/g,'40 mv').replace(/\bzero\b/g,'0').replace(/\bone\b/g,'1').replace(/\btwo\b/g,'2').replace(/\bthree\b/g,'3').replace(/\bfour\b/g,'4').replace(/\bfive\b/g,'5').replace(/\bsix\b/g,'6').replace(/\bseven\b/g,'7').replace(/\beight\b/g,'8').replace(/\bnine\b/g,'9').replace(/\btwelve\b/g,'12').replace(/\bmillivolts?\b/gi,'mv').replace(/\bvolts?\b|\bvdc\b/gi,'v').replace(/\bkilohms?\b/gi,'kohms').replace(/\bmilliamps?|\bmilliamperes?\b/gi,'ma').replace(/\bamps?|\bamperes?\b/gi,'a').replace(/\bkilohertz\b/gi,'khz').replace(/\bhertz\b/gi,'hz').replace(/\bkilopascals?\b/gi,'kpa').replace(/\bpounds? per square inch\b/gi,'psi').replace(/\bdegrees?\s*(celsius|fahrenheit)\b/gi,(_,scale)=>scale[0]);return value.replace(/\s+/g,' ').trim()}
 function correlationObservation(normalized){return /\b(synchroniz(?:e|ed)|sync(?:ed)?|in sync(?:ed)?|out of sync|correlat(?:e|es|ed|ion)|line up|timing relationship|signals? (?:match|don't match|do not match)|relationship (?:is )?wrong|timing (?:is )?off)\b/.test(normalized)}
 function classifyFindingIntent(text,normalized=normalizeFinding(text)){const raw=String(text||'').trim().toLowerCase();if(/\?|^(?:am|is|are|do|does|what|where|how|can)\b|^should\s+(?:i|we)\b/.test(raw))return FINDING_INTENT.QUESTION;if(/\b(need to check|need to test|should backprobe|next i (?:check|test)|going to (?:check|test)|will (?:check|test))\b/.test(raw))return FINDING_INTENT.PROCEDURE;if(/\b(should|should be|supposed to|spec(?:ification)?|expected|target|need to see|need (?:less|more|under|over|below|above)|want to see|normally|maximum|minimum|anything (?:under|over|below|above))\b/.test(raw))return FINDING_INTENT.SPEC;if(/\b(looks? okay|i think|probably|seems? normal|seems? alright|maybe|might have passed|not sure|unsure|questionable|unable to verify|cannot verify|can't verify)\b/.test(raw))return FINDING_INTENT.UNCERTAIN;if(correlationObservation(normalized)||/\b((?:test |it )?(?:pass(?:es|ed)?|fail(?:s|ed)?)|signal (?:is )?switching|switching signal|it's switching|it is switching|scope (?:is )?(?:switching|toggling)|light came on|injector (?:is )?pulsing|ground (?:is )?(?:good|present)|ground checks? out|power (?:is )?good|no signal|no voltage|no continuity|have continuity|has continuity|continuity (?:is )?good|open circuit|infinite resistance|nothing(?: there)?|\bol\b|stays? at 0)\b/.test(normalized))return FINDING_INTENT.QUALITATIVE;if(/\b(measured|found|reading|reads|meter (?:shows|says|reads)|i have|i got|i'm getting|im getting|showing|actual|scope shows|there is|got|less than)\b/.test(normalized)||/^(?:-?(?:\d+(?:\.\d+)?|\.\d+))\s*(?:mv|v|ohms?|ω)?\.?$/.test(normalized))return FINDING_INTENT.ACTUAL;return FINDING_INTENT.UNCERTAIN}
 function signalActivityFinding(normalized){const activity=/\b(switch(?:es|ing)|toggl(?:e|es|ing)|oscillat(?:e|es|ing)|puls(?:e|es|ing)|alternat(?:e|es|ing)|goes? from|moving between|changing between|high and low|low and high|low\b.+\bhigh|high\b.+\blow|waveform activity)\b/.test(normalized),strongEvidence=activity&&/\b(signal|voltage|waveform|scope|high|low|between|from|kim|cam|it)\b/.test(normalized),scoped=strongEvidence?normalized.replace(/\bkim\b/g,'cam'):normalized,negative=/\b(no (?:cam )?signal|flat ?line|stuck at|constant(?: at)?|not (?:switch(?:ing)?|toggl(?:e|ing)|oscillat(?:e|ing)|puls(?:e|ing)|alternat(?:e|ing))|isn't switching|wasn't switching)\b/.test(scoped),values=[...scoped.matchAll(/-?(?:\d+(?:\.\d+)?|\.\d+)\s*(mv|v)?\b/g)].map(match=>({value:Number(match[0].match(/-?(?:\d+(?:\.\d+)?|\.\d+)/)[0]),unit:match[1]||''})),term=/\btoggl/.test(scoped)?'toggling':/\boscillat/.test(scoped)?'oscillating':/\bpuls/.test(scoped)?'pulsing':'switching',format=item=>`${Number((item.unit==='mv'?item.value/1000:item.value).toFixed(4))} V`,observationSummary=strongEvidence&&values.length>=2?`Cam signal is ${term} from ${format(values[0])} to ${format(values[1])}.`:'';return {recognized:negative||strongEvidence,result:negative?'fail':strongEvidence?'pass':'inconclusive',observationSummary}}
-function interpretFinding(test,text){const normalized=normalizeFinding(text),signalActivity=test.kind==='signal-activity'?signalActivityFinding(normalized):null;let intent=classifyFindingIntent(text,normalized);if(signalActivity?.recognized)intent=FINDING_INTENT.QUALITATIVE;const measurement=normalized.match(/(-?(?:\d+(?:\.\d+)?|\.\d+))\s*(mv|v|ohms?|ω|kohms?|kω)?\b/),rawValue=measurement?Number(measurement[1]):null,rawUnit=measurement?.[2]||'',value=rawValue===null?null:rawValue*(rawUnit==='mv'?0.001:/^(?:kohms?|kω)$/.test(rawUnit)?1000:1),continuityTest=test.kind==='circuit-isolation'&&/continuity|resistance|ohm/i.test(`${test.name||''} ${test.componentOrCircuit||''} ${test.method||''} ${test.criterion||''} ${test.expectedResult||''}`),unit=/^(?:ohms?|ω|kohms?|kω)$/.test(rawUnit)||continuityTest&&value!==null?'Ω':value!==null?'V':'';const noVoltage=/\b(no voltage|0\s*v|nothing there|nothing)\b/.test(normalized);const positive=/\b(good|checks? out|present|has continuity|have continuity|continuity (?:is )?good)\b/.test(normalized);const open=/\b(open(?: circuit)?|ol|no continuity|infinite resistance)\b/.test(normalized);let result='inconclusive',understood=value!==null?`${Number(value.toFixed(4))} ${unit}`:normalized;if(intent!==FINDING_INTENT.ACTUAL&&intent!==FINDING_INTENT.QUALITATIVE)return {normalized,intent,value,unit,result,understood};
- if(test.kind==='reference-voltage'){if(value!==null)result=value>=4.5&&value<=5.5?'pass':'fail';else if(noVoltage)result='fail';else if(/\bpower (?:is )?good\b/.test(normalized))result='pass'}
+function parseDiagnosticMeasurement(normalized){const match=String(normalized||'').match(/(-?(?:\d+(?:\.\d+)?|\.\d+))\s*(mv|v|ohms?|ω|kohms?|kω|ma|a|khz|hz|psi|kpa|°?c|°?f)\b/i);if(!match)return {value:null,unit:'',rawUnit:''};const rawValue=Number(match[1]),rawUnit=match[2].toLowerCase(),conversions={mv:[0.001,'V'],v:[1,'V'],ohm:[1,'Ω'],ohms:[1,'Ω'],'ω':[1,'Ω'],kohm:[1000,'Ω'],kohms:[1000,'Ω'],'kω':[1000,'Ω'],ma:[0.001,'A'],a:[1,'A'],khz:[1000,'Hz'],hz:[1,'Hz'],psi:[1,'psi'],kpa:[1,'kPa'],c:[1,'°C'],'°c':[1,'°C'],f:[1,'°F'],'°f':[1,'°F']},conversion=conversions[rawUnit];return conversion?{value:rawValue*conversion[0],unit:conversion[1],rawUnit}:{value:null,unit:'',rawUnit:''}}
+function interpretFinding(test,text){const normalized=normalizeFinding(text),signalActivity=test.kind==='signal-activity'?signalActivityFinding(normalized):null,continuityTest=test.kind==='circuit-isolation'&&/continuity|resistance|ohm/i.test(`${test.name||''} ${test.componentOrCircuit||''} ${test.method||''} ${test.criterion||''} ${test.expectedResult||''}`);let intent=classifyFindingIntent(text,normalized),measurement=parseDiagnosticMeasurement(normalized);if(signalActivity?.recognized)intent=FINDING_INTENT.QUALITATIVE;else if(measurement.value!==null&&measurement.rawUnit&&intent===FINDING_INTENT.UNCERTAIN)intent=FINDING_INTENT.ACTUAL;if(measurement.value===null&&intent===FINDING_INTENT.ACTUAL){const bare=normalized.match(/-?(?:\d+(?:\.\d+)?|\.\d+)/);if(bare)measurement={value:Number(bare[0]),unit:continuityTest?'Ω':'V',rawUnit:''}}const value=measurement.value,unit=measurement.unit;const noVoltage=/\b(no voltage|0\s*v|nothing there|nothing)\b/.test(normalized);const positive=/\b(good|checks? out|present|has continuity|have continuity|continuity (?:is )?good)\b/.test(normalized);const open=/\b(open(?: circuit)?|ol|no continuity|infinite resistance)\b/.test(normalized);let result='inconclusive',understood=value!==null?`${Number(value.toFixed(4))} ${unit}`:normalized;if(intent!==FINDING_INTENT.ACTUAL&&intent!==FINDING_INTENT.QUALITATIVE)return {normalized,intent,value,unit,result,understood};
+ if(value!==null&&test.comparator==='<=')result=value<=test.maximum?'pass':'fail';else if(value!==null&&test.comparator==='>=')result=value>=test.minimum?'pass':'fail';else if(value!==null&&test.comparator==='range')result=value>=test.minimum&&value<=test.maximum?'pass':'fail';
+ if(test.kind==='reference-voltage'){if(result==='inconclusive'&&value!==null)result=value>=4.5&&value<=5.5?'pass':'fail';else if(noVoltage)result='fail';else if(/\bpower (?:is )?good\b/.test(normalized))result='pass'}
  else if(test.kind==='ground-integrity'){if(/\bground (?:is )?(?:good|present)\b|\bground checks? out\b/.test(normalized))result='pass';else if(/\bno ground\b/.test(normalized)||open)result='fail';else if(value!==null)result=value<=0.1?'pass':'fail'}
  else if(test.kind==='signal-activity'){if(signalActivity?.recognized)result=signalActivity.result;else if(/\bno signal\b/.test(normalized)||noVoltage)result='fail'}
  else if(test.kind==='signal-correlation'){const negative=/\b(not synchroniz(?:e|ed)|not (?:in )?sync(?:ed)?|(?:is|are|was|were)(?: not|n't) (?:in )?sync(?:ed)?|out of sync|do(?:es)? not line up|doesn't line up|don't line up|do(?:es)? not correlate|doesn't correlate|don't correlate|did not pass|didn't pass|not good|correlation (?:is )?(?:bad|incorrect|fail(?:s|ed)?)|timing (?:is )?off|relationship (?:is )?wrong|signals? (?:don't|do not) match|no correlation|no (?:cam|crank) signal|not aligned|failed)\b/.test(normalized),positive=/\b(synchroniz(?:e|ed)(?: correctly)?|sync(?:ed)?(?: correctly)?|in sync(?:ed)?|signals? (?:are |is )?in sync(?:ed)?|(?:signals?|cam and crank|they) line up(?: correctly)?|(?:cam and crank|cam crank|they) correlate(?: correctly)?|correlation (?:looks |is )?(?:correct|good)|correlation pass(?:es|ed)?|cam\/crank correlation (?:is )?correct|timing correlation (?:looks |is )?good|timing (?:correlation )?(?:looks? )?correct|mechanical timing checks? out|cam crank relationship (?:is )?correct|signals? match|signals? (?:are )?aligned)\b/.test(normalized);if(negative)result='fail';else if(positive)result='pass'}
- else if(test.kind==='circuit-isolation'){if(value!==null&&test.comparator==='<=')result=value<=test.maximum?'pass':'fail';else if(value!==null&&test.comparator==='>=')result=value>=test.minimum?'pass':'fail';else if(value!==null&&test.comparator==='range')result=value>=test.minimum&&value<=test.maximum?'pass':'fail';else if(open||/\b(?:test |it )?fail(?:s|ed)?\b/.test(normalized))result='fail';else if(positive||/\b(?:test |it )?pass(?:es|ed)?\b/.test(normalized))result='pass';else if(continuityTest&&value!==null){const statedMaximum=Number((`${test.criterion||''} ${test.expectedResult||''}`.match(/(?:maximum|less than|under|≤|<=)\s*(\d+(?:\.\d+)?|\.\d+)/i)||[])[1]),maximum=Number.isFinite(statedMaximum)?statedMaximum:1;result=/\bless than\b/.test(normalized)&&value===maximum?'pass':value<maximum?'pass':'fail'}}
+ else if(test.kind==='circuit-isolation'){if(open||/\b(?:test |it )?fail(?:s|ed)?\b/.test(normalized))result='fail';else if(result==='inconclusive'&&(positive||/\b(?:test |it )?pass(?:es|ed)?\b/.test(normalized)))result='pass';else if(result==='inconclusive'&&continuityTest&&value!==null){const statedMaximum=Number((`${test.criterion||''} ${test.expectedResult||''}`.match(/(?:maximum|less than|under|≤|<=)\s*(\d+(?:\.\d+)?|\.\d+)/i)||[])[1]),maximum=Number.isFinite(statedMaximum)?statedMaximum:1;result=/\bless than\b/.test(normalized)&&value===maximum?'pass':value<maximum?'pass':'fail'}}
  return {normalized,intent,value,unit:value!==null?unit:open?'continuity':'',result,understood,observationSummary:signalActivity?.observationSummary||''}
 }
 function nextPendingTest(afterId){const workflow=workflowDefinition(),start=workflow.tests.findIndex(test=>test.id===afterId);return workflow.tests.slice(start+1).find(test=>test.required!==false&&testRecord(test.id)?.status==='pending')||null}
@@ -7705,7 +7707,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.7V3</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.7V4</strong></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>
 <li>Service Worker Script URL: <strong id="nitrosRuntimeSwUrl">Checking</strong></li>
