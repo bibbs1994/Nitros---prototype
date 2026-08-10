@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.7V5 — Verified Repair Information Document/Text Extraction</title>
+<title>Nitros Mobile Technician Portal v10.12.7V6 — Document Extraction Required-Field Validation Fix</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.7V5 — Verified Repair Information Document/Text Extraction</div>
+  <div class="sub">Mobile Technician Portal v10.12.7V6 — Document Extraction Required-Field Validation Fix</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.7V5 — Verified Repair Information Document/Text Extraction. Existing conversational and diagnostic evidence features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.7V6 — Document Extraction Required-Field Validation Fix. Existing conversational and diagnostic evidence features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.7V5 — Verified Repair Information Document/Text Extraction</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.7V6 — Document Extraction Required-Field Validation Fix</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.7V5 — Verified Repair Information Document/Text Extraction</div>
+      <div class="eyebrow">Version 10.12.7V6 — Document Extraction Required-Field Validation Fix</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1683,13 +1683,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.7V5 • Verified Repair Information Document/Text Extraction • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.7V6 • Document Extraction Required-Field Validation Fix • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.12.7V5',
-  release:'Verified Repair Information Document/Text Extraction',
+  version:'10.12.7V6',
+  release:'Document Extraction Required-Field Validation Fix',
   buildDate:'2026-08-10',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -5284,7 +5284,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7V5 • Verified Repair Information Document/Text Extraction</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7V6 • Document Extraction Required-Field Validation Fix</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5322,7 +5322,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7V5 — Verified Repair Information Document/Text Extraction</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7V6 — Document Extraction Required-Field Validation Fix</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6347,7 +6347,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7V5</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7V6</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -7374,7 +7374,7 @@ function nextPendingTest(afterId){const workflow=workflowDefinition(),start=work
 function verifiedIsolationTest(guided){const info=state.verifiedRepairInformation,tests=Array.isArray(info?.isolationTests)?info.isolationTests:[],vehicle=vehicleLabel().toLowerCase();const item=tests.find(test=>test?.verified===true&&Array.isArray(test.dtcs)&&test.dtcs.includes(state.activeDtc)&&(!test.vehicle||vehicle.includes(String(test.vehicle).toLowerCase()))&&test.id&&test.name&&test.componentOrCircuit&&test.testLocation&&test.method&&test.criterion&&test.requestedResult&&!guided.tests.some(record=>record.id===`verified-${test.id}`&&['pass','fail'].includes(record.status)));if(!item)return null;return Object.freeze({id:`verified-${item.id}`,name:String(item.name),kind:'circuit-isolation',required:true,verifiedSource:String(info.source||item.source||'Loaded verified repair information'),componentOrCircuit:String(item.componentOrCircuit),testLocation:String(item.testLocation),method:String(item.method),criterion:String(item.criterion),requestedResult:String(item.requestedResult),comparator:['<=','>=','range'].includes(item.comparator)?item.comparator:'',minimum:Number.isFinite(item.minimum)?item.minimum:null,maximum:Number.isFinite(item.maximum)?item.maximum:null,expectedResult:String(item.criterion),prompt:`Next test: ${item.componentOrCircuit}. Test at ${item.testLocation}. Use ${item.method}. Expected result: ${item.criterion}. ${item.requestedResult}`})}
 function isolationSelection(guided){const selected=verifiedIsolationTest(guided);guided.selectedIsolationTest=selected?{...selected}:null;if(selected){state.repairInformationRequired=false;state.repairInformationLoaded=true}else{state.repairInformationRequired=true;state.repairInformationLoaded=['available','verified'].includes(state.repairInformation?.status);if(!state.repairInformationLoaded)state.repairInformation={status:'required',source:'',verifiedAt:'',evidenceReference:null}}return selected||testDefinition('verified-repair-information-required')}
 function nextTestForResult(definition,result){if(definition.kind!=='signal-correlation')return nextPendingTest(definition.id);const routedId=result==='pass'?definition.passNext:result==='fail'?definition.failNext:'';return routedId==='verified-isolation'?isolationSelection(state.diagnosticTestState):routedId?testDefinition(routedId):nextPendingTest(definition.id)}
-function repairInformationEligibility(detail){const kind=String(detail?.kind||''),analysis=detail?.analysis,hasText=kind==='text-data'&&String(detail?.text||'').trim().length>0,hasPdf=kind==='pdf-attachment'&&Number(detail?.fileSize)>0,isDiagram=kind==='image-analysis'&&analysis?.category==='AUTOMOTIVE_WIRING_DIAGRAM',document=kind==='image-analysis'&&analysis?.category==='DOCUMENT_OR_TEXT_SCREENSHOT'?analysis.documentRepairInformation:null,documentComplete=document?.extractionStatus==='COMPLETE'&&document?.dtcApplicability==='APPLICABLE'&&document?.freshResultVerification==='PASS'&&Array.isArray(analysis?.isolationTests)&&analysis.isolationTests.length>0,missing=Array.isArray(document?.missingRequiredFields)?document.missingRequiredFields:[];const eligible=hasText||hasPdf||isDiagram||documentComplete,reason=eligible?'':document?`Document extraction cannot satisfy Verified Repair Information Required. Missing or unsupported: ${missing.length?missing.join(', '):document?.dtcApplicability==='NOT APPLICABLE'?'DTC applicability':'complete readable test fields'}.`:'The imported item is blank or is not classified as a technical diagram/document.';return {eligible,reason}}
+function repairInformationEligibility(detail){const kind=String(detail?.kind||''),analysis=detail?.analysis,hasText=kind==='text-data'&&String(detail?.text||'').trim().length>0,hasPdf=kind==='pdf-attachment'&&Number(detail?.fileSize)>0,isDiagram=kind==='image-analysis'&&analysis?.category==='AUTOMOTIVE_WIRING_DIAGRAM',document=kind==='image-analysis'&&analysis?.category==='DOCUMENT_OR_TEXT_SCREENSHOT'?analysis.documentRepairInformation:null,documentComplete=document?.extractionStatus==='COMPLETE'&&document?.dtcApplicability==='APPLICABLE'&&document?.freshResultVerification==='PASS'&&Array.isArray(analysis?.isolationTests)&&analysis.isolationTests.length>0,missing=Array.isArray(document?.missingRequiredFields)?document.missingRequiredFields:[];const eligible=hasText||hasPdf||isDiagram||documentComplete,reason=eligible?'':document?missing.length?`Document extraction cannot satisfy Verified Repair Information Required. Missing or unsupported: ${missing.join(', ')}.`:`Document extraction is complete, but its DTC applicability is ${document.dtcApplicability||'UNKNOWN / CANNOT DETERMINE'} for the active diagnostic case.`:'The imported item is blank or is not classified as a technical diagram/document.';return {eligible,reason}}
 function repairInformationReference(detail){const isolationTests=Array.isArray(detail?.isolationTests)?detail.isolationTests:Array.isArray(detail?.parsedData?.isolationTests)?detail.parsedData.isolationTests:Array.isArray(detail?.analysis?.isolationTests)?detail.analysis.isolationTests:[];return {kind:String(detail?.kind||'unknown'),fileName:String(detail?.fileName||''),importedAt:String(detail?.importedAt||new Date().toISOString()),imageHash:String(detail?.imageHash||''),category:String(detail?.analysis?.category||''),runId:String(detail?.analysis?.runId||''),fileSize:Number(detail?.fileSize)||0,isolationTests:isolationTests.map(test=>({...test}))}}
 function handleRepairInformationImport(detail){const guided=state.diagnosticTestState,definition=testDefinition(guided?.currentTestId);if(!guided||definition?.kind!=='repair-information-required')return false;const reference=repairInformationReference(detail),eligibility=repairInformationEligibility(detail);state.pendingRepairInformation={...reference,eligible:eligibility.eligible,reason:eligibility.reason};state.repairInformationEvidence=Array.isArray(state.repairInformationEvidence)?state.repairInformationEvidence:[];state.repairInformationEvidence.push({...reference,confirmed:false,eligible:eligibility.eligible});state.repairInformationEvidence=state.repairInformationEvidence.slice(-20);state.repairInformationRequired=true;state.repairInformationLoaded=false;state.repairInformationSource=reference.fileName||'Imported diagnostic item';state.repairInformationLoadedAt='';ask(eligibility.eligible?`“${reference.fileName||'Imported diagnostic item'}” is attached to this active case for review. If it is the applicable repair information for this vehicle and DTC, choose “Use as Verified Repair Information.”`:`The imported item is attached as case evidence, but it cannot satisfy the repair-information gate. ${eligibility.reason}`);return true}
 function verifyPendingRepairInformation(){const guided=state.diagnosticTestState,definition=testDefinition(guided?.currentTestId),pending=state.pendingRepairInformation;if(!guided||definition?.kind!=='repair-information-required'||!pending?.eligible)return false;const completedBefore=JSON.stringify(guided.tests.filter(test=>['pass','fail'].includes(test.status)&&test.id!=='verified-repair-information-required')),before={caseId:state.id,vehicle:JSON.stringify(state.vehicle),activeDtc:state.activeDtc,workflowId:guided.workflowId},verifiedAt=new Date().toISOString(),source=pending.fileName||'Imported diagnostic item',gate=testRecord('verified-repair-information-required');state.verifiedRepairInformation={source,verifiedAt,evidenceReference:{...pending},isolationTests:Array.isArray(pending.isolationTests)?pending.isolationTests.map(test=>({...test})):[]};state.repairInformationSource=source;state.repairInformationLoadedAt=verifiedAt;state.repairInformationEvidence=state.repairInformationEvidence.map((item,index,all)=>index===all.length-1?{...item,confirmed:true,verifiedAt}:item);const selected=verifiedIsolationTest(guided);if(!selected){state.repairInformation={status:'available',source,verifiedAt,evidenceReference:{...pending}};state.repairInformationRequired=true;state.repairInformationLoaded=true;guided.selectedIsolationTest=null;activateTest(guided,definition);ask('Repair information is attached and available, but it does not yet provide a verified, DTC-applicable circuit-isolation test with the component or circuit, test location, method, criterion, and requested result. The Verified Repair Information Required step remains pending. Load verified information containing those missing test details.');return true}state.repairInformation={status:'verified',source,verifiedAt,evidenceReference:{...pending}};state.repairInformationRequired=false;state.repairInformationLoaded=true;Object.assign(gate,{status:'pass',technicianFinding:`Technician verified applicable repair information: ${source}`,timestamp:verifiedAt,source:'technician-confirmed-import'});guided.selectedIsolationTest={...selected};activateTest(guided,selected);guided.lastCompletedResult={testId:gate.id,testName:gate.name,workflowId:guided.workflowId,workflowName:workflowName(),expectedResult:'Applicable verified repair information',comparator:'',actualObservedMeasurement:null,unit:'',status:'pass',explanatoryResultText:'the applicable repair information was technician-verified',nextTestId:selected.id,nextTestName:selected.name,nextTestPrompt:selected.prompt,rawObservation:`Technician verified applicable repair information: ${source}`,normalizedObservation:'verified repair information',intent:'TECHNICIAN_VERIFIED_REPAIR_INFORMATION',timestamp:verifiedAt};if(state.id!==before.caseId||JSON.stringify(state.vehicle)!==before.vehicle||state.activeDtc!==before.activeDtc||guided.workflowId!==before.workflowId||JSON.stringify(guided.tests.filter(test=>['pass','fail'].includes(test.status)&&test.id!=='verified-repair-information-required'))!==completedBefore)throw new Error('Repair information verification attempted to replace authoritative case history.');ask(`Verified repair information is attached. ${selected.prompt}`);return true}
@@ -7712,7 +7712,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.7V5</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.7V6</strong></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>
 <li>Service Worker Script URL: <strong id="nitrosRuntimeSwUrl">Checking</strong></li>

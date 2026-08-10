@@ -14,10 +14,10 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
 
 test('BF app build keeps the proven AO analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.7AO'/);
-  assert.match(html, /10\.12\.7V5/);
+  assert.match(html, /10\.12\.7V6/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.7V5'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.7V6'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -127,8 +127,17 @@ test('V5 document screenshots keep their category and route through fresh repair
   assert.match(analyzer,/result\.route='Document\/OCR'/);
   assert.doesNotMatch(analyzer,/No clean-room document\/OCR analyzer is configured/);
   assert.match(analyzer,/documentRepairInformation.*freshResultVerification/);
-  assert.match(analyzer,/result\.isolationTests=complete\?/);
+  assert.match(analyzer,/result\.isolationTests=complete&&applicable\?/);
   for(const id of ['nitrosDocumentExtractionStatus','nitrosDocumentExtractedFields','nitrosDocumentMissingFields','nitrosDocumentDtcApplicability','nitrosDocumentFreshVerification'])assert.match(html,new RegExp(`id="${id}"`));
+});
+
+test('V6 document completion validates resolved applicability independently from visible DTC codes',()=>{
+  assert.match(core,/\['APPLICABLE','NOT APPLICABLE','UNKNOWN \/ CANNOT DETERMINE'\]\.includes\(raw\.dtcApplicability\)/);
+  assert.match(core,/\['DTC applicability',result\.dtcApplicability\]/);
+  assert.doesNotMatch(core,/\['DTC applicability',result\.dtcs\.length\]/);
+  assert.match(analyzer,/resolvedApplicability=extraction\?\.dtcApplicability\|\|''/);
+  assert.doesNotMatch(analyzer,/!applicable&&!missing\.includes\('DTC applicability'\)/);
+  assert.match(analyzer,/extractionStatus:complete\?'COMPLETE':'INCOMPLETE'/);
 });
 
 test('AO guided electrical testing does not verify a fault from one ambiguous reading', () => {
@@ -171,7 +180,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.7V5'/);
+  assert.match(html, /version:'10\.12\.7V6'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
