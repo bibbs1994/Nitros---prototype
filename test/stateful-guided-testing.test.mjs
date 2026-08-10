@@ -16,7 +16,7 @@ function harness(activeDtc='P0340'){
     function vehicleLabel(){return [state.vehicle.year,state.vehicle.make,state.vehicle.model,state.vehicle.engine].filter(Boolean).join(' ')}
     function ask(text){state.lastReply=text;responses.push(text)}
     ${source}
-    return {state,responses,ensureGuidedState,handleGuidedFinding,handleRepairInformationImport,verifyPendingRepairInformation,interpretFinding,normalizeFinding,classifyFindingIntent,repairDiagnosticText,FINDING_INTENT,GUIDED_WORKFLOWS};
+    return {state,responses,ensureGuidedState,handleGuidedFinding,handleRepairInformationImport,verifyPendingRepairInformation,interpretFinding,normalizeFinding,classifyFindingIntent,repairDiagnosticText,repairDecisionReply,diagnosticCompletionGate,missingRepairDecisionEvidence,FINDING_INTENT,GUIDED_WORKFLOWS};
   `)();
 }
 
@@ -81,7 +81,7 @@ test('guided state survives the same JSON persistence used by the authoritative 
 test('BF engine is authoritative, guarded, and exposes compact debug state',()=>{
   assert.match(html,/diagnosticTestState:null/);
   assert.match(html,/localStorage\.setItem\(STATE_KEY,JSON\.stringify\(state\)\)/);
-  assert.match(html,/\['diagnostic','circuit-isolation','mechanical-diagnosis'\]\.includes\(state\.stage\).*handleGuidedFinding\(text\)/);
+  assert.match(html,/\['diagnostic','circuit-isolation','mechanical-diagnosis','repair-decision'\]\.includes\(state\.stage\).*handleGuidedFinding\(text\)/);
   assert.match(html,/verified repair information/);
   for(const field of ['avNormalizedFinding','avMatchedTestId','avInterpretedValue','avUnit','avResult','avNextTestId'])assert.match(html,new RegExp(field));
 });
@@ -300,4 +300,57 @@ test('BF invalid or blank imports cannot satisfy the repair-information gate',()
 
 test('BF authoritative fields, explicit action, and New Case isolation remain present',()=>{
   for(const field of ['repairInformationRequired','repairInformationLoaded','repairInformationSource','repairInformationLoadedAt','repairInformationEvidence','pendingRepairInformation'])assert.match(html,new RegExp(field));assert.match(html,/repairInformation:\{status:'required'/);assert.match(html,/Repair Information: \$\{repairInformation\}/);assert.match(html,/function reset\(\).*state=blank\(\)/);assert.match(html,/verifyRepairInformation:verifyPendingRepairInformation/);
+});
+
+function completedRepairDecision(){
+  const h=atCorrelation();
+  h.handleGuidedFinding('Cam and crank are synchronized correctly');
+  h.handleRepairInformationImport({kind:'pdf-attachment',fileName:'verified-procedure.pdf',fileSize:8192,importedAt:'2026-08-10T12:00:00.000Z'});
+  h.verifyPendingRepairInformation();
+  h.handleGuidedFinding('Continuity test passed');
+  return h;
+}
+
+test('VI completed required evidence transitions deterministically to repair-decision without another test',()=>{
+  const h=completedRepairDecision(),guided=h.state.diagnosticTestState;
+  assert.equal(h.state.stage,'repair-decision');
+  assert.equal(guided.currentTestId,'');
+  assert.equal(guided.nextRecommendedTest,'');
+  assert.ok(guided.completedAt);
+  assert.match(h.state.lastReply,/Diagnostic testing is complete/);
+  assert.doesNotMatch(h.state.lastReply,/Next (?:test|we'll test)|load the applicable wiring diagram/i);
+});
+
+test("VI what's next after Current Test Complete reviews stored evidence and never restarts testing",()=>{
+  const h=completedRepairDecision(),guided=h.state.diagnosticTestState,before=JSON.stringify(guided.tests);
+  h.handleGuidedFinding("What's next?");
+  assert.equal(h.state.stage,'repair-decision');
+  assert.equal(guided.currentTestId,'');
+  assert.equal(JSON.stringify(guided.tests),before);
+  assert.match(h.state.lastReply,/Stored evidence:/);
+  assert.doesNotMatch(h.state.lastReply,/Next (?:test|we'll test)|power\/reference.*give me|load the applicable wiring diagram/i);
+});
+
+test("VI all-pass evidence refuses to condemn a component",()=>{
+  const h=completedRepairDecision();h.handleGuidedFinding("What's wrong with it?");
+  assert.match(h.state.lastReply,/does not support condemning a component/i);
+  assert.match(h.state.lastReply,/Do not replace a part/i);
+});
+
+test('VI repair-decision logic names the exact missing evidence instead of fabricating a test',()=>{
+  const h=completedRepairDecision(),guided=h.state.diagnosticTestState,ground=guided.tests.find(test=>test.id==='cam-ground');ground.status='pending';guided.currentTestId='';h.state.stage='circuit-isolation';
+  h.handleGuidedFinding("What's next?");
+  assert.match(h.state.lastReply,/missing: Cam Sensor Ground/i);
+  assert.doesNotMatch(h.state.lastReply,/perform|measure|Next test/i);
+});
+
+test('VI entering repair-decision preserves every previously passed result',()=>{
+  const h=completedRepairDecision(),ids=['cam-power-reference','cam-ground','cam-signal','cam-correlation','verified-repair-information-required','verified-cmp-signal-circuit-continuity'];
+  assert.deepEqual(ids.map(id=>h.state.diagnosticTestState.tests.find(test=>test.id===id)?.status),['pass','pass','pass','pass','pass','pass']);
+});
+
+test('VI New Case still clears completed and repair-decision state',()=>{
+  assert.match(html,/function reset\(\)\{window\.resetOcrSessionState\?\.\('authoritative New Case command'\);state=blank\(\)/);
+  assert.match(html,/const blank=\(\)=>\(\{[^\n]+stage:'vehicle',diagnosticTestState:null/);
+  assert.match(html,/^\s*if\(\/\^\(new case\|start new case\|clear case\|start over\)\$\//m);
 });
