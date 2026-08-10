@@ -14,10 +14,10 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
 
 test('BF app build keeps the proven AO analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.7AO'/);
-  assert.match(html, /10\.12\.7V4/);
+  assert.match(html, /10\.12\.7V5/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.7V4'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.7V5'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -39,8 +39,8 @@ test('analysis payload is a single bounded metadata-free JPEG copy', () => {
   assert.match(analyzer, /run\.bytes=sourceBuffer\.slice\(0\)/);
   assert.match(analyzer, /payloadImageCount:1/);
   assert.equal((analyzer.match(/imageBase64\}/g)||[]).length, 1);
-  assert.equal((core.match(/type: 'input_image'/g)||[]).length, 3);
-  assert.equal((core.match(/image_url:/g)||[]).length, 3);
+  assert.equal((core.match(/type: 'input_image'/g)||[]).length, 4);
+  assert.equal((core.match(/image_url:/g)||[]).length, 4);
   assert.match(core, /requiredFields = \['transactionId', 'imageHash', 'mimeType', 'imageBase64'\]/);
 });
 
@@ -118,6 +118,19 @@ test('wiring diagrams are structurally gated and expose one-step guided test sta
   assert.match(html, /id="nitrosComponentTestSessionId"/);
 });
 
+test('V5 document screenshots keep their category and route through fresh repair-information extraction',()=>{
+  assert.match(core,/semanticResult\.category === 'DOCUMENT_OR_TEXT_SCREENSHOT'/);
+  assert.match(core,/documentRepairInformationSchema/);
+  assert.match(core,/Do not reclassify the image/);
+  assert.match(core,/Never manufacture missing connector names, pins, terminals, wire colors, methods, or specifications/);
+  assert.match(analyzer,/result\.category==='DOCUMENT_OR_TEXT_SCREENSHOT'/);
+  assert.match(analyzer,/result\.route='Document\/OCR'/);
+  assert.doesNotMatch(analyzer,/No clean-room document\/OCR analyzer is configured/);
+  assert.match(analyzer,/documentRepairInformation.*freshResultVerification/);
+  assert.match(analyzer,/result\.isolationTests=complete\?/);
+  for(const id of ['nitrosDocumentExtractionStatus','nitrosDocumentExtractedFields','nitrosDocumentMissingFields','nitrosDocumentDtcApplicability','nitrosDocumentFreshVerification'])assert.match(html,new RegExp(`id="${id}"`));
+});
+
 test('AO guided electrical testing does not verify a fault from one ambiguous reading', () => {
   assert.match(analyzer, /numeric!==null.*status:'INCONCLUSIVE'/);
   assert.match(analyzer, /That reading alone does not verify a fault/);
@@ -158,7 +171,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.7V4'/);
+  assert.match(html, /version:'10\.12\.7V5'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {

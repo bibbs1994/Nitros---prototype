@@ -90,6 +90,26 @@ const wiringDiagramSchema = {
   }
 };
 
+const documentRepairInformationSchema = {
+  type: 'object', additionalProperties: false,
+  required: ['status','dtcs','testName','componentOrCircuit','testLocation','method','criterion','requestedResult','comparator','minimum','maximum','visibleTextEvidence','missingRequiredFields'],
+  properties: {
+    status: { type: 'string', enum: ['COMPLETE','INCOMPLETE','UNREADABLE'] },
+    dtcs: { type: 'array', items: { type: 'string', pattern: '^[PCBU][0-9A-F]{4}$' }, maxItems: 16 },
+    testName: { type: 'string', maxLength: 200 },
+    componentOrCircuit: { type: 'string', maxLength: 300 },
+    testLocation: { type: 'string', maxLength: 400 },
+    method: { type: 'string', maxLength: 700 },
+    criterion: { type: 'string', maxLength: 300 },
+    requestedResult: { type: 'string', maxLength: 300 },
+    comparator: { type: 'string', enum: ['','<=','>=','range'] },
+    minimum: { anyOf: [{ type: 'number' }, { type: 'null' }] },
+    maximum: { anyOf: [{ type: 'number' }, { type: 'null' }] },
+    visibleTextEvidence: { type: 'array', items: { type: 'string' }, maxItems: 24 },
+    missingRequiredFields: { type: 'array', items: { type: 'string', enum: ['DTC applicability','component or circuit','test location','test method','criterion','requested technician result'] }, maxItems: 6 }
+  }
+};
+
 export function normalizeSemanticConfidence(rawConfidence) {
   if (rawConfidence === null || rawConfidence === undefined) return null;
   let numeric;
@@ -237,6 +257,18 @@ function validateSemanticPayload(raw) {
   if (result.category !== 'UNKNOWN_OR_ANALYSIS_UNAVAILABLE' && !result.evidence.length) throw new Error('Analyzer supplied no visual evidence.');
   if (result.category === 'AUTOMOTIVE_GRAPH' && result.graphEvidence.length < 2) throw new Error('Graph classification lacks independent structural evidence.');
   if (result.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE' && !result.automotiveEvidence.length) throw new Error('Automotive classification lacks positive visual evidence.');
+  return result;
+}
+
+function validateDocumentRepairInformation(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Document extraction returned no structured result.');
+  if (!['COMPLETE','INCOMPLETE','UNREADABLE'].includes(raw.status)) throw new Error('Document extraction status is invalid.');
+  const text = (field, limit) => typeof raw[field] === 'string' ? raw[field].trim().slice(0, limit) : '';
+  const allowedMissing = new Set(['DTC applicability','component or circuit','test location','test method','criterion','requested technician result']);
+  const result = {status:raw.status,dtcs:Array.isArray(raw.dtcs)?[...new Set(raw.dtcs.filter(code=>/^[PCBU][0-9A-F]{4}$/.test(code)))].slice(0,16):[],testName:text('testName',200),componentOrCircuit:text('componentOrCircuit',300),testLocation:text('testLocation',400),method:text('method',700),criterion:text('criterion',300),requestedResult:text('requestedResult',300),comparator:['','<=','>=','range'].includes(raw.comparator)?raw.comparator:'',minimum:Number.isFinite(raw.minimum)?raw.minimum:null,maximum:Number.isFinite(raw.maximum)?raw.maximum:null,visibleTextEvidence:cleanStringArray(raw.visibleTextEvidence,'visibleTextEvidence'),missingRequiredFields:Array.isArray(raw.missingRequiredFields)?[...new Set(raw.missingRequiredFields.filter(field=>allowedMissing.has(field)))]:[]};
+  const required=[['DTC applicability',result.dtcs.length],['component or circuit',result.componentOrCircuit],['test location',result.testLocation],['test method',result.method],['criterion',result.criterion],['requested technician result',result.requestedResult]];
+  result.missingRequiredFields=[...new Set([...result.missingRequiredFields,...required.filter(([,value])=>!value).map(([field])=>field)])];
+  if(result.status==='COMPLETE'&&result.missingRequiredFields.length)result.status='INCOMPLETE';
   return result;
 }
 
@@ -431,8 +463,28 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
       markDiagnostic(diagnostic, 'R_WIRING_ANALYSIS_FAILED', { wiringDiagramAnalysisAttempted: true, wiringDiagramResponseParsed: false, wiringDiagramResultPresent: false, wiringDiagramErrorMessage: safeMessage, wiringDiagramElapsedMs: Math.max(0, Date.now() - diagramStartedAt) });
     }
   } else markDiagnostic(diagnostic, diagnostic.stage, { wiringDiagramAnalysisAttempted: false, wiringDiagramAnalysisSkipped: true });
+  let documentRepairInformation = null;
+  if (semanticResult.category === 'DOCUMENT_OR_TEXT_SCREENSHOT') {
+    const documentStartedAt = Date.now();
+    const documentPrompt = `Extract repair-information text only from the visible pixels of this current document, text screen, or screenshot. Do not use filenames, metadata, prior images, prior cases, cached results, general automotive knowledge, or typical OEM procedures. Do not reclassify the image. Transcribe only visibly supported information for one diagnostic circuit-isolation test: applicable DTC codes, test name, component or circuit, test location including connector or terminal only when visibly provided, test method, required specification or pass/fail criterion, and the technician measurement/result requested by the procedure. Never manufacture missing connector names, pins, terminals, wire colors, methods, or specifications. Use an empty string or null for unsupported fields and list every missing required field. Set COMPLETE only when DTC applicability, component/circuit, location, method, criterion, and requested result are all visibly supported; otherwise use INCOMPLETE or UNREADABLE. Derive comparator and numeric bounds only when the visible criterion explicitly supports them. Include short visibleTextEvidence excerpts supporting the extracted fields.`;
+    markDiagnostic(diagnostic, 'S_DOCUMENT_EXTRACTION_REQUESTED', { documentExtractionAttempted: true, documentExtractionResponseReceived: false, documentExtractionResultPresent: false });
+    try {
+      const documentResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 1600, input: [{ role: 'user', content: [{ type: 'input_text', text: documentPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }], text: { format: { type: 'json_schema', name: 'nitros_document_repair_information', strict: true, schema: documentRepairInformationSchema } } }), signal: analysisSignal });
+      const documentBody = await documentResponse.json().catch(() => null);
+      markDiagnostic(diagnostic, 'T_DOCUMENT_EXTRACTION_RESPONSE', { documentExtractionResponseReceived: true, documentExtractionResponseOk: documentResponse.ok, documentExtractionHttpStatus: documentResponse.status, documentExtractionElapsedMs: Math.max(0, Date.now() - documentStartedAt) });
+      if (!documentResponse.ok) throw new Error(documentBody?.error?.message || `Document extraction request failed with HTTP ${documentResponse.status}.`);
+      if (!documentBody) throw new Error('Document extraction response was not valid JSON.');
+      documentRepairInformation = { ...validateDocumentRepairInformation(JSON.parse(extractOutputText(documentBody))), semanticRequestId: transactionId, imageHash };
+      markDiagnostic(diagnostic, 'U_DOCUMENT_EXTRACTION_COMPLETE', { documentExtractionResponseParsed: true, documentExtractionResultPresent: true, documentExtractionStatus: documentRepairInformation.status, documentExtractionMissingFields: documentRepairInformation.missingRequiredFields });
+    } catch (error) {
+      const safeMessage = sanitizeDiagnosticText(error?.message) || 'Document extraction failed.';
+      documentRepairInformation = {status:'UNREADABLE',dtcs:[],testName:'',componentOrCircuit:'',testLocation:'',method:'',criterion:'',requestedResult:'',comparator:'',minimum:null,maximum:null,visibleTextEvidence:[],missingRequiredFields:['DTC applicability','component or circuit','test location','test method','criterion','requested technician result'],error:safeMessage,semanticRequestId:transactionId,imageHash};
+      markDiagnostic(diagnostic, 'U_DOCUMENT_EXTRACTION_FAILED', { documentExtractionResponseParsed: false, documentExtractionResultPresent: false, documentExtractionStatus: 'UNREADABLE', documentExtractionErrorMessage: safeMessage });
+    }
+  } else markDiagnostic(diagnostic, diagnostic.stage, { documentExtractionAttempted: false, documentExtractionSkipped: true });
   semanticResult.componentIdentification = componentIdentification;
   semanticResult.wiringDiagramAnalysis = wiringDiagramAnalysis;
+  semanticResult.documentRepairInformation = documentRepairInformation;
   return {
     transactionId,
     imageHash,
