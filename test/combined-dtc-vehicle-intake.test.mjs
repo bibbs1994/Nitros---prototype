@@ -53,7 +53,7 @@ function statusHarness(input){
   const statusStart=html.indexOf('function diagnosticStatus('),processStart=html.indexOf('function process(',statusStart),processEnd=html.indexOf('function renderTranscript(',processStart);
   assert.ok(statusStart>=0&&processStart>statusStart&&processEnd>processStart,'status intake functions were not found');
   return Function(`
-    let state={activeDtc:'P0340',dtcs:['P0340'],status:'',stage:'status',additionalTesting:{active:false},history:[]};
+    let state={activeDtc:'P0340',dtcs:['P0340'],status:'',stage:'status',intakeStep:'status',additionalTesting:{active:false},history:[]};
     const replies=[];
     function add(){} function ask(text){replies.push(text)} function isDiagnosticComplete(){return false}
     function ensureGuidedState(){throw new Error('guided testing must not run during status intake')}
@@ -61,6 +61,7 @@ function statusHarness(input){
     function parseVehicle(){throw new Error('vehicle parsing must not run for a status answer')}
     function codes(){throw new Error('repeated DTC must not be processed as new intake')}
     function concern(){throw new Error('concern parsing must not run for a status answer')}
+    function advanceIntake(){state.intakeStep=state.status?'complaint':'status';state.stage=state.intakeStep}
     function nextQuestion(){return state.status?'What is the customer complaint?':\`Is \${state.activeDtc} current, pending, history, or intermittent?\`}
     ${html.slice(statusStart,processEnd)}
     process(${JSON.stringify(input)});
@@ -89,5 +90,5 @@ test('VO leaves genuinely ambiguous status answers at the status question',()=>{
 test('BF preserves authoritative persistence and one service-worker authority',()=>{
   assert.match(html,/const STATE_KEY='nitros_diagnostic_case_v10120'/);
   assert.equal((html.match(/navigator\.serviceWorker\.register\(/g)||[]).length,1);
-  assert.match(html,/version:'10\.12\.7VO'/);
+  assert.match(html,/version:'10\.12\.7V1'/);
 });
