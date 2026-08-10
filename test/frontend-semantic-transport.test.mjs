@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { normalizeWiringField } from '../semantic-analyzer-core.mjs';
 
 const root = new URL('../', import.meta.url);
 const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
@@ -13,10 +14,10 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
 
 test('BF app build keeps the proven AO analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.7AO'/);
-  assert.match(html, /10\.12\.7VI/);
+  assert.match(html, /10\.12\.7VJ/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.7VI'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.7VJ'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -157,7 +158,18 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.7VI'/);
+  assert.match(html, /version:'10\.12\.7VJ'/);
+});
+
+test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
+  const nodes=normalizeWiringField([{component:'Camshaft Position Sensor',terminal:'',wire:'Signal circuit'},{component:'ECM',pin:null,description:'Visible destination; terminal unreadable'}]);
+  assert.equal(nodes.length,2);
+  assert.equal(nodes[0].component,'Camshaft Position Sensor');
+  assert.equal(nodes[0].terminal,'');
+  assert.equal(nodes[1].component,'ECM');
+  assert.equal(nodes[1].terminal,'');
+  assert.match(core,/one unreadable connector, pin, or wire designation must not erase otherwise reliable components or circuit paths/);
+  assert.match(core,/while still returning other readable evidence and source confidence/);
 });
 
 test('transport diagnostics cover lifecycle, timing, and categorized failures', () => {

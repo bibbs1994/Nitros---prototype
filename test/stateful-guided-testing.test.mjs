@@ -311,6 +311,14 @@ function completedRepairDecision(){
   return h;
 }
 
+function awaitingContinuity(){
+  const h=atCorrelation();
+  h.handleGuidedFinding('Cam and crank are synchronized correctly');
+  h.handleRepairInformationImport({kind:'pdf-attachment',fileName:'verified-procedure.pdf',fileSize:8192,importedAt:'2026-08-10T12:00:00.000Z'});
+  h.verifyPendingRepairInformation();
+  return h;
+}
+
 test('VI completed required evidence transitions deterministically to repair-decision without another test',()=>{
   const h=completedRepairDecision(),guided=h.state.diagnosticTestState;
   assert.equal(h.state.stage,'repair-decision');
@@ -353,4 +361,31 @@ test('VI New Case still clears completed and repair-decision state',()=>{
   assert.match(html,/function reset\(\)\{window\.resetOcrSessionState\?\.\('authoritative New Case command'\);state=blank\(\)/);
   assert.match(html,/const blank=\(\)=>\(\{[^\n]+stage:'vehicle',diagnosticTestState:null/);
   assert.match(html,/^\s*if\(\/\^\(new case\|start new case\|clear case\|start over\)\$\//m);
+});
+
+test('VJ CMP continuity accepts passing numeric resistance with or without an explicit unit',()=>{
+  for(const input of ['0.2 ohms','I have 0.2','point two ohms','0.4 ohms','less than one ohm']){
+    const h=awaitingContinuity(),guided=h.state.diagnosticTestState,record=guided.tests.find(test=>test.id==='verified-cmp-signal-circuit-continuity');h.handleGuidedFinding(input);
+    assert.equal(record.status,'pass',input);assert.equal(record.technicianFinding,input,input);assert.equal(record.unit,'Ω',input);assert.equal(guided.currentTestId,'',input);assert.equal(h.state.stage,'repair-decision',input);
+  }
+});
+
+test('VJ CMP continuity stores a failing numeric resistance and enters the supported circuit-fault decision path',()=>{
+  const h=awaitingContinuity(),guided=h.state.diagnosticTestState,record=guided.tests.find(test=>test.id==='verified-cmp-signal-circuit-continuity');h.handleGuidedFinding('I measured 1.4 ohms');
+  assert.equal(record.status,'fail');assert.equal(record.interpretedValue,1.4);assert.equal(record.unit,'Ω');assert.equal(record.technicianFinding,'I measured 1.4 ohms');assert.equal(guided.currentTestId,'');assert.equal(h.state.stage,'repair-decision');assert.match(h.state.lastReply,/failed evidence supports a repair decision focused on CMP Signal Circuit Continuity/i);
+});
+
+test('VJ CMP continuity accepts natural-language PASS and open-circuit failure variants',()=>{
+  for(const input of ['continuity is good','it passes']){const h=awaitingContinuity(),record=h.state.diagnosticTestState.tests.find(test=>test.id==='verified-cmp-signal-circuit-continuity');h.handleGuidedFinding(input);assert.equal(record.status,'pass',input)}
+  for(const input of ['open circuit','OL','infinite resistance','no continuity']){const h=awaitingContinuity(),record=h.state.diagnosticTestState.tests.find(test=>test.id==='verified-cmp-signal-circuit-continuity');h.handleGuidedFinding(input);assert.equal(record.status,'fail',input);assert.equal(record.technicianFinding,input,input);assert.equal(h.state.stage,'repair-decision',input)}
+});
+
+test("VJ what's next while continuity is truly pending requests only that result",()=>{
+  const h=awaitingContinuity(),guided=h.state.diagnosticTestState,before=JSON.stringify(guided.tests);h.handleGuidedFinding("What's next?");
+  assert.equal(guided.currentTestId,'verified-cmp-signal-circuit-continuity');assert.equal(JSON.stringify(guided.tests),before);assert.match(h.state.lastReply,/CMP Signal Circuit Continuity is still awaiting a result/i);assert.match(h.state.lastReply,/measured resistance with units/i);assert.doesNotMatch(h.state.lastReply,/^Correct -|Next test:/i);
+});
+
+test("VJ stored completion wins over a stale current-test pointer and cannot replay or reopen the prompt",()=>{
+  const h=completedRepairDecision(),guided=h.state.diagnosticTestState,record=guided.tests.find(test=>test.id==='verified-cmp-signal-circuit-continuity'),before=JSON.stringify(guided.tests);guided.currentTestId=record.id;guided.nextRecommendedTest=record.id;h.state.stage='circuit-isolation';h.handleGuidedFinding("What's next?");
+  assert.equal(record.status,'pass');assert.equal(JSON.stringify(guided.tests),before);assert.equal(guided.currentTestId,'');assert.equal(guided.nextRecommendedTest,'');assert.equal(h.state.stage,'repair-decision');assert.match(h.state.lastReply,/Diagnostic testing is complete/i);assert.doesNotMatch(h.state.lastReply,/still awaiting|Next test:|perform the test/i);
 });
