@@ -16,7 +16,7 @@ function harness(activeDtc='P0340'){
     function vehicleLabel(){return [state.vehicle.year,state.vehicle.make,state.vehicle.model,state.vehicle.engine].filter(Boolean).join(' ')}
     function ask(text){state.lastReply=text;responses.push(text)}
     ${source}
-    return {state,responses,ensureGuidedState,handleGuidedFinding,handleRepairInformationImport,verifyPendingRepairInformation,interpretFinding,normalizeFinding,classifyFindingIntent,repairDiagnosticText,repairDecisionReply,diagnosticConclusion,diagnosticCompletionGate,missingRepairDecisionEvidence,FINDING_INTENT,GUIDED_WORKFLOWS};
+    return {state,responses,ensureGuidedState,handleGuidedFinding,handleRepairInformationImport,verifyPendingRepairInformation,interpretFinding,normalizeFinding,classifyFindingIntent,repairDiagnosticText,repairDecisionReply,diagnosticConclusion,diagnosticCompletionGate,isDiagnosticComplete,continueToRepairDecision,missingRepairDecisionEvidence,FINDING_INTENT,GUIDED_WORKFLOWS};
   `)();
 }
 
@@ -420,4 +420,17 @@ test('VK verified repair information remains reference material rather than comp
 test('VK repair-decision conclusion persists with authoritative state across JSON refresh and resume',()=>{
   const h=failedContinuityDecision(),restored=JSON.parse(JSON.stringify(h.state));
   assert.equal(restored.stage,'repair-decision');assert.equal(restored.diagnosticTestState.currentTestId,'');assert.equal(restored.diagnosticTestState.tests.find(test=>test.id==='verified-cmp-signal-circuit-continuity').status,'fail');assert.equal(restored.repairInformation.status,'verified');assert.equal(restored.diagnosticTestState.diagnosticConclusion,h.state.lastReply);assert.match(restored.diagnosticTestState.diagnosticConclusion,/CMP signal circuit continuity path/i);
+});
+
+test('VL completed authoritative state rejects diagram-import regression and remains repair-decision after refresh',()=>{
+  const h=completedRepairDecision(),guided=h.state.diagnosticTestState,before=JSON.stringify({stage:h.state.stage,guided,repairInformation:h.state.repairInformation});
+  assert.equal(h.isDiagnosticComplete(),true);
+  assert.equal(h.handleRepairInformationImport({kind:'image-analysis',fileName:'cam-wiring.png',fileSize:5000,analysis:{category:'AUTOMOTIVE_WIRING_DIAGRAM',runId:'RUN-FRESH'}}),false);
+  assert.equal(JSON.stringify({stage:h.state.stage,guided,repairInformation:h.state.repairInformation}),before);
+  assert.equal(h.state.stage,'repair-decision');assert.equal(guided.currentTestId,'');assert.equal(guided.nextRecommendedTest,'');assert.deepEqual(guided.tests.filter(test=>['pass','fail'].includes(test.status)).map(test=>test.status),['pass','pass','pass','pass','pass','pass']);
+  const restored=JSON.parse(JSON.stringify(h.state));assert.equal(restored.stage,'repair-decision');assert.equal(restored.diagnosticTestState.currentTestId,'');assert.ok(restored.diagnosticTestState.completedAt);
+});
+
+test('VL repair-decision action uses the canonical conclusion without reopening a test',()=>{
+  const h=completedRepairDecision(),guided=h.state.diagnosticTestState,before=JSON.stringify(guided.tests);assert.equal(h.continueToRepairDecision(),true);assert.equal(JSON.stringify(guided.tests),before);assert.equal(h.state.stage,'repair-decision');assert.equal(guided.currentTestId,'');assert.match(h.state.lastReply,/Diagnostic testing is complete/i);
 });

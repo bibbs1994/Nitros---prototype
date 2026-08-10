@@ -14,10 +14,10 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
 
 test('BF app build keeps the proven AO analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.7AO'/);
-  assert.match(html, /10\.12\.7VK/);
+  assert.match(html, /10\.12\.7VL/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.7VK'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.7VL'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -158,7 +158,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.7VK'/);
+  assert.match(html, /version:'10\.12\.7VL'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
@@ -170,6 +170,16 @@ test('VJ partial-readable wiring evidence retains reliable circuit data without 
   assert.equal(nodes[1].terminal,'');
   assert.match(core,/one unreadable connector, pin, or wire designation must not erase otherwise reliable components or circuit paths/);
   assert.match(core,/while still returning other readable evidence and source confidence/);
+});
+
+test('VL completed diagnostics render repair-decision CTA and hard-block stale guided-test creation', () => {
+  const completeBranch=analyzer.indexOf("if(window.NitrosDiagnosticV10120?.isComplete?.())"),testBranch=analyzer.indexOf("else if(diagram.status==='READY'&&diagram.testPlan.length)",completeBranch),sessionCreation=analyzer.indexOf('run.componentTestSession={',testBranch),clickRecheck=analyzer.indexOf("if(window.NitrosDiagnosticV10120?.isComplete?.())",testBranch);
+  assert.ok(completeBranch>=0&&testBranch>completeBranch,'authoritative completion must be checked before the generic diagram test CTA');
+  assert.match(analyzer,/button\.textContent='CONTINUE TO REPAIR DECISION'/);
+  assert.match(analyzer,/continueToRepairDecision\?\.\(\)/);
+  assert.ok(clickRecheck>testBranch&&clickRecheck<sessionCreation,'a stale rendered CTA must recheck completion before creating a guided-test session');
+  assert.match(html,/isComplete:isDiagnosticComplete,continueToRepairDecision/);
+  assert.match(analyzer,/Fresh-result verification/);
 });
 
 test('transport diagnostics cover lifecycle, timing, and categorized failures', () => {

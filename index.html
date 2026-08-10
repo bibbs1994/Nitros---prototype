@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.7VK — Repair-Decision Diagnostic Conclusion Gate</title>
+<title>Nitros Mobile Technician Portal v10.12.7VL — Diagnostic Completion / Repair-Decision Gate</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.7VK — Repair-Decision Diagnostic Conclusion Gate</div>
+  <div class="sub">Mobile Technician Portal v10.12.7VL — Diagnostic Completion / Repair-Decision Gate</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.7VK — Repair-Decision Diagnostic Conclusion Gate. Existing conversational and diagnostic evidence features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.7VL — Diagnostic Completion / Repair-Decision Gate. Existing conversational and diagnostic evidence features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.7VK — Repair-Decision Diagnostic Conclusion Gate</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.7VL — Diagnostic Completion / Repair-Decision Gate</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.7VK — Repair-Decision Diagnostic Conclusion Gate</div>
+      <div class="eyebrow">Version 10.12.7VL — Diagnostic Completion / Repair-Decision Gate</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1683,13 +1683,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.7VK • Repair-Decision Diagnostic Conclusion Gate • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.7VL • Diagnostic Completion / Repair-Decision Gate • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.12.7VK',
-  release:'Repair-Decision Diagnostic Conclusion Gate',
+  version:'10.12.7VL',
+  release:'Diagnostic Completion / Repair-Decision Gate',
   buildDate:'2026-08-10',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -5284,7 +5284,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7VK • Repair-Decision Diagnostic Conclusion Gate</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7VL • Diagnostic Completion / Repair-Decision Gate</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5322,7 +5322,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7VK — Repair-Decision Diagnostic Conclusion Gate</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7VL — Diagnostic Completion / Repair-Decision Gate</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6347,7 +6347,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7VK</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7VL</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -7375,8 +7375,10 @@ function completedResultReply(result){const observed=result.observationSummary?`
 function repairDecisionEvidence(guided=state.diagnosticTestState){return guided?.tests.filter(test=>['pass','fail'].includes(test.status))||[]}
 function missingRepairDecisionEvidence(guided=state.diagnosticTestState){const workflow=workflowDefinition(),missing=[];if(!guided||!workflow)return['active diagnostic workflow'];for(const definition of workflow.tests.filter(test=>test.required!==false)){if(testRecord(definition.id)?.status!=='pass')missing.push(definition.name)}if(state.repairInformation?.status!=='verified')missing.push('Verified Repair Information');const selected=guided.selectedIsolationTest;if(selected&&!['pass','fail'].includes(testRecord(selected.id)?.status))missing.push(selected.name);return [...new Set(missing)]}
 function diagnosticCompletionGate(guided=state.diagnosticTestState){if(!guided||guided.currentTestId||missingRepairDecisionEvidence(guided).length)return false;guided.nextRecommendedTest='';guided.completedAt=guided.completedAt||new Date().toISOString();state.stage='repair-decision';return true}
+function isDiagnosticComplete(){const guided=state.diagnosticTestState;return Boolean(state.activeDtc&&state.stage==='repair-decision'&&guided?.workflowId&&!guided.currentTestId&&guided.completedAt&&missingRepairDecisionEvidence(guided).length===0)}
 function diagnosticConclusion(guided=state.diagnosticTestState){const evidence=repairDecisionEvidence(guided),passes=evidence.filter(test=>test.status==='pass'),failures=evidence.filter(test=>test.status==='fail'),passSummary=passes.map(test=>test.name).join(', '),evidenceSummary=evidence.map(test=>`${test.name}: ${test.status.toUpperCase()}`).join('; '),continuityFailure=failures.find(test=>/continuity/i.test(`${test.id} ${test.name}`));if(continuityFailure)return`Diagnostic testing is complete. Diagnostic finding: testing identified a failure in the CMP signal circuit continuity path. Proved: ${passSummary} passed, and ${continuityFailure.name} failed. Did not prove: the exact open or high-resistance location, or a failed sensor, ECM/PCM, connector, wire, or terminal. Repair authorization: review the verified repair information and recorded test evidence to identify the affected circuit section before authorizing a specific repair. Verified repair information is reference material, not independent proof that a component failed. Stored evidence: ${evidenceSummary}.`;if(failures.length)return`Diagnostic testing is complete. Diagnostic finding: stored testing identified failure in ${failures.map(test=>test.name).join(', ')}. Proved: ${evidenceSummary}. Did not prove: a specific failed component unless the completed test directly isolated that component. Repair authorization: use the verified repair information and recorded evidence to identify the actual repair target before authorizing a repair. Verified repair information is reference material, not independent proof of component failure.`;return`Diagnostic testing is complete. Diagnostic finding: all required tests are complete. Proved: ${passSummary} passed. Did not prove: that the camshaft position sensor, ECM/PCM, connector, wire, terminal, or any other component failed; the evidence does not support condemning a component. Repair authorization: do not replace a part from this evidence alone; review the verified repair information and case conditions for the remaining diagnostic decision. Verified repair information is reference material, not independent proof of component failure. Stored evidence: ${evidenceSummary}.`}
 function repairDecisionReply(){const guided=state.diagnosticTestState,missing=missingRepairDecisionEvidence(guided);if(missing.length)return`Current Test is Complete, but the stored evidence is missing: ${missing.join(', ')}. I cannot make a repair decision until that specific evidence is present.`;diagnosticCompletionGate(guided);const conclusion=diagnosticConclusion(guided);guided.diagnosticConclusion=conclusion;return conclusion}
+function continueToRepairDecision(){if(!isDiagnosticComplete())return false;ask(repairDecisionReply());return true}
 function diagnosticProgressRequest(text){return /^(?:what(?:'s| is) next|next|continue|where do we go now|what do i do now)\??$/i.test(String(text||'').trim())}
 function reconcileCompletedCurrentTest(guided){const current=testRecord(guided?.currentTestId);if(!guided?.currentTestId||!['pass','fail'].includes(current?.status))return false;activateTest(guided,nextPendingTest(guided.currentTestId));diagnosticCompletionGate(guided);return true}
 function pendingTestReply(definition){const continuity=/continuity|resistance/i.test(`${definition.name||''} ${definition.expectedResult||''}`),requirement=continuity?'Report the measured resistance with units, or a direct continuity result such as pass, open circuit, OL, or no continuity.':definition.requestedResult||'Report the actual measurement or direct observed result.';return`${definition.name} is still awaiting a result. ${requirement}`}
@@ -7496,7 +7498,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 window.addEventListener('pageshow',()=>{revealLogin();if(!bootFinished)setTimeout(boot,0)});
 window.addEventListener('nitros:diagnostic-import',event=>handleRepairInformationImport(event.detail));
 window.addEventListener('nitros:verify-repair-information',()=>verifyPendingRepairInformation());
-window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),process,reset,importRepairInformation:handleRepairInformationImport,verifyRepairInformation:verifyPendingRepairInformation,isRepairInformationRequired:()=>state.repairInformationRequired&&testDefinition(state.diagnosticTestState?.currentTestId)?.kind==='repair-information-required'};
+window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),process,reset,importRepairInformation:handleRepairInformationImport,verifyRepairInformation:verifyPendingRepairInformation,isRepairInformationRequired:()=>state.repairInformationRequired&&testDefinition(state.diagnosticTestState?.currentTestId)?.kind==='repair-information-required',isComplete:isDiagnosticComplete,continueToRepairDecision};
 })();
 </script>
 
@@ -7686,7 +7688,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.7VK</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.7VL</strong></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>
 <li>Service Worker Script URL: <strong id="nitrosRuntimeSwUrl">Checking</strong></li>
