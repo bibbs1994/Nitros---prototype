@@ -16,7 +16,7 @@ function harness(activeDtc='P0340'){
     function vehicleLabel(){return [state.vehicle.year,state.vehicle.make,state.vehicle.model,state.vehicle.engine].filter(Boolean).join(' ')}
     function ask(text){state.lastReply=text;responses.push(text)}
     ${source}
-    return {state,responses,ensureGuidedState,handleGuidedFinding,handleRepairInformationImport,verifyPendingRepairInformation,interpretFinding,normalizeFinding,classifyFindingIntent,repairDiagnosticText,repairDecisionReply,diagnosticConclusion,diagnosticCompletionGate,isDiagnosticComplete,continueToRepairDecision,missingRepairDecisionEvidence,FINDING_INTENT,GUIDED_WORKFLOWS};
+    return {state,responses,ensureGuidedState,handleGuidedFinding,handleRepairInformationImport,verifyPendingRepairInformation,interpretFinding,normalizeFinding,classifyFindingIntent,repairDiagnosticText,repairDecisionReply,diagnosticConclusion,diagnosticCompletionGate,deriveDiagnosticDisposition,applyNoFaultAction,isDiagnosticComplete,continueToRepairDecision,missingRepairDecisionEvidence,FINDING_INTENT,GUIDED_WORKFLOWS};
   `)();
 }
 
@@ -359,7 +359,7 @@ test('VI entering repair-decision preserves every previously passed result',()=>
 
 test('VI New Case still clears completed and repair-decision state',()=>{
   assert.match(html,/function reset\(\)\{window\.resetOcrSessionState\?\.\('authoritative New Case command'\);state=blank\(\)/);
-  assert.match(html,/const blank=\(\)=>\(\{[^\n]+stage:'vehicle',diagnosticTestState:null/);
+  assert.match(html,/const blank=\(\)=>\(\{[^\n]+stage:'vehicle',[^\n]+diagnosticTestState:null/);
   assert.match(html,/^\s*if\(\/\^\(new case\|start new case\|clear case\|start over\)\$\//m);
 });
 
@@ -453,4 +453,29 @@ test('VM next action remains a deliberate repair-decision choice and starts no e
 
 test('VM ordinary repair question cannot bypass the completion-and-evidence gate',()=>{
   const h=awaitingContinuity(),guided=h.state.diagnosticTestState;h.handleGuidedFinding('What should be repaired?');assert.notEqual(h.state.stage,'repair-decision');assert.equal(guided.currentTestId,'verified-cmp-signal-circuit-continuity');assert.doesNotMatch(h.state.lastReply,/Outcome: (?:CONFIRMED FAILURE|SUPPORTED REPAIR DECISION|NO COMPONENT FAILURE CONFIRMED)/);
+});
+
+test('VN all-PASS completion derives authoritative no-fault and no-repair disposition',()=>{
+  const h=completedRepairDecision(),guided=h.state.diagnosticTestState;
+  assert.equal(h.state.diagnosticOutcome,'NO FAULT CONFIRMED');assert.equal(h.state.repairDecision,'NO REPAIR AUTHORIZED');assert.equal(h.state.stage,'repair-decision');assert.equal(guided.currentTestId,'');assert.match(h.state.lastReply,/^Diagnostic testing is complete\. No component failure was confirmed\./);assert.match(h.state.lastReply,/No repair is authorized by the current evidence/i);assert.doesNotMatch(h.state.lastReply,/replace (?:the )?(?:CMP|camshaft|ECM|PCM)/i);
+});
+
+test('VN Review Test Results exposes unchanged completed history without restarting',()=>{
+  const h=completedRepairDecision(),guided=h.state.diagnosticTestState,before=JSON.stringify(guided.tests),result=h.applyNoFaultAction('review');assert.equal(result.accepted,true);assert.equal(h.state.repairDecisionView,'results');assert.equal(JSON.stringify(guided.tests),before);assert.equal(guided.currentTestId,'');assert.equal(h.state.stage,'repair-decision');
+});
+
+test('VN Perform Additional Testing appends investigation mode without erasing case authority',()=>{
+  const h=completedRepairDecision(),guided=h.state.diagnosticTestState,before={id:h.state.id,vehicle:structuredClone(h.state.vehicle),dtc:h.state.activeDtc,workflow:guided.workflowId,tests:JSON.stringify(guided.tests),repairInformation:structuredClone(h.state.repairInformation)},result=h.applyNoFaultAction('additional-testing');assert.equal(result.accepted,true);assert.match(result.message,/completed evidence remains unchanged/i);assert.equal(h.state.additionalTesting.active,true);assert.equal(h.state.repairDecisionView,'additional-testing');assert.equal(h.state.id,before.id);assert.deepEqual(h.state.vehicle,before.vehicle);assert.equal(h.state.activeDtc,before.dtc);assert.equal(guided.workflowId,before.workflow);assert.equal(JSON.stringify(guided.tests),before.tests);assert.deepEqual(h.state.repairInformation,before.repairInformation);assert.equal(guided.currentTestId,'');
+});
+
+test('VN Close Diagnostic preserves evidence and deterministically authorizes no repair',()=>{
+  const h=completedRepairDecision(),guided=h.state.diagnosticTestState,before=JSON.stringify(guided.tests),result=h.applyNoFaultAction('close');assert.equal(result.accepted,true);assert.equal(h.state.diagnosticClosed,true);assert.equal(h.state.diagnosticOutcome,'NO FAULT CONFIRMED');assert.equal(h.state.repairDecision,'NO REPAIR AUTHORIZED');assert.equal(JSON.stringify(guided.tests),before);assert.equal(h.state.stage,'repair-decision');assert.equal(guided.currentTestId,'');assert.match(result.message,/No repair is authorized/i);
+});
+
+test('VN no-fault outcome and action state survive existing JSON persistence',()=>{
+  const h=completedRepairDecision();h.applyNoFaultAction('review');const restored=JSON.parse(JSON.stringify(h.state));assert.equal(restored.diagnosticOutcome,'NO FAULT CONFIRMED');assert.equal(restored.repairDecision,'NO REPAIR AUTHORIZED');assert.equal(restored.repairDecisionView,'results');assert.equal(restored.diagnosticTestState.currentTestId,'');assert.equal(restored.diagnosticTestState.tests.filter(test=>test.status==='pass').length,6);
+});
+
+test('VN status UI exposes authoritative fields and three functional controls',()=>{
+  for(const label of ['Review Test Results','Perform Additional Testing','Close Diagnostic — No Fault Confirmed'])assert.match(html,new RegExp(label));for(const id of ['reviewDiagnosticResults','performAdditionalTesting','closeNoFaultDiagnostic','diagnosticCompletedResults'])assert.match(html,new RegExp(id));assert.match(html,/Diagnostic Outcome: \$\{esc\(state\.diagnosticOutcome\)\}/);assert.match(html,/Repair Decision: \$\{esc\(state\.repairDecision\|\|'PENDING'\)\}/);assert.match(html,/additionalTesting\.notes\.push\(\{text,at:new Date\(\)\.toISOString\(\)\}\)/);assert.match(html,/reviewDiagnosticResults,beginAdditionalTesting,closeNoFaultDiagnostic/);
 });
