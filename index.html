@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.7V2 — Verified Repair Information Load / Resume Fix</title>
+<title>Nitros Mobile Technician Portal v10.12.7V3 — Direct AI Diagnostic Combined Intake</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.7V2 — Verified Repair Information Load / Resume Fix</div>
+  <div class="sub">Mobile Technician Portal v10.12.7V3 — Direct AI Diagnostic Combined Intake</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.7V2 — Verified Repair Information Load / Resume Fix. Existing conversational and diagnostic evidence features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.7V3 — Direct AI Diagnostic Combined Intake. Existing conversational and diagnostic evidence features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.7V2 — Verified Repair Information Load / Resume Fix</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.7V3 — Direct AI Diagnostic Combined Intake</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.7V2 — Verified Repair Information Load / Resume Fix</div>
+      <div class="eyebrow">Version 10.12.7V3 — Direct AI Diagnostic Combined Intake</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1683,13 +1683,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.7V2 • Verified Repair Information Load / Resume Fix • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.7V3 • Direct AI Diagnostic Combined Intake • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.12.7V2',
-  release:'Verified Repair Information Load / Resume Fix',
+  version:'10.12.7V3',
+  release:'Direct AI Diagnostic Combined Intake',
   buildDate:'2026-08-10',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -5284,7 +5284,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7V2 • Verified Repair Information Load / Resume Fix</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7V3 • Direct AI Diagnostic Combined Intake</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5322,7 +5322,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7V2 — Verified Repair Information Load / Resume Fix</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7V3 — Direct AI Diagnostic Combined Intake</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6347,7 +6347,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7V2</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7V3</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -6536,7 +6536,14 @@ function localGeneralAnswer(text){
  if(/WIRE|PINOUT|CONNECTOR|WIRING DIAGRAM/.test(q))return 'I can help test the circuit. Give me the vehicle, engine, circuit or code, and the measurements already taken; exact connector views and pin locations require matching service information.';
  return firstTurn?'Tell me the DTC or symptom you are working with, and I will start with one useful question rather than a checklist.':'What did you observe or measure next?';
 }
-async function send(text){text=(text||'').trim();if(!text||busy)return;if(/^(?:new case|start new case|reset case|clear case)[.!?\s]*$/i.test(text)){resetNaturalCase();history.push({role:'assistant',content:'New diagnostic case started. Tell me the vehicle, DTC, or symptom when you are ready.',mode:'general'});activeMode='general';render();input.value='';save();updateContext();return}if(activeMode==='general'&&isNewNaturalContext(text))resetNaturalCase();history.push({role:'user',content:text,mode:activeMode});addMessage('user',text);input.value='';parseCaseInput(text);save();updateContext();const context=mergedContext();
+async function send(text){text=(text||'').trim();if(!text||busy)return;if(/^(?:new case|start new case|reset case|clear case)[.!?\s]*$/i.test(text)){resetNaturalCase();window.NitrosDiagnosticV10120?.reset();history.push({role:'assistant',content:'New diagnostic case started. Tell me the vehicle, DTC, or symptom when you are ready.',mode:'general'});activeMode='general';render();input.value='';save();updateContext();return}if(activeMode==='general'&&isNewNaturalContext(text))resetNaturalCase();history.push({role:'user',content:text,mode:activeMode});addMessage('user',text);input.value='';
+ const directVehicle=naturalVehicle(text),directCodes=naturalCodes(text),hasVehicleFact=!!(directVehicle.year||directVehicle.make||directVehicle.model||directVehicle.engine);
+ if(activeMode==='general'&&directCodes.length&&hasVehicleFact&&window.NitrosDiagnosticV10120){
+   window.NitrosDiagnosticV10120.process(text);const authoritative=window.NitrosDiagnosticV10120.getState();
+   caseData={...emptyNaturalCase(),vehicle:[authoritative.vehicle.year,authoritative.vehicle.make,authoritative.vehicle.model,authoritative.vehicle.engine].filter(Boolean).join(' '),...authoritative.vehicle,dtcs:[...authoritative.dtcs],status:authoritative.status||'',currentQuestion:authoritative.lastReply||''};
+   const reply=authoritative.lastReply;history.push({role:'assistant',content:reply,mode:'general'});addMessage('assistant',reply);save();updateContext();return
+ }
+ parseCaseInput(text);save();updateContext();const context=mergedContext();
  if(activeMode==='general'&&!serviceUrl()){const reply=localGeneralAnswer(text);history.push({role:'assistant',content:reply,mode:'general'});addMessage('assistant',reply);save();updateContext();return}
  if(activeMode==='ro'&&!context.ro){const reply='RO Assistant is reserved for case-specific work. Open or enter a repair order to attach the vehicle, concern, DTCs, and technician notes. For a question that does not need an RO, switch to General Diagnostics.';history.push({role:'assistant',content:reply,mode:'ro'});addMessage('assistant',reply);save();updateContext();return}
  busy=true;$('diagSend').disabled=true;$('diagSend').textContent='Thinking…';updateContext();
@@ -7319,7 +7326,7 @@ function canonicalDtc(p,a,b,c,d){const code=(p+a+b+c+d).toUpperCase().replace(/O
 function normalize(text){return String(text||'').trim().replace(DTC_PATTERN,(match,lead,p,a,b,c,d)=>{const code=canonicalDtc(p,a,b,c,d);return code?lead+code:match})}
 function codes(text){const found=[];for(const m of String(text||'').matchAll(DTC_PATTERN)){const code=canonicalDtc(m[2],m[3],m[4],m[5],m[6]);if(code&&!found.includes(code))found.push(code)}return found}
 function vehicleLabel(){return [state.vehicle.year,state.vehicle.make,state.vehicle.model,state.vehicle.engine].filter(Boolean).join(' ').replace(/\s+/g,' ').trim()}
-function parseVehicle(text){const t=normalize(text);const y=(t.match(/\b(19\d{2}|20\d{2})\b/)||[])[1]||'';if(!y)return null;const makes=['Toyota','GMC','Chevrolet','Ford','Honda','Kia','Hyundai','Nissan','Jeep','Dodge','Ram','Volkswagen','VW','BMW','Mini','Subaru','Mazda','Lexus','Acura','Buick','Cadillac','Chrysler'];const make=makes.find(m=>new RegExp('\\b'+m+'\\b','i').test(t))||'';const models=['F-150','Silverado','Camry','Accord','Civic','Corolla','Tacoma','Tundra','RAV4','CR-V','Altima','Sentra','Rogue','Wrangler','Cherokee','Sierra','Ram'];const model=models.find(m=>new RegExp('\\b'+m.replace('-','[- ]?')+'\\b','i').test(t))||'';const eng=(t.match(/\b(\d(?:\.\d)?)\s*(?:L|liter)\b/i)||[])[1]||'';return {year:y,make:make==='VW'?'Volkswagen':make,model,engine:eng?(eng+'L'):''}}
+function parseVehicle(text){const t=normalize(text);const year=(t.match(/\b(19\d{2}|20\d{2})\b/)||[])[1]||'';const makes=['Toyota','GMC','Chevrolet','Ford','Honda','Kia','Hyundai','Nissan','Jeep','Dodge','Ram','Volkswagen','VW','BMW','Mini','Subaru','Mazda','Lexus','Acura','Buick','Cadillac','Chrysler'];let make=makes.find(m=>new RegExp('\\b'+m+'\\b','i').test(t))||'';const models=['F-150','Silverado','Camry','Accord','Civic','Corolla','Tacoma','Tundra','RAV4','CR-V','Altima','Sentra','Rogue','Wrangler','Cherokee','Sierra','Ram'];const model=models.find(m=>new RegExp('\\b'+m.replace('-','[- ]?')+'\\b','i').test(t))||'';const approvedModelMakes={Camry:'Toyota',Corolla:'Toyota',Tacoma:'Toyota',Tundra:'Toyota',RAV4:'Toyota',Accord:'Honda',Civic:'Honda','CR-V':'Honda',Altima:'Nissan',Sentra:'Nissan',Rogue:'Nissan',Wrangler:'Jeep',Silverado:'Chevrolet',Sierra:'GMC','F-150':'Ford'};if(!make&&model)make=approvedModelMakes[model]||'';const eng=(t.match(/\b(\d(?:\.\d)?)\s*(?:L|liter)\b/i)||[])[1]||'';return year||make||model||eng?{year,make:make==='VW'?'Volkswagen':make,model,engine:eng?(eng+'L'):''}:null}
 function concern(text){return (String(text||'').match(/\b(rough idle|runs? rough|stall(?:s|ing)?|no[- ]start|hard start(?:ing)?|hesitat(?:es|ion|ing)|loss of power|low power|misfir(?:e|es|ing)|overheat(?:s|ing)?|(?:check engine|service engine|MIL) light)\b/i)||[])[1]||''}
 const GUIDED_WORKFLOWS={
  P0340:{id:'p0340-camshaft-position-circuit',tests:[
@@ -7397,10 +7404,10 @@ function reviewDiagnosticResults(){const result=applyNoFaultAction('review');if(
 function beginAdditionalTesting(){const result=applyNoFaultAction('additional-testing');if(result.accepted)ask(result.message);return result.accepted}
 function closeNoFaultDiagnostic(){const result=applyNoFaultAction('close');if(result.accepted)ask(result.message);return result.accepted}
 function workflowName(){if(state.activeDtc==='P0420'||state.activeDtc==='P0430')return'Catalyst Efficiency';if(state.activeDtc==='P0340'||state.activeDtc==='P0342')return'Camshaft Position Circuit';if(/^P030[0-8]$/.test(state.activeDtc))return'Misfire Diagnosis';if(!state.activeDtc&&(state.complaint||state.symptoms))return'Symptom-Based Diagnosis';return state.activeDtc?'Code-Specific Diagnostic':'Vehicle Intake'}
-function nextRequiredIntakeStep(){if(!vehicleLabel())return'vehicle';if(!state.activeDtc&&!state.complaint)return'dtc';if(state.activeDtc&&!state.status)return'status';if(state.activeDtc&&!state.complaint)return'complaint';if(state.activeDtc&&!state.symptoms)return'symptoms';if(!state.previousRepairs)return'previous-repairs';if(!state.previousTests)return'previous-testing';return'complete'}
+function nextRequiredIntakeStep(){if(!state.vehicle.year||!state.vehicle.make||!state.vehicle.model)return'vehicle';if(!state.activeDtc&&!state.complaint)return'dtc';if(state.activeDtc&&!state.status)return'status';if(state.activeDtc&&!state.complaint)return'complaint';if(state.activeDtc&&!state.symptoms)return'symptoms';if(!state.previousRepairs)return'previous-repairs';if(!state.previousTests)return'previous-testing';return'complete'}
 function advanceIntake(){state.intakeStep=nextRequiredIntakeStep();state.stage=({vehicle:'vehicle',dtc:'dtc',status:'status',complaint:'complaint',symptoms:'symptoms','previous-repairs':'repairs','previous-testing':'tests',complete:'diagnostic'})[state.intakeStep];return state.intakeStep}
 function nextQuestion(){
- if(state.intakeStep==='vehicle')return'What vehicle are we working on? Give me the year, make, model, and engine if known.';
+ if(state.intakeStep==='vehicle'){const missing=[!state.vehicle.year&&'year',!state.vehicle.make&&'make',!state.vehicle.model&&'model'].filter(Boolean);return vehicleLabel()?`I recorded ${vehicleLabel()}. What is the missing vehicle ${missing.join(' and ')}?`:'What vehicle are we working on? Give me the year, make, model, and engine if known.';}
  if(state.intakeStep==='dtc')return'Enter a diagnostic code or simply describe the symptom or customer concern. A code is not required.';
  if(state.intakeStep==='status')return`Is ${state.activeDtc} current, pending, history, or intermittent?`;
  if(state.intakeStep==='complaint')return'What is the customer complaint? You can say “MIL only” if there are no drivability complaints.';
@@ -7698,7 +7705,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.7V2</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.7V3</strong></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>
 <li>Service Worker Script URL: <strong id="nitrosRuntimeSwUrl">Checking</strong></li>

@@ -9,6 +9,9 @@ assert.ok(start>=0&&end>start,'authoritative intake helpers were not found');
 const helpers=Function(`${html.slice(start,end)};return {normalize,codes,parseVehicle,concern}`)();
 
 const examples=[
+  ['I have a P0340 on a 2014 Toyota Camry.','P0340',{year:'2014',make:'Toyota',model:'Camry'}],
+  ['2014 Toyota Camry with P0340.','P0340',{year:'2014',make:'Toyota',model:'Camry'}],
+  ['Got a P0340, working on a 2014 Camry.','P0340',{year:'2014',make:'Toyota',model:'Camry'}],
   ['P0340 2014 Toyota Camry','P0340',{year:'2014',make:'Toyota',model:'Camry'}],
   ['p0340 2014 Toyota Camry','P0340',{year:'2014',make:'Toyota',model:'Camry'}],
   ['P 0340 2014 Toyota Camry','P0340',{year:'2014',make:'Toyota',model:'Camry'}],
@@ -18,7 +21,7 @@ const examples=[
   ['P O 340 2014 Toyota Camry','P0340',{year:'2014',make:'Toyota',model:'Camry'}],
   ['po340 2014 Toyota Camry','P0340',{year:'2014',make:'Toyota',model:'Camry'}],
   ['code PO340 2014 Toyota Camry','P0340',{year:'2014',make:'Toyota',model:'Camry'}],
-  ['2014 Camry with code P0340','P0340',{year:'2014',make:'',model:'Camry'}],
+  ['2014 Camry with code P0340','P0340',{year:'2014',make:'Toyota',model:'Camry'}],
   ['Toyota Camry 2014, P0-3.4_0','P0340',{year:'2014',make:'Toyota',model:'Camry'}],
   ['U 0 1 0 0 2018 Ford F-150','U0100',{year:'2018',make:'Ford',model:'F-150'}],
   ['C-0-0-3-5 2017 Chevrolet Silverado','C0035',{year:'2017',make:'Chevrolet',model:'Silverado'}]
@@ -47,6 +50,28 @@ test('authoritative processing applies vehicle, every DTC, and concern before re
   assert.match(processSource,/const v=parseVehicle\(text\),found=codes\(text\),reportedConcern=concern\(text\)/);
   assert.match(processSource,/state\.dtcs=\[\.\.\.new Set\(\[\.\.\.found,\.\.\.state\.dtcs\]\)\]/);
   assert.match(processSource,/if\(v\|\|found\.length\)/);
+});
+
+test('V3 Direct AI combined entry delegates to authoritative state and does not request the DTC again',()=>{
+  const sendSource=html.slice(html.indexOf('async function send('),html.indexOf('function closeMode('));
+  assert.match(sendSource,/directCodes\.length&&hasVehicleFact&&window\.NitrosDiagnosticV10120/);
+  assert.match(sendSource,/window\.NitrosDiagnosticV10120\.process\(text\)/);
+  assert.match(sendSource,/const authoritative=window\.NitrosDiagnosticV10120\.getState\(\)/);
+  const processSource=html.slice(html.indexOf('function process('),html.indexOf('function renderTranscript('));
+  assert.match(processSource,/if\(v\|\|found\.length\)\{advanceIntake\(\)/);
+  assert.match(html,/if\(state\.intakeStep==='status'\)return`Is \$\{state\.activeDtc\} current, pending, history, or intermittent\?`/);
+});
+
+test('V3 partial vehicle intake retains approved Camry identity and asks only for year',()=>{
+  assert.deepEqual(helpers.parseVehicle('P0340 on a Camry.'),{year:'',make:'Toyota',model:'Camry',engine:''});
+  assert.match(html,/What is the missing vehicle \$\{missing\.join\(' and '\)\}\?/);
+});
+
+test('standalone DTC, standalone vehicle, and New Case paths remain available',()=>{
+  assert.deepEqual(helpers.codes('P0340'),['P0340']);
+  assert.deepEqual(helpers.parseVehicle('2014 Toyota Camry'),{year:'2014',make:'Toyota',model:'Camry',engine:''});
+  assert.match(html,/resetNaturalCase\(\);window\.NitrosDiagnosticV10120\?\.reset\(\)/);
+  assert.match(html,/function reset\(\)\{window\.resetOcrSessionState\?\.\('authoritative New Case command'\);state=blank\(\)/);
 });
 
 function statusHarness(input){
@@ -87,8 +112,8 @@ test('VO leaves genuinely ambiguous status answers at the status question',()=>{
   assert.match(result.replies[0],/Is P0340 current, pending, history, or intermittent\?/);
 });
 
-test('BF preserves authoritative persistence and one service-worker authority',()=>{
+test('V3 preserves authoritative persistence and one service-worker authority',()=>{
   assert.match(html,/const STATE_KEY='nitros_diagnostic_case_v10120'/);
   assert.equal((html.match(/navigator\.serviceWorker\.register\(/g)||[]).length,1);
-  assert.match(html,/version:'10\.12\.7V2'/);
+  assert.match(html,/version:'10\.12\.7V3'/);
 });
