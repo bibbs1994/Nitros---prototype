@@ -14,10 +14,10 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
 
 test('BF app build keeps the proven AO analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.7AO'/);
-  assert.match(html, /10\.12\.7V7/);
+  assert.match(html, /10\.12\.7V8/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.7V7'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.7V8'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -127,16 +127,16 @@ test('V5 document screenshots keep their category and route through fresh repair
   assert.match(analyzer,/result\.route='Document\/OCR'/);
   assert.doesNotMatch(analyzer,/No clean-room document\/OCR analyzer is configured/);
   assert.match(analyzer,/documentRepairInformation.*freshResultVerification/);
-  assert.match(analyzer,/result\.isolationTests=complete&&applicable\?/);
-  for(const id of ['nitrosDocumentExtractionStatus','nitrosDocumentExtractedFields','nitrosDocumentMissingFields','nitrosDocumentDtcApplicability','nitrosDocumentFreshVerification'])assert.match(html,new RegExp(`id="${id}"`));
+  assert.match(analyzer,/result\.isolationTests=\[\]/);
+  for(const id of ['nitrosDocumentExtractionStatus','nitrosDocumentExtractedFields','nitrosDocumentMissingFields','nitrosDocumentDtcApplicability','nitrosDocumentFreshVerification','nitrosDocumentExtractionRunId','nitrosDocumentVerificationRunId','nitrosDocumentCanonicalCriterion','nitrosDocumentExtractionMissingFields','nitrosDocumentVerificationMissingFields','nitrosDocumentSynchronizationStatus'])assert.match(html,new RegExp(`id="${id}"`));
 });
 
 test('V6 document completion validates resolved applicability independently from visible DTC codes',()=>{
   assert.match(core,/\['APPLICABLE','NOT APPLICABLE','UNKNOWN \/ CANNOT DETERMINE'\]\.includes\(raw\.dtcApplicability\)/);
   assert.match(core,/\['DTC applicability',result\.dtcApplicability\]/);
   assert.doesNotMatch(core,/\['DTC applicability',result\.dtcs\.length\]/);
-  assert.match(analyzer,/resolvedApplicability=extraction\?\.dtcApplicability\|\|''/);
-  assert.doesNotMatch(analyzer,/!applicable&&!missing\.includes\('DTC applicability'\)/);
+  assert.match(analyzer,/extraction\?\.extractionRunId===run\.runId/);
+  assert.doesNotMatch(analyzer,/activeDtcMatch|resolvedApplicability/);
   assert.match(analyzer,/extractionStatus:complete\?'COMPLETE':'INCOMPLETE'/);
 });
 
@@ -149,6 +149,14 @@ test('V7 document criterion requires current visible-text evidence in server and
   assert.match(analyzer,/criterionEvidenceVisible=!!criterionEvidence/);
   assert.match(analyzer,/criterionGrounded=criterionEvidenceVisible/);
   assert.match(analyzer,/criterion:criterionGrounded\?claimedCriterion:''/);
+});
+
+test('V8 canonical criterion aliases normalize once and synchronization is run-bound',()=>{
+  for(const alias of ['criterion','criteria','specification','spec','expectedValue','expected_value','acceptableRange','acceptable_range'])assert.ok(analyzer.includes(`'${alias}'`),`missing criterion alias ${alias}`);
+  assert.match(analyzer,/analysisRunId:run\.runId,extractionRunId:run\.runId/);
+  assert.match(analyzer,/verificationRunId:run\.runId,synchronizationStatus:fresh\?'PASS':'FAIL'/);
+  assert.match(html,/analysis\.runId===document\.extractionRunId&&document\.extractionRunId===document\.verificationRunId/);
+  assert.match(html,/INTERNAL STATE MISMATCH: extraction reports no missing fields while verification reports/);
 });
 
 test('AO guided electrical testing does not verify a fault from one ambiguous reading', () => {
@@ -191,7 +199,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.7V7'/);
+  assert.match(html, /version:'10\.12\.7V8'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
