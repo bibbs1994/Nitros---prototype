@@ -14,10 +14,10 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
 
 test('BF app build keeps the proven AO analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.7AO'/);
-  assert.match(html, /10\.12\.7V6/);
+  assert.match(html, /10\.12\.7V7/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.7V6'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.7V7'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -122,7 +122,7 @@ test('V5 document screenshots keep their category and route through fresh repair
   assert.match(core,/semanticResult\.category === 'DOCUMENT_OR_TEXT_SCREENSHOT'/);
   assert.match(core,/documentRepairInformationSchema/);
   assert.match(core,/Do not reclassify the image/);
-  assert.match(core,/Never manufacture missing connector names, pins, terminals, wire colors, methods, or specifications/);
+  assert.match(core,/Never manufacture, infer, complete, substitute, or supplement missing connector names, pins, terminals, wire colors, methods, specifications/);
   assert.match(analyzer,/result\.category==='DOCUMENT_OR_TEXT_SCREENSHOT'/);
   assert.match(analyzer,/result\.route='Document\/OCR'/);
   assert.doesNotMatch(analyzer,/No clean-room document\/OCR analyzer is configured/);
@@ -138,6 +138,17 @@ test('V6 document completion validates resolved applicability independently from
   assert.match(analyzer,/resolvedApplicability=extraction\?\.dtcApplicability\|\|''/);
   assert.doesNotMatch(analyzer,/!applicable&&!missing\.includes\('DTC applicability'\)/);
   assert.match(analyzer,/extractionStatus:complete\?'COMPLETE':'INCOMPLETE'/);
+});
+
+test('V7 document criterion requires current visible-text evidence in server and client validation',()=>{
+  assert.match(core,/criterionEvidenceVisible=!!criterionEvidence/);
+  assert.match(core,/criterionGrounded=criterionEvidenceVisible/);
+  assert.match(core,/criterion:criterionGrounded\?claimedCriterion:''/);
+  assert.match(core,/minimum:criterionGrounded&&Number\.isFinite/);
+  assert.match(core,/If no criterion\/specification is visibly printed/);
+  assert.match(analyzer,/criterionEvidenceVisible=!!criterionEvidence/);
+  assert.match(analyzer,/criterionGrounded=criterionEvidenceVisible/);
+  assert.match(analyzer,/criterion:criterionGrounded\?claimedCriterion:''/);
 });
 
 test('AO guided electrical testing does not verify a fault from one ambiguous reading', () => {
@@ -180,7 +191,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.7V6'/);
+  assert.match(html, /version:'10\.12\.7V7'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
