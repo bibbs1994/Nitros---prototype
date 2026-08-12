@@ -1,6 +1,6 @@
-/* Nitros 10.12.15 PID snapshot range/current semantic precision with clean-room transaction isolation. */
+/* Nitros 10.12.16 PID snapshot range vs time-series semantic precision with clean-room transaction isolation. */
 (()=>{'use strict';
-  const BUILD='10.12.15';
+  const BUILD='10.12.16';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
   const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
   const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
@@ -687,7 +687,7 @@
       nitrosCaseId:caseId,nitrosAnalysisSessionId:sessionId,nitrosCaptureRequestId:run?.runId||'None',nitrosAnalysisId:run?.runId||'None',
       nitrosCurrentImageSha:run?.imageHash?`${run.imageHash.slice(0,16)}…`:'None',nitrosAnalyzerSource:result?.source||'CURRENT IMAGE BYTES',nitrosResultId:result?.runId||'None',
       nitrosAnalysisStarted:run?.started||'None',nitrosAnalysisCompleted:run?.completed||'None',nitrosResultDisposition:extra.disposition||'NONE',nitrosResetReason:extra.resetReason||'—',
-      nitrosActiveClassifier:'NitrosSemanticImageAnalysis / PID snapshot range/current semantic precision / 10.12.15',nitrosStaleResultLog:lastStaleMessage,
+      nitrosActiveClassifier:'NitrosSemanticImageAnalysis / PID snapshot range vs time-series semantic precision / 10.12.16',nitrosStaleResultLog:lastStaleMessage,
       nitrosImageClassification:result?CATEGORY_LABELS[result.category]||result.category:'No image classified.',nitrosClassificationConfidence:result?(result.confidence===null?'Not provided':`${result.confidence}%`):'—',nitrosRawConfidence:result?.rawConfidence??'Not provided',nitrosNormalizedConfidence:result?.normalizedConfidence===null||result?.normalizedConfidence===undefined?'Not provided':`${result.normalizedConfidence}%`,nitrosClassificationEvidence:result?.evidence?.join('; ')||'No image classified.',
       nitrosPrimaryComponent:result?.componentIdentification?.primaryComponent||'None',nitrosComponentStatus:result?.componentIdentification?.status||'Not run',nitrosRawComponentConfidence:result?.componentIdentification?.rawComponentConfidence??'Not provided',nitrosNormalizedComponentConfidence:result?.componentIdentification?.normalizedComponentConfidence===null||result?.componentIdentification?.normalizedComponentConfidence===undefined?'Not provided':`${result.componentIdentification.normalizedComponentConfidence}%`,nitrosAutomotiveSystem:result?.componentIdentification?.system||'Not determined',nitrosSecondaryComponents:result?.componentIdentification?.secondaryComponents?.join('; ')||'None',nitrosComponentEvidence:result?.componentIdentification?.supportingEvidence?.join('; ')||'None',nitrosComponentAlternatives:result?.componentIdentification?.possibleAlternatives?.join('; ')||'None',nitrosComponentUncertainty:result?.componentIdentification?.uncertaintyReason||'None',nitrosComponentHashMatch:result?.componentIdentification?(result.componentIdentification.imageHash===run?.imageHash?'PASS':'FAIL'):'Not run',
       nitrosDiagramStatus:result?.wiringDiagramAnalysis?.status||'Not run',nitrosDiagramConfidence:result?.wiringDiagramAnalysis?.confidence===null||result?.wiringDiagramAnalysis?.confidence===undefined?'Not provided':`${result.wiringDiagramAnalysis.confidence}%`,nitrosDiagramStructuralEvidence:result?.wiringDiagramAnalysis?.structuralEvidence?.join('; ')||'None',nitrosDiagramComponents:result?.wiringDiagramAnalysis?.detectedComponents?.join('; ')||'None',nitrosDiagramConnectors:result?.wiringDiagramAnalysis?.connectorsAndPins?.join('; ')||'None',nitrosDiagramPowerPath:result?.wiringDiagramAnalysis?.powerPath?.map(node=>[node.component,node.terminal,node.wire,node.circuit,node.voltageExpected].filter(Boolean).join(' ')).join(' → ')||result?.wiringDiagramAnalysis?.circuitPaths?.map(path=>`${path.label}: ${path.path}`).join(' | ')||'None',nitrosDiagramGroundPath:result?.wiringDiagramAnalysis?.groundPath?.map(node=>[node.component,node.terminal,node.wire,node.circuit,node.voltageExpected].filter(Boolean).join(' ')).join(' → ')||'Not reliably confirmed',nitrosDiagramControlPath:result?.wiringDiagramAnalysis?.controlPath?.map(node=>[node.component,node.terminal,node.wire,node.circuit,node.voltageExpected].filter(Boolean).join(' ')).join(' → ')||'Not reliably confirmed',nitrosDiagramUnreadable:result?.wiringDiagramAnalysis?.unreadableFields?.join('; ')||'None',nitrosComponentTestSessionId:run?.componentTestSession?.id||'None',
@@ -750,7 +750,7 @@
     updateDeveloper(null,{resetReason:'APP_START'});
   }
 
-  function start(){document.title='Nitros Mobile Technician Portal v10.12.15 — PID Snapshot Range/Current Semantic Precision — Build 2026-08-12';buildImportUi()}
+  function start(){document.title='Nitros Mobile Technician Portal v10.12.16 — PID Snapshot Range vs Time-Series Semantic Precision — Build 2026-08-12';buildImportUi()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
   window.addEventListener('pageshow',()=>setTimeout(start,40));
   new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))buildImportUi()}).observe(document.documentElement,{childList:true,subtree:true});

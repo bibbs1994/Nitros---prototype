@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.12.15 adds PID Snapshot Range/Current Semantic Precision while preserving the temporal-inference guard and verified portal workflows.
+Version 10.12.16 adds PID Snapshot Range vs Time-Series Semantic Precision while preserving the temporal-inference guard and verified portal workflows.
 
 ## Secure semantic analyzer
 

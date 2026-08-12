@@ -54,7 +54,7 @@ test('delayed iOS voices resolve once and stale queued speech cannot play',()=>{
   assert.deepEqual(h.spoken.map(item=>item.text),['newest response','read last reply']);
 });
 
-test('10.12.15 applies conservative varied prosody without changing spoken diagnostic words',()=>{
+test('10.12.16 applies conservative varied prosody without changing spoken diagnostic words',()=>{
   const h=speechHarness(voices),text='Ground looks good. Next, check the signal circuit and tell me what you see.';
   h.controller.speak(text,{rate:.94,pitch:.9});
   assert.equal(h.spoken[0].text,text);
