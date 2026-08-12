@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.12.13 prevents temporal diagnostic inference from static PID snapshots while preserving the 10.12.12 semantic-response resilience and verified portal workflows.
+Version 10.12.14 adds PID Snapshot Semantic Cleanup while preserving the 10.12.13 temporal-inference guard and verified portal workflows.
 
 ## Secure semantic analyzer
 

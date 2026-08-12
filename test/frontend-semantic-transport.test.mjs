@@ -13,11 +13,11 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
 ]);
 
 test('BF app build keeps the proven AO analyzer and production endpoint', () => {
-  assert.match(analyzer, /const BUILD='10\.12\.13'/);
-  assert.match(html, /10\.12\.13/);
+  assert.match(analyzer, /const BUILD='10\.12\.14'/);
+  assert.match(html, /10\.12\.14/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.13'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.14'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -37,12 +37,13 @@ test('automotive graphs route into Oliver with context-safe structured findings'
   assert.match(analyzer, /result\.route='Automotive graph analysis'/);
   assert.doesNotMatch(analyzer, /No clean-room graph\/OCR analyzer is configured/);
   assert.match(analyzer, /Observed:/);assert.match(analyzer, /Interpretation:/);assert.match(analyzer, /Next Test:/);
+  assert.match(analyzer,/graph\.analysisMode==='PID_SNAPSHOT'\?'AUTOMOTIVE PID SNAPSHOT ANALYSIS':'AUTOMOTIVE GRAPH ANALYSIS'/);
   assert.match(analyzer, /NitrosQuickVehicle\?\.getActiveVehicle/);
   assert.match(analyzer, /Possible vehicle-context mismatch/);
   assert.match(analyzer, /Retain these graph findings in the current diagnostic conversation/);
 });
 
-test('10.12.13 preserves supported semantic response shapes and one transient unusable-result retry',()=>{
+test('10.12.14 preserves supported semantic response shapes and one transient unusable-result retry',()=>{
   for(const shape of ['direct-object','single-result-array','nested-data','nested-result','nested-analysis','nested-output','JSON-content','unsupported'])assert.ok(analyzer.includes(shape),`missing response shape ${shape}`);
   for(const failure of ['transport_failure','endpoint_failure','openai_request_failure','empty_model_response','malformed_semantic_response','unsupported_response_shape','valid_response_no_usable_visual_evidence'])assert.ok(analyzer.includes(failure),`missing failure class ${failure}`);
   assert.match(analyzer,/function normalizeSemanticResponse\(payload\)/);
@@ -226,7 +227,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.13'/);
+  assert.match(html, /version:'10\.12\.14'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
