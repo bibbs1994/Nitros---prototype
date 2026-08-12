@@ -130,3 +130,19 @@ test('10.12.26 preservation-safe merge adds promised time without erasing existi
   const {api}=assistant(),existing={customer:'Derek Lord',phone:'5082947538',vehicle:'2018 Jeep Wrangler',date:'2026-08-13',time:'08:00',arrival:'Drop-off',status:'Scheduled',concern:'EVAP code',notes:'Authorization retained',confirmationMethod:'Text message',keys:'Keys received',transportation:'Needs transportation arranged',inspections:'All the fluids'},parsed=api.parseAppointmentRequest('Promise to have it done by 2 PM.'),merged=api.mergePreparedAppointment(existing,parsed);
   for(const [key,value] of Object.entries(existing))assert.equal(merged[key],value,key);assert.equal(merged.promisedTime,'14:00');
 });
+
+test('10.12.27 complete conversational draft persists every structured field across navigation-style restoration',()=>{
+  const {api,fields,context}=assistant(),raw='Derek Lord dropping off his Jeep tomorrow morning at 8 AM with an EVAP code.',draft=api.parseAppointmentRequest(raw);
+  assert.equal(api.hydrateAppointmentDraft(draft).ok,true);
+  assert.equal(api.commitAppointmentDraft(draft).ok,true);
+  for(const id of ['appointmentCustomer','appointmentVehicle','appointmentDate','appointmentTime','appointmentArrival','appointmentStatus','appointmentConcern'])fields.get(id).value='';
+  assert.equal(api.restoreAppointmentDraft().ok,true);
+  assert.deepEqual({customer:fields.get('appointmentCustomer').value,vehicle:fields.get('appointmentVehicle').value,date:fields.get('appointmentDate').value,time:fields.get('appointmentTime').value,arrival:fields.get('appointmentArrival').value,status:fields.get('appointmentStatus').value,concern:fields.get('appointmentConcern').value},{customer:'Derek Lord',vehicle:'Jeep',date:'2026-08-13',time:'08:00',arrival:'Drop-off',status:'Scheduled',concern:'EVAP code'});
+  assert.match(context.localStorage.getItem('nitros_oliver_appointment_draft_v1'),/"rawTranscript":"Derek Lord dropping off his Jeep tomorrow morning at 8 AM with an EVAP code\."/);
+});
+
+test('10.12.27 developer diagnostics expose structured acceptance capture and successful state commit',()=>{
+  const {api,context}=assistant(),raw='Derek Lord dropping off his Jeep tomorrow morning at 8 AM with an EVAP code.';
+  context.document.getElementById('oliverScheduleInput').value=raw;api.prepare();const diag=context.window.NitrosDeveloperMode.appointmentAssistant;
+  assert.deepEqual({raw:diag.rawTranscript,normalized:diag.normalizedTranscript,customer:diag.customerName,vehicle:diag.vehicleMake,date:diag.appointmentDate,time:diag.appointmentTime,arrival:diag.arrivalType,concern:diag.primaryConcern,confidence:diag.confidence,commit:diag.stateCommitResult},{raw,normalized:raw,customer:'Derek Lord',vehicle:'Jeep',date:'2026-08-13',time:'08:00',arrival:'Drop-off',concern:'EVAP code',confidence:100,commit:'SUCCESS'});
+});
