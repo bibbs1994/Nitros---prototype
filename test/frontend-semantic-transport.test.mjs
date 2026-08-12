@@ -38,10 +38,10 @@ test('10.12.28 canonical normalizer rejects malformed and incomplete semantic co
 
 test('10.12.28 keeps the proven analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.23'/);
-  assert.match(html, /10\.12\.30/);
+  assert.match(html, /10\.12\.31/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.30'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.31'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -62,6 +62,7 @@ test('automotive graphs route into Oliver with context-safe structured findings'
   assert.doesNotMatch(analyzer, /No clean-room graph\/OCR analyzer is configured/);
   assert.match(analyzer, /Observed:/);assert.match(analyzer, /Interpretation:/);assert.match(analyzer, /Next Test:/);assert.match(analyzer, /<strong>Why:<\/strong>/);
   for(const diagnostic of ['nitrosEvidenceInventoryStatus','nitrosAvailableDiagnosticChannels','nitrosNextTestUnresolvedQuestion','nitrosRedundantTestCheck','nitrosCandidateNextTestRejected','nitrosNextTestSelection'])assert.ok(analyzer.includes(diagnostic),`missing graph diagnostic ${diagnostic}`);
+  for(const diagnostic of ['nitrosNumericEvidenceNormalization','nitrosCurrentMinMaxConsistency','nitrosZeroCrossingValidation','nitrosDirectionalClaimValidation','nitrosNumericInterpretationGuard','nitrosNumericNarrativeConflict','nitrosNumericNarrativeCorrection'])assert.ok(analyzer.includes(diagnostic),`missing numeric guard diagnostic ${diagnostic}`);
   assert.match(analyzer,/graph\.analysisMode==='PID_SNAPSHOT'\?'AUTOMOTIVE PID SNAPSHOT ANALYSIS':'AUTOMOTIVE PID GRAPH ANALYSIS'/);
   assert.match(analyzer,/<strong>Trace Behavior:<\/strong>/);
   assert.match(analyzer, /NitrosQuickVehicle\?\.getActiveVehicle/);
@@ -255,7 +256,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.30'/);
+  assert.match(html, /version:'10\.12\.31'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
