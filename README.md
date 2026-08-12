@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.12.10 adds dedicated automotive graph analysis while preserving the verified repair-order, diagnostic persistence, voice, Notes, Vehicle Info, and service-worker behavior.
+Version 10.12.11 corrects automotive graph diagnostic reasoning while preserving the verified classification, repair-order, persistence, voice, Notes, Vehicle Info, and service-worker behavior.
 
 ## Secure semantic analyzer
 
