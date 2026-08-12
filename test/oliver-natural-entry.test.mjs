@@ -40,8 +40,8 @@ test('plain text DTC entry remains text-first and starts one relevant decision',
   assert.match(html,/openAndSend:text=>\{openMode\('general'\);setTimeout\(\(\)=>send\(text\),100\)\}/);
 });
 
-test('10.12.20 build identity is visible without removing AR Oliver or AQ GPS implementation',()=>{
-  assert.match(html,/10\.12\.20/);
+test('10.12.21 build identity is visible without removing AR Oliver or AQ GPS implementation',()=>{
+  assert.match(html,/10\.12\.21/);
   assert.match(html,/NitrosOliverNaturalEntry/);
   assert.match(html,/window\.NitrosGpsEvidence/);
   assert.match(html,/photoEvidence:persistedPhotos\.map\(item=>\(\{[^\n]+gps:item\.gps/);

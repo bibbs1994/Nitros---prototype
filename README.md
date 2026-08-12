@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.12.20 adds Oliver Voice Appointment Structured Capture / Persistence while preserving the 10.12.18 PID evidence gate and verified portal workflows.
+Version 10.12.21 adds the Oliver Appointment Voice Customer Entity + Multi-Field Routing Fix while preserving the 10.12.18 PID evidence gate and verified portal workflows.
 
 ## Secure semantic analyzer
 
