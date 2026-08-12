@@ -438,8 +438,9 @@
     if(category==='AUTOMOTIVE_GRAPH'&&graphEvidence.length<2)throw new Error('Graph classification lacks independent structural evidence.');
     if(category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'&&!automotiveEvidence.length)throw new Error('Automotive classification lacks positive visual evidence.');
     const componentIdentification=normalizeComponentIdentification(raw.componentIdentification,category,run);
-    const wiringDiagramAnalysis=normalizeWiringDiagram(raw.wiringDiagramAnalysis,category,run),documentRepairInformation=normalizeDocumentRepairInformation(raw.documentRepairInformation,category,run);
-    return {runId:run.runId,semanticRequestId:raw.transactionId,imageHash:raw.imageHash,category,confidence,rawConfidence:raw.rawConfidence??null,normalizedConfidence:confidence,componentIdentification,wiringDiagramAnalysis,documentRepairInformation,objects,evidence,description:String(raw.description||'').trim(),automotiveEvidence,graphEvidence,documentEvidence,source:String(raw.source||'NitrosVisionAnalyzer semantic result'),transportStatus:raw.transportStatus??null,routingData:raw.routingData??null};
+    const wiringDiagramAnalysis=normalizeWiringDiagram(raw.wiringDiagramAnalysis,category,run),documentRepairInformation=normalizeDocumentRepairInformation(raw.documentRepairInformation,category,run),automotiveGraphAnalysis=category==='AUTOMOTIVE_GRAPH'&&raw.automotiveGraphAnalysis?{...raw.automotiveGraphAnalysis}:null;
+    if(category==='AUTOMOTIVE_GRAPH'&&(!automotiveGraphAnalysis||automotiveGraphAnalysis.semanticRequestId!==run.analyzer.requestId||automotiveGraphAnalysis.imageHash!==run.imageHash))throw new Error('Automotive graph analysis is missing or does not match the current image.');
+    return {runId:run.runId,semanticRequestId:raw.transactionId,imageHash:raw.imageHash,category,confidence,rawConfidence:raw.rawConfidence??null,normalizedConfidence:confidence,componentIdentification,automotiveGraphAnalysis,wiringDiagramAnalysis,documentRepairInformation,objects,evidence,description:String(raw.description||'').trim(),automotiveEvidence,graphEvidence,documentEvidence,source:String(raw.source||'NitrosVisionAnalyzer semantic result'),transportStatus:raw.transportStatus??null,routingData:raw.routingData??null};
   }
 
   function unavailableResult(run,reason){
@@ -474,9 +475,8 @@
   async function routeFreshResult(run,result){
     const payload={bytes:run.bytes.slice(0),mimeType:run.mime,runId:run.runId,imageHash:run.imageHash,signal:run.controller.signal,cache:'no-store',classification:result};
     if(result.category==='AUTOMOTIVE_GRAPH'){
-      const analyzer=window.NitrosGraphAnalyzerAD;
-      result.route='Graph/OCR';
-      result.routeResult=typeof analyzer?.analyzeCurrentImage==='function'?await analyzer.analyzeCurrentImage(payload):{status:'Analysis unavailable',evidence:['No clean-room graph/OCR analyzer is configured.']};
+      result.route='Automotive graph analysis';
+      result.routeResult={status:result.automotiveGraphAnalysis.status==='FAILED'?'Analysis unavailable':'Diagnostic interpretation complete',evidence:[...result.automotiveGraphAnalysis.observed]};
     }else if(result.category==='AUTOMOTIVE_WIRING_DIAGRAM'){
       result.route='Wiring diagram / guided component test';
       result.routeResult={status:result.wiringDiagramAnalysis?.status==='READY'?'Circuit analysis ready':'Insufficient diagram readability',evidence:[...(result.wiringDiagramAnalysis?.structuralEvidence||[])]};
@@ -549,6 +549,8 @@
       section.innerHTML=`<h3>SPECIFIC COMPONENT IDENTIFICATION</h3><strong>Status:</strong> ${escapeHtml(component.status)}<br><strong>Primary component:</strong> ${escapeHtml(component.primaryComponent)}<br><strong>Component confidence:</strong> <span class="phase2-confidence">${escapeHtml(componentConfidence)}</span><br><strong>System:</strong> ${escapeHtml(component.system||'Not determined')}<br><strong>Supporting visual evidence:</strong>${list(component.supportingEvidence)}<strong>Secondary visible components:</strong>${list(component.secondaryComponents)}<strong>Possible identification:</strong>${list(component.possibleAlternatives)}${component.uncertaintyReason?`<strong>Reason:</strong> ${escapeHtml(component.uncertaintyReason)}`:''}`;
       host.appendChild(section);
     }
+    const graph=result.automotiveGraphAnalysis;
+    if(graph){const section=document.createElement('section'),list=items=>items?.length?`<ul>${items.map(item=>`<li>${escapeHtml(item)}</li>`).join('')}</ul>`:'<p>None reliably readable.</p>';section.className='automotive-graph-analysis';section.innerHTML=`<h3>AUTOMOTIVE GRAPH ANALYSIS</h3><strong>Observed:</strong>${list(graph.observed)}<strong>Interpretation:</strong>${list(graph.interpretation)}<strong>Next Test:</strong>${list(graph.nextTest)}${graph.unreadableOrUncertain?.length?`<strong>Unreadable / uncertain:</strong>${list(graph.unreadableOrUncertain)}`:''}`;host.appendChild(section)}
     const documentInfo=result.documentRepairInformation;
     if(documentInfo){const section=document.createElement('section'),field=(label,value)=>`<strong>${label}:</strong> ${escapeHtml(value||'Not visibly provided')}<br>`,missing=documentInfo.missingRequiredFields?.length?documentInfo.missingRequiredFields.join(', '):'None',verified=documentInfo.freshResultVerification==='PASS'&&missing==='None'&&documentInfo.verifiedRepairInformationStatus==='VERIFIED';section.className='document-repair-information';section.innerHTML=`<h3>DOCUMENT REPAIR INFORMATION EXTRACTION</h3>${field('Extraction status',documentInfo.extractionStatus||documentInfo.status)}${field('DTC applicability',documentInfo.dtcApplicability)}${field('DTCs',documentInfo.dtcs?.join(', '))}${field('Test',documentInfo.testName)}${field('Component / circuit',documentInfo.componentOrCircuit)}${field('Test location / connector / terminal',documentInfo.testLocation)}${field('Method',documentInfo.method)}${field('Criterion',documentInfo.criterion)}${field('Requested technician result',documentInfo.requestedResult)}${field('Missing required fields',missing)}${field('Fresh-result verification',documentInfo.freshResultVerification)}${field('Verified Repair Information',verified?'PASS / VERIFIED':documentInfo.verifiedRepairInformationStatus||'PENDING')}${field('Missing or unsupported',missing)}`;if(documentInfo.freshResultVerification==='PASS'&&missing==='None'&&!verified)section.insertAdjacentHTML('beforeend','<p>INTERNAL STATE MISMATCH: fresh verification passed with no missing fields, but Verified Repair Information did not transition to VERIFIED.</p>');else if(!verified)section.insertAdjacentHTML('beforeend',`<p>Verified Repair Information Required remains pending. Missing or unsupported: ${escapeHtml(missing)}.</p>`);host.appendChild(section)}
     const diagram=result.wiringDiagramAnalysis;
@@ -634,6 +636,7 @@
       window.NitrosDeveloperMode=window.NitrosDeveloperMode||{};window.NitrosDeveloperMode.imageClassification=routed;
       publishImport({kind:'image-analysis',fileName:run.fileName,fileSize:run.fileSize,importedAt:run.completed,imageHash:run.imageHash,analysis:routed});
       renderResult(run,routed);
+      const graphFact=graphConversationText(routed);if(graphFact)sendFact(graphFact);
       const componentFailed=routed.category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'&&routed.componentIdentification?.status==='FAILED';
       const diagramFailed=routed.category==='AUTOMOTIVE_WIRING_DIAGRAM'&&routed.wiringDiagramAnalysis?.status==='FAILED';
       await stage(run,18,componentFailed||diagramFailed?'FAIL':'PASS');
@@ -675,6 +678,20 @@
   window.updateAnalysisSessionDeveloper=()=>updateDeveloper(activeRun);
 
   function sendFact(text){const input=$('oliverHubInput'),send=$('oliverHubSend');if(!input||!send)return false;input.value=text;send.click();return true}
+  function graphConversationText(result){
+    const graph=result?.automotiveGraphAnalysis;if(!graph||graph.status==='FAILED')return '';
+    const active=window.NitrosQuickVehicle?.getActiveVehicle?.(),visible=String(graph.visibleVehicle?.description||'').trim(),activeLabel=active?[active.year,active.make,active.model,active.engine].filter(Boolean).join(' '):'';
+    const tokens=value=>String(value||'').toLowerCase().match(/\b(?:19|20)\d{2}\b|[a-z0-9-]+/g)||[],a=tokens(activeLabel),v=tokens(visible),mismatch=activeLabel&&visible&&a.some(token=>token.length>2&&!v.includes(token))&&v.some(token=>token.length>2&&!a.includes(token));
+    const lines=['Automotive diagnostic graph analysis completed for the current uploaded image.'];
+    if(activeLabel)lines.push(`Active RO vehicle context: ${activeLabel}.`);
+    if(mismatch)lines.push(`Possible vehicle-context mismatch: the graph visibly identifies ${visible}, which may not match the active RO vehicle ${activeLabel}. Ask the technician to confirm whether this graph belongs to the current vehicle before applying vehicle-specific conclusions.`);
+    lines.push(`Observed: ${graph.observed?.join(' ')||'No graph details were reliably readable.'}`);
+    lines.push(`Interpretation: ${graph.interpretation?.join(' ')||'Insufficient visible evidence for a diagnostic conclusion.'}`);
+    lines.push(`Next Test: ${graph.nextTest?.join(' ')||'Obtain a clearer graph or supporting measured data.'}`);
+    if(graph.unreadableOrUncertain?.length)lines.push(`Unreadable or uncertain: ${graph.unreadableOrUncertain.join(' ')}`);
+    lines.push('Retain these graph findings in the current diagnostic conversation. Treat Observed as pixel-supported evidence and Interpretation as an inference; do not invent missing labels, values, scales, specifications, or procedures.');
+    return lines.join('\n');
+  }
   function publishImport(detail){lastDiagnosticImport={importedAt:new Date().toISOString(),...detail};window.dispatchEvent(new CustomEvent('nitros:diagnostic-import',{detail:lastDiagnosticImport}));const button=$('oliverUseVerifiedRepairInfo'),diagnosticState=window.NitrosDiagnosticV10120?.getState?.();if(button)button.hidden=!(diagnosticState?.repairInformationRequired&&diagnosticState?.pendingRepairInformation?.eligible)}
   function parseTextFile(text,name){const codes=[...new Set((String(text).toUpperCase().match(/\b[PCBU][0-9A-F]{4}\b/g)||[]))].slice(0,24);const summary=[`Imported diagnostic file ${name}`];if(codes.length)summary.push(`DTCs found: ${codes.join(', ')}`);summary.push(String(text).replace(/\s+/g,' ').slice(0,1200));return {summary:summary.join('. '),preview:String(text).slice(0,5000)}}
   function previewData(html){const preview=$('oliverImportPreview');if(preview){preview.innerHTML=html;preview.classList.add('open')}}

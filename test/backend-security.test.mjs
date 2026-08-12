@@ -20,6 +20,12 @@ test('semantic confidence normalization supports fractional, percentage, string,
   assert.equal(normalizeSemanticConfidence('not provided'), null);
 });
 
+test('automotive graph classification continues into grounded diagnostic interpretation', async () => {
+  const bytes=Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a,0x00]),body={transactionId:'graph-stage',imageHash:createHash('sha256').update(bytes).digest('hex'),mimeType:'image/png',imageBase64:bytes.toString('base64')};let calls=0;
+  const result=await analyzeSemanticImage(body,{apiKey:'test-only-placeholder',fetchImpl:async()=>{calls+=1;const payload=calls===1?{category:'AUTOMOTIVE_GRAPH',confidence:98,objects:['axes','two plotted traces'],evidence:['axes and scale markings are visible','two time-series traces are visible'],description:'Oxygen sensor diagnostic graph.',automotiveEvidence:[],graphEvidence:['axes with repeated scale markings','multiple plotted traces'],documentEvidence:[]}:{status:'PARTIAL',confidence:91,observed:['B1S1 and B1S2 labels are visible','The downstream trace switches with the upstream trace'],interpretation:['Displayed behavior may be consistent with reduced catalyst oxygen-storage activity, but the graph alone does not prove converter failure'],nextTest:['Verify fuel control and exhaust integrity, then repeat a warmed steady-state catalyst oxygen-storage test'],pidNames:['B1S1','B1S2'],sensorNames:['upstream oxygen sensor','downstream oxygen sensor'],valuesAndScales:[],traceFindings:['downstream trace follows upstream activity'],unreadableOrUncertain:['Voltage and time scales are not reliably readable'],visibleVehicle:{description:'',evidence:[]}};return{ok:true,status:200,async json(){return{output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(payload)}]}]}}}}});
+  assert.equal(calls,2);assert.equal(result.semanticResult.category,'AUTOMOTIVE_GRAPH');assert.equal(result.semanticResult.automotiveGraphAnalysis.status,'PARTIAL');assert.equal(result.semanticResult.automotiveGraphAnalysis.imageHash,body.imageHash);assert.match(result.semanticResult.automotiveGraphAnalysis.interpretation[0],/does not prove converter failure/);assert.match(result.semanticResult.automotiveGraphAnalysis.nextTest[0],/exhaust integrity/);
+});
+
 test('wiring fields normalize strings, arrays, object nodes, and wrapped collections', () => {
   const expectedKeys = ['component','terminal','wire','circuit','voltageExpected','description'];
   const cases = [

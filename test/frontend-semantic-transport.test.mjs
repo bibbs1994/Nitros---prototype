@@ -30,6 +30,18 @@ test('semantic request preserves the production payload and classification gates
   assert.match(analyzer, /category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'&&!automotiveEvidence\.length/);
 });
 
+test('automotive graphs route into Oliver with context-safe structured findings', () => {
+  assert.match(core, /semanticResult\.category === 'AUTOMOTIVE_GRAPH'/);
+  assert.match(core, /nitros_automotive_graph/);
+  assert.match(core, /never condemn a converter from the graph alone/i);
+  assert.match(analyzer, /result\.route='Automotive graph analysis'/);
+  assert.doesNotMatch(analyzer, /No clean-room graph\/OCR analyzer is configured/);
+  assert.match(analyzer, /Observed:/);assert.match(analyzer, /Interpretation:/);assert.match(analyzer, /Next Test:/);
+  assert.match(analyzer, /NitrosQuickVehicle\?\.getActiveVehicle/);
+  assert.match(analyzer, /Possible vehicle-context mismatch/);
+  assert.match(analyzer, /Retain these graph findings in the current diagnostic conversation/);
+});
+
 test('analysis payload is a single bounded metadata-free JPEG copy', () => {
   assert.match(analyzer, /ANALYSIS_STAGES=Object\.freeze\(\[\{longDimension:1536,quality:\.78\},\{longDimension:1280,quality:\.72\},\{longDimension:1024,quality:\.68\}\]\)/);
   assert.match(analyzer, /imageOrientation:'from-image'/);
@@ -39,8 +51,8 @@ test('analysis payload is a single bounded metadata-free JPEG copy', () => {
   assert.match(analyzer, /run\.bytes=sourceBuffer\.slice\(0\)/);
   assert.match(analyzer, /payloadImageCount:1/);
   assert.equal((analyzer.match(/imageBase64\}/g)||[]).length, 1);
-  assert.equal((core.match(/type: 'input_image'/g)||[]).length, 4);
-  assert.equal((core.match(/image_url:/g)||[]).length, 4);
+  assert.equal((core.match(/type: 'input_image'/g)||[]).length, 5);
+  assert.equal((core.match(/image_url:/g)||[]).length, 5);
   assert.match(core, /requiredFields = \['transactionId', 'imageHash', 'mimeType', 'imageBase64'\]/);
 });
 

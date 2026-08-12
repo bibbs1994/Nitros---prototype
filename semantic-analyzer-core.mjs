@@ -30,6 +30,26 @@ const semanticSchema = {
   }
 };
 
+const automotiveGraphSchema = {
+  type: 'object', additionalProperties: false,
+  required: ['status','confidence','observed','interpretation','nextTest','pidNames','sensorNames','valuesAndScales','traceFindings','unreadableOrUncertain','visibleVehicle'],
+  properties: {
+    status: { type: 'string', enum: ['READY','PARTIAL','UNREADABLE'] },
+    confidence: { anyOf: [{ type: 'number', minimum: 0, maximum: 100 }, { type: 'string', pattern: '^\\s*(?:\\d+(?:\\.\\d+)?|\\.\\d+)\\s*%?\\s*$' }, { type: 'null' }] },
+    observed: { type: 'array', items: { type: 'string' }, maxItems: 24 },
+    interpretation: { type: 'array', items: { type: 'string' }, maxItems: 16 },
+    nextTest: { type: 'array', items: { type: 'string' }, maxItems: 8 },
+    pidNames: { type: 'array', items: { type: 'string' }, maxItems: 24 },
+    sensorNames: { type: 'array', items: { type: 'string' }, maxItems: 24 },
+    valuesAndScales: { type: 'array', items: { type: 'string' }, maxItems: 24 },
+    traceFindings: { type: 'array', items: { type: 'string' }, maxItems: 24 },
+    unreadableOrUncertain: { type: 'array', items: { type: 'string' }, maxItems: 20 },
+    visibleVehicle: { type: 'object', additionalProperties: false, required: ['description','evidence'], properties: {
+      description: { type: 'string', maxLength: 200 }, evidence: { type: 'array', items: { type: 'string' }, maxItems: 8 }
+    } }
+  }
+};
+
 const automotiveComponentSchema = {
   type: 'object',
   additionalProperties: false,
@@ -277,6 +297,15 @@ function validateDocumentRepairInformation(raw) {
   return result;
 }
 
+function validateAutomotiveGraph(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Automotive graph analysis returned no structured result.');
+  if (!['READY','PARTIAL','UNREADABLE'].includes(raw.status)) throw new Error('Automotive graph analysis status is invalid.');
+  const arrays = {};
+  for (const field of ['observed','interpretation','nextTest','pidNames','sensorNames','valuesAndScales','traceFindings','unreadableOrUncertain']) arrays[field] = cleanStringArray(raw[field], field);
+  const visibleVehicle = raw.visibleVehicle && typeof raw.visibleVehicle === 'object' ? { description: String(raw.visibleVehicle.description || '').trim().slice(0, 200), evidence: cleanStringArray(raw.visibleVehicle.evidence, 'visibleVehicle.evidence') } : { description: '', evidence: [] };
+  return { status: raw.status, confidence: normalizeSemanticConfidence(raw.confidence), rawConfidence: raw.confidence ?? null, ...arrays, visibleVehicle };
+}
+
 function extractOutputText(response) {
   for (const item of response?.output || []) {
     if (item?.type !== 'message') continue;
@@ -447,6 +476,25 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
   } else {
     markDiagnostic(diagnostic, 'K_SEMANTIC_OUTPUT_EXTRACTED', { componentIdentificationAttempted: false, componentIdentificationSkipped: true });
   }
+  let automotiveGraphAnalysis = null;
+  if (semanticResult.category === 'AUTOMOTIVE_GRAPH') {
+    const graphStartedAt = Date.now();
+    const graphPrompt = `Analyze only the visible pixels of this current automotive diagnostic graph. This is a dedicated diagnostic interpretation stage after classification. Extract only labels, units, numeric values, time scales, operating conditions, and vehicle identity that are genuinely readable. Never invent PID or sensor labels, voltages, scales, wire details, connector pins, specifications, OEM procedures, or vehicle-specific facts. Analyze every visible trace and panel, including RPM, fuel trim, oxygen/air-fuel sensors, temperature, pressure, frequency, duty cycle, upstream/downstream behavior, switching/cross-count activity, flatline or bias, correlation, and abnormal patterns when actually supported. Keep directly visible facts in observed and diagnostic inferences in interpretation. Put every limitation in unreadableOrUncertain and still analyze reliable portions. Use concise technician language. For catalyst/O2 graphs, compare upstream and downstream behavior but never condemn a converter from the graph alone; distinguish reduced oxygen-storage activity from sensor, mixture-control, exhaust-leak, and insufficient-evidence possibilities, and recommend the best confirmation test. In visibleVehicle, report a vehicle only if identifying text is visibly readable in the image; otherwise leave description and evidence empty.`;
+    markDiagnostic(diagnostic, 'P_GRAPH_ANALYSIS_REQUESTED', { graphAnalysisAttempted: true, graphAnalysisResponseReceived: false, graphAnalysisResultPresent: false });
+    try {
+      const graphResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 2200, input: [{ role: 'user', content: [{ type: 'input_text', text: graphPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }], text: { format: { type: 'json_schema', name: 'nitros_automotive_graph', strict: true, schema: automotiveGraphSchema } } }), signal: analysisSignal });
+      const graphBody = await graphResponse.json().catch(() => null);
+      markDiagnostic(diagnostic, 'Q_GRAPH_ANALYSIS_RESPONSE', { graphAnalysisResponseReceived: true, graphAnalysisResponseOk: graphResponse.ok, graphAnalysisHttpStatus: graphResponse.status, graphAnalysisElapsedMs: Math.max(0, Date.now() - graphStartedAt) });
+      if (!graphResponse.ok) throw new Error(graphBody?.error?.message || `Automotive graph request failed with HTTP ${graphResponse.status}.`);
+      if (!graphBody) throw new Error('Automotive graph response was not valid JSON.');
+      automotiveGraphAnalysis = { ...validateAutomotiveGraph(JSON.parse(extractOutputText(graphBody))), semanticRequestId: transactionId, imageHash };
+      markDiagnostic(diagnostic, 'R_GRAPH_ANALYSIS_EXTRACTED', { graphAnalysisResponseParsed: true, graphAnalysisResultPresent: true, graphAnalysisStatus: automotiveGraphAnalysis.status });
+    } catch (error) {
+      const safeMessage = sanitizeDiagnosticText(error?.message) || 'Automotive graph analysis failed.';
+      automotiveGraphAnalysis = { status: 'FAILED', confidence: null, rawConfidence: null, observed: [], interpretation: [], nextTest: [], pidNames: [], sensorNames: [], valuesAndScales: [], traceFindings: [], unreadableOrUncertain: [safeMessage], visibleVehicle: { description: '', evidence: [] }, semanticRequestId: transactionId, imageHash };
+      markDiagnostic(diagnostic, 'R_GRAPH_ANALYSIS_FAILED', { graphAnalysisAttempted: true, graphAnalysisResponseParsed: false, graphAnalysisResultPresent: false, graphAnalysisErrorMessage: safeMessage });
+    }
+  } else markDiagnostic(diagnostic, diagnostic.stage, { graphAnalysisAttempted: false, graphAnalysisSkipped: true });
   let wiringDiagramAnalysis = null;
   if (semanticResult.category === 'AUTOMOTIVE_WIRING_DIAGRAM') {
     const diagramStartedAt = Date.now();
@@ -488,6 +536,7 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
     }
   } else markDiagnostic(diagnostic, diagnostic.stage, { documentExtractionAttempted: false, documentExtractionSkipped: true });
   semanticResult.componentIdentification = componentIdentification;
+  semanticResult.automotiveGraphAnalysis = automotiveGraphAnalysis;
   semanticResult.wiringDiagramAnalysis = wiringDiagramAnalysis;
   semanticResult.documentRepairInformation = documentRepairInformation;
   return {
