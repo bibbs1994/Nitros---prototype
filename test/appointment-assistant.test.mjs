@@ -94,3 +94,16 @@ test('10.12.23 prepare handler commits all four real form values and records bef
 test('manual appointment save and conflict workflow remain independently wired',()=>{
   assert.match(html,/function saveAppointment\(\)/);assert.match(html,/el\('saveAppointment'\)\?\.addEventListener\('click',saveAppointment\)/);assert.match(html,/el\('checkAppointmentConflict'\)\?\.addEventListener\('click',\(\)=>showConflict\(\)\)/);assert.match(html,/write\(APPT_KEY,\[\.\.\.list\.filter/);
 });
+
+test('10.12.25 two-field result preserves every known-good appointment property',()=>{
+  const {api}=assistant(),raw='Derek Lord, phone number 508-678-5432, is dropping off his 2018 Jeep Wrangler tomorrow, Thursday, at 8:00 AM for an EVAP code. Also check all the fluids and inspect a fuel smell coming from underneath the vehicle. Customer authorizes diagnostic testing up to 130 dollars. Keys will be left with the shop. Customer needs a ride home. Confirm the appointment by text. If possible, have the vehicle completed by 2:00 PM.',draft=api.parseAppointmentRequest(raw);
+  const protectedFields={phone:'5086785432',vehicle:'2018 Jeep Wrangler',date:'2026-08-13',time:'08:00',arrival:'Drop-off',status:'Scheduled',confirmationMethod:'Text message',keys:'Keys received',transportation:'Needs transportation arranged',concern:'EVAP code',inspections:'All the fluids'};
+  for(const [key,value] of Object.entries(protectedFields))assert.equal(draft[key],value,key);
+  assert.match(draft.notes,/130 dollars/i);assert.match(draft.notes,/fuel smell/i);assert.equal(draft.customer,'Derek Lord');assert.equal(draft.promisedTime,'14:00');
+});
+
+test('10.12.25 target isolation cases retain arrival/deadline distinction',()=>{
+  const {api}=assistant();let draft=api.parseAppointmentRequest('Derek Lord, phone number 508-678-5432.');assert.equal(draft.customer,'Derek Lord');assert.equal(draft.phone,'5086785432');
+  draft=api.parseAppointmentRequest('Derek Lord is dropping off tomorrow at 8 AM and needs the vehicle completed by 2 PM.');assert.equal(draft.customer,'Derek Lord');assert.equal(draft.time,'08:00');assert.equal(draft.promisedTime,'14:00');
+  draft=api.parseAppointmentRequest('Derek Lord is dropping off at 2 PM.');assert.equal(draft.time,'14:00');assert.equal(draft.promisedTime,'');
+});
