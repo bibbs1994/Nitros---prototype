@@ -14,7 +14,7 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
 
 test('BF app build keeps the proven AO analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.7AO'/);
-  assert.match(html, /10\.12\.7V9/);
+  assert.match(html, /10\.12\.8/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
   assert.match(serviceWorker, /const VERSION = '10\.12\.8'/);

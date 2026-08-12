@@ -16,7 +16,7 @@ function harness(activeDtc='P0340'){
     function vehicleLabel(){return [state.vehicle.year,state.vehicle.make,state.vehicle.model,state.vehicle.engine].filter(Boolean).join(' ')}
     function ask(text){state.lastReply=text;responses.push(text)}
     ${source}
-    return {state,responses,ensureGuidedState,handleGuidedFinding,handleRepairInformationImport,verifyPendingRepairInformation,interpretFinding,normalizeFinding,classifyFindingIntent,repairDiagnosticText,repairDecisionReply,diagnosticConclusion,diagnosticCompletionGate,deriveDiagnosticDisposition,applyNoFaultAction,isDiagnosticComplete,continueToRepairDecision,missingRepairDecisionEvidence,FINDING_INTENT,GUIDED_WORKFLOWS};
+    return {state,responses,ensureGuidedState,handleGuidedFinding,routeConversationalDiagnosticEvidence,diagnosticProgressRequest,handleRepairInformationImport,verifyPendingRepairInformation,interpretFinding,normalizeFinding,classifyFindingIntent,repairDiagnosticText,repairDecisionReply,diagnosticConclusion,diagnosticCompletionGate,deriveDiagnosticDisposition,applyNoFaultAction,isDiagnosticComplete,continueToRepairDecision,missingRepairDecisionEvidence,FINDING_INTENT,GUIDED_WORKFLOWS};
   `)();
 }
 
@@ -39,6 +39,19 @@ test('power and ground passes persist and advance one test at a time',()=>{
   assert.equal(h.state.diagnosticTestState.tests[1].status,'pass');
   assert.equal(h.state.diagnosticTestState.currentTestId,'cam-signal');
   assert.match(h.responses.at(-1),/Next we'll test Cam Signal Activity/i);
+});
+
+test('10.12.8 routes natural power and ground evidence around unfinished intake and retains both results',()=>{
+  const h=harness();h.state.stage='status';h.state.intakeStep='status';
+  assert.equal(h.routeConversationalDiagnosticEvidence('I have battery voltage on the power wire.'),true);
+  assert.equal(h.routeConversationalDiagnosticEvidence('Ground is good too.'),true);
+  assert.deepEqual(h.state.diagnosticTestState.tests.slice(0,2).map(item=>item.status),['pass','pass']);
+  assert.equal(h.state.diagnosticTestState.currentTestId,'cam-signal');
+  assert.equal(h.state.intakeStep,'complete');
+  assert.match(h.state.diagnosticTestState.tests[0].technicianFinding,/battery voltage/i);
+  assert.match(h.state.diagnosticTestState.tests[1].technicianFinding,/ground is good/i);
+  assert.equal(h.diagnosticProgressRequest('What should I check next?'),true);
+  assert.doesNotMatch(h.responses.join(' '),/pin \d|connector\s+[A-Z]\d|wire color/i);
 });
 
 test('signal failure commits and advances to the next pending required test',()=>{

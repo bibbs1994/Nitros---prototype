@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.8 — Floating Quick Notes</title>
+<title>Nitros Mobile Technician Portal v10.12.8 — Oliver Conversational Diagnostic Context</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.7V9 — Verified Repair Information PASS State Fix</div>
+  <div class="sub">Mobile Technician Portal v10.12.8 — Oliver Conversational Diagnostic Context</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.7V9 — Verified Repair Information PASS State Fix. Existing conversational and diagnostic evidence features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.8 — Oliver Conversational Diagnostic Context. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.7V9 — Verified Repair Information PASS State Fix</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.8 — Oliver Conversational Diagnostic Context</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.7V9 — Verified Repair Information PASS State Fix</div>
+      <div class="eyebrow">Version 10.12.8 — Oliver Conversational Diagnostic Context</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1683,14 +1683,14 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.8 • Floating Quick Notes • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.8 • Oliver Conversational Diagnostic Context • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
   version:'10.12.8',
-  release:'Floating Quick Notes',
-  buildDate:'2026-08-11',
+  release:'Oliver Conversational Diagnostic Context',
+  buildDate:'2026-08-12',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
 window.NitrosOliverSpeech=(()=>{
@@ -5284,7 +5284,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.7V9 • Verified Repair Information PASS State Fix</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.8 • Oliver Conversational Diagnostic Context</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5322,7 +5322,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.7V9 — Verified Repair Information PASS State Fix</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.8 — Oliver Conversational Diagnostic Context</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6347,7 +6347,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.7V9</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.8</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -7363,7 +7363,7 @@ function signalActivityFinding(normalized){const activity=/\b(switch(?:es|ing)|t
 function parseDiagnosticMeasurement(normalized){const match=String(normalized||'').match(/(-?(?:\d+(?:\.\d+)?|\.\d+))\s*(mv|v|ohms?|ω|kohms?|kω|ma|a|khz|hz|psi|kpa|°?c|°?f)\b/i);if(!match)return {value:null,unit:'',rawUnit:''};const rawValue=Number(match[1]),rawUnit=match[2].toLowerCase(),conversions={mv:[0.001,'V'],v:[1,'V'],ohm:[1,'Ω'],ohms:[1,'Ω'],'ω':[1,'Ω'],kohm:[1000,'Ω'],kohms:[1000,'Ω'],'kω':[1000,'Ω'],ma:[0.001,'A'],a:[1,'A'],khz:[1000,'Hz'],hz:[1,'Hz'],psi:[1,'psi'],kpa:[1,'kPa'],c:[1,'°C'],'°c':[1,'°C'],f:[1,'°F'],'°f':[1,'°F']},conversion=conversions[rawUnit];return conversion?{value:rawValue*conversion[0],unit:conversion[1],rawUnit}:{value:null,unit:'',rawUnit:''}}
 function interpretFinding(test,text){const normalized=normalizeFinding(text),signalActivity=test.kind==='signal-activity'?signalActivityFinding(normalized):null,continuityTest=test.kind==='circuit-isolation'&&/continuity|resistance|ohm/i.test(`${test.name||''} ${test.componentOrCircuit||''} ${test.method||''} ${test.criterion||''} ${test.expectedResult||''}`);let intent=classifyFindingIntent(text,normalized),measurement=parseDiagnosticMeasurement(normalized);if(signalActivity?.recognized)intent=FINDING_INTENT.QUALITATIVE;else if(measurement.value!==null&&measurement.rawUnit&&intent===FINDING_INTENT.UNCERTAIN)intent=FINDING_INTENT.ACTUAL;if(measurement.value===null&&intent===FINDING_INTENT.ACTUAL){const bare=normalized.match(/-?(?:\d+(?:\.\d+)?|\.\d+)/);if(bare)measurement={value:Number(bare[0]),unit:continuityTest?'Ω':'V',rawUnit:''}}const value=measurement.value,unit=measurement.unit;const noVoltage=/\b(no voltage|0\s*v|nothing there|nothing)\b/.test(normalized);const positive=/\b(good|checks? out|present|has continuity|have continuity|continuity (?:is )?good)\b/.test(normalized);const open=/\b(open(?: circuit)?|ol|no continuity|infinite resistance)\b/.test(normalized);let result='inconclusive',understood=value!==null?`${Number(value.toFixed(4))} ${unit}`:normalized;if(intent!==FINDING_INTENT.ACTUAL&&intent!==FINDING_INTENT.QUALITATIVE)return {normalized,intent,value,unit,result,understood};
  if(value!==null&&test.comparator==='<=')result=value<=test.maximum?'pass':'fail';else if(value!==null&&test.comparator==='>=')result=value>=test.minimum?'pass':'fail';else if(value!==null&&test.comparator==='range')result=value>=test.minimum&&value<=test.maximum?'pass':'fail';
- if(test.kind==='reference-voltage'){if(result==='inconclusive'&&value!==null)result=value>=4.5&&value<=5.5?'pass':'fail';else if(noVoltage)result='fail';else if(/\bpower (?:is )?good\b/.test(normalized))result='pass'}
+ if(test.kind==='reference-voltage'){if(result==='inconclusive'&&value!==null)result=value>=4.5&&value<=5.5?'pass':'fail';else if(noVoltage)result='fail';else if(/\b(?:power (?:is )?good|battery voltage (?:is )?(?:on|at|present)|(?:have|has|found|got) battery voltage)\b/.test(normalized))result='pass'}
  else if(test.kind==='ground-integrity'){if(/\bground (?:is )?(?:good|present)\b|\bground checks? out\b/.test(normalized))result='pass';else if(/\bno ground\b/.test(normalized)||open)result='fail';else if(value!==null)result=value<=0.1?'pass':'fail'}
  else if(test.kind==='signal-activity'){if(signalActivity?.recognized)result=signalActivity.result;else if(/\bno signal\b/.test(normalized)||noVoltage)result='fail'}
  else if(test.kind==='signal-correlation'){const negative=/\b(not synchroniz(?:e|ed)|not (?:in )?sync(?:ed)?|(?:is|are|was|were)(?: not|n't) (?:in )?sync(?:ed)?|out of sync|do(?:es)? not line up|doesn't line up|don't line up|do(?:es)? not correlate|doesn't correlate|don't correlate|did not pass|didn't pass|not good|correlation (?:is )?(?:bad|incorrect|fail(?:s|ed)?)|timing (?:is )?off|relationship (?:is )?wrong|signals? (?:don't|do not) match|no correlation|no (?:cam|crank) signal|not aligned|failed)\b/.test(normalized),positive=/\b(synchroniz(?:e|ed)(?: correctly)?|sync(?:ed)?(?: correctly)?|in sync(?:ed)?|signals? (?:are |is )?in sync(?:ed)?|(?:signals?|cam and crank|they) line up(?: correctly)?|(?:cam and crank|cam crank|they) correlate(?: correctly)?|correlation (?:looks |is )?(?:correct|good)|correlation pass(?:es|ed)?|cam\/crank correlation (?:is )?correct|timing correlation (?:looks |is )?good|timing (?:correlation )?(?:looks? )?correct|mechanical timing checks? out|cam crank relationship (?:is )?correct|signals? match|signals? (?:are )?aligned)\b/.test(normalized);if(negative)result='fail';else if(positive)result='pass'}
@@ -7391,7 +7391,9 @@ function diagnosticConclusion(guided=state.diagnosticTestState){const evidence=r
 function repairDecisionReply(){const guided=state.diagnosticTestState,missing=missingRepairDecisionEvidence(guided);if(missing.length)return`Current Test is Complete, but the stored evidence is missing: ${missing.join(', ')}. I cannot make a repair decision until that specific evidence is present.`;diagnosticCompletionGate(guided);deriveDiagnosticDisposition(guided);const conclusion=diagnosticConclusion(guided);guided.diagnosticConclusion=conclusion;return conclusion}
 function applyNoFaultAction(action){if(state.diagnosticOutcome!=='NO FAULT CONFIRMED'||state.repairDecision!=='NO REPAIR AUTHORIZED'||!isDiagnosticComplete())return {accepted:false,message:''};if(action==='review'){state.repairDecisionView='results';return {accepted:true,message:''}}if(action==='additional-testing'){state.diagnosticClosed=false;state.repairDecisionView='additional-testing';state.additionalTesting={active:true,openedAt:state.additionalTesting?.openedAt||new Date().toISOString(),notes:Array.isArray(state.additionalTesting?.notes)?state.additionalTesting.notes:[]};return {accepted:true,message:'Additional investigation is open on this case. The completed evidence remains unchanged. What do you want to investigate next, or what diagnostic evidence do you want to import?'}}if(action==='close'){state.diagnosticClosed=true;state.repairDecisionView='closed';state.additionalTesting={...(state.additionalTesting||{}),active:false,notes:Array.isArray(state.additionalTesting?.notes)?state.additionalTesting.notes:[]};state.repairDecision='NO REPAIR AUTHORIZED';return {accepted:true,message:'Diagnostic closed — No Fault Confirmed. No repair is authorized by the current evidence. The complete diagnostic evidence remains stored with this case.'}}return {accepted:false,message:''}}
 function continueToRepairDecision(){if(!isDiagnosticComplete())return false;ask(repairDecisionReply());return true}
-function diagnosticProgressRequest(text){return /^(?:what(?:'s| is) next|next|continue|where do we go now|what do i do now)\??$/i.test(String(text||'').trim())}
+function diagnosticProgressRequest(text){return /^(?:what(?:'s| is| should be) (?:the )?(?:next|i check next)|what should i (?:check|test|do) next|next(?: test| check)?|continue|where do we go now|what do i do now)\??$/i.test(String(text||'').trim())}
+function conversationalDiagnosticEvidence(text){const value=String(text||'').trim();if(!state.activeDtc||!value)return null;const directResult=/\b(good|bad|pass(?:ed|es)?|fail(?:ed|s)?|present|missing|open(?: circuit)?|no continuity|continuity|switch(?:es|ing)?|battery voltage|\d+(?:\.\d+)?\s*(?:v|volts?|ohms?|Ω))\b/i.test(value);if(!directResult)return null;if(/\b(power|reference|feed|supply)\b/i.test(value))return'cam-power-reference';if(/\bground|grounding\b/i.test(value))return'cam-ground';if(/\b(signal|scope|waveform|switch(?:es|ing)?)\b/i.test(value))return'cam-signal';return null}
+function routeConversationalDiagnosticEvidence(text){const targetId=conversationalDiagnosticEvidence(text),guided=targetId&&ensureGuidedState();if(!guided)return false;const target=testRecord(targetId),definition=testDefinition(targetId);if(!target||!definition||['pass','fail'].includes(target.status))return false;state.intakeStep='complete';state.stage='diagnostic';activateTest(guided,definition);return handleGuidedFinding(text)}
 function reconcileCompletedCurrentTest(guided){const current=testRecord(guided?.currentTestId);if(!guided?.currentTestId||!['pass','fail'].includes(current?.status))return false;activateTest(guided,nextPendingTest(guided.currentTestId));diagnosticCompletionGate(guided);return true}
 function pendingTestReply(definition){const continuity=/continuity|resistance/i.test(`${definition.name||''} ${definition.expectedResult||''}`),requirement=continuity?'Report the measured resistance with units, or a direct continuity result such as pass, open circuit, OL, or no continuity.':definition.requestedResult||'Report the actual measurement or direct observed result.';return`${definition.name} is still awaiting a result. ${requirement}`}
 function committedIsolationTransition(guided,definition,text,receivedAt){if(!definition.isolation||!definition.parentTestId)return false;const parentDefinition=testDefinition(definition.parentTestId),parentRecord=testRecord(definition.parentTestId);if(!parentDefinition||!parentRecord||!['pass','fail'].includes(parentRecord.status))return false;const next=nextPendingTest(parentDefinition.id),completed=Object.freeze({testId:parentDefinition.id,testName:parentDefinition.name,workflowId:guided.workflowId,workflowName:workflowName(),expectedResult:parentDefinition.expectedResult||'',comparator:parentDefinition.comparator||'',actualObservedMeasurement:parentRecord.interpretedValue,unit:parentRecord.unit||'',status:parentRecord.status,explanatoryResultText:`the committed ${parentDefinition.name} result remains authoritative`,nextTestId:next?.id||'',nextTestName:next?.name||'',nextTestPrompt:next?.prompt||'',rawObservation:text,normalizedObservation:normalizeFinding(text),intent:'AUTHORITATIVE_COMMITTED_RESULT',timestamp:new Date().toISOString()});activateTest(guided,next);guided.lastCompletedResult={...completed};lastDiagnosticTransition={raw:text,at:receivedAt};ask(completedResultReply(completed));return true}
@@ -7427,6 +7429,7 @@ function diagnosticStatus(text){const match=String(text||'').toLowerCase().match
 function process(raw){const text=String(raw||'').trim();if(!text)return;add('You',text);const low=text.toLowerCase();
  if(/^(new case|start new case|clear case|start over)$/.test(low)){reset();return}
  if(state.additionalTesting?.active&&isDiagnosticComplete()){state.additionalTesting.notes=Array.isArray(state.additionalTesting.notes)?state.additionalTesting.notes:[];state.additionalTesting.notes.push({text,at:new Date().toISOString()});state.additionalTesting.notes=state.additionalTesting.notes.slice(-50);ask(`Additional investigation note recorded without changing the completed results: “${text}” Import supporting evidence or deliberately choose the next diagnostic direction when ready.`);return}
+ if(typeof routeConversationalDiagnosticEvidence==='function'&&routeConversationalDiagnosticEvidence(text))return
  if(['diagnostic','circuit-isolation','mechanical-diagnosis','repair-decision'].includes(state.stage)&&state.activeDtc&&ensureGuidedState()&&handleGuidedFinding(text))return
  if(state.intakeStep==='status'){
    const selectedStatus=diagnosticStatus(text);if(selectedStatus){state.status=selectedStatus;advanceIntake();ask(`Code status recorded as ${state.status}. ${nextQuestion()}`);return}
@@ -7718,7 +7721,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.7V9</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.8</strong></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>
 <li>Service Worker Script URL: <strong id="nitrosRuntimeSwUrl">Checking</strong></li>
