@@ -94,3 +94,24 @@ test('10.12.23 prepare handler commits all four real form values and records bef
 test('manual appointment save and conflict workflow remain independently wired',()=>{
   assert.match(html,/function saveAppointment\(\)/);assert.match(html,/el\('saveAppointment'\)\?\.addEventListener\('click',saveAppointment\)/);assert.match(html,/el\('checkAppointmentConflict'\)\?\.addEventListener\('click',\(\)=>showConflict\(\)\)/);assert.match(html,/write\(APPT_KEY,\[\.\.\.list\.filter/);
 });
+
+test('10.12.24 customer-only leading name and phone commit independently of lookup',()=>{
+  const {api,fields}=assistant(),draft=api.parseAppointmentRequest('Derek Lord, phone number 508-678-5432.');
+  assert.equal(draft.customer,'Derek Lord');assert.equal(draft.phone,'5086785432');assert.equal(draft.customerNameValidation,'VALID');
+  assert.equal(api.hydrateAppointmentDraft(draft).ok,true);assert.equal(fields.get('appointmentCustomer').value,'Derek Lord');assert.equal(fields.get('appointmentPhone').value,'5086785432');
+});
+
+test('10.12.24 arrival and completion times remain isolated',()=>{
+  const {api}=assistant(),draft=api.parseAppointmentRequest('Derek Lord is dropping off tomorrow at 8 AM and needs the vehicle completed by 2 PM.');
+  assert.equal(draft.customer,'Derek Lord');assert.equal(draft.time,'08:00');assert.equal(draft.promisedTime,'14:00');
+});
+
+test('10.12.24 ready-by variant extracts possessive customer and promised time',()=>{
+  const {api}=assistant(),draft=api.parseAppointmentRequest('Have Derek Lord’s Jeep ready by 3:30 PM.');
+  assert.equal(draft.customer,'Derek Lord');assert.equal(draft.promisedTime,'15:30');assert.equal(draft.time,'');
+});
+
+test('10.12.24 drop-off time never becomes a promised completion',()=>{
+  const {api}=assistant(),draft=api.parseAppointmentRequest('Derek Lord is dropping the Jeep off at 2 PM.');
+  assert.equal(draft.customer,'Derek Lord');assert.equal(draft.time,'14:00');assert.equal(draft.promisedTime,'');
+});
