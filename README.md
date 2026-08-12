@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.12.17 adds PID Time-Series Trace Preservation / Static-Snapshot Contradiction Fix while preserving verified portal workflows.
+Version 10.12.19 fixes Oliver appointment parsing and verified form hydration while preserving the 10.12.18 PID evidence gate and verified portal workflows.
 
 ## Secure semantic analyzer
 

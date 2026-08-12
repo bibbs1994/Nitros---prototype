@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.17 — PID Time-Series Trace Preservation / Static-Snapshot Contradiction Fix — Build 2026-08-12</title>
+<title>Nitros Mobile Technician Portal v10.12.19 — Oliver Appointment Form Hydration Fix — Build 2026-08-12</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.17 — PID Time-Series Trace Preservation / Static-Snapshot Contradiction Fix — Build 2026-08-12</div>
+  <div class="sub">Mobile Technician Portal v10.12.19 — Oliver Appointment Form Hydration Fix — Build 2026-08-12</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.17 — PID Time-Series Trace Preservation / Static-Snapshot Contradiction Fix — Build 2026-08-12. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.19 — Oliver Appointment Form Hydration Fix — Build 2026-08-12. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.17 — PID Time-Series Trace Preservation / Static-Snapshot Contradiction Fix — Build 2026-08-12</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.19 — Oliver Appointment Form Hydration Fix — Build 2026-08-12</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.17 — PID Time-Series Trace Preservation / Static-Snapshot Contradiction Fix — Build 2026-08-12</div>
+      <div class="eyebrow">Version 10.12.19 — Oliver Appointment Form Hydration Fix — Build 2026-08-12</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1683,13 +1683,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.17 • PID Time-Series Trace Preservation / Static-Snapshot Contradiction Fix • Build 2026-08-12 • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.19 • Oliver Appointment Form Hydration Fix • Build 2026-08-12 • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.12.17',
-  release:'PID Time-Series Trace Preservation / Static-Snapshot Contradiction Fix',
+  version:'10.12.19',
+  release:'Oliver Appointment Form Hydration Fix',
   buildDate:'2026-08-12',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -5184,7 +5184,13 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     function renderAll(){renderAppointments();renderFollowups();renderBriefing()}
     function parseDate(text){const low=text.toLowerCase(),base=new Date();if(low.includes('tomorrow'))base.setDate(base.getDate()+1);else if(low.includes('monday')){let d=(1-base.getDay()+7)%7;if(d===0)d=7;base.setDate(base.getDate()+d)}else if(low.includes('tuesday')){let d=(2-base.getDay()+7)%7;if(d===0)d=7;base.setDate(base.getDate()+d)}else if(low.includes('wednesday')){let d=(3-base.getDay()+7)%7;if(d===0)d=7;base.setDate(base.getDate()+d)}else if(low.includes('thursday')){let d=(4-base.getDay()+7)%7;if(d===0)d=7;base.setDate(base.getDate()+d)}else if(low.includes('friday')){let d=(5-base.getDay()+7)%7;if(d===0)d=7;base.setDate(base.getDate()+d)}return isoDate(base)}
     function parseTime(text){const m=text.match(/(?:at\s*)?(1[0-2]|0?\d)(?::([0-5]\d))?\s*(a\.?m\.?|p\.?m\.?)?/i);if(!m)return '08:00';let h=+m[1],min=m[2]||'00',amp=(m[3]||'').toLowerCase();if(amp.startsWith('p')&&h<12)h+=12;if(amp.startsWith('a')&&h===12)h=0;return `${String(h).padStart(2,'0')}:${min}`}
-    function oliverParse(){const text=el('oliverScheduleInput')?.value.trim();if(!text){el('oliverScheduleResponse').textContent='Tell me what you would like scheduled or remembered.';return}const low=text.toLowerCase(),isFollow=/remind|don't forget|order|call back|follow up|follow-up/.test(low);if(isFollow){blankFollowup();el('followupDueDate').value=parseDate(text);el('followupDueTime').value=parseTime(text);el('followupTask').value=text.replace(/^oliver[, ]*/i,'').trim();if(/order/.test(low))el('followupCategory').value='Order Parts';if(/urgent|safety|first thing/.test(low))el('followupPriority').value=/urgent|safety/.test(low)?'urgent':'high';const kia=text.match(/([A-Z][a-z]+)'?s?\s+(Kia Soul|[A-Z][a-z]+\s+[A-Z][a-z]+)/);if(kia){el('followupCustomer').value=kia[1];el('followupVehicle').value=kia[2]}el('oliverScheduleResponse').textContent='I prepared a shop follow-up below. Review the due date, customer, vehicle, vendors, and task, then tap Save Follow-Up.';el('followupCustomer').scrollIntoView({behavior:'smooth',block:'center'})}else{blankAppointment();el('appointmentDate').value=parseDate(text);el('appointmentTime').value=parseTime(text);const name=text.match(/(?:schedule|book|add)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i);if(name)el('appointmentCustomer').value=name[1];const veh=text.match(/(?:with|bringing|in|the)\s+(?:the\s+)?((?:19|20)\d{2}\s+[^,.]+|[A-Z][a-z]+\s+(?:Soul|Cougar|Truck|Buick|Kia|Ford|Chevy|Toyota|Honda|Jeep))/i);if(veh)el('appointmentVehicle').value=veh[1].trim();el('appointmentConcern').value=text.replace(/^oliver[, ]*/i,'').trim();if(/wait/.test(low))el('appointmentArrival').value='Waiting';else if(/tow/.test(low))el('appointmentArrival').value='Tow-in';else if(/key drop/.test(low))el('appointmentArrival').value='Key drop';const draft=currentDraft(),hits=showConflict(draft);el('oliverScheduleResponse').textContent=hits.length?`I prepared the appointment, but I found ${hits.length} schedule conflict${hits.length===1?'':'s'}. Review the highlighted schedule warning before saving.`:'I prepared the appointment and checked the schedule. Review the details, then tap Save Appointment.';el('appointmentCustomer').scrollIntoView({behavior:'smooth',block:'center'})}}
+    function normalizeAppointmentTranscript(text){return String(text||'').replace(/\bE\s*\.?\s*V\s*\.?\s*A\s*\.?\s*P\s*\.?\s+code\b/gi,'EVAP code').replace(/\bEVA\s+code\b/gi,'EVAP code').replace(/\bevap\s+code\b/gi,'EVAP code').replace(/\bevap\s+problem\b/gi,'EVAP problem').replace(/\s+/g,' ').trim()}
+    function parseAppointmentRequest(original){const text=normalizeAppointmentTranscript(original),low=text.toLowerCase(),nameMatch=text.match(/^\s*([A-Z][a-z]+\s+[A-Z][a-z]+)\s+(?:is\s+)?(?:leaving|dropping\s+off|bringing)\b/)||text.match(/\bput\s+([A-Z][a-z]+\s+[A-Z][a-z]+)\s+down\b/i)||text.match(/\bschedule\s+([A-Z][a-z]+\s+[A-Z][a-z]+)(?:'s|\s)/i)||text.match(/\b(?:schedule|book|add)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i),year=text.match(/\b((?:19|20)\d{2})\b/)?.[1]||'',make=text.match(/\b(Jeep|Ford|Chevrolet|Chevy|GMC|Toyota|Honda|Kia|Hyundai|Dodge|Ram|Nissan|Subaru|BMW|Mercedes(?:-Benz)?|Volkswagen|Audi|Buick|Cadillac|Chrysler|Mazda|Volvo|Lexus|Acura)\b/i)?.[1]||'',modelMatch=make?text.match(new RegExp(`\\b${make.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\s+([A-Z][A-Za-z0-9-]+)`,'i')):null,modelCandidate=modelMatch?.[1]||'',model=/^(?:tomorrow|morning|afternoon|evening|at|for|with|is)$/i.test(modelCandidate)?'':modelCandidate,phone=text.match(/(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/)?.[0]||'',concernMatch=text.match(/\bfor\s+(?:an?\s+|the\s+)?(.+?)(?:[.!?]|$)/i)||text.match(/\bwith\s+(?:an?\s+|the\s+)?(EVAP\s+(?:code|problem))\b/i),dropOff=/\b(?:leaving|drop(?:ping)?\s+off|put .+ down)\b/i.test(text),arrival=/\b(?:tow|towed)\b/i.test(text)?'Tow-in':/\bkey\s+drop\b/i.test(text)?'Key drop':/\bwait(?:ing)?\b/i.test(text)?'Waiting':dropOff?'Drop-off':'Drop-off';let concern=(concernMatch?.[1]||'').trim();if(/^EVAP\s+(?:code|problem)$/i.test(concern))concern=concern.replace(/^evap/i,'EVAP');const vehicle=[year,make,model].filter(Boolean).join(' ').trim();return{normalizedTranscript:text,customer:nameMatch?.[1]?.trim()||'',phone,vehicle,year,make,model,date:parseDate(text),time:parseTime(text),arrival,dropOffIntent:dropOff,concern,notes:''}}
+    function hydrateAppointmentDraft(draft,writer=window.NitrosAppointmentHydrationWriter||((id,value)=>{const node=el(id);if(!node)throw new Error(`Missing appointment field: ${id}`);node.value=value})){const fields={appointmentEditId:'',appointmentCustomer:draft.customer,appointmentPhone:draft.phone||'',appointmentVehicle:draft.vehicle,appointmentDate:draft.date,appointmentTime:draft.time,appointmentArrival:draft.arrival||'Drop-off',appointmentConcern:draft.concern,appointmentNotes:draft.notes||''};try{blankAppointment();Object.entries(fields).forEach(([id,value])=>writer(id,value));const hydrated=Object.entries(fields).every(([id,value])=>String(el(id)?.value??'')===String(value));if(!hydrated)throw new Error('Appointment form state did not retain the parsed draft.');return{ok:true,fields:Object.keys(fields)}}catch(error){return{ok:false,error:String(error?.message||error),fields:Object.keys(fields)}}}
+    function verifyAppointmentHydration(draft){return el('appointmentCustomer')?.value.trim()===draft.customer&&el('appointmentVehicle')?.value.trim()===draft.vehicle&&el('appointmentDate')?.value===draft.date&&el('appointmentTime')?.value===draft.time&&el('appointmentConcern')?.value.trim()===draft.concern&&el('appointmentPhone')?.value===(draft.phone||'')&&el('appointmentArrival')?.value===(draft.arrival||'Drop-off')}
+    function appointmentDiagnostic(data){window.NitrosDeveloperMode=window.NitrosDeveloperMode||{};window.NitrosDeveloperMode.appointmentAssistant={appointmentIntentDetected:!!data.intent,normalizedTranscript:data.normalizedTranscript||'',parsedFieldNames:data.parsedFieldNames||[],resolvedLocalDateTime:data.resolvedLocalDateTime||'',formHydration:data.formHydration||'NOT_ATTEMPTED',scheduleCheckResult:data.scheduleCheckResult||'NOT_RUN',draftReady:!!data.draftReady}}
+    function oliverParse(){const input=el('oliverScheduleInput'),text=input?.value.trim();if(!text){el('oliverScheduleResponse').textContent='Tell me what you would like scheduled or remembered.';return}const low=text.toLowerCase(),isFollow=/remind|don't forget|order|call back|follow up|follow-up/.test(low);if(isFollow){blankFollowup();el('followupDueDate').value=parseDate(text);el('followupDueTime').value=parseTime(text);el('followupTask').value=text.replace(/^oliver[, ]*/i,'').trim();if(/order/.test(low))el('followupCategory').value='Order Parts';if(/urgent|safety|first thing/.test(low))el('followupPriority').value=/urgent|safety/.test(low)?'urgent':'high';const kia=text.match(/([A-Z][a-z]+)'?s?\s+(Kia Soul|[A-Z][a-z]+\s+[A-Z][a-z]+)/);if(kia){el('followupCustomer').value=kia[1];el('followupVehicle').value=kia[2]}el('oliverScheduleResponse').textContent='I prepared a shop follow-up below. Review the due date, customer, vehicle, vendors, and task, then tap Save Follow-Up.';el('followupCustomer').scrollIntoView({behavior:'smooth',block:'center'});return}const draft=parseAppointmentRequest(text),required=draft.customer&&draft.vehicle&&draft.date&&draft.time&&draft.concern;appointmentDiagnostic({intent:true,normalizedTranscript:draft.normalizedTranscript,parsedFieldNames:Object.keys(draft).filter(key=>draft[key]!==''&&key!=='normalizedTranscript'),resolvedLocalDateTime:`${draft.date} ${draft.time}`});if(!required){el('oliverScheduleResponse').textContent='I understood that you want an appointment, but I could not reliably identify the customer, vehicle, date, time, and concern. Your original instruction is still available above so you can clarify it.';appointmentDiagnostic({intent:true,normalizedTranscript:draft.normalizedTranscript,parsedFieldNames:Object.keys(draft).filter(key=>draft[key]!==''),resolvedLocalDateTime:`${draft.date} ${draft.time}`,formHydration:'NOT_ATTEMPTED',draftReady:false});return}const hydration=hydrateAppointmentDraft(draft),verified=hydration.ok&&verifyAppointmentHydration(draft);if(!verified){el('oliverScheduleResponse').textContent='I parsed the appointment, but could not write it into the form. Your original instruction is preserved. Please try again or enter the fields manually.';appointmentDiagnostic({intent:true,normalizedTranscript:draft.normalizedTranscript,parsedFieldNames:hydration.fields,resolvedLocalDateTime:`${draft.date} ${draft.time}`,formHydration:'FAILED',draftReady:false});return}const hits=showConflict(currentDraft());appointmentDiagnostic({intent:true,normalizedTranscript:draft.normalizedTranscript,parsedFieldNames:hydration.fields,resolvedLocalDateTime:`${draft.date} ${draft.time}`,formHydration:'SUCCESS',scheduleCheckResult:hits.length?`CONFLICTS:${hits.length}`:'CLEAR',draftReady:true});el('oliverScheduleResponse').textContent=hits.length?`I prepared the appointment, but I found ${hits.length} schedule conflict${hits.length===1?'':'s'}. Review the populated details and schedule warning before saving.`:'I prepared the appointment and checked the schedule. Review the populated details, then tap Save Appointment.';el('appointmentCustomer').scrollIntoView({behavior:'smooth',block:'center'})}
+    window.NitrosAppointmentAssistant=Object.freeze({normalizeAppointmentTranscript,parseAppointmentRequest,hydrateAppointmentDraft,verifyAppointmentHydration,prepare:oliverParse});
     function listen(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){el('oliverScheduleResponse').textContent='Voice recognition is not available in this browser. You can still type or use the phone keyboard microphone.';return}const r=new SR();r.lang='en-US';r.interimResults=false;r.onstart=()=>el('oliverScheduleResponse').textContent='Listening…';r.onerror=e=>el('oliverScheduleResponse').textContent=`Voice recognition stopped: ${e.error}. You can type the instruction instead.`;r.onresult=e=>{el('oliverScheduleInput').value=e.results[0][0].transcript;el('oliverScheduleResponse').textContent='I heard your instruction. Tap Have Oliver Prepare It.'};r.start()}
     function download(){const payload={schema:'nitros-schedule-package',version:'8.2.8',createdAt:new Date().toISOString(),appointments:read(APPT_KEY),followups:read(FOLLOW_KEY)},blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`Nitros_v8.2.8_Schedule_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setMsg('scheduleTransferStatus','Schedule and follow-ups exported successfully.','status ok')}
     async function importData(file){const d=JSON.parse(await file.text());if(d?.schema!=='nitros-schedule-package')throw new Error('Unsupported file');const am=new Map(read(APPT_KEY).map(x=>[x.id,x]));(d.appointments||[]).forEach(x=>x?.id&&am.set(x.id,{...am.get(x.id),...x}));const fm=new Map(read(FOLLOW_KEY).map(x=>[x.id,x]));(d.followups||[]).forEach(x=>x?.id&&fm.set(x.id,{...fm.get(x.id),...x}));localStorage.setItem(APPT_KEY,JSON.stringify([...am.values()]));localStorage.setItem(FOLLOW_KEY,JSON.stringify([...fm.values()]));renderAll();setMsg('scheduleTransferStatus','Schedule package imported and merged without deleting existing records.','status ok')}
@@ -5290,7 +5296,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.17 • PID Time-Series Trace Preservation / Static-Snapshot Contradiction Fix • Build 2026-08-12</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.19 • Oliver Appointment Form Hydration Fix • Build 2026-08-12</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5328,7 +5334,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.17 — PID Time-Series Trace Preservation / Static-Snapshot Contradiction Fix — Build 2026-08-12</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.19 — Oliver Appointment Form Hydration Fix — Build 2026-08-12</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6353,7 +6359,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.17</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.19</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -7736,7 +7742,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.17</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.19</strong></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>
 <li>Service Worker Script URL: <strong id="nitrosRuntimeSwUrl">Checking</strong></li>
