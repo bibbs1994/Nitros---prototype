@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import vm from 'node:vm';
 import { normalizeWiringField } from '../semantic-analyzer-core.mjs';
 
 const root = new URL('../', import.meta.url);
@@ -12,12 +13,35 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
   readFile(new URL('semantic-analyzer-core.mjs', root), 'utf8')
 ]);
 
-test('BF app build keeps the proven AO analyzer and production endpoint', () => {
+function semanticNormalizer(){
+  const start=analyzer.indexOf('  function normalizeSemanticAnalysisResponse(payload){'),endMarker='  window.NitrosNormalizeSemanticResponse=normalizeSemanticAnalysisResponse;',end=analyzer.indexOf(endMarker,start)+endMarker.length,context={window:{}};
+  assert.ok(start>0&&end>start,'semantic normalizer source must be extractable');vm.createContext(context);vm.runInContext(analyzer.slice(start,end),context);return context.window.NitrosNormalizeSemanticAnalysisResponse;
+}
+
+const semanticFixture={category:'AUTOMOTIVE_GRAPH',confidence:98,objects:['PID graph'],evidence:['visible plotted traces'],description:'Automotive PID graph',automotiveEvidence:[],graphEvidence:['horizontal graph axis','multiple plotted points'],documentEvidence:[]};
+
+test('10.12.28 canonical normalizer accepts direct, array, envelope, OpenAI content, and fenced JSON shapes',()=>{
+  const normalize=semanticNormalizer(),identity={transactionId:'sem-current',imageHash:'abc123'},cases=[
+    {...identity,semanticResult:semanticFixture},
+    [{...identity,semanticResult:semanticFixture}],
+    {...identity,data:{result:{semanticResult:semanticFixture}}},
+    {...identity,output:[{content:[{type:'output_text',text:JSON.stringify(semanticFixture)}]}]},
+    {...identity,semanticResult:`\n\`\`\`json\n${JSON.stringify(semanticFixture)}\n\`\`\`\n`},
+    {...identity,output_parsed:semanticFixture}
+  ];
+  for(const raw of cases){const result=normalize(raw);assert.equal(result.semanticResult.category,'AUTOMOTIVE_GRAPH');assert.equal(result.transactionId,identity.transactionId);assert.equal(result.imageHash,identity.imageHash)}
+});
+
+test('10.12.28 canonical normalizer rejects malformed and incomplete semantic content',()=>{
+  const normalize=semanticNormalizer();assert.equal(normalize({semanticResult:'```json\n{bad json}\n```'}),null);assert.equal(normalize({semanticResult:{category:'AUTOMOTIVE_GRAPH'}}),null);
+});
+
+test('10.12.28 keeps the proven analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.23'/);
-  assert.match(html, /10\.12\.27/);
+  assert.match(html, /10\.12\.28/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.27'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.28'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -44,19 +68,20 @@ test('automotive graphs route into Oliver with context-safe structured findings'
   assert.match(analyzer, /Retain these graph findings in the current diagnostic conversation/);
 });
 
-test('10.12.23 preserves supported semantic response shapes and one transient unusable-result retry',()=>{
-  for(const shape of ['direct-object','single-result-array','nested-data','nested-result','nested-analysis','nested-output','JSON-content','unsupported'])assert.ok(analyzer.includes(shape),`missing response shape ${shape}`);
+test('10.12.28 preserves supported semantic response shapes and one transient unusable-result retry',()=>{
+  for(const shape of ['semanticResult','structured_output','output_parsed','output[]','content[]','JSON text','unsupported'])assert.ok(analyzer.includes(shape),`missing response shape ${shape}`);
   for(const failure of ['transport_failure','endpoint_failure','openai_request_failure','empty_model_response','malformed_semantic_response','unsupported_response_shape','valid_response_no_usable_visual_evidence'])assert.ok(analyzer.includes(failure),`missing failure class ${failure}`);
-  assert.match(analyzer,/function normalizeSemanticResponse\(payload\)/);
-  assert.match(analyzer,/window\.NitrosNormalizeSemanticResponse=normalizeSemanticResponse/);
+  assert.match(analyzer,/function normalizeSemanticAnalysisResponse\(payload\)/);
+  assert.match(analyzer,/window\.NitrosNormalizeSemanticAnalysisResponse=normalizeSemanticAnalysisResponse/);
   assert.match(analyzer,/for\(let analysisAttempt=1;analysisAttempt<=2;analysisAttempt\+=1\)/);
-  assert.match(analyzer,/analysisAttempt===2\)run\.analyzer\.retryStatus='PASS'/);
+  assert.match(analyzer,/analysisAttempt===2\)run\.analyzer\.retryStatus='PASS'/);assert.match(analyzer,/retryStatus='RUNNING'/);
   assert.match(analyzer,/retryable:failureClass==='malformed_semantic_response'/);
   assert.match(analyzer,/valid_response_no_usable_visual_evidence[\s\S]+retryable:false/);
   assert.match(analyzer,/CURRENT_REQUEST_MISMATCH/);assert.match(analyzer,/CURRENT_IMAGE_MISMATCH/);assert.match(analyzer,/CURRENT_ATTEMPT_MISMATCH/);
   for(const stage of ['Semantic response shape normalized','Semantic objects received','Semantic analysis retry','Fresh-result verification'])assert.ok(analyzer.includes(stage),`missing stage ${stage}`);
-  assert.match(analyzer,/topLevelKeys:payload&&typeof payload==='object'\?Object\.keys\(payload\)\.sort\(\):\[\]/);
+  assert.match(analyzer,/topLevelKeys:payload&&typeof payload==='object'&&!Array\.isArray\(payload\)\?Object\.keys\(payload\)\.sort\(\):\[\]/);
   assert.match(analyzer,/Semantic failure class:/);assert.match(analyzer,/Response shape:/);
+  for(const field of ['rawResponseType','semanticPayloadLocated','semanticPayloadParsed','canonicalNormalizationSuccessful','semanticObjectCount'])assert.ok(analyzer.includes(field),`missing normalization diagnostic ${field}`);
 });
 
 test('analysis payload is a single bounded metadata-free JPEG copy', () => {
@@ -228,7 +253,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.27'/);
+  assert.match(html, /version:'10\.12\.28'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
@@ -290,7 +315,7 @@ test('visible stages reflect confirmed browser, Vercel, OpenAI, parse, and objec
   assert.match(analyzer, /if\(server\.openaiResponseReceived&&server\.openaiResponseOk\)set\(5,'PASS'\)/);
   assert.doesNotMatch(analyzer, /if\(server\.openaiRequestAttempted\)set\(5,'PASS'\)/);
   assert.match(analyzer, /if\(diag\.responseShapeNormalized\)set\(8,'PASS'\)/);
-  assert.match(analyzer, /if\(server\.semanticOutputPresent&&diag\.responseShapeNormalized\)set\(9,'PASS'\)/);
+  assert.match(analyzer, /if\(diag\.semanticObjectCount>0&&diag\.responseShapeNormalized\)set\(9,'PASS'\)/);
 });
 
 test('CORS preflight explicitly allows the production request headers', () => {

@@ -41,7 +41,7 @@ test('plain text DTC entry remains text-first and starts one relevant decision',
 });
 
 test('10.12.23 build identity is visible without removing AR Oliver or AQ GPS implementation',()=>{
-  assert.match(html,/10\.12\.27/);
+  assert.match(html,/10\.12\.28/);
   assert.match(html,/NitrosOliverNaturalEntry/);
   assert.match(html,/window\.NitrosGpsEvidence/);
   assert.match(html,/photoEvidence:persistedPhotos\.map\(item=>\(\{[^\n]+gps:item\.gps/);
