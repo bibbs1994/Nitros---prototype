@@ -37,7 +37,8 @@ test('automotive graphs route into Oliver with context-safe structured findings'
   assert.match(analyzer, /result\.route='Automotive graph analysis'/);
   assert.doesNotMatch(analyzer, /No clean-room graph\/OCR analyzer is configured/);
   assert.match(analyzer, /Observed:/);assert.match(analyzer, /Interpretation:/);assert.match(analyzer, /Next Test:/);
-  assert.match(analyzer,/graph\.analysisMode==='PID_SNAPSHOT'\?'AUTOMOTIVE PID SNAPSHOT ANALYSIS':'AUTOMOTIVE GRAPH ANALYSIS'/);
+  assert.match(analyzer,/graph\.analysisMode==='PID_SNAPSHOT'\?'AUTOMOTIVE PID SNAPSHOT ANALYSIS':'AUTOMOTIVE PID GRAPH ANALYSIS'/);
+  assert.match(analyzer,/<strong>Trace Behavior:<\/strong>/);
   assert.match(analyzer, /NitrosQuickVehicle\?\.getActiveVehicle/);
   assert.match(analyzer, /Possible vehicle-context mismatch/);
   assert.match(analyzer, /Retain these graph findings in the current diagnostic conversation/);
