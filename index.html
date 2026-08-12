@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.24 — Oliver Appointment Name and Completion Final Fix — Build 2026-08-12</title>
+<title>Nitros Mobile Technician Portal v10.12.23 — Oliver Appointment Dedicated Field Commit Fix — Build 2026-08-12</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.24 — Oliver Appointment Name and Completion Final Fix — Build 2026-08-12</div>
+  <div class="sub">Mobile Technician Portal v10.12.23 — Oliver Appointment Dedicated Field Commit Fix — Build 2026-08-12</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.24 — Oliver Appointment Name and Completion Final Fix — Build 2026-08-12. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.23 — Oliver Appointment Dedicated Field Commit Fix — Build 2026-08-12. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.24 — Oliver Appointment Name and Completion Final Fix — Build 2026-08-12</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.23 — Oliver Appointment Dedicated Field Commit Fix — Build 2026-08-12</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.24 — Oliver Appointment Name and Completion Final Fix — Build 2026-08-12</div>
+      <div class="eyebrow">Version 10.12.23 — Oliver Appointment Dedicated Field Commit Fix — Build 2026-08-12</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1683,13 +1683,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.24 • Oliver Appointment Name and Completion Final Fix • Build 2026-08-12 • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.23 • Oliver Appointment Dedicated Field Commit Fix • Build 2026-08-12 • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.12.24',
-  release:'Oliver Appointment Name and Completion Final Fix',
+  version:'10.12.23',
+  release:'Oliver Appointment Dedicated Field Commit Fix',
   buildDate:'2026-08-12',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -5198,12 +5198,6 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     function customerLookupResult(name){if(!name)return'NOT_ATTEMPTED';const wanted=name.toLowerCase(),appointmentMatch=read(APPT_KEY).some(item=>String(item.customer||'').trim().toLowerCase()===wanted);let historyMatch=false;try{historyMatch=typeof loadCustomerHistory==='function'&&loadCustomerHistory().some(item=>String(item.customer?.name||item.customerName||item.customer||'').trim().toLowerCase()===wanted)}catch(_){historyMatch=false}return appointmentMatch||historyMatch?'EXACT_MATCH':'NOT_FOUND_PRESERVED'}
     function appointmentDiagnostic(data){const trace=data.controlTrace||{},detail=(id,candidate)=>trace[id]||{candidate:candidate||'',normalized:candidate||'',formValue:'',commitResult:'NOT_ATTEMPTED'},confirmation=detail('appointmentConfirmationMethod',data.confirmationMethodCandidate),promised=detail('appointmentPromisedTime',data.promisedCompletionCandidate),keys=detail('appointmentKeys',data.keysAccessCandidate),transportation=detail('appointmentTransportation',data.transportationCandidate);window.NitrosDeveloperMode=window.NitrosDeveloperMode||{};window.NitrosDeveloperMode.appointmentAssistant={appointmentIntentDetected:!!data.intent,rawTranscript:data.rawTranscript||'',normalizedTranscript:data.normalizedTranscript||'',customerName:data.customer||'',phone:data.phone||'',vehicleYear:data.year||'',vehicleMake:data.make||'',vehicleModel:data.model||'',appointmentDate:data.date||'',appointmentTime:data.time||'',arrivalType:data.arrival||'',primaryConcern:data.concern||'',additionalRequestedInspections:data.inspections||'',confirmationMethodCandidate:confirmation.candidate,confirmationMethodNormalized:confirmation.normalized,confirmationMethodFormValue:confirmation.formValue,confirmationMethodCommitResult:confirmation.commitResult,promisedCompletionCandidate:promised.candidate,promisedCompletionNormalized:promised.normalized,promisedCompletionFormValue:promised.formValue,promisedCompletionCommitResult:promised.commitResult,keysAccessCandidate:keys.candidate,keysAccessNormalized:keys.normalized,keysAccessFormValue:keys.formValue,keysAccessCommitResult:keys.commitResult,transportationCandidate:transportation.candidate,transportationNormalized:transportation.normalized,transportationFormValue:transportation.formValue,transportationCommitResult:transportation.commitResult,appointmentNotes:data.notes||'',normalizationsApplied:data.normalizationsApplied||[],unresolvedFields:data.unresolvedFields||[],preparedAppointmentObject:data.preparedAppointmentObject||null,finalAppointmentFormState:data.finalAppointmentFormState||null,stateCommitResult:data.appointmentStateCommitResult||'NOT_ATTEMPTED',confidence:data.confidence??0,formHydration:data.formHydration||'NOT_ATTEMPTED',scheduleCheckResult:data.scheduleCheckResult||'NOT_RUN',draftReady:!!data.draftReady}}
     function oliverParse(){const input=el('oliverScheduleInput'),text=input?.value.trim();if(!text){el('oliverScheduleResponse').textContent='Tell me what you would like scheduled or remembered.';return}const low=text.toLowerCase(),isFollow=/remind|don't forget|order|call back|follow up|follow-up/.test(low);if(isFollow){blankFollowup();el('followupDueDate').value=parseDate(text);el('followupDueTime').value=parseTime(text);el('followupTask').value=text.replace(/^oliver[, ]*/i,'').trim();if(/order/.test(low))el('followupCategory').value='Order Parts';if(/urgent|safety|first thing/.test(low))el('followupPriority').value=/urgent|safety/.test(low)?'urgent':'high';const kia=text.match(/([A-Z][a-z]+)'?s?\s+(Kia Soul|[A-Z][a-z]+\s+[A-Z][a-z]+)/);if(kia){el('followupCustomer').value=kia[1];el('followupVehicle').value=kia[2]}el('oliverScheduleResponse').textContent='I prepared a shop follow-up below. Review the due date, customer, vehicle, vendors, and task, then tap Save Follow-Up.';el('followupCustomer').scrollIntoView({behavior:'smooth',block:'center'});return}const draft=parseAppointmentRequest(text),expected=['customer','vehicle','date','time','concern'],missing=expected.filter(key=>!draft[key]),confidence=Math.round((expected.length-missing.length)/expected.length*100),diag={intent:true,...draft,customerLookupResult:customerLookupResult(draft.customer),unresolvedFields:missing,confidence,parsedFieldNames:Object.keys(draft).filter(key=>draft[key]!==''&&!['rawTranscript','normalizedTranscript'].includes(key)),resolvedLocalDateTime:[draft.date,draft.time].filter(Boolean).join(' ')};const hydration=hydrateAppointmentDraft(draft),verified=hydration.ok&&verifyAppointmentHydration(draft);diag.preparedAppointmentObject={...draft};diag.controlTrace=hydration.trace||{};diag.finalAppointmentFormState=hydration.finalAppointmentFormState||null;if(!verified){el('oliverScheduleResponse').textContent='I parsed the appointment, but could not write it into the form. Your original instruction is preserved. Please try again or enter the fields manually.';appointmentDiagnostic({...diag,formHydration:'FAILED',appointmentStateCommitResult:'NOT_ATTEMPTED',draftReady:false});return}const committed=commitAppointmentDraft(draft);if(!committed.ok){el('oliverScheduleResponse').textContent='I populated the appointment form, but could not preserve the draft. Your original instruction remains available. Review the fields and try again.';appointmentDiagnostic({...diag,customerNameCommitted:!!draft.customer,phoneCommitted:!!draft.phone,formHydration:'SUCCESS',appointmentStateCommitResult:'FAILED',draftReady:false});return}const hits=draft.date&&draft.time?showConflict(currentDraft()):[];appointmentDiagnostic({...diag,customerNameCommitted:!!draft.customer,phoneCommitted:!!draft.phone,formHydration:'SUCCESS',appointmentStateCommitResult:'SUCCESS',scheduleCheckResult:draft.date&&draft.time?(hits.length?`CONFLICTS:${hits.length}`:'CLEAR'):'NOT_RUN',draftReady:missing.length===0});if(missing.length){el('oliverScheduleResponse').textContent=`I populated and preserved the details I could identify. Please provide only the missing ${missing.join(', ')}.`}else{el('oliverScheduleResponse').textContent=hits.length?`I prepared the appointment, but I found ${hits.length} schedule conflict${hits.length===1?'':'s'}. Review the populated details and schedule warning before saving.`:'I prepared and preserved the appointment draft and checked the schedule. Review the populated details, then tap Save Appointment.'}el('appointmentCustomer').scrollIntoView({behavior:'smooth',block:'center'})}
-    const parseAppointmentRequestCore=parseAppointmentRequest;
-    parseAppointmentRequest=function(original){const draft=parseAppointmentRequestCore(original),text=draft.normalizedTranscript||String(original||''),person='([A-Z][a-z]+(?:[’\'-][A-Za-z]+)?\\s+[A-Z][a-z]+(?:[’\'-][A-Za-z]+)?)',phone='(?:\\+?1[\\s.-]?)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}';if(!draft.customer){const nameMatch=text.match(new RegExp(`^\\s*(?:this\\s+is\\s+)?${person}\\s*,?\\s*(?=(?:(?:phone\\s+)?number|phone)?\\s*${phone}\\b|(?:is\\s+)?(?:dropping|leaving|bringing)\\b)`,'i'))||text.match(new RegExp(`^\\s*schedule\\s+${person}(?=\\s*(?:,|\\s+(?:number|phone|for|is|${phone}\\b)))`,'i'))||text.match(new RegExp(`^\\s*have\\s+${person}[’']s\\s+`,'i'));if(nameMatch?.[1])draft.customer=nameMatch[1].trim()}const completionMatch=text.match(/\b((?:have\s+(?:it|the\s+vehicle)\s+)?(?:completed|done|finished|ready)\s+by\s+|(?:customer\s+)?needs?\s+(?:(?:it|the\s+vehicle)\s+)?(?:back\s+)?by\s+)((?:1[0-2]|0?\d|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)(?::[0-5]\d)?\s*(?:a\.?m\.?|p\.?m\.?)?)/i);if(completionMatch){draft.promisedCompletionPhrase=completionMatch[0].trim();draft.promisedTime=parseTime(`at ${completionMatch[2]}`);draft.promisedCompletionCandidate=completionMatch[2].trim();draft.promisedCompletionNormalized=draft.promisedTime;if(!/\b(?:at|appointment\s+at|dropp?ing(?:\s+\w+){0,3}\s+off\s+at)\s+(?:1[0-2]|0?\d|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)/i.test(text))draft.time=''}draft.customerNameCandidate=draft.customer||'';draft.customerNameConfidence=draft.customer?'high':'none';draft.customerNameValidation=draft.customer?'VALID':'SPEECH_MISSING_NAME';draft.rawTranscriptNameSegment=draft.customer?(text.match(new RegExp(`^.{0,80}?\\b${draft.customer.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\$&')}\\b`,'i'))?.[0]||draft.customer).trim():'';return draft};
-    let appointmentMergeBefore={customer:'',promisedTime:''};const hydrateAppointmentDraftCore=hydrateAppointmentDraft;
-    hydrateAppointmentDraft=function(draft,writer){appointmentMergeBefore={customer:el('appointmentCustomer')?.value||'',promisedTime:el('appointmentPromisedTime')?.value||''};return hydrateAppointmentDraftCore(draft,writer)};
-    const appointmentDiagnosticCore=appointmentDiagnostic;
-    appointmentDiagnostic=function(data){appointmentDiagnosticCore(data);const diagnostic=window.NitrosDeveloperMode.appointmentAssistant,prepared=data.preparedAppointmentObject||{},finalState=data.finalAppointmentFormState||{},lookup=data.customerLookupResult||'NOT_ATTEMPTED';Object.assign(diagnostic,{rawTranscriptNameSegment:prepared.rawTranscriptNameSegment||'',customerNameCandidate:prepared.customerNameCandidate||prepared.customer||'',customerNameConfidence:prepared.customerNameConfidence||'none',customerLookupAttempted:lookup!=='NOT_ATTEMPTED',customerLookupResult:lookup,customerNameBeforeMerge:appointmentMergeBefore.customer,customerNameAfterMerge:finalState.customer||'',customerNameRendered:el('appointmentCustomer')?.value||'',customerNameCommitStatus:!prepared.customer?'SPEECH_MISSING_NAME':finalState.customer===prepared.customer?'NAME_COMMITTED':'NAME_EXTRACTED_BUT_NOT_COMMITTED',promisedCompletionPhrase:prepared.promisedCompletionPhrase||'',promisedCompletionCandidate:prepared.promisedCompletionCandidate||'',promisedCompletionNormalized:prepared.promisedCompletionNormalized||prepared.promisedTime||'',promisedCompletionInternalValue:prepared.promisedTime||'',promisedCompletionBeforeMerge:appointmentMergeBefore.promisedTime,promisedCompletionAfterMerge:finalState.promisedTime||'',promisedCompletionRendered:el('appointmentPromisedTime')?.value||'',preparedAppointmentObject:prepared,finalAppointmentFormState:finalState})};
     window.NitrosAppointmentAssistant=Object.freeze({normalizeAppointmentTranscript,parseAppointmentRequest,hydrateAppointmentDraft,verifyAppointmentHydration,appointmentDraftFromForm,commitAppointmentDraft,restoreAppointmentDraft,prepare:oliverParse});
     function listen(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){el('oliverScheduleResponse').textContent='Voice recognition is not available in this browser. You can still type or use the phone keyboard microphone.';return}const r=new SR();r.lang='en-US';r.interimResults=false;r.onstart=()=>el('oliverScheduleResponse').textContent='Listening…';r.onerror=e=>el('oliverScheduleResponse').textContent=`Voice recognition stopped: ${e.error}. You can type the instruction instead.`;r.onresult=e=>{el('oliverScheduleInput').value=e.results[0][0].transcript;el('oliverScheduleResponse').textContent='I heard your instruction. Tap Have Oliver Prepare It.'};r.start()}
     function download(){const payload={schema:'nitros-schedule-package',version:'8.2.8',createdAt:new Date().toISOString(),appointments:read(APPT_KEY),followups:read(FOLLOW_KEY)},blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`Nitros_v8.2.8_Schedule_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setMsg('scheduleTransferStatus','Schedule and follow-ups exported successfully.','status ok')}
@@ -5311,7 +5305,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.24 • Oliver Appointment Name and Completion Final Fix • Build 2026-08-12</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.23 • Oliver Appointment Dedicated Field Commit Fix • Build 2026-08-12</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5349,7 +5343,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.24 — Oliver Appointment Name and Completion Final Fix — Build 2026-08-12</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.23 — Oliver Appointment Dedicated Field Commit Fix — Build 2026-08-12</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6374,7 +6368,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.24</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.23</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -7757,7 +7751,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.24</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.23</strong></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>
 <li>Service Worker Script URL: <strong id="nitrosRuntimeSwUrl">Checking</strong></li>
