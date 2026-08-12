@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.12.11 corrects automotive graph diagnostic reasoning while preserving the verified classification, repair-order, persistence, voice, Notes, Vehicle Info, and service-worker behavior.
+Version 10.12.12 adds semantic image response normalization and one safe empty-response retry while preserving the 10.12.11 graph reasoning and verified portal workflows.
 
 ## Secure semantic analyzer
 

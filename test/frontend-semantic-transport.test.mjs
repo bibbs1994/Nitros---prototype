@@ -13,11 +13,11 @@ const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
 ]);
 
 test('BF app build keeps the proven AO analyzer and production endpoint', () => {
-  assert.match(analyzer, /const BUILD='10\.12\.11'/);
-  assert.match(html, /10\.12\.11/);
+  assert.match(analyzer, /const BUILD='10\.12\.12'/);
+  assert.match(html, /10\.12\.12/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.11'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.12'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -40,6 +40,21 @@ test('automotive graphs route into Oliver with context-safe structured findings'
   assert.match(analyzer, /NitrosQuickVehicle\?\.getActiveVehicle/);
   assert.match(analyzer, /Possible vehicle-context mismatch/);
   assert.match(analyzer, /Retain these graph findings in the current diagnostic conversation/);
+});
+
+test('10.12.12 normalizes supported semantic response shapes and retries only one transient unusable result',()=>{
+  for(const shape of ['direct-object','single-result-array','nested-data','nested-result','nested-analysis','nested-output','JSON-content','unsupported'])assert.ok(analyzer.includes(shape),`missing response shape ${shape}`);
+  for(const failure of ['transport_failure','endpoint_failure','openai_request_failure','empty_model_response','malformed_semantic_response','unsupported_response_shape','valid_response_no_usable_visual_evidence'])assert.ok(analyzer.includes(failure),`missing failure class ${failure}`);
+  assert.match(analyzer,/function normalizeSemanticResponse\(payload\)/);
+  assert.match(analyzer,/window\.NitrosNormalizeSemanticResponse=normalizeSemanticResponse/);
+  assert.match(analyzer,/for\(let analysisAttempt=1;analysisAttempt<=2;analysisAttempt\+=1\)/);
+  assert.match(analyzer,/analysisAttempt===2\)run\.analyzer\.retryStatus='PASS'/);
+  assert.match(analyzer,/retryable:failureClass==='malformed_semantic_response'/);
+  assert.match(analyzer,/valid_response_no_usable_visual_evidence[\s\S]+retryable:false/);
+  assert.match(analyzer,/CURRENT_REQUEST_MISMATCH/);assert.match(analyzer,/CURRENT_IMAGE_MISMATCH/);assert.match(analyzer,/CURRENT_ATTEMPT_MISMATCH/);
+  for(const stage of ['Semantic response shape normalized','Semantic objects received','Semantic analysis retry','Fresh-result verification'])assert.ok(analyzer.includes(stage),`missing stage ${stage}`);
+  assert.match(analyzer,/topLevelKeys:payload&&typeof payload==='object'\?Object\.keys\(payload\)\.sort\(\):\[\]/);
+  assert.match(analyzer,/Semantic failure class:/);assert.match(analyzer,/Response shape:/);
 });
 
 test('analysis payload is a single bounded metadata-free JPEG copy', () => {
@@ -211,7 +226,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.11'/);
+  assert.match(html, /version:'10\.12\.12'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
@@ -257,8 +272,9 @@ test('classification is gated by response, schema, request ID, and image hash', 
   }
   assert.match(analyzer, /runId:run\.analyzer\.requestId/);
   assert.match(analyzer, /raw\.transactionId!==run\.analyzer\.requestId/);
-  assert.match(analyzer, /payload\?\.transactionId===runId/);
-  assert.match(analyzer, /payload\?\.imageHash===imageHash/);
+  assert.match(analyzer, /normalizedResponse\?\.transactionId===runId/);
+  assert.match(analyzer, /normalizedResponse\?\.imageHash===imageHash/);
+  assert.match(analyzer, /attemptMatches=diagnostic\.analysisAttempt===analysisAttempt/);
   assert.match(analyzer, /expectedSemanticFieldsPresent:true/);
   assert.match(analyzer, /pipeline:\{\.\.\.diagnostic\.pipeline,SEMANTIC_CONTENT_FOUND:'PASS'\}/);
 });
@@ -271,7 +287,8 @@ test('visible stages reflect confirmed browser, Vercel, OpenAI, parse, and objec
   assert.match(analyzer, /if\(diag\.responseReceived\)\{set\(3,'PASS'\);set\(4,'PASS'\)\}/);
   assert.match(analyzer, /if\(server\.openaiResponseReceived&&server\.openaiResponseOk\)set\(5,'PASS'\)/);
   assert.doesNotMatch(analyzer, /if\(server\.openaiRequestAttempted\)set\(5,'PASS'\)/);
-  assert.match(analyzer, /if\(server\.semanticOutputPresent\)set\(8,'PASS'\)/);
+  assert.match(analyzer, /if\(diag\.responseShapeNormalized\)set\(8,'PASS'\)/);
+  assert.match(analyzer, /if\(server\.semanticOutputPresent&&diag\.responseShapeNormalized\)set\(9,'PASS'\)/);
 });
 
 test('CORS preflight explicitly allows the production request headers', () => {
