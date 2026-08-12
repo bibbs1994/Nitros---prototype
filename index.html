@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.8 — Oliver Conversational Diagnostic Context</title>
+<title>Nitros Mobile Technician Portal v10.12.9 — Oliver Natural Voice Experience</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.8 — Oliver Conversational Diagnostic Context</div>
+  <div class="sub">Mobile Technician Portal v10.12.9 — Oliver Natural Voice Experience</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.8 — Oliver Conversational Diagnostic Context. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.9 — Oliver Natural Voice Experience. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.8 — Oliver Conversational Diagnostic Context</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.9 — Oliver Natural Voice Experience</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.8 — Oliver Conversational Diagnostic Context</div>
+      <div class="eyebrow">Version 10.12.9 — Oliver Natural Voice Experience</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1683,13 +1683,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.8 • Oliver Conversational Diagnostic Context • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.9 • Oliver Natural Voice Experience • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.12.8',
-  release:'Oliver Conversational Diagnostic Context',
+  version:'10.12.9',
+  release:'Oliver Natural Voice Experience',
   buildDate:'2026-08-12',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -1698,14 +1698,17 @@ window.NitrosOliverSpeech=(()=>{
   const synth=window.speechSynthesis;
   let lockedVoice=null,lockedVoiceURI='',voiceResolved=false,sequence=0,pending=null,pendingTimer=0;
   const voiceKey=voice=>String(voice?.voiceURI||voice?.name||'');
-  function voices(){return synth?.getVoices?.()||[]}
-  function resolveVoice(){const list=voices();if(lockedVoiceURI){const refreshed=list.find(voice=>voiceKey(voice)===lockedVoiceURI);if(refreshed)lockedVoice=refreshed;return lockedVoice}if(voiceResolved)return lockedVoice;if(!list.length)return null;const ordered=[...list].sort((a,b)=>voiceKey(a).localeCompare(voiceKey(b)));lockedVoice=ordered.find(voice=>/^en-US/i.test(voice.lang)&&/Microsoft David|Microsoft Mark|Google US English|Daniel|Alex|Samantha|Ava|Aaron/i.test(voice.name))||ordered.find(voice=>/^en-US/i.test(voice.lang))||ordered.find(voice=>/^en/i.test(voice.lang))||ordered[0]||null;lockedVoiceURI=voiceKey(lockedVoice);voiceResolved=true;return lockedVoice}
-  function deliver(request,allowDefault=false){if(!synth||!request||request.token!==sequence)return false;const voice=resolveVoice();if(!voice&&!allowDefault)return false;if(!voice)voiceResolved=true;pending=null;clearTimeout(pendingTimer);const utterance=new SpeechSynthesisUtterance(request.text);utterance.lang=request.options.lang||'en-US';utterance.rate=request.options.rate??.94;utterance.pitch=request.options.pitch??1;utterance.volume=request.options.volume??1;if(voice)utterance.voice=voice;utterance.onstart=request.options.onstart||null;utterance.onend=request.options.onend||null;utterance.onerror=request.options.onerror||null;synth.resume();synth.speak(utterance);return true}
-  function speak(text,options={}){if(!synth||!text)return false;const request={token:++sequence,text:String(text),options};synth.cancel();synth.resume();pending=request;if(!deliver(request,false))pendingTimer=setTimeout(()=>deliver(request,true),250);return true}
-  function cancel(){sequence++;pending=null;clearTimeout(pendingTimer);try{synth?.cancel()}catch(_){}}
+  const browserProvider=Object.freeze({name:'browser-speech-synthesis',voices:()=>synth?.getVoices?.()||[],cancel:()=>synth?.cancel(),resume:()=>synth?.resume(),speak:utterance=>synth?.speak(utterance)});
+  function voices(){return browserProvider.voices()}
+  function resolveVoice(){const list=voices();if(lockedVoiceURI){const refreshed=list.find(voice=>voiceKey(voice)===lockedVoiceURI);if(refreshed)lockedVoice=refreshed;return lockedVoice}if(voiceResolved)return lockedVoice;if(!list.length)return null;const ordered=[...list].sort((a,b)=>voiceKey(a).localeCompare(voiceKey(b))),preferred=['Microsoft David','Microsoft Mark','Daniel','Alex','Aaron','Google US English','Ava','Samantha'];lockedVoice=preferred.map(name=>ordered.find(voice=>/^en-US/i.test(voice.lang)&&voice.name.includes(name))).find(Boolean)||ordered.find(voice=>/^en-US/i.test(voice.lang))||ordered.find(voice=>/^en/i.test(voice.lang))||ordered[0]||null;lockedVoiceURI=voiceKey(lockedVoice);voiceResolved=true;return lockedVoice}
+  function spokenText(text){return String(text||'').replace(/\s+/g,' ').trim()}
+  function prosody(text,options){const sentences=(text.match(/[.!?](?:\s|$)/g)||[]).length,instruction=/\b(next|check|test|verify|measure|report|tell me)\b/i.test(text),question=/\?\s*$/.test(text);let rate=Number(options.rate??.94),pitch=Number(options.pitch??.98);if(sentences>2)rate-=.015;if(instruction)rate-=.01;if(question){rate+=.01;pitch+=.005}return {rate:Math.max(.9,Math.min(.98,rate)),pitch:Math.max(.96,Math.min(1,pitch)),volume:Math.max(.7,Math.min(1,Number(options.volume??1)))}}
+  function deliver(request,allowDefault=false){if(!synth||!request||request.token!==sequence)return false;const voice=resolveVoice();if(!voice&&!allowDefault)return false;if(!voice)voiceResolved=true;pending=null;clearTimeout(pendingTimer);const text=spokenText(request.text),delivery=prosody(text,request.options),utterance=new SpeechSynthesisUtterance(text);utterance.lang=request.options.lang||'en-US';utterance.rate=delivery.rate;utterance.pitch=delivery.pitch;utterance.volume=delivery.volume;if(voice)utterance.voice=voice;utterance.onstart=request.options.onstart||null;utterance.onend=request.options.onend||null;utterance.onerror=request.options.onerror||null;browserProvider.resume();browserProvider.speak(utterance);return true}
+  function speak(text,options={}){if(!synth||!text)return false;const request={token:++sequence,text:String(text),options};browserProvider.cancel();browserProvider.resume();pending=request;if(!deliver(request,false))pendingTimer=setTimeout(()=>deliver(request,true),250);return true}
+  function cancel(){sequence++;pending=null;clearTimeout(pendingTimer);try{browserProvider.cancel()}catch(_){}}
   function unlock(){try{resolveVoice();synth?.resume()}catch(_){}}
   if(synth){const changed=()=>{resolveVoice();if(pending)deliver(pending,false)};if(typeof synth.addEventListener==='function')synth.addEventListener('voiceschanged',changed);else synth.onvoiceschanged=changed}
-  return Object.freeze({speak,cancel,unlock,get lockedVoiceURI(){return lockedVoiceURI||'browser-default'}});
+  return Object.freeze({speak,cancel,unlock,provider:browserProvider.name,get lockedVoiceURI(){return lockedVoiceURI||'browser-default'}});
 })();
 // v10.12.7AP: GPS belongs to the Nitros evidence record, never only to image EXIF.
 window.NitrosGpsEvidence=(()=>{
@@ -5284,7 +5287,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.8 • Oliver Conversational Diagnostic Context</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">v10.12.9 • Oliver Natural Voice Experience</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5322,7 +5325,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.8 — Oliver Conversational Diagnostic Context</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.9 — Oliver Natural Voice Experience</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6347,7 +6350,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.8</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.9</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -6388,7 +6391,10 @@ let history=[];
 const emptyNaturalCase=()=>({vehicle:'',year:'',make:'',model:'',engine:'',dtcs:[],complaint:'',status:'',symptoms:[],tests:[],measurements:[],parts:[],observations:[],currentQuestion:'',latestAnswer:'',confirmedFindings:[],assumptions:[]});
 let caseData=emptyNaturalCase();
 function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function baseContext(){return {vehicle:[val('vehicleYear'),val('vehicleMake'),val('vehicleModel'),val('vehicleEngine')||val('engineSize')].filter(Boolean).join(' ')||val('appointmentVehicle')||'',vin:val('vinInput')||val('vinNumber')||'',ro:val('roNumber')||val('workOrderNumber')||'',customer:val('customerName')||val('appointmentCustomer')||'',concern:val('customerConcern')||val('concern')||val('appointmentConcern')||'',dtcs:val('dtcCodes')||val('scanResults')||'',notes:val('internalTechnicianNotes')||''}}
+function activeRepairOrderContext(){let draft={};try{draft=window.NitrosRepairOrderCore?.collectDraft?.()||JSON.parse(localStorage.getItem(window.NitrosRepairOrderCore?.draftKey||'')||'{}')||{}}catch(_){}const fields=draft.fields||{},selected=draft.selectedVehicle||{},value=(...ids)=>ids.map(id=>val(id)||String(fields[id]??'').trim()).find(Boolean)||'',year=value('vehicleYear')||selected.year||'',make=value('vehicleMake')||selected.make||'',model=value('vehicleModel')||selected.model||'',engine=value('vehicleEngine','engineSize')||selected.engine||selected.engineSize||'',activeRepairId=localStorage.getItem('activeRepairOrderId')||'',ro=value('roNumber','workOrderNumber')||activeRepairId,concern=value('customerConcern','concern','appointmentConcern'),notes=value('internalTechnicianNotes'),technicianFindings=value('technicianFindings','inspectionFindings'),dtcText=[value('dtcCodes','scanResults'),concern,technicianFindings,notes].filter(Boolean).join(' | '),photos=window.NitrosRepairOrderCore?.activePhotoRecord||null,diagnostic=window.NitrosDiagnosticV10120?.getState?.(),verifiedRepairInformation=diagnostic?.repairOrderId===String(activeRepairId||ro)?diagnostic.verifiedRepairInformation:null;return {activeRepairId,ro,year,make,model,engine,vehicle:[year,make,model,engine].filter(Boolean).join(' ')||value('appointmentVehicle'),vin:(value('vinInput','vinNumber')||selected.vin||'').toUpperCase(),mileage:value('mileage'),customer:value('customerName','appointmentCustomer'),concern,dtcs:dtcText,notes,technicianFindings,previousTests:value('previousTesting','diagnosticResults','scanResults')||technicianFindings,repairHistory:value('previousRepairs','repairHistory','repairRecommendations'),repairStatus:value('repairStatus'),currentStage:draft.screen||window.NitrosRepairOrderCore?.getScreen?.()||'',photos,uploadedEvidence:photos,verifiedRepairInformation}}
+function baseContext(){return activeRepairOrderContext()}
+function conversationStorageKey(){const c=activeRepairOrderContext(),scope=activeMode==='ro'&&(c.activeRepairId||c.ro)?String(c.activeRepairId||c.ro).replace(/[^a-z0-9_-]/gi,'_'):'general';return `${SESSION_KEY}:${scope}`}
+function inheritRepairOrderContext(){if(activeMode!=='ro')return;const c=activeRepairOrderContext(),vehicle={year:c.year,make:c.make,model:c.model,engine:c.engine};if(c.vehicle){Object.assign(caseData,vehicle);caseData.vehicle=c.vehicle}const roCodes=naturalCodes(c.dtcs);if(roCodes.length)caseData.dtcs=roCodes;if(c.concern)caseData.complaint=c.concern;if(c.technicianFindings)uniquePush(caseData.confirmedFindings,c.technicianFindings);if(c.previousTests)uniquePush(caseData.tests,c.previousTests);if(c.repairHistory)uniquePush(caseData.parts,c.repairHistory);window.NitrosDiagnosticV10120?.attachRepairOrderContext?.(c)}
 function setMode(next){activeMode=next==='ro'?'ro':'general';const c=baseContext();$('diagGeneralMode')?.classList.toggle('active',activeMode==='general');$('diagRoMode')?.classList.toggle('active',activeMode==='ro');if(activeMode==='general'){$('diagOperatingMode').textContent='General Diagnostics — no VIN, engine size, or RO required.';input.placeholder='Ask any general diagnostic question or enter a DTC…'}else{$('diagOperatingMode').textContent=c.ro?'RO Assistant — active repair-order context attached.':'RO Assistant — open or enter an RO for case-specific guidance.';input.placeholder='Ask about the active repair order, test result, or next diagnostic step…'}updateContext()}
 function uniquePush(arr,value){value=String(value||'').trim();if(value&&!arr.some(x=>x.toLowerCase()===value.toLowerCase()))arr.push(value)}
 function naturalVehicle(text){
@@ -6420,8 +6426,8 @@ function parseCaseInput(text){
 function mergedContext(){const c=baseContext();return {...c,vehicle:caseData.vehicle||c.vehicle,dtcs:caseData.dtcs.join(', ')||c.dtcs,diagnosticSession:caseData}}
 function updateContext(){const c=mergedContext();const summary=[c.vehicle,caseData.dtcs.length&&caseData.dtcs.join(', '),caseData.status].filter(Boolean).join(' • ');$('diagContextLine').textContent=activeMode==='general'?(summary||'General Diagnostics • no RO required'):[c.vehicle,c.ro&&`RO ${c.ro}`,c.concern].filter(Boolean).join(' • ')||'RO Assistant • no active repair order';$('diagVehicle').textContent=[c.vehicle,c.ro&&`RO ${c.ro}`].filter(Boolean).join(' • ')||'No vehicle or repair order selected';$('diagConcern').textContent=caseData.symptoms.at(-1)||c.concern||'Not entered';$('diagDtcs').textContent=caseData.dtcs.join(', ')||c.dtcs||'None entered';$('diagState').textContent=busy?'Waiting for Oliver response':history.length?`${activeMode==='general'?'General':'RO'} conversation active — session memory on`:'Ready for technician input'}
 function addMessage(role,text){const d=document.createElement('div');d.className='diag-message '+(role==='user'?'tech':'');d.innerHTML=`<div class="speaker">${role==='user'?'Technician':'Oliver'}</div>${esc(text)}`;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;if(role==='assistant')lastOliver=text}
-function save(){try{localStorage.setItem(SESSION_KEY,JSON.stringify({history,activeMode,caseData,at:Date.now()}))}catch(_){}}
-function restore(){try{const x=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');history=Array.isArray(x?.history)?x.history:[];activeMode=x?.activeMode==='ro'?'ro':'general';if(x?.caseData&&typeof x.caseData==='object'){const blank=emptyNaturalCase();caseData={...blank,...x.caseData};for(const key of ['dtcs','symptoms','tests','measurements','parts','observations','confirmedFindings','assumptions'])caseData[key]=Array.isArray(x.caseData[key])?x.caseData[key]:[]}}catch(_){history=[];activeMode='general';caseData=emptyNaturalCase()}}
+function save(){try{localStorage.setItem(conversationStorageKey(),JSON.stringify({history,activeMode,caseData,at:Date.now()}))}catch(_){}}
+function restore(){try{const x=JSON.parse(localStorage.getItem(conversationStorageKey())||'null');history=Array.isArray(x?.history)?x.history:[];if(x?.caseData&&typeof x.caseData==='object'){const blank=emptyNaturalCase();caseData={...blank,...x.caseData};for(const key of ['dtcs','symptoms','tests','measurements','parts','observations','confirmedFindings','assumptions'])caseData[key]=Array.isArray(x.caseData[key])?x.caseData[key]:[]}}catch(_){history=[];caseData=emptyNaturalCase()}inheritRepairOrderContext()}
 function render(){chat.innerHTML='';if(!history.length){addMessage('assistant','Oliver Diagnostic Engine v2.0 is ready. General Diagnostics answers code and testing questions without requiring a VIN or repair order. RO Assistant is available separately for vehicle-specific case guidance.');return}history.forEach(m=>addMessage(m.role,m.content))}
 function serviceUrl(){return (localStorage.getItem(ENDPOINT_KEY)||'').trim()}
 function isContextRefusal(t){return /(vin[- ]specific|vin specific engine|engine size and (?:an )?(?:ro|repair order)|need(?:s|ed)? (?:the )?(?:vin|repair order|ro)|can only receive confirmation|cannot (?:answer|continue|provide).*?(?:vin|repair order|ro)|requires? .*?(?:vin|repair order|ro))/i.test(t||'')}
@@ -6543,6 +6549,7 @@ async function send(text){text=(text||'').trim();if(!text||busy)return;if(/^(?:n
    caseData={...emptyNaturalCase(),vehicle:[authoritative.vehicle.year,authoritative.vehicle.make,authoritative.vehicle.model,authoritative.vehicle.engine].filter(Boolean).join(' '),...authoritative.vehicle,dtcs:[...authoritative.dtcs],status:authoritative.status||'',currentQuestion:authoritative.lastReply||''};
    const reply=authoritative.lastReply;history.push({role:'assistant',content:reply,mode:'general'});addMessage('assistant',reply);save();updateContext();return
  }
+ if(activeMode==='ro'&&window.NitrosDiagnosticV10120&&(/\b(power|reference|feed|supply|ground|signal|scope|waveform|battery voltage|continuity|open circuit)\b/i.test(text)||/^(?:what(?:'s| is| should be)|what (?:do you want|should i).*(?:next|check)|next|continue)/i.test(text))){window.NitrosDiagnosticV10120.process(text);const authoritative=window.NitrosDiagnosticV10120.getState(),reply=authoritative.lastReply;caseData.vehicle=[authoritative.vehicle.year,authoritative.vehicle.make,authoritative.vehicle.model,authoritative.vehicle.engine].filter(Boolean).join(' ');Object.assign(caseData,authoritative.vehicle);caseData.dtcs=[...authoritative.dtcs];caseData.complaint=authoritative.complaint||caseData.complaint;if(reply){history.push({role:'assistant',content:reply,mode:'ro'});addMessage('assistant',reply);save();updateContext();return}}
  parseCaseInput(text);save();updateContext();const context=mergedContext();
  if(activeMode==='general'&&!serviceUrl()){const reply=localGeneralAnswer(text);history.push({role:'assistant',content:reply,mode:'general'});addMessage('assistant',reply);save();updateContext();return}
  if(activeMode==='ro'&&!context.ro){const reply='RO Assistant is reserved for case-specific work. Open or enter a repair order to attach the vehicle, concern, DTCs, and technician notes. For a question that does not need an RO, switch to General Diagnostics.';history.push({role:'assistant',content:reply,mode:'ro'});addMessage('assistant',reply);save();updateContext();return}
@@ -6564,7 +6571,7 @@ async function send(text){text=(text||'').trim();if(!text||busy)return;if(/^(?:n
  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!r.ok)throw new Error(`Service returned ${r.status}`);const data=await r.json();let reply=String(data.reply||data.message||data.output||'').trim();if(!reply)throw new Error('Service returned no diagnostic response');if(general&&isContextRefusal(reply))reply=localGeneralAnswer(text);history.push({role:'assistant',content:reply,mode:activeMode});addMessage('assistant',reply);save()
  }catch(err){const reply=activeMode==='general'?localGeneralAnswer(text):`Oliver RO Assistant connection failed: ${err.message}. The repair-order conversation is preserved.`;history.push({role:'assistant',content:reply,mode:activeMode});addMessage('assistant',reply);save()}finally{busy=false;$('diagSend').disabled=false;$('diagSend').textContent='Send to Oliver';updateContext()}}
 function closeMode(){shell.classList.remove('active');document.body.style.overflow='';window.NitrosOliverSpeech?.cancel()}
-function openMode(next='general'){shell.classList.add('active');document.body.style.overflow='hidden';restore();setMode(next);render();updateContext();setTimeout(()=>input.focus(),80)}
+function openMode(next='general'){shell.classList.add('active');document.body.style.overflow='hidden';activeMode=next==='ro'?'ro':'general';restore();setMode(activeMode);render();updateContext();setTimeout(()=>input.focus(),80)}
 function speakLast(){if(lastOliver)window.NitrosOliverSpeech?.speak(lastOliver,{rate:.95,pitch:.9,lang:'en-US'})}
 $('diagGeneralMode')?.addEventListener('click',()=>setMode('general'));$('diagRoMode')?.addEventListener('click',()=>setMode('ro'));
 $('diagSend').onclick=()=>send(input.value);input.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(input.value)}};
@@ -7315,7 +7322,7 @@ const LEGACY_KEYS=[
  'nitros_v1052_oliver_transcript','nitros_oliver_active_diagnostic_case_v1060','nitros_oliver_case_v10106','nitros_oliver_case_v10107','nitros_oliver_case_v10109','nitros_oliver_case_v10110','nitros_oliver_case_v10111','nitros_oliver_case_v10112','nitros_oliver_case_v10113','nitros_oliver_case_v10114','nitros_oliver_case_v10143','nitros_oliver_workflow_v10105'
 ];
 const $=id=>document.getElementById(id);
-const blank=()=>({schema:1,id:'CASE-'+Date.now(),vehicle:{year:'',make:'',model:'',engine:''},dtcs:[],activeDtc:'',status:'',complaint:'',symptoms:'',previousRepairs:'',previousTests:'',liveData:'',verifiedRepairInformation:null,repairInformation:{status:'required',source:'',verifiedAt:'',evidenceReference:null},pendingRepairInformation:null,repairInformationRequired:false,repairInformationLoaded:false,repairInformationSource:'',repairInformationLoadedAt:'',repairInformationEvidence:[],stage:'vehicle',intakeStep:'vehicle',diagnosticOutcome:'',repairDecision:'',diagnosticClosed:false,repairDecisionView:'',additionalTesting:{active:false,openedAt:'',notes:[]},diagnosticTestState:null,lastReply:'',history:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
+const blank=()=>({schema:1,id:'CASE-'+Date.now(),repairOrderId:'',vehicle:{year:'',make:'',model:'',engine:''},vin:'',mileage:'',dtcs:[],activeDtc:'',status:'',complaint:'',symptoms:'',previousRepairs:'',previousTests:'',technicianNotes:'',photoEvidence:null,currentRoStage:'',liveData:'',verifiedRepairInformation:null,repairInformation:{status:'required',source:'',verifiedAt:'',evidenceReference:null},pendingRepairInformation:null,repairInformationRequired:false,repairInformationLoaded:false,repairInformationSource:'',repairInformationLoadedAt:'',repairInformationEvidence:[],stage:'vehicle',intakeStep:'vehicle',diagnosticOutcome:'',repairDecision:'',diagnosticClosed:false,repairDecisionView:'',additionalTesting:{active:false,openedAt:'',notes:[]},diagnosticTestState:null,lastReply:'',history:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
 let state=load();let rendering=false;
 function legacyIntakeStep(stage){return({vehicle:'vehicle',dtc:'dtc',status:'status',complaint:'complaint',symptoms:'symptoms',repairs:'previous-repairs',tests:'previous-testing'})[stage]||'complete'}
 function load(){try{const x=JSON.parse(localStorage.getItem(STATE_KEY)||'null');if(!x||x.schema!==1)return blank();const restored=Object.assign(blank(),x,{vehicle:Object.assign(blank().vehicle,x.vehicle||{}),history:Array.isArray(x.history)?x.history:[],dtcs:Array.isArray(x.dtcs)?x.dtcs:[]});restored.intakeStep=x.intakeStep||legacyIntakeStep(x.stage);return restored}catch(_){return blank()}}
@@ -7392,7 +7399,7 @@ function repairDecisionReply(){const guided=state.diagnosticTestState,missing=mi
 function applyNoFaultAction(action){if(state.diagnosticOutcome!=='NO FAULT CONFIRMED'||state.repairDecision!=='NO REPAIR AUTHORIZED'||!isDiagnosticComplete())return {accepted:false,message:''};if(action==='review'){state.repairDecisionView='results';return {accepted:true,message:''}}if(action==='additional-testing'){state.diagnosticClosed=false;state.repairDecisionView='additional-testing';state.additionalTesting={active:true,openedAt:state.additionalTesting?.openedAt||new Date().toISOString(),notes:Array.isArray(state.additionalTesting?.notes)?state.additionalTesting.notes:[]};return {accepted:true,message:'Additional investigation is open on this case. The completed evidence remains unchanged. What do you want to investigate next, or what diagnostic evidence do you want to import?'}}if(action==='close'){state.diagnosticClosed=true;state.repairDecisionView='closed';state.additionalTesting={...(state.additionalTesting||{}),active:false,notes:Array.isArray(state.additionalTesting?.notes)?state.additionalTesting.notes:[]};state.repairDecision='NO REPAIR AUTHORIZED';return {accepted:true,message:'Diagnostic closed — No Fault Confirmed. No repair is authorized by the current evidence. The complete diagnostic evidence remains stored with this case.'}}return {accepted:false,message:''}}
 function continueToRepairDecision(){if(!isDiagnosticComplete())return false;ask(repairDecisionReply());return true}
 function diagnosticProgressRequest(text){return /^(?:what(?:'s| is| should be) (?:the )?(?:next|i check next)|what should i (?:check|test|do) next|next(?: test| check)?|continue|where do we go now|what do i do now)\??$/i.test(String(text||'').trim())}
-function conversationalDiagnosticEvidence(text){const value=String(text||'').trim();if(!state.activeDtc||!value)return null;const directResult=/\b(good|bad|pass(?:ed|es)?|fail(?:ed|s)?|present|missing|open(?: circuit)?|no continuity|continuity|switch(?:es|ing)?|battery voltage|\d+(?:\.\d+)?\s*(?:v|volts?|ohms?|Ω))\b/i.test(value);if(!directResult)return null;if(/\b(power|reference|feed|supply)\b/i.test(value))return'cam-power-reference';if(/\bground|grounding\b/i.test(value))return'cam-ground';if(/\b(signal|scope|waveform|switch(?:es|ing)?)\b/i.test(value))return'cam-signal';return null}
+function conversationalDiagnosticEvidence(text){const value=String(text||'').trim();if(!state.activeDtc||!value)return null;const directResult=/\b(good|bad|pass(?:ed|es)?|fail(?:ed|s)?|present|missing|open(?: circuit)?|no continuity|continuity|switch(?:es|ing)?|battery voltage|\d+(?:\.\d+)?\s*(?:v|volts?|ohms?|Ω))\b/i.test(value);if(!directResult)return null;if(/\b(power|reference|feed|supply|battery voltage)\b/i.test(value))return'cam-power-reference';if(/\bground|grounding\b/i.test(value))return'cam-ground';if(/\b(signal|scope|waveform|switch(?:es|ing)?)\b/i.test(value))return'cam-signal';return null}
 function routeConversationalDiagnosticEvidence(text){const targetId=conversationalDiagnosticEvidence(text),guided=targetId&&ensureGuidedState();if(!guided)return false;const target=testRecord(targetId),definition=testDefinition(targetId);if(!target||!definition||['pass','fail'].includes(target.status))return false;state.intakeStep='complete';state.stage='diagnostic';activateTest(guided,definition);return handleGuidedFinding(text)}
 function reconcileCompletedCurrentTest(guided){const current=testRecord(guided?.currentTestId);if(!guided?.currentTestId||!['pass','fail'].includes(current?.status))return false;activateTest(guided,nextPendingTest(guided.currentTestId));diagnosticCompletionGate(guided);return true}
 function pendingTestReply(definition){const continuity=/continuity|resistance/i.test(`${definition.name||''} ${definition.expectedResult||''}`),requirement=continuity?'Report the measured resistance with units, or a direct continuity result such as pass, open circuit, OL, or no continuity.':definition.requestedResult||'Report the actual measurement or direct observed result.';return`${definition.name} is still awaiting a result. ${requirement}`}
@@ -7426,6 +7433,7 @@ function nextQuestion(){
 }
 function reset(){window.resetOcrSessionState?.('authoritative New Case command');state=blank();add('Oliver','New diagnostic case started. What vehicle are we working on?');save()}
 function diagnosticStatus(text){const match=String(text||'').toLowerCase().match(/\b(current|pending|history|historical|stored|intermittent)\b/);if(!match)return'';return match[1]==='stored'||match[1]==='historical'?'history':match[1]}
+function attachRepairOrderContext(context={}){const repairOrderId=String(context.activeRepairId||context.ro||'').trim();if(!repairOrderId)return false;if(state.repairOrderId&&state.repairOrderId!==repairOrderId)state=blank();state.repairOrderId=repairOrderId;for(const key of ['year','make','model','engine'])if(context[key])state.vehicle[key]=String(context[key]);state.vin=context.vin||state.vin;state.mileage=context.mileage||state.mileage;state.complaint=context.concern||state.complaint;state.symptoms=state.symptoms||context.concern||'';state.technicianNotes=context.notes||context.technicianFindings||state.technicianNotes;state.previousTests=context.previousTests||state.previousTests;state.previousRepairs=context.repairHistory||state.previousRepairs;state.photoEvidence=context.uploadedEvidence||context.photos||state.photoEvidence;state.currentRoStage=context.currentStage||state.currentRoStage;const found=codes(Array.isArray(context.dtcs)?context.dtcs.join(' '):context.dtcs||'');if(found.length){const changed=state.activeDtc&&state.activeDtc!==found[0];state.dtcs=[...new Set([...found,...state.dtcs])];state.activeDtc=found[0];if(changed)state.diagnosticTestState=null}if(context.verifiedRepairInformation&&!state.verifiedRepairInformation)state.verifiedRepairInformation=context.verifiedRepairInformation;if(state.activeDtc||state.complaint){state.intakeStep='complete';state.stage='diagnostic';ensureGuidedState()}save();return true}
 function process(raw){const text=String(raw||'').trim();if(!text)return;add('You',text);const low=text.toLowerCase();
  if(/^(new case|start new case|clear case|start over)$/.test(low)){reset();return}
  if(state.additionalTesting?.active&&isDiagnosticComplete()){state.additionalTesting.notes=Array.isArray(state.additionalTesting.notes)?state.additionalTesting.notes:[];state.additionalTesting.notes.push({text,at:new Date().toISOString()});state.additionalTesting.notes=state.additionalTesting.notes.slice(-50);ask(`Additional investigation note recorded without changing the completed results: “${text}” Import supporting evidence or deliberately choose the next diagnostic direction when ready.`);return}
@@ -7520,7 +7528,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 window.addEventListener('pageshow',()=>{revealLogin();if(!bootFinished)setTimeout(boot,0)});
 window.addEventListener('nitros:diagnostic-import',event=>handleRepairInformationImport(event.detail));
 window.addEventListener('nitros:verify-repair-information',()=>verifyPendingRepairInformation());
-window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),process,reset,importRepairInformation:handleRepairInformationImport,verifyRepairInformation:verifyPendingRepairInformation,isRepairInformationRequired:()=>state.repairInformationRequired&&testDefinition(state.diagnosticTestState?.currentTestId)?.kind==='repair-information-required',isComplete:isDiagnosticComplete,continueToRepairDecision,reviewDiagnosticResults,beginAdditionalTesting,closeNoFaultDiagnostic};
+window.NitrosDiagnosticV10120={getState:()=>JSON.parse(JSON.stringify(state)),process,reset,attachRepairOrderContext,importRepairInformation:handleRepairInformationImport,verifyRepairInformation:verifyPendingRepairInformation,isRepairInformationRequired:()=>state.repairInformationRequired&&testDefinition(state.diagnosticTestState?.currentTestId)?.kind==='repair-information-required',isComplete:isDiagnosticComplete,continueToRepairDecision,reviewDiagnosticResults,beginAdditionalTesting,closeNoFaultDiagnostic};
 })();
 </script>
 
@@ -7721,7 +7729,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.8</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.9</strong></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>
 <li>Service Worker Script URL: <strong id="nitrosRuntimeSwUrl">Checking</strong></li>

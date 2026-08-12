@@ -37,8 +37,8 @@ test('specification reply, completed-result reply, and Read Last Reply use one l
   h.controller.speak('Cam Sensor Ground passes');
   h.controller.speak('Cam Sensor Ground passes');
   assert.equal(h.spoken.length,3);
-  assert.deepEqual(h.spoken.map(item=>item.voice.voiceURI),['voice-ava','voice-ava','voice-ava']);
-  assert.equal(h.controller.lockedVoiceURI,'voice-ava');
+  assert.deepEqual(h.spoken.map(item=>item.voice.voiceURI),['voice-daniel','voice-daniel','voice-daniel']);
+  assert.equal(h.controller.lockedVoiceURI,'voice-daniel');
 });
 
 test('delayed iOS voices resolve once and stale queued speech cannot play',()=>{
@@ -49,14 +49,23 @@ test('delayed iOS voices resolve once and stale queued speech cannot play',()=>{
   h.setVoices(voices);
   assert.deepEqual(h.spoken.map(item=>item.text),['newest response']);
   h.controller.speak('read last reply');
-  assert.deepEqual(h.spoken.map(item=>item.voice.voiceURI),['voice-ava','voice-ava']);
+  assert.deepEqual(h.spoken.map(item=>item.voice.voiceURI),['voice-daniel','voice-daniel']);
   h.runTimers();
   assert.deepEqual(h.spoken.map(item=>item.text),['newest response','read last reply']);
 });
 
+test('10.12.9 applies conservative varied prosody without changing spoken diagnostic words',()=>{
+  const h=speechHarness(voices),text='Ground looks good. Next, check the signal circuit and tell me what you see.';
+  h.controller.speak(text,{rate:.94,pitch:.9});
+  assert.equal(h.spoken[0].text,text);
+  assert.ok(h.spoken[0].rate>=.9&&h.spoken[0].rate<=.98);
+  assert.ok(h.spoken[0].pitch>=.96&&h.spoken[0].pitch<=1);
+  assert.equal(h.controller.provider,'browser-speech-synthesis');
+});
+
 test('all Oliver speech call sites are centralized',()=>{
   assert.equal((html.match(/new SpeechSynthesisUtterance\(/g)||[]).length,1);
-  assert.equal((html.match(/synth\.speak\(/g)||[]).length,1);
+  assert.equal((html.match(/speak:utterance=>synth\?\.speak\(utterance\)/g)||[]).length,1);
   assert.equal((html.match(/(?:window\.)?speechSynthesis\.speak\(/g)||[]).length,0);
   assert.match(html,/if\(state\.lastReply\)speakOliver\(state\.lastReply\)/);
   for(const call of ['oliverScheduleResponse','speakGuideText','smartOliverRead','diagReadLast','oliverHubReadLast'])assert.match(html,new RegExp(call));

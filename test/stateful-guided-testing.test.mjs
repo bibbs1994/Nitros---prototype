@@ -54,6 +54,16 @@ test('10.12.8 routes natural power and ground evidence around unfinished intake 
   assert.doesNotMatch(h.responses.join(' '),/pin \d|connector\s+[A-Z]\d|wire color/i);
 });
 
+test('10.12.8 active RO context skips scripted intake and preserves authoritative RO facts',()=>{
+  assert.match(html,/function activeRepairOrderContext\(\)/);
+  assert.match(html,/conversationStorageKey\(\)/);
+  assert.match(html,/function attachRepairOrderContext\(context=\{\}\)/);
+  assert.match(html,/state\.intakeStep='complete';state\.stage='diagnostic'/);
+  for(const field of ['vin','mileage','technicianNotes','photoEvidence','currentRoStage','verifiedRepairInformation'])assert.match(html,new RegExp(field));
+  assert.match(html,/activeMode==='ro'.+NitrosDiagnosticV10120\.process\(text\)/);
+  assert.match(html,/power\|reference\|feed\|supply\|battery voltage/);
+});
+
 test('signal failure commits and advances to the next pending required test',()=>{
   const h=harness();h.ensureGuidedState();
   h.handleGuidedFinding('Found 5v on the cam power side');
