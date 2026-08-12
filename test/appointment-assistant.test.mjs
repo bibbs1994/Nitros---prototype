@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const start=html.indexOf('    function parseDate(text)');
-const endMarker='    window.NitrosAppointmentAssistant=Object.freeze({normalizeAppointmentTranscript,parseAppointmentRequest,hydrateAppointmentDraft,verifyAppointmentHydration,appointmentDraftFromForm,commitAppointmentDraft,restoreAppointmentDraft,prepare:oliverParse});';
+const endMarker='    window.NitrosAppointmentAssistant=Object.freeze({normalizeAppointmentTranscript,parseAppointmentRequest,mergePreparedAppointment,hydrateAppointmentDraft,verifyAppointmentHydration,appointmentDraftFromForm,commitAppointmentDraft,restoreAppointmentDraft,prepare:oliverParse});';
 const end=html.indexOf(endMarker,start)+endMarker.length;
 assert.ok(start>0&&end>start,'appointment assistant source must be extractable');
 const assistantSource=html.slice(start,end);
@@ -106,4 +106,27 @@ test('10.12.25 target isolation cases retain arrival/deadline distinction',()=>{
   const {api}=assistant();let draft=api.parseAppointmentRequest('Derek Lord, phone number 508-678-5432.');assert.equal(draft.customer,'Derek Lord');assert.equal(draft.phone,'5086785432');
   draft=api.parseAppointmentRequest('Derek Lord is dropping off tomorrow at 8 AM and needs the vehicle completed by 2 PM.');assert.equal(draft.customer,'Derek Lord');assert.equal(draft.time,'08:00');assert.equal(draft.promisedTime,'14:00');
   draft=api.parseAppointmentRequest('Derek Lord is dropping off at 2 PM.');assert.equal(draft.time,'14:00');assert.equal(draft.promisedTime,'');
+});
+
+test('10.12.26 phone commits regardless of formatting or fixed name placement',()=>{
+  const {api,fields}=assistant();for(const phone of ['5082947538','508-294-7538','(508) 294-7538']){const draft=api.parseAppointmentRequest(`Derek Lord phone number ${phone} is dropping off his 2018 Jeep Wrangler tomorrow.`);assert.equal(draft.customer,'Derek Lord');assert.equal(draft.phone,'5082947538');assert.equal(draft.vehicle,'2018 Jeep Wrangler');assert.equal(api.hydrateAppointmentDraft(draft).ok,true);assert.equal(fields.get('appointmentPhone').value,'5082947538')}
+});
+
+test('10.12.26 completion-only language cannot populate appointment time',()=>{
+  const {api}=assistant(),completionOnly=api.parseAppointmentRequest('Derek Lord is dropping off the Jeep tomorrow and promises to have it done by 2 PM.'),twoTimes=api.parseAppointmentRequest('Derek Lord is dropping off the Jeep tomorrow at 8 AM and needs it done by 2 PM.');
+  assert.equal(completionOnly.customer,'Derek Lord');assert.equal(completionOnly.time,'');assert.equal(completionOnly.promisedTime,'14:00');assert.equal(twoTimes.time,'08:00');assert.equal(twoTimes.promisedTime,'14:00');
+});
+
+test('10.12.26 office keys and confirmation variants use existing enum values',()=>{
+  const {api}=assistant();assert.equal(api.parseAppointmentRequest('Keys will be left at the office.').keys,'Keys received');assert.equal(api.parseAppointmentRequest('Call to confirm.').confirmationMethod,'Phone call');
+});
+
+test('10.12.26 routing diagnostics distinguish absent speech input from commit failure',()=>{
+  const {api,context}=assistant();context.document.getElementById('oliverScheduleInput').value='Derek Lord phone number 5082947538 is dropping off his 2018 Jeep Wrangler tomorrow for an EV code. Keys will be left at the office.';api.prepare();const diag=context.window.NitrosDeveloperMode.appointmentAssistant;
+  assert.equal(diag.routingTrace.phone.normalizedValue,'5082947538');assert.equal(diag.routingTrace.phone.commitSucceeded,true);assert.equal(diag.routingTrace.keysAccess.normalizedValue,'Keys received');assert.equal(diag.routingTrace.keysAccess.commitSucceeded,true);assert.equal(diag.routingTrace.confirmationMethod.resolution,'SPEECH_MISSING_INPUT');assert.equal(diag.routingTrace.transportation.resolution,'SPEECH_MISSING_INPUT');assert.equal(diag.routingTrace.additionalInspection.resolution,'SPEECH_MISSING_INPUT');assert.ok(diag.formStateBeforeMerge);assert.ok(diag.formStateAfterMerge);assert.equal(diag.speechCaptureStatus,'TYPED_INPUT');
+});
+
+test('10.12.26 preservation-safe merge adds promised time without erasing existing fields',()=>{
+  const {api}=assistant(),existing={customer:'Derek Lord',phone:'5082947538',vehicle:'2018 Jeep Wrangler',date:'2026-08-13',time:'08:00',arrival:'Drop-off',status:'Scheduled',concern:'EVAP code',notes:'Authorization retained',confirmationMethod:'Text message',keys:'Keys received',transportation:'Needs transportation arranged',inspections:'All the fluids'},parsed=api.parseAppointmentRequest('Promise to have it done by 2 PM.'),merged=api.mergePreparedAppointment(existing,parsed);
+  for(const [key,value] of Object.entries(existing))assert.equal(merged[key],value,key);assert.equal(merged.promisedTime,'14:00');
 });
