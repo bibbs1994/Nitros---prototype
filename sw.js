@@ -1,10 +1,11 @@
 'use strict';
 
-const VERSION = '10.12.9';
+const VERSION = '10.12.10';
 const CACHE_PREFIX = 'nitros-mobile-technician-portal-';
 const CACHE_NAME = `${CACHE_PREFIX}${VERSION}`;
 const OBSOLETE_CLASSIFIER_CACHE_PREFIXES = [CACHE_PREFIX, 'nitros-image-classifier-', 'nitros-classifier-'];
 const APP_SHELL = new URL('./index.html', self.registration.scope).href;
+const STATIC_ASSETS = new Set([new URL('./image-analysis-ad.js', self.registration.scope).href]);
 
 self.addEventListener('install', event => {
   event.waitUntil(self.skipWaiting());
@@ -24,18 +25,19 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
   const isNavigation = request.mode === 'navigate';
   const isAppShellHtml = url.origin === self.location.origin && (url.pathname.endsWith('/') || url.pathname.endsWith('/index.html'));
-  if (!isNavigation && !isAppShellHtml) return;
+  const isVersionedStaticAsset = STATIC_ASSETS.has(url.href);
+  if (!isNavigation && !isAppShellHtml && !isVersionedStaticAsset) return;
 
   event.respondWith((async () => {
     try {
       const response = await fetch(request, { cache: 'no-store' });
       if (response.ok) {
         const cache = await caches.open(CACHE_NAME);
-        await cache.put(APP_SHELL, response.clone());
+        await cache.put(isVersionedStaticAsset ? request : APP_SHELL, response.clone());
       }
       return response;
     } catch (error) {
-      const cached = await caches.match(APP_SHELL, { cacheName: CACHE_NAME });
+      const cached = await caches.match(isVersionedStaticAsset ? request : APP_SHELL, { cacheName: CACHE_NAME });
       if (cached) return cached;
       throw error;
     }

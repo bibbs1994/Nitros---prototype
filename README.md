@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.12.7AF adds genuine semantic image analysis while preserving the verified 10.12.7AE active repair-order persistence system.
+Version 10.12.10 adds dedicated automotive graph analysis while preserving the verified repair-order, diagnostic persistence, voice, Notes, Vehicle Info, and service-worker behavior.
 
 ## Secure semantic analyzer
 
