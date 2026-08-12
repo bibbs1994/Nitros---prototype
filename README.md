@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.12.22 adds the Oliver Appointment Semantic Normalization + Dedicated Field Routing Fix while preserving the 10.12.18 PID evidence gate and verified portal workflows.
+Version 10.12.23 adds the Oliver Appointment Dedicated Field Commit Fix while preserving the 10.12.18 PID evidence gate and verified portal workflows.
 
 ## Secure semantic analyzer
 
