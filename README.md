@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.12.19 fixes Oliver appointment parsing and verified form hydration while preserving the 10.12.18 PID evidence gate and verified portal workflows.
+Version 10.12.20 adds Oliver Voice Appointment Structured Capture / Persistence while preserving the 10.12.18 PID evidence gate and verified portal workflows.
 
 ## Secure semantic analyzer
 
