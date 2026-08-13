@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const authority=html.indexOf("const STATE_KEY='nitros_diagnostic_case_v10120'");
 function extract(name,next){const start=html.indexOf(`function ${name}(`,authority),end=html.indexOf(`function ${next}(`,start);assert.ok(start>=0&&end>start);return html.slice(start,end).trim()}
-const normalizeBlowerResult=Function(`return (${extract('normalizeBlowerResult','handleBlowerGuidedResult')})`)();
+const normalizeBlowerResult=Function(`return (${extract('normalizeBlowerResult','handleBlowerSpeedRecheck')})`)();
 
 test('natural confirmation responses normalize into authoritative split blower evidence',()=>{
   for(const response of ['Yes.','It works on high only.','One through three are dead but four works.','High works. Nothing on the lower speeds.']){
@@ -13,12 +13,31 @@ test('natural confirmation responses normalize into authoritative split blower e
   }
 });
 
+test('10.12.61 active blower question recognizes numbered, high-only, all, none, and partial shop language',()=>{
+  const highOnly=['The blower only works on number four.','Only high works.','Nothing except number four.','Four works but the first three don\'t.'];
+  for(const response of highOnly){const result=normalizeBlowerResult('blower-symptom-confirmation',response);assert.ok(result,response);assert.equal(result.facts.speedStates[1],'INOPERATIVE');assert.equal(result.facts.speedStates[4],'OPERATIVE')}
+  const lowerOnly=normalizeBlowerResult('blower-symptom-confirmation','One through three are dead.');assert.equal(lowerOnly.status,'INCONCLUSIVE');assert.deepEqual(lowerOnly.facts.missingSpeeds,[4]);
+  const all=normalizeBlowerResult('blower-symptom-confirmation','All four work.');assert.deepEqual(Object.values(all.facts.speedStates),['OPERATIVE','OPERATIVE','OPERATIVE','OPERATIVE']);
+  const none=normalizeBlowerResult('blower-symptom-confirmation','None of them work.');assert.deepEqual(Object.values(none.facts.speedStates),['INOPERATIVE','INOPERATIVE','INOPERATIVE','INOPERATIVE']);
+  const split=normalizeBlowerResult('blower-symptom-confirmation',"One and two work but three and four don't.");assert.deepEqual(Object.values(split.facts.speedStates),['OPERATIVE','OPERATIVE','INOPERATIVE','INOPERATIVE']);
+});
+
+test('10.12.61 commits conversational observations before advancing and guards duplicates and conflicts',()=>{
+  assert.match(html,/evidenceSource:'conversational-technician-observation'/);
+  assert.match(html,/duplicate=guided\.evidence\.some/);
+  assert.match(html,/diagnosticConclusionState='CONFLICTING_EVIDENCE'/);
+  assert.match(html,/handleBlowerSpeedRecheck\(guided,current,text\)/);
+  assert.match(html,/Committed Conversational Observations:/);
+  assert.match(html,/selectGuidanceTest\(next\.id,next\.name,reason,next\.prompt\);ask/);
+});
+
 test('guided HVAC workflow enforces one pending test and persists evidence',()=>{
   assert.match(html,/currentTestStatus:'PENDING',completedTests:\[\],evidence:\[\],passedTests:\[\],failedTests:\[\],nextTest:null,diagnosticConclusionState:'UNCONFIRMED'/);
   assert.match(html,/activateBlowerTest\('blower-symptom-confirmation'\)/);
-  assert.match(html,/guided\.completedTests\.push\(record\);guided\.evidence\.push\(record\)/);
+  assert.match(html,/if\(!duplicate\)guided\.evidence\.push\(record\)/);
+  assert.match(html,/guided\.completedTests\.push\(record\)/);
   assert.match(html,/activateBlowerTest\('blower-control-connector-inspection'\)/);
-  assert.match(html,/Since high speed operates, the blower motor is capable of running/);
+  assert.match(html,/Since speed 4, the highest setting, operates, the blower motor is capable of running/);
   assert.match(html,/test targets, not confirmed failed parts|no component is confirmed failed/i);
 });
 

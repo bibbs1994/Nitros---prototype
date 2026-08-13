@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const source=html.slice(html.indexOf('window.NitrosOliverSpeech=(()=>{'),html.indexOf('// v10.12.7AP:'));
 
-test('10.12.60 preserves Oliver as the permanent professional Nitros voice identity',()=>{
+test('10.12.61 preserves Oliver as the permanent professional Nitros voice identity',()=>{
   for(const marker of ['Oliver — the voice of Nitros','experienced-master-automotive-diagnostic-technician','human','calm','confident','professional','patient','friendly','clear','conversational'])assert.match(source,new RegExp(marker));
   for(const marker of ['robotic','raspy','monotone','metallic','rushed','overacted'])assert.match(source,new RegExp(marker));
 });

@@ -41,6 +41,17 @@ test('power and ground passes persist and advance one test at a time',()=>{
   assert.match(h.responses.at(-1),/Next we'll test Cam Signal Activity/i);
 });
 
+test('10.12.61 electrical shop-language observations map through the shared contextual interpreter',()=>{
+  const h=harness(),power={id:'power',name:'Power',kind:'reference-voltage',comparator:'range',minimum:4.5,maximum:14.8},ground={id:'ground',name:'Ground',kind:'ground-integrity',comparator:'<=',maximum:.1},signal={id:'signal',name:'Signal',kind:'signal-activity'},continuity={id:'continuity',name:'Circuit Continuity',kind:'circuit-isolation',criterion:'less than 1 ohm'};
+  assert.equal(h.interpretFinding(power,"I've got twelve volts there.").result,'pass');
+  assert.equal(h.interpretFinding(power,'No power.').result,'fail');
+  assert.equal(h.interpretFinding(ground,'Ground is good.').result,'pass');
+  assert.equal(h.interpretFinding(ground,'No ground.').result,'fail');
+  assert.equal(h.interpretFinding(signal,'No signal.').result,'fail');
+  assert.equal(h.interpretFinding(continuity,'I have continuity.').result,'pass');
+  assert.equal(h.interpretFinding(continuity,"It's open.").result,'fail');
+});
+
 test('10.12.8 routes natural power and ground evidence around unfinished intake and retains both results',()=>{
   const h=harness();h.state.stage='status';h.state.intakeStep='status';
   assert.equal(h.routeConversationalDiagnosticEvidence('I have battery voltage on the power wire.'),true);

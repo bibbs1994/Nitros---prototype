@@ -4,7 +4,7 @@ import fs from 'node:fs';
 
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 
-test('10.12.60 exposes persistent conversational evidence and developer trace state',()=>{
+test('10.12.61 exposes persistent conversational evidence and developer trace state',()=>{
   assert.match(html,/const blankGuidance=\(\)=>\(\{knowledgeSource:'generic-diagnostic-knowledge'/);
   assert.match(html,/conversationalGuidance:Object\.assign\(blankGuidance\(\),x\.conversationalGuidance\|\|\{\}\)/);
   assert.match(html,/window\.NitrosConversationalGuidanceCore=Object\.freeze/);
