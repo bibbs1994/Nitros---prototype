@@ -25,7 +25,7 @@ test('RO conversation contract uses known facts and rejects mandatory intake',()
 
 test('voice changes are delivery-only and expose a future provider abstraction',()=>{
   assert.match(html,/Voice-delivery layer only: keep Oliver's diagnostic words and decisions unchanged/);
-  assert.match(html,/persona:'calm-seasoned-master-technician'/);
-  assert.match(html,/providerAdapter:'future-ready'/);
+  assert.match(html,/persona:'experienced-master-automotive-diagnostic-technician'/);
+  assert.match(html,/providerAdapter:'highest-quality-neural-when-available'/);
   assert.equal((html.match(/new SpeechSynthesisUtterance\(/g)||[]).length,1);
 });

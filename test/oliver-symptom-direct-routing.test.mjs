@@ -27,9 +27,9 @@ test('exact live utterance captures engine and manual HVAC configuration',()=>{
 test('symptom without a DTC atomically enters HVAC diagnosis',()=>{
   assert.match(html,/if\(symptom&&!found\.length\)\{state\.activeDtc='';state\.intakeStep='complete';state\.stage='diagnostic'/);
   assert.match(html,/No trouble code is required to start this diagnosis/);
-  assert.match(html,/lower-speed blower control path/);
-  assert.match(html,/test targets, not confirmed failed parts/);
-  assert.match(html,/exact pins, wire colors, locations, and specifications require verified service information/);
+  assert.match(html,/blower-symptom-confirmation/);
+  assert.match(html,/no component is confirmed failed/);
+  assert.match(html,/Exact cavities and wire colors require verified service information/);
 });
 
 test('authoritative display agrees with normalized symptom workflow',()=>{
