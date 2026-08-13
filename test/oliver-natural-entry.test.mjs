@@ -25,9 +25,9 @@ test('natural diagnostic session stores required lightweight state',()=>{
   assert.match(html,/I recorded \$\{raw\} as the verified answer/);
 });
 
-test('new case and different vehicle or DTC clear stale conversational and image state',()=>{
-  assert.match(html,/resetNaturalCase\(\);window\.NitrosDiagnosticV10120\?\.reset\(\);history\.push\(\{role:'assistant',content:'New diagnostic case started/);
-  assert.match(html,/isNewNaturalContext\(text\)\)resetNaturalCase\(\)/);
+test('new case and different vehicle clear conversational state without resetting permanent diagnostic data',()=>{
+  assert.match(html,/different vehicle\)\[\.!\?\\s\]\*\$\/i\.test\(text\)\)\{resetNaturalCase\(\)/);
+  assert.match(html,/isNewNaturalContext\(text\)\)\{resetNaturalCase\(\);window\.NitrosDiagnosticV10120\?\.reset\(\)\}/);
   assert.match(html,/caseData=emptyNaturalCase\(\);history=\[\];loadedImage='';lastOliver=''/);
 });
 
@@ -40,8 +40,8 @@ test('plain text DTC entry remains text-first and starts one relevant decision',
   assert.match(html,/openAndSend:text=>\{openMode\('general'\);setTimeout\(\(\)=>send\(text\),100\)\}/);
 });
 
-test('10.12.23 build identity is visible without removing AR Oliver or AQ GPS implementation',()=>{
-  assert.match(html,/10\.12\.49/);
+test('10.12.50 build identity is visible without removing AR Oliver or AQ GPS implementation',()=>{
+  assert.match(html,/10\.12\.50/);
   assert.match(html,/NitrosOliverNaturalEntry/);
   assert.match(html,/window\.NitrosGpsEvidence/);
   assert.match(html,/photoEvidence:persistedPhotos\.map\(item=>\(\{[^\n]+gps:item\.gps/);
