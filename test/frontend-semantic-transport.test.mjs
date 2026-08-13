@@ -38,10 +38,10 @@ test('10.12.28 canonical normalizer rejects malformed and incomplete semantic co
 
 test('10.12.28 keeps the proven analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.23'/);
-  assert.match(html, /10\.12\.47/);
+  assert.match(html, /10\.12\.48/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.47'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.48'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -115,7 +115,7 @@ test('10.12.46 keeps fresh provenance independent from rendered numeric evidence
   const start=analyzer.indexOf('  function canonicalSourceNumber('),end=analyzer.indexOf('  window.NitrosValidateFinalRenderedPid=',start),context={};vm.runInNewContext(`${analyzer.slice(start,end)};this.gate=finalizeRenderedNumericEvidence;`,context);const source=(current,minimum,maximum)=>({pidName:'Engine Speed',unit:'RPM',current,minimum,maximum,sourceField:'CURRENT_IMAGE_EVIDENCE'}),run=(current,minimum,maximum)=>context.gate({numericEvidence:[source(current,minimum,maximum)],observed:[],interpretation:[],traceFindings:[],numericValidation:{},semanticConsistencyStatus:'PASS',freshResultVerification:'PASS'});const complete=run(2167,742,2241),incomplete=run(2167,null,null),inconsistent=run(2167,700,1800);assert.deepEqual([complete.freshResultVerification,incomplete.freshResultVerification,inconsistent.freshResultVerification],['PASS','PASS','PASS']);assert.deepEqual([complete.evidenceResultVerification,incomplete.evidenceResultVerification,inconsistent.evidenceResultVerification],['PASS','INCOMPLETE','FAIL']);assert.match(analyzer,/transaction ID does not match the current semantic request/);assert.match(analyzer,/image hash does not match the current image/);assert.match(analyzer,/freshResultProvenance:Object\.freeze\(\{status:'PASS',runId:run\.runId,semanticRequestId:run\.analyzer\.requestId,imageHash:run\.imageHash/);assert.doesNotMatch(analyzer,/freshResultVerification:failed\.length\?'FAIL'/);assert.match(analyzer,/freshResultVerification:fresh\?'PASS':'FAIL',evidenceResultVerification:evidenceVerified\?'PASS':graph\.finalRenderValidationStatus/);
 });
 
-test('10.12.47 targets only inconsistent PID triplets and rejects stale recovery generations',()=>{
+test('10.12.48 targets only inconsistent PID triplets and rejects stale recovery generations',()=>{
   const start=analyzer.indexOf('  function canonicalSourceNumber('),end=analyzer.indexOf('  window.NitrosValidateFinalRenderedPid=',start),context={};vm.runInNewContext(`${analyzer.slice(start,end)};this.gate=finalizeRenderedNumericEvidence;`,context);const row=(pidName,current,minimum,maximum,unit)=>({pidName,current,minimum,maximum,unit,sourceField:'INITIAL_CURRENT_IMAGE'}),base={numericEvidence:[row('Long FT #1',6.249,-6.249,5.467,'%'),row('Short FT #1',.781,-2.342,1.563,'%'),row('O2S B1S2',.055,0,.055,'V'),row('AFS B1S1',3.249,3.191,3.303,'V'),row('Engine Speed',905,899,994,'RPM')],observed:[],interpretation:[],traceFindings:[],numericValidation:{},semanticConsistencyStatus:'FAIL_NUMERIC_EVIDENCE',freshResultVerification:'PASS',semanticRequestId:'generation-47',imageHash:'hash-47'},recovery={pidName:'Long FT #1',current:-6.249,minimum:-6.249,maximum:-5.467,unit:'%',visibleEvidence:['Long FT #1 visible row'],status:'RECOVERED',semanticRequestId:'generation-47',imageHash:'hash-47',generationId:'generation-47'},recovered=context.gate({...base,targetedPidRecovery:[recovery]}),engine=recovered.finalCanonicalPidEvidence.find(item=>item.pidName==='Engine Speed'),ltft=recovered.finalCanonicalPidEvidence.find(item=>item.pidName==='Long FT #1');assert.deepEqual([engine.currentNumeric,engine.minNumeric,engine.maxNumeric],[905,899,994]);assert.deepEqual([ltft.currentNumeric,ltft.minNumeric,ltft.maxNumeric],[-6.249,-6.249,-5.467]);assert.equal(ltft.evidenceState,'COMPLETE_VALID');assert.equal(recovered.targetedRecoveryLog.find(item=>item.pidName==='Long FT #1').recoveryAttempted,'YES');assert.equal(recovered.targetedRecoveryLog.find(item=>item.pidName==='Engine Speed').recoveryAttempted,'NO');const stale=context.gate({...base,targetedPidRecovery:[{...recovery,generationId:'old-generation'}]}),staleLtft=stale.finalCanonicalPidEvidence.find(item=>item.pidName==='Long FT #1');assert.deepEqual([staleLtft.currentNumeric,staleLtft.minNumeric,staleLtft.maxNumeric],[6.249,-6.249,5.467]);assert.equal(staleLtft.evidenceState,'INCONSISTENT');assert.equal(stale.targetedRecoveryLog.find(item=>item.pidName==='Long FT #1').recoveryIdentityStatus,'REJECTED_OR_UNAVAILABLE');const stillInvalid=context.gate({...base,targetedPidRecovery:[{...recovery,current:6.249,maximum:5.467}]}),invalidLtft=stillInvalid.finalCanonicalPidEvidence.find(item=>item.pidName==='Long FT #1');assert.equal(invalidLtft.evidenceState,'INCONSISTENT');assert.equal(stillInvalid.freshResultVerification,'PASS');
 });
 
@@ -304,7 +304,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.47'/);
+  assert.match(html, /version:'10\.12\.48'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
