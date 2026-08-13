@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.58 — Oliver Natural Output Level + Semantic Cadence Refinement — Build 2026-08-13</title>
+<title>Nitros Mobile Technician Portal v10.12.59 — Oliver Measured Low-Baritone Prosody Reference — Build 2026-08-13</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.58 — Oliver Natural Output Level + Semantic Cadence Refinement — Build 2026-08-13</div>
+  <div class="sub">Mobile Technician Portal v10.12.59 — Oliver Measured Low-Baritone Prosody Reference — Build 2026-08-13</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.58 — Oliver Natural Output Level + Semantic Cadence Refinement · Build 2026-08-13. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.59 — Oliver Measured Low-Baritone Prosody Reference · Build 2026-08-13. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.58 — Oliver Natural Output Level + Semantic Cadence Refinement · Build 2026-08-13</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.59 — Oliver Measured Low-Baritone Prosody Reference · Build 2026-08-13</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.58 — Oliver Natural Output Level + Semantic Cadence Refinement · Build 2026-08-13</div>
+      <div class="eyebrow">Version 10.12.59 — Oliver Measured Low-Baritone Prosody Reference · Build 2026-08-13</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1683,21 +1683,28 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.58 • Oliver Natural Output Level + Semantic Cadence Refinement • Build 2026-08-13 • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.59 • Oliver Measured Low-Baritone Prosody Reference • Build 2026-08-13 • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.12.58',
-  release:'Oliver Natural Output Level + Semantic Cadence Refinement',
+  version:'10.12.59',
+  release:'Oliver Measured Low-Baritone Prosody Reference',
   buildDate:'2026-08-13',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
 window.NitrosOliverSpeech=(()=>{
   'use strict';
   const synth=window.speechSynthesis;
-  const OLIVER_VOICE_CONFIG=Object.freeze({identity:'Oliver — the voice of Nitros',language:'en-US',accentTarget:'neutral-General-American',tone:'warm-confident-approachable-technician',rate:.94,pitch:1,volume:.88,gain:.88,prosody:Object.freeze({mode:'semantic-thought-boundary-conversational',pace:'professional-conversational',punctuationPauses:'native-variable',sectionPauses:'native-paragraph-boundaries',phraseGrouping:'semantic-analysis-with-single-continuous-utterance',emphasis:'native-modest'}),audioProcessing:Object.freeze({signal:'clean-dry-isolated-centered-overlay-ready',channelMode:'centered-mono-source',stereoCompatibility:'identical-dual-mono-if-required',loudnessTarget:'-16 to -14 LUFS provider target; not measurable in Web Speech API',truePeakTarget:'-1.5 dBTP or lower provider target; not measurable in Web Speech API',sourceLevel:'reduced-from-full-scale',reverb:false,echo:false,spatialization:false,stereoWidening:false,chorus:false,delay:false,roomSimulation:false,pitchShift:false,compression:false,limiting:false,automaticGainRiding:false,filtering:false,mixing:false,ambience:false}),engine:'browser-speech-synthesis'});
-  const OLIVER_VOICE_VALIDATION_SAMPLE="Okay, I've got a 2016 Jeep Wrangler with the 3.6 liter. Looking at what we have so far, engine speed is sitting at about twenty-one sixty-seven RPM. That part looks normal. Before we condemn anything, let's check the evidence we already have and figure out what test actually makes sense next.";
+  const OLIVER_VOICE_CONFIG=Object.freeze({identity:'Oliver — the voice of Nitros',language:'en-US',accentTarget:'neutral-General-American',tone:'mature-warm-calm-low-baritone-technician',rate:.94,pitch:.995,volume:.88,gain:.88,acousticTarget:Object.freeze({referencePitchCenterHz:103,referencePitchMeanHz:102.5,primaryPitchRegionHz:'95-113',expressiveRangeHz:'67-122',briefEmphasisCeilingHz:'125-130',routineCeilingHz:'130-135',typicalPauseMs:'250-350',thoughtTransitionPauseMs:'400-500',capabilityNote:'Web Speech API uses relative pitch and native semantic pauses; Hz and pause milliseconds are provider targets, not browser measurements'}),prosody:Object.freeze({mode:'semantic-thought-boundary-conversational',pace:'professional-conversational',punctuationPauses:'native-variable',sectionPauses:'native-paragraph-boundaries',phraseGrouping:'semantic-analysis-with-single-continuous-utterance',emphasis:'native-modest'}),audioProcessing:Object.freeze({signal:'clean-dry-isolated-centered-overlay-ready',channelMode:'centered-mono-source',stereoCompatibility:'identical-dual-mono-if-required',loudnessTarget:'-17 to -18 LUFS provider target; not measurable in Web Speech API',truePeakTarget:'-1.0 dBTP or lower provider target; not measurable in Web Speech API',referenceLoudness:'-23.6 LUFS',referenceTruePeak:'-2.7 dBTP',referenceLoudnessRange:'2.1 LU',sourceLevel:'reduced-from-full-scale',eqDirection:'warm-full-no-upper-mid-or-high-frequency-boost',reverb:false,echo:false,spatialization:false,stereoWidening:false,chorus:false,delay:false,roomSimulation:false,pitchShift:false,compression:false,limiting:false,automaticGainRiding:false,filtering:false,mixing:false,ambience:false}),engine:'browser-speech-synthesis'});
+  const OLIVER_VOICE_VALIDATION_SAMPLES=Object.freeze([
+    'Hey Bobby. What are we working on?',
+    "Alright, that gives us something. The signal's there, so I wouldn't condemn the sensor yet. Let's check the circuit under load next.",
+    'What happened when you moved the harness?',
+    'Hold on. Shut the ignition off before you disconnect that connector.',
+    "Yep. That's exactly what I wanted to see.",
+    "Okay, I've got a 2016 Jeep Wrangler with the 3.6 liter. Looking at what we have so far, engine speed is sitting at about twenty-one sixty-seven RPM. That part looks normal. Before we condemn anything, let's check the evidence we already have and figure out what test actually makes sense next."
+  ]);
   let lockedVoice=null,lockedVoiceURI='',voiceResolved=false,sequence=0,pending=null,pendingTimer=0,lastRequestText='',lastRequestAt=0,qualityTier='browser-default',fallbackUsed=false,fallbackReason='',activeStreams=0,currentUtterance=null,speechState='idle',duplicateSuppressed=false,interruptionCount=0,lastPlaybackError='',utteranceCount=0,lastPipeline={phraseCount:0,pauseProsodyMode:OLIVER_VOICE_CONFIG.prosody.mode,deliveryProfile:'conversation',requestedRate:OLIVER_VOICE_CONFIG.rate,requestedPitch:OLIVER_VOICE_CONFIG.pitch,requestedVolume:OLIVER_VOICE_CONFIG.volume};
   const log=(message,detail='')=>{try{console.info(`[Oliver Voice] ${message}${detail?`: ${detail}`:''}`)}catch(_){}};
   const voiceKey=voice=>String(voice?.voiceURI||voice?.name||'');
@@ -1713,13 +1720,13 @@ window.NitrosOliverSpeech=(()=>{
   // Voice-delivery layer only: keep Oliver's diagnostic words and decisions unchanged.
   // The profile is provider-neutral so a future neural voice can consume the same intent.
   const deliveryStyle=Object.freeze({identity:'Oliver — the voice of Nitros',persona:'experienced-master-automotive-diagnostic-technician',character:['human','calm','confident','professional','patient','friendly','clear','conversational'],avoid:['robotic','raspy','monotone','metallic','rushed','overacted'],pace:'smooth-natural',emphasis:'subtle',thoughtPauses:'sentence-punctuation',shopLanguage:'plain-experienced-technician',responseShape:'one-next-action-or-question',providerAdapter:'highest-quality-neural-when-available'});
-  function prosody(text,options){const analysis=analyzePhrases(text),measurement=/\b\d+(?:\.\d+)?\s*(?:v|volt|ohm|amp|psi|kpa|hz|rpm|%|degree|°|ms)\b/i.test(text);let rate=Number(options.rate??OLIVER_VOICE_CONFIG.rate),pitch=Number(options.pitch??OLIVER_VOICE_CONFIG.pitch);const profileAdjustments={'short-confirmation':{rate:.014,pitch:.001},'diagnostic-observation':{rate:-.008,pitch:0},'safety-instruction':{rate:-.022,pitch:-.002},'diagnostic-reasoning':{rate:-.018,pitch:-.002},'technician-question':{rate:-.004,pitch:.003},conversation:{rate:0,pitch:0}},adjustment=profileAdjustments[analysis.deliveryProfile]||profileAdjustments.conversation;rate+=adjustment.rate;pitch+=adjustment.pitch;if(measurement)rate-=.006;const delivery={rate:Math.max(.90,Math.min(.97,rate)),pitch:Math.max(.99,Math.min(1.005,pitch)),volume:Math.max(.82,Math.min(.90,Number(options.volume??OLIVER_VOICE_CONFIG.volume))),analysis};lastPipeline={phraseCount:analysis.phraseCount,paragraphCount:analysis.paragraphCount,pauseProsodyMode:OLIVER_VOICE_CONFIG.prosody.mode,deliveryProfile:analysis.deliveryProfile,requestedRate:delivery.rate,requestedPitch:delivery.pitch,requestedVolume:delivery.volume};return delivery}
+  function prosody(text,options){const analysis=analyzePhrases(text),measurement=/\b\d+(?:\.\d+)?\s*(?:v|volt|ohm|amp|psi|kpa|hz|rpm|%|degree|°|ms)\b/i.test(text);let rate=Number(options.rate??OLIVER_VOICE_CONFIG.rate),pitch=Number(options.pitch??OLIVER_VOICE_CONFIG.pitch);const profileAdjustments={'short-confirmation':{rate:.014,pitch:.001},'diagnostic-observation':{rate:-.008,pitch:0},'safety-instruction':{rate:-.022,pitch:-.001},'diagnostic-reasoning':{rate:-.018,pitch:-.001},'technician-question':{rate:-.004,pitch:.002},conversation:{rate:0,pitch:0}},adjustment=profileAdjustments[analysis.deliveryProfile]||profileAdjustments.conversation;rate+=adjustment.rate;pitch+=adjustment.pitch;if(measurement)rate-=.006;const delivery={rate:Math.max(.90,Math.min(.97,rate)),pitch:Math.max(.992,Math.min(1.002,pitch)),volume:Math.max(.82,Math.min(.90,Number(options.volume??OLIVER_VOICE_CONFIG.volume))),analysis};lastPipeline={phraseCount:analysis.phraseCount,paragraphCount:analysis.paragraphCount,pauseProsodyMode:OLIVER_VOICE_CONFIG.prosody.mode,deliveryProfile:analysis.deliveryProfile,requestedRate:delivery.rate,requestedPitch:delivery.pitch,requestedVolume:delivery.volume};return delivery}
   function deliver(request,allowDefault=false){if(!synth||!request||request.token!==sequence)return false;const voice=resolveVoice();if(!voice&&!allowDefault)return false;if(!voice){voiceResolved=true;fallbackUsed=true;fallbackReason='voice list unavailable after load timeout';log('fallback voice activated',fallbackReason)}pending=null;clearTimeout(pendingTimer);const sourceText=spokenText(request.text),text=pronunciationText(sourceText),delivery=prosody(sourceText,request.options),utterance=new SpeechSynthesisUtterance(text);utterance.lang=request.options.lang||OLIVER_VOICE_CONFIG.language;utterance.rate=delivery.rate;utterance.pitch=delivery.pitch;utterance.volume=delivery.volume;if(voice)utterance.voice=voice;const finish=event=>{if(currentUtterance!==utterance)return;currentUtterance=null;activeStreams=0;if(event.type==='end'){speechState='completed';log('speech completed')}else{speechState='failed';lastPlaybackError=String(event.error||event.message||'speech synthesis error');log('speech failed',lastPlaybackError)}const handler=event.type==='end'?request.options.onend:request.options.onerror;if(typeof handler==='function')handler(event)};utterance.onstart=event=>{if(currentUtterance===utterance){activeStreams=1;speechState='speaking';log('speech started')}if(typeof request.options.onstart==='function')request.options.onstart(event)};utterance.onend=finish;utterance.onerror=finish;currentUtterance=utterance;activeStreams=1;utteranceCount++;browserProvider.resume();browserProvider.speak(utterance);return true}
   function speak(text,options={}){if(!synth||!text)return false;const clean=spokenText(text),now=Date.now();duplicateSuppressed=false;if(!options.force&&clean===lastRequestText&&now-lastRequestAt<1200){duplicateSuppressed=true;log('duplicate playback suppressed');return false}lastRequestText=clean;lastRequestAt=now;if(currentUtterance||pending){interruptionCount++;speechState='interrupted';log('previous utterance cancelled')}const request={token:++sequence,text:clean,options};browserProvider.cancel();browserProvider.resume();speechState='preparing';lastPlaybackError='';log('preparing response');pending=request;if(!deliver(request,false))pendingTimer=setTimeout(()=>deliver(request,true),250);return true}
   function cancel(){if(currentUtterance||pending){interruptionCount++;speechState='interrupted';log('previous utterance cancelled')}else speechState='idle';sequence++;pending=null;currentUtterance=null;activeStreams=0;clearTimeout(pendingTimer);try{browserProvider.cancel()}catch(error){lastPlaybackError=String(error?.message||error);speechState='failed'}}
   function unlock(){try{resolveVoice();synth?.resume()}catch(_){}}
   if(synth){const changed=()=>{resolveVoice();if(pending)deliver(pending,false)};if(typeof synth.addEventListener==='function')synth.addEventListener('voiceschanged',changed);else synth.onvoiceschanged=changed}
-  return Object.freeze({speak,cancel,unlock,speakValidationSample:()=>speak(OLIVER_VOICE_VALIDATION_SAMPLE,{force:true}),validationSample:OLIVER_VOICE_VALIDATION_SAMPLE,provider:browserProvider.name,config:OLIVER_VOICE_CONFIG,deliveryStyle,get lockedVoiceURI(){return lockedVoiceURI||'browser-default'},get qualityTier(){return qualityTier},get selectedVoiceName(){return lockedVoice?.name||'Browser default'},get selectedVoiceLanguage(){return lockedVoice?.lang||OLIVER_VOICE_CONFIG.language},get fallbackUsed(){return fallbackUsed},get activeStreams(){return activeStreams},get diagnostics(){return {selectedVoice:this.selectedVoiceName,voiceIdentifier:this.lockedVoiceURI,voiceLanguage:this.selectedVoiceLanguage,accentTarget:OLIVER_VOICE_CONFIG.accentTarget,tone:OLIVER_VOICE_CONFIG.tone,engine:OLIVER_VOICE_CONFIG.engine,playbackMode:'single-authoritative-utterance',speechState,deliveryProfile:lastPipeline.deliveryProfile,requestedRate:lastPipeline.requestedRate,requestedPitch:lastPipeline.requestedPitch,requestedVolume:lastPipeline.requestedVolume,gain:OLIVER_VOICE_CONFIG.gain,phraseCount:lastPipeline.phraseCount,paragraphCount:lastPipeline.paragraphCount||0,utteranceCount,pauseProsodyMode:lastPipeline.pauseProsodyMode,duplicateSuppressed,fallbackUsed,fallbackReason,interruptionCount,lastPlaybackError,activePlaybackStreams:activeStreams,audioProcessing:OLIVER_VOICE_CONFIG.audioProcessing}}});
+  return Object.freeze({speak,cancel,unlock,speakValidationSample:(index=5)=>speak(OLIVER_VOICE_VALIDATION_SAMPLES[Math.max(0,Math.min(5,Number(index)||0))],{force:true}),validationSample:OLIVER_VOICE_VALIDATION_SAMPLES[5],validationSamples:OLIVER_VOICE_VALIDATION_SAMPLES,provider:browserProvider.name,config:OLIVER_VOICE_CONFIG,deliveryStyle,get lockedVoiceURI(){return lockedVoiceURI||'browser-default'},get qualityTier(){return qualityTier},get selectedVoiceName(){return lockedVoice?.name||'Browser default'},get selectedVoiceLanguage(){return lockedVoice?.lang||OLIVER_VOICE_CONFIG.language},get fallbackUsed(){return fallbackUsed},get activeStreams(){return activeStreams},get diagnostics(){return {selectedVoice:this.selectedVoiceName,voiceIdentifier:this.lockedVoiceURI,voiceLanguage:this.selectedVoiceLanguage,accentTarget:OLIVER_VOICE_CONFIG.accentTarget,tone:OLIVER_VOICE_CONFIG.tone,acousticTarget:OLIVER_VOICE_CONFIG.acousticTarget,engine:OLIVER_VOICE_CONFIG.engine,playbackMode:'single-authoritative-utterance',speechState,deliveryProfile:lastPipeline.deliveryProfile,requestedRate:lastPipeline.requestedRate,requestedPitch:lastPipeline.requestedPitch,requestedVolume:lastPipeline.requestedVolume,gain:OLIVER_VOICE_CONFIG.gain,phraseCount:lastPipeline.phraseCount,paragraphCount:lastPipeline.paragraphCount||0,utteranceCount,pauseProsodyMode:lastPipeline.pauseProsodyMode,duplicateSuppressed,fallbackUsed,fallbackReason,interruptionCount,lastPlaybackError,activePlaybackStreams:activeStreams,audioProcessing:OLIVER_VOICE_CONFIG.audioProcessing}}});
 })();
 // v10.12.7AP: GPS belongs to the Nitros evidence record, never only to image EXIF.
 window.NitrosGpsEvidence=(()=>{
@@ -5318,7 +5325,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">Version 10.12.58 — Oliver Natural Output Level + Semantic Cadence Refinement · Build 2026-08-13</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">Version 10.12.59 — Oliver Measured Low-Baritone Prosody Reference · Build 2026-08-13</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5356,7 +5363,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.58 — Oliver Natural Output Level + Semantic Cadence Refinement · Build 2026-08-13</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.59 — Oliver Measured Low-Baritone Prosody Reference · Build 2026-08-13</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6384,7 +6391,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.58</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.59</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -7800,7 +7807,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.58</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.59</strong></li>
 <li><strong>POST-RENDER NUMERIC SOURCE AUDIT:</strong> <span id="nitrosRenderedInvariantLog">Not run</span></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>
