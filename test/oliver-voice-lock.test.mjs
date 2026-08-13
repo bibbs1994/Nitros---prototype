@@ -56,13 +56,13 @@ test('delayed iOS voices resolve once and stale queued speech cannot play',()=>{
   assert.deepEqual(h.spoken.map(item=>item.text),['newest response','read last reply']);
 });
 
-test('10.12.57 applies stable natural prosody without changing ordinary spoken diagnostic words',()=>{
+test('10.12.58 applies stable natural prosody without changing ordinary spoken diagnostic words',()=>{
   const h=speechHarness(voices),text='Ground looks good. Next, check the signal circuit and tell me what you see.';
   h.controller.speak(text,{rate:.94,pitch:.9});
   assert.equal(h.spoken[0].text,text);
   assert.ok(h.spoken[0].rate>=.90&&h.spoken[0].rate<=1);
   assert.ok(h.spoken[0].pitch>=.98&&h.spoken[0].pitch<=1.02);
-  assert.equal(h.spoken[0].volume,1);
+  assert.equal(h.spoken[0].volume,.88);
   assert.equal(h.controller.provider,'browser-speech-synthesis');
 });
 
@@ -72,7 +72,7 @@ test('phrase analysis varies pacing by response shape while retaining one contin
   assert.equal(h.spoken.length,1);
   assert.equal(h.spoken[0].text,technical.replaceAll('RPM','R P M'));
   assert.ok(h.controller.diagnostics.phraseCount>=4);
-  assert.equal(h.controller.diagnostics.pauseProsodyMode,'contextual-native-punctuation-conversational');
+  assert.equal(h.controller.diagnostics.pauseProsodyMode,'semantic-thought-boundary-conversational');
   assert.ok(h.controller.diagnostics.requestedRate<.94);
   h.controller.speak('Exactly.',{force:true});
   assert.ok(h.controller.diagnostics.requestedRate>.94);
@@ -82,7 +82,7 @@ test('speech-safe pronunciation preserves displayed content while clarifying cod
   const h=speechHarness(voices),visible='P0340 measured -6.25% at 12.6 V and 40 mV.';
   h.controller.speak(visible);
   assert.equal(visible,'P0340 measured -6.25% at 12.6 V and 40 mV.');
-  assert.equal(h.spoken[0].text,'P zero three four zero measured negative 6.25 percent at 12.6 volts and 40 millivolts.');
+  assert.equal(h.spoken[0].text,'P zero three forty measured negative 6.25 percent at 12.6 volts and 40 millivolts.');
   assert.equal(h.spoken.length,1);
 });
 
@@ -109,6 +109,17 @@ test('validation sequence selects distinct restrained delivery profiles',()=>{
   assert.ok(new Set(rates).size>=4);
   assert.ok(rates.every(rate=>rate>=.90&&rate<=.97));
   assert.equal(h.spoken.length,samples.length);
+});
+
+test('10.12.58 validation sample is repeatable, conversational, and below full source level',()=>{
+  const h=speechHarness(voices),sample="Okay, I've got a 2016 Jeep Wrangler with the 3.6 liter. Looking at what we have so far, engine speed is sitting at about twenty-one sixty-seven RPM. That part looks normal. Before we condemn anything, let's check the evidence we already have and figure out what test actually makes sense next.";
+  assert.equal(h.controller.validationSample,sample);
+  assert.equal(h.controller.speakValidationSample(),true);
+  assert.equal(h.spoken.length,1);
+  assert.equal(h.spoken[0].text,sample.replace('RPM','R P M'));
+  assert.equal(h.spoken[0].volume,.88);
+  assert.equal(h.controller.diagnostics.deliveryProfile,'diagnostic-reasoning');
+  assert.equal(h.controller.diagnostics.audioProcessing.sourceLevel,'reduced-from-full-scale');
 });
 
 test('playback telemetry records duplicate suppression and explicit interruption',()=>{
