@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const source=html.slice(html.indexOf('window.NitrosOliverSpeech=(()=>{'),html.indexOf('// v10.12.7AP:'));
 
-test('10.12.55 preserves Oliver as the permanent professional Nitros voice identity',()=>{
+test('10.12.56 preserves Oliver as the permanent professional Nitros voice identity',()=>{
   for(const marker of ['Oliver — the voice of Nitros','experienced-master-automotive-diagnostic-technician','human','calm','confident','professional','patient','friendly','clear','conversational'])assert.match(source,new RegExp(marker));
   for(const marker of ['robotic','raspy','monotone','metallic','rushed','overacted'])assert.match(source,new RegExp(marker));
 });
@@ -29,5 +29,5 @@ test('professional delivery uses conservative human pacing and subtle variation'
 });
 
 test('developer diagnostics expose voice, phrase, and prosody state',()=>{
-  for(const marker of ['nitrosOliverVoiceIdentity','nitrosOliverVoiceDiagnostic','selectedVoice','voiceLanguage','qualityTier','fallbackUsed','activePlaybackStreams','phraseCount','pauseProsodyMode','requestedRate','requestedPitch','requestedVolume'])assert.match(html,new RegExp(marker));
+  for(const marker of ['nitrosOliverVoiceIdentity','nitrosOliverVoiceDiagnostic','selectedVoice','voiceIdentifier','voiceLanguage','qualityTier','fallbackUsed','fallbackReason','speechState','utteranceCount','duplicateSuppressed','interruptionCount','lastPlaybackError','activePlaybackStreams','phraseCount','pauseProsodyMode','requestedRate','requestedPitch','requestedVolume'])assert.match(html,new RegExp(marker));
 });

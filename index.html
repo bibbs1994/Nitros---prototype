@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.55 — Oliver Natural Speech / Prosody Humanization — Build 2026-08-13</title>
+<title>Nitros Mobile Technician Portal v10.12.56 — Oliver Natural Voice Stabilization — Build 2026-08-13</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.55 — Oliver Natural Speech / Prosody Humanization — Build 2026-08-13</div>
+  <div class="sub">Mobile Technician Portal v10.12.56 — Oliver Natural Voice Stabilization — Build 2026-08-13</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.55 — Oliver Natural Speech / Prosody Humanization · Build 2026-08-13. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.56 — Oliver Natural Voice Stabilization · Build 2026-08-13. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.55 — Oliver Natural Speech / Prosody Humanization · Build 2026-08-13</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.56 — Oliver Natural Voice Stabilization · Build 2026-08-13</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.55 — Oliver Natural Speech / Prosody Humanization · Build 2026-08-13</div>
+      <div class="eyebrow">Version 10.12.56 — Oliver Natural Voice Stabilization · Build 2026-08-13</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1683,13 +1683,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.55 • Oliver Natural Speech / Prosody Humanization • Build 2026-08-13 • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.56 • Oliver Natural Voice Stabilization • Build 2026-08-13 • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.12.55',
-  release:'Oliver Natural Speech / Prosody Humanization',
+  version:'10.12.56',
+  release:'Oliver Natural Voice Stabilization',
   buildDate:'2026-08-13',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -1697,25 +1697,27 @@ window.NitrosOliverSpeech=(()=>{
   'use strict';
   const synth=window.speechSynthesis;
   const OLIVER_VOICE_CONFIG=Object.freeze({identity:'Oliver — the voice of Nitros',language:'en-US',rate:.94,pitch:1,volume:1,gain:1,prosody:Object.freeze({mode:'native-punctuation-aware-conversational',pace:'professional-conversational',punctuationPauses:'native-variable',sectionPauses:'native-paragraph-boundaries',phraseGrouping:'analysis-with-single-continuous-utterance',emphasis:'native-modest'}),audioProcessing:Object.freeze({reverb:false,echo:false,spatialization:false,delay:false,pitchShift:false,compression:false,filtering:false}),engine:'browser-speech-synthesis'});
-  let lockedVoice=null,lockedVoiceURI='',voiceResolved=false,sequence=0,pending=null,pendingTimer=0,lastRequestText='',lastRequestAt=0,qualityTier='browser-default',fallbackUsed=false,activeStreams=0,currentUtterance=null,lastPipeline={phraseCount:0,pauseProsodyMode:OLIVER_VOICE_CONFIG.prosody.mode,requestedRate:OLIVER_VOICE_CONFIG.rate,requestedPitch:OLIVER_VOICE_CONFIG.pitch,requestedVolume:OLIVER_VOICE_CONFIG.volume};
+  let lockedVoice=null,lockedVoiceURI='',voiceResolved=false,sequence=0,pending=null,pendingTimer=0,lastRequestText='',lastRequestAt=0,qualityTier='browser-default',fallbackUsed=false,fallbackReason='',activeStreams=0,currentUtterance=null,speechState='idle',duplicateSuppressed=false,interruptionCount=0,lastPlaybackError='',utteranceCount=0,lastPipeline={phraseCount:0,pauseProsodyMode:OLIVER_VOICE_CONFIG.prosody.mode,requestedRate:OLIVER_VOICE_CONFIG.rate,requestedPitch:OLIVER_VOICE_CONFIG.pitch,requestedVolume:OLIVER_VOICE_CONFIG.volume};
+  const log=(message,detail='')=>{try{console.info(`[Oliver Voice] ${message}${detail?`: ${detail}`:''}`)}catch(_){}};
   const voiceKey=voice=>String(voice?.voiceURI||voice?.name||'');
   const browserProvider=Object.freeze({name:'browser-speech-synthesis',voices:()=>synth?.getVoices?.()||[],cancel:()=>synth?.cancel(),resume:()=>synth?.resume(),speak:utterance=>synth?.speak(utterance)});
   function voices(){return browserProvider.voices()}
   const premiumName=/\b(neural|natural|premium|enhanced|online)\b/i,avoidName=/\b(compact|espeak|festival|robot|whisper|junior|child)\b/i,matureMaleNames=['Daniel','Alex','Aaron','Andrew','Brian','Microsoft David','Microsoft Mark','Google UK English Male','English United Kingdom Male'];
   function voiceScore(voice){const name=String(voice?.name||''),uri=voiceKey(voice),locale=/^en-US/i.test(voice?.lang)?60:/^en-(?:CA|GB|AU|IE|ZA)/i.test(voice?.lang)?45:/^en/i.test(voice?.lang)?20:-100,quality=premiumName.test(`${name} ${uri}`)?120:0,preferredIndex=matureMaleNames.findIndex(item=>name.toLowerCase().includes(item.toLowerCase())),professional=preferredIndex>=0?220+(matureMaleNames.length-preferredIndex)*4:0,remote=voice?.localService===false?8:0,penalty=avoidName.test(`${name} ${uri}`)?-150:0;return locale+quality+professional+remote+penalty}
-  function resolveVoice(){const list=voices();if(lockedVoiceURI){const refreshed=list.find(voice=>voiceKey(voice)===lockedVoiceURI);if(refreshed)lockedVoice=refreshed;return lockedVoice}if(voiceResolved)return lockedVoice;if(!list.length)return null;const ordered=[...list].sort((a,b)=>voiceScore(b)-voiceScore(a)||voiceKey(a).localeCompare(voiceKey(b)));lockedVoice=ordered[0]||null;lockedVoiceURI=voiceKey(lockedVoice);fallbackUsed=!lockedVoice||!matureMaleNames.some(item=>String(lockedVoice.name||'').toLowerCase().includes(item.toLowerCase()));qualityTier=lockedVoice&&premiumName.test(`${lockedVoice.name} ${lockedVoiceURI}`)?'highest-available-neural-or-natural':'best-available-browser-voice';voiceResolved=true;return lockedVoice}
+  function resolveVoice(){const list=voices();if(lockedVoiceURI){const refreshed=list.find(voice=>voiceKey(voice)===lockedVoiceURI);if(refreshed)lockedVoice=refreshed;return lockedVoice}if(voiceResolved)return lockedVoice;if(!list.length)return null;const ordered=[...list].sort((a,b)=>voiceScore(b)-voiceScore(a)||voiceKey(a).localeCompare(voiceKey(b)));lockedVoice=ordered[0]||null;lockedVoiceURI=voiceKey(lockedVoice);fallbackUsed=!lockedVoice||!matureMaleNames.some(item=>String(lockedVoice.name||'').toLowerCase().includes(item.toLowerCase()));fallbackReason=fallbackUsed?'preferred mature male voice unavailable':'';qualityTier=lockedVoice&&premiumName.test(`${lockedVoice.name} ${lockedVoiceURI}`)?'highest-available-neural-or-natural':'best-available-browser-voice';voiceResolved=true;log('voice selected',lockedVoice?.name||'browser voice');if(fallbackUsed)log('fallback voice activated',fallbackReason);return lockedVoice}
   function spokenText(text){return String(text||'').trim()}
+  function pronunciationText(text){const digitWords={0:'zero',1:'one',2:'two',3:'three',4:'four',5:'five',6:'six',7:'seven',8:'eight',9:'nine'};return spokenText(text).replace(/\b([PCBU])([0-9A-F]{4})\b/gi,(_,family,digits)=>`${family.toUpperCase()} ${digits.toUpperCase().split('').map(value=>digitWords[value]||value).join(' ')}`).replace(/(-?\d+(?:\.\d+)?)\s*%/g,'$1 percent').replace(/(-?\d+(?:\.\d+)?)\s*mV\b/gi,'$1 millivolts').replace(/(-?\d+(?:\.\d+)?)\s*V\b/g,(_,value)=>`${value} ${Math.abs(Number(value))===1?'volt':'volts'}`).replace(/(-?\d+(?:\.\d+)?)\s*A\b/g,(_,value)=>`${value} ${Math.abs(Number(value))===1?'amp':'amps'}`).replace(/(-?\d+(?:\.\d+)?)\s*Ω\b/g,'$1 ohms').replace(/(^|[\s(])-(?=\d)/g,'$1negative ')}
   function analyzePhrases(text){const source=String(text||'').trim(),paragraphs=source?source.split(/\n\s*\n+/).filter(Boolean):[],phrases=source?source.split(/(?<=[.!?;:])\s+|,\s+|\n+(?=(?:\d+[.)]|[-•])\s)/).map(part=>part.trim()).filter(Boolean):[];return {phraseCount:Math.max(paragraphs.length,phrases.length),paragraphCount:paragraphs.length||Number(Boolean(source)),shortAcknowledgment:/^(?:okay|got it|exactly|right|correct|that's the one|that makes sense|let's check that)[.!]?$/i.test(source),question:/\?\s*$/.test(source),technical:/\b(?:rpm|pid|pcm|ecm|dtc|o2|volts?|reference|ground circuit|camshaft position sensor|open circuit|short to ground|current|minimum|maximum|verified|pass|fail)\b/i.test(source),longExplanation:source.length>180||phrases.length>3}}
   // Voice-delivery layer only: keep Oliver's diagnostic words and decisions unchanged.
   // The profile is provider-neutral so a future neural voice can consume the same intent.
   const deliveryStyle=Object.freeze({identity:'Oliver — the voice of Nitros',persona:'experienced-master-automotive-diagnostic-technician',character:['human','calm','confident','professional','patient','friendly','clear','conversational'],avoid:['robotic','raspy','monotone','metallic','rushed','overacted'],pace:'smooth-natural',emphasis:'subtle',thoughtPauses:'sentence-punctuation',shopLanguage:'plain-experienced-technician',responseShape:'one-next-action-or-question',providerAdapter:'highest-quality-neural-when-available'});
   function prosody(text,options){const analysis=analyzePhrases(text),measurement=/\b\d+(?:\.\d+)?\s*(?:v|volt|ohm|amp|psi|kpa|hz|rpm|%|degree|°|ms)\b/i.test(text);let rate=Number(options.rate??OLIVER_VOICE_CONFIG.rate),pitch=Number(options.pitch??OLIVER_VOICE_CONFIG.pitch);if(analysis.longExplanation)rate-=.018;else if(analysis.shortAcknowledgment)rate+=.015;if(measurement||analysis.technical)rate-=.008;if(analysis.question)pitch+=.004;const delivery={rate:Math.max(.90,Math.min(1,rate)),pitch:Math.max(.98,Math.min(1.02,pitch)),volume:Math.max(.95,Math.min(1,Number(options.volume??OLIVER_VOICE_CONFIG.volume))),analysis};lastPipeline={phraseCount:analysis.phraseCount,paragraphCount:analysis.paragraphCount,pauseProsodyMode:OLIVER_VOICE_CONFIG.prosody.mode,requestedRate:delivery.rate,requestedPitch:delivery.pitch,requestedVolume:delivery.volume};return delivery}
-  function deliver(request,allowDefault=false){if(!synth||!request||request.token!==sequence)return false;const voice=resolveVoice();if(!voice&&!allowDefault)return false;if(!voice){voiceResolved=true;fallbackUsed=true}pending=null;clearTimeout(pendingTimer);const text=spokenText(request.text),delivery=prosody(text,request.options),utterance=new SpeechSynthesisUtterance(text);utterance.lang=request.options.lang||OLIVER_VOICE_CONFIG.language;utterance.rate=delivery.rate;utterance.pitch=delivery.pitch;utterance.volume=delivery.volume;if(voice)utterance.voice=voice;const finish=event=>{if(currentUtterance===utterance){currentUtterance=null;activeStreams=0}const handler=event.type==='end'?request.options.onend:request.options.onerror;if(typeof handler==='function')handler(event)};utterance.onstart=event=>{if(currentUtterance===utterance)activeStreams=1;if(typeof request.options.onstart==='function')request.options.onstart(event)};utterance.onend=finish;utterance.onerror=finish;currentUtterance=utterance;activeStreams=1;browserProvider.resume();browserProvider.speak(utterance);return true}
-  function speak(text,options={}){if(!synth||!text)return false;const clean=spokenText(text),now=Date.now();if(!options.force&&clean===lastRequestText&&now-lastRequestAt<1200)return false;lastRequestText=clean;lastRequestAt=now;const request={token:++sequence,text:clean,options};browserProvider.cancel();browserProvider.resume();pending=request;if(!deliver(request,false))pendingTimer=setTimeout(()=>deliver(request,true),250);return true}
-  function cancel(){sequence++;pending=null;currentUtterance=null;activeStreams=0;clearTimeout(pendingTimer);try{browserProvider.cancel()}catch(_){}}
+  function deliver(request,allowDefault=false){if(!synth||!request||request.token!==sequence)return false;const voice=resolveVoice();if(!voice&&!allowDefault)return false;if(!voice){voiceResolved=true;fallbackUsed=true;fallbackReason='voice list unavailable after load timeout';log('fallback voice activated',fallbackReason)}pending=null;clearTimeout(pendingTimer);const sourceText=spokenText(request.text),text=pronunciationText(sourceText),delivery=prosody(sourceText,request.options),utterance=new SpeechSynthesisUtterance(text);utterance.lang=request.options.lang||OLIVER_VOICE_CONFIG.language;utterance.rate=delivery.rate;utterance.pitch=delivery.pitch;utterance.volume=delivery.volume;if(voice)utterance.voice=voice;const finish=event=>{if(currentUtterance!==utterance)return;currentUtterance=null;activeStreams=0;if(event.type==='end'){speechState='completed';log('speech completed')}else{speechState='failed';lastPlaybackError=String(event.error||event.message||'speech synthesis error');log('speech failed',lastPlaybackError)}const handler=event.type==='end'?request.options.onend:request.options.onerror;if(typeof handler==='function')handler(event)};utterance.onstart=event=>{if(currentUtterance===utterance){activeStreams=1;speechState='speaking';log('speech started')}if(typeof request.options.onstart==='function')request.options.onstart(event)};utterance.onend=finish;utterance.onerror=finish;currentUtterance=utterance;activeStreams=1;utteranceCount++;browserProvider.resume();browserProvider.speak(utterance);return true}
+  function speak(text,options={}){if(!synth||!text)return false;const clean=spokenText(text),now=Date.now();duplicateSuppressed=false;if(!options.force&&clean===lastRequestText&&now-lastRequestAt<1200){duplicateSuppressed=true;log('duplicate playback suppressed');return false}lastRequestText=clean;lastRequestAt=now;if(currentUtterance||pending){interruptionCount++;speechState='interrupted';log('previous utterance cancelled')}const request={token:++sequence,text:clean,options};browserProvider.cancel();browserProvider.resume();speechState='preparing';lastPlaybackError='';log('preparing response');pending=request;if(!deliver(request,false))pendingTimer=setTimeout(()=>deliver(request,true),250);return true}
+  function cancel(){if(currentUtterance||pending){interruptionCount++;speechState='interrupted';log('previous utterance cancelled')}else speechState='idle';sequence++;pending=null;currentUtterance=null;activeStreams=0;clearTimeout(pendingTimer);try{browserProvider.cancel()}catch(error){lastPlaybackError=String(error?.message||error);speechState='failed'}}
   function unlock(){try{resolveVoice();synth?.resume()}catch(_){}}
   if(synth){const changed=()=>{resolveVoice();if(pending)deliver(pending,false)};if(typeof synth.addEventListener==='function')synth.addEventListener('voiceschanged',changed);else synth.onvoiceschanged=changed}
-  return Object.freeze({speak,cancel,unlock,provider:browserProvider.name,config:OLIVER_VOICE_CONFIG,deliveryStyle,get lockedVoiceURI(){return lockedVoiceURI||'browser-default'},get qualityTier(){return qualityTier},get selectedVoiceName(){return lockedVoice?.name||'Browser default'},get selectedVoiceLanguage(){return lockedVoice?.lang||OLIVER_VOICE_CONFIG.language},get fallbackUsed(){return fallbackUsed},get activeStreams(){return activeStreams},get diagnostics(){return {selectedVoice:this.selectedVoiceName,voiceLanguage:this.selectedVoiceLanguage,engine:OLIVER_VOICE_CONFIG.engine,requestedRate:lastPipeline.requestedRate,requestedPitch:lastPipeline.requestedPitch,requestedVolume:lastPipeline.requestedVolume,gain:OLIVER_VOICE_CONFIG.gain,phraseCount:lastPipeline.phraseCount,paragraphCount:lastPipeline.paragraphCount||0,pauseProsodyMode:lastPipeline.pauseProsodyMode,fallbackUsed,activePlaybackStreams:activeStreams,audioProcessing:OLIVER_VOICE_CONFIG.audioProcessing}}});
+  return Object.freeze({speak,cancel,unlock,provider:browserProvider.name,config:OLIVER_VOICE_CONFIG,deliveryStyle,get lockedVoiceURI(){return lockedVoiceURI||'browser-default'},get qualityTier(){return qualityTier},get selectedVoiceName(){return lockedVoice?.name||'Browser default'},get selectedVoiceLanguage(){return lockedVoice?.lang||OLIVER_VOICE_CONFIG.language},get fallbackUsed(){return fallbackUsed},get activeStreams(){return activeStreams},get diagnostics(){return {selectedVoice:this.selectedVoiceName,voiceIdentifier:this.lockedVoiceURI,voiceLanguage:this.selectedVoiceLanguage,engine:OLIVER_VOICE_CONFIG.engine,playbackMode:'single-authoritative-utterance',speechState,requestedRate:lastPipeline.requestedRate,requestedPitch:lastPipeline.requestedPitch,requestedVolume:lastPipeline.requestedVolume,gain:OLIVER_VOICE_CONFIG.gain,phraseCount:lastPipeline.phraseCount,paragraphCount:lastPipeline.paragraphCount||0,utteranceCount,pauseProsodyMode:lastPipeline.pauseProsodyMode,duplicateSuppressed,fallbackUsed,fallbackReason,interruptionCount,lastPlaybackError,activePlaybackStreams:activeStreams,audioProcessing:OLIVER_VOICE_CONFIG.audioProcessing}}});
 })();
 // v10.12.7AP: GPS belongs to the Nitros evidence record, never only to image EXIF.
 window.NitrosGpsEvidence=(()=>{
@@ -5314,7 +5316,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">Version 10.12.55 — Oliver Natural Speech / Prosody Humanization · Build 2026-08-13</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">Version 10.12.56 — Oliver Natural Voice Stabilization · Build 2026-08-13</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5352,7 +5354,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.55 — Oliver Natural Speech / Prosody Humanization · Build 2026-08-13</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.56 — Oliver Natural Voice Stabilization · Build 2026-08-13</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6380,7 +6382,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.55</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.56</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -7796,7 +7798,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.55</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.56</strong></li>
 <li><strong>POST-RENDER NUMERIC SOURCE AUDIT:</strong> <span id="nitrosRenderedInvariantLog">Not run</span></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>

@@ -54,7 +54,7 @@ test('delayed iOS voices resolve once and stale queued speech cannot play',()=>{
   assert.deepEqual(h.spoken.map(item=>item.text),['newest response','read last reply']);
 });
 
-test('10.12.55 applies stable natural prosody without changing spoken diagnostic words',()=>{
+test('10.12.56 applies stable natural prosody without changing ordinary spoken diagnostic words',()=>{
   const h=speechHarness(voices),text='Ground looks good. Next, check the signal circuit and tell me what you see.';
   h.controller.speak(text,{rate:.94,pitch:.9});
   assert.equal(h.spoken[0].text,text);
@@ -74,6 +74,25 @@ test('phrase analysis varies pacing by response shape while retaining one contin
   assert.ok(h.controller.diagnostics.requestedRate<.94);
   h.controller.speak('Exactly.',{force:true});
   assert.ok(h.controller.diagnostics.requestedRate>.94);
+});
+
+test('speech-safe pronunciation preserves displayed content while clarifying codes, units, and negatives',()=>{
+  const h=speechHarness(voices),visible='P0340 measured -6.25% at 12.6 V and 40 mV.';
+  h.controller.speak(visible);
+  assert.equal(visible,'P0340 measured -6.25% at 12.6 V and 40 mV.');
+  assert.equal(h.spoken[0].text,'P zero three four zero measured negative 6.25 percent at 12.6 volts and 40 millivolts.');
+  assert.equal(h.spoken.length,1);
+});
+
+test('playback telemetry records duplicate suppression and explicit interruption',()=>{
+  const h=speechHarness(voices);
+  assert.equal(h.controller.speak('Check the ground circuit.'),true);
+  assert.equal(h.controller.speak('Check the ground circuit.'),false);
+  assert.equal(h.controller.diagnostics.duplicateSuppressed,true);
+  h.controller.cancel();
+  assert.equal(h.controller.diagnostics.speechState,'interrupted');
+  assert.ok(h.controller.diagnostics.interruptionCount>=1);
+  assert.equal(h.controller.diagnostics.playbackMode,'single-authoritative-utterance');
 });
 
 test('all Oliver speech call sites are centralized',()=>{
