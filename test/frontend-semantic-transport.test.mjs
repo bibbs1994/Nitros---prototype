@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
+import { readFile } from 'node:fs/promises';
 import { normalizeWiringField } from '../semantic-analyzer-core.mjs';
 
 const root = new URL('../', import.meta.url);
@@ -38,10 +38,10 @@ test('10.12.28 canonical normalizer rejects malformed and incomplete semantic co
 
 test('10.12.28 keeps the proven analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.23'/);
-  assert.match(html, /10\.12\.36/);
+  assert.match(html, /10\.12\.37/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.36'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.37'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -65,12 +65,19 @@ test('automotive graphs route into Oliver with context-safe structured findings'
   for(const diagnostic of ['nitrosNumericSignNormalization','nitrosNumericEvidenceNormalization','nitrosCurrentMinMaxConsistency','nitrosInvalidPidEvidence','nitrosNumericInconsistencySource','nitrosZeroCrossingValidation','nitrosDirectionalClaimValidation','nitrosDependentInterpretationSuppressed','nitrosDiagnosticSignificanceGuard','nitrosNumericInterpretationGuard','nitrosNumericNarrativeConflict','nitrosNumericNarrativeCorrection'])assert.ok(analyzer.includes(diagnostic),`missing numeric guard diagnostic ${diagnostic}`);
   assert.match(analyzer,/graph\.analysisMode==='PID_SNAPSHOT'\?'AUTOMOTIVE PID SNAPSHOT ANALYSIS':'AUTOMOTIVE PID GRAPH ANALYSIS'/);
   assert.match(analyzer,/freshResultVerification:verified\?'PASS':'FAIL'/);assert.match(analyzer,/nitrosEvidenceType/);assert.match(analyzer,/nitrosSemanticConsistencyStatus/);assert.match(analyzer,/workflowRelevance/);assert.match(analyzer,/camWorkflow/);assert.match(analyzer,/authoritativeWorkflowPreserved:true/);
-  assert.match(analyzer,/Numeric Evidence Consistency: FAIL/);assert.match(analyzer,/Diagnostic interpretation blocked\. Re-read or reacquire the evidence before continuing\./);assert.match(analyzer,/evidenceConsistencyFailures/);
+  assert.match(analyzer,/Numeric Evidence Consistency: FAIL/);assert.match(analyzer,/Diagnostic interpretation of this PID is withheld until valid evidence is available\./);assert.match(analyzer,/finalCanonicalPidEvidence/);
   assert.match(analyzer,/<strong>Trace Behavior:<\/strong>/);
   assert.match(analyzer, /NitrosQuickVehicle\?\.getActiveVehicle/);
   assert.match(analyzer, /Possible vehicle-context mismatch/);
   assert.match(analyzer, /Retain these graph findings in the current diagnostic conversation/);
   for(const field of ['nitrosTemporalRoutingDecision','nitrosTemporalInterpretationPermissions','nitrosTemporalClaimValidation','nitrosTemporalClaimConflictDetected'])assert.ok(analyzer.includes(field),`missing temporal enforcement diagnostic ${field}`);
+});
+
+test('10.12.37 final rendered-value gate validates and renders one frozen canonical PID object',()=>{
+  const start=analyzer.indexOf('  function finalizeRenderedNumericEvidence('),end=analyzer.indexOf('  window.NitrosFinalizeRenderedNumericEvidence=',start);assert.ok(start>=0&&end>start);const context={};vm.runInNewContext(`${analyzer.slice(start,end)};this.gate=finalizeRenderedNumericEvidence;`,context);
+  const row=(pidName,current,minimum,maximum,unit)=>({pidName,current,minimum,maximum,unit,currentPresent:true,minimumPresent:true,maximumPresent:true}),graph={numericEvidence:[row('Long FT #1',6.249,-6.249,5.467,'%'),row('Short FT #1',.781,-2.342,1.563,'%'),row('AFS Voltage B1S1',3.249,3.191,3.303,'V'),row('O2S B1S2',.055,0,.055,'V'),row('Engine Speed',905,899,994,'RPM')],interpretation:['Long FT #1 indicates a diagnosis.','Short FT #1 is observed.'],traceFindings:['Long FT #1 trace conclusion.','O2S B1S2 trace observed.'],diagnosticSignificance:'SIGNIFICANT',nextTest:['Replace component'],numericValidation:{currentMinMaxConsistency:'PASS'},freshResultVerification:'PASS'};
+  const failed=context.gate(graph),ltft=failed.finalCanonicalPidEvidence[0];assert.equal(failed.finalRenderValidationStatus,'FAIL');assert.equal(failed.freshResultVerification,'FAIL');assert.deepEqual(Array.from(failed.finalCanonicalPidEvidence,row=>row.invariantResult),['FAIL','PASS','PASS','PASS','PASS']);assert.equal(ltft.displayCurrent,'+6.249%');assert.equal(ltft.displayMaximum,'+5.467%');assert.equal(ltft.violationReason,'Current exceeds displayed Max.');assert.ok(Object.isFrozen(failed.finalCanonicalPidEvidence)&&failed.finalCanonicalPidEvidence.every(Object.isFrozen));assert.doesNotMatch(failed.interpretation.join(' '),/Long FT|LTFT/i);assert.match(failed.interpretation.join(' '),/Short FT/i);assert.match(failed.nextTest[0],/Reacquire Long FT #1/);assert.match(failed.nextTestReason,/Current exceeds displayed Max/i);
+  for(const [current,minimum,maximum,expected] of [[-6.249,-6.249,-5.467,'PASS'],[1.563,-2.342,1.563,'PASS'],[1,1,1,'PASS'],[1,5,-5,'FAIL'],[-6,-5,5,'FAIL'],[6,-5,5,'FAIL']]){const result=context.gate({numericEvidence:[row('Long FT #1',current,minimum,maximum,'%')],numericValidation:{},freshResultVerification:'PASS',interpretation:[],traceFindings:[]});assert.equal(result.finalCanonicalPidEvidence[0].invariantResult,expected,`${minimum} <= ${current} <= ${maximum}`)}
 });
 
 test('10.12.28 preserves supported semantic response shapes and one transient unusable-result retry',()=>{
@@ -258,7 +265,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.36'/);
+  assert.match(html, /version:'10\.12\.37'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
