@@ -13,7 +13,7 @@ test('natural confirmation responses normalize into authoritative split blower e
   }
 });
 
-test('10.12.61 active blower question recognizes numbered, high-only, all, none, and partial shop language',()=>{
+test('10.12.62 active blower question recognizes numbered, high-only, all, none, and partial shop language',()=>{
   const highOnly=['The blower only works on number four.','Only high works.','Nothing except number four.','Four works but the first three don\'t.'];
   for(const response of highOnly){const result=normalizeBlowerResult('blower-symptom-confirmation',response);assert.ok(result,response);assert.equal(result.facts.speedStates[1],'INOPERATIVE');assert.equal(result.facts.speedStates[4],'OPERATIVE')}
   const lowerOnly=normalizeBlowerResult('blower-symptom-confirmation','One through three are dead.');assert.equal(lowerOnly.status,'INCONCLUSIVE');assert.deepEqual(lowerOnly.facts.missingSpeeds,[4]);
@@ -22,7 +22,16 @@ test('10.12.61 active blower question recognizes numbered, high-only, all, none,
   const split=normalizeBlowerResult('blower-symptom-confirmation',"One and two work but three and four don't.");assert.deepEqual(Object.values(split.facts.speedStates),['OPERATIVE','OPERATIVE','INOPERATIVE','INOPERATIVE']);
 });
 
-test('10.12.61 commits conversational observations before advancing and guards duplicates and conflicts',()=>{
+test('10.12.62 accepts terse active-question shorthand without promoting hypotheses or ambiguity',()=>{
+  for(const response of ['Blow only works on number four','It only works on high.','High is the only speed.','Only full blast works.','Speed four works, that\'s it.','Four.']){
+    const result=normalizeBlowerResult('blower-symptom-confirmation',response);assert.ok(result,response);assert.equal(result.facts.blowerHighSpeed,'OPERATES');assert.equal(result.facts.lowerBlowerSpeeds,'INOPERATIVE');
+  }
+  assert.equal(normalizeBlowerResult('blower-symptom-confirmation','It works sometimes.'),null);
+  assert.equal(normalizeBlowerResult('blower-symptom-confirmation','Probably the resistor.'),null);
+  assert.equal(normalizeBlowerResult('unrelated-test','Four.'),null);
+});
+
+test('10.12.62 commits conversational observations before advancing and guards duplicates and conflicts',()=>{
   assert.match(html,/evidenceSource:'conversational-technician-observation'/);
   assert.match(html,/duplicate=guided\.evidence\.some/);
   assert.match(html,/diagnosticConclusionState='CONFLICTING_EVIDENCE'/);
