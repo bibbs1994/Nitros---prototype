@@ -51,6 +51,22 @@ const automotiveGraphSchema = {
   }
 };
 
+const targetedPidRecoverySchema = {
+  type: 'object', additionalProperties: false, required: ['recoveries'], properties: {
+    recoveries: { type: 'array', maxItems: 12, items: { type: 'object', additionalProperties: false,
+      required: ['pidName','current','minimum','maximum','unit','visibleEvidence','status'], properties: {
+        pidName: { type: 'string', maxLength: 120 },
+        current: { anyOf: [{ type: 'number' }, { type: 'null' }] },
+        minimum: { anyOf: [{ type: 'number' }, { type: 'null' }] },
+        maximum: { anyOf: [{ type: 'number' }, { type: 'null' }] },
+        unit: { type: 'string', maxLength: 20 },
+        visibleEvidence: { type: 'array', items: { type: 'string' }, maxItems: 8 },
+        status: { type: 'string', enum: ['RECOVERED','UNREADABLE'] }
+      }
+    } }
+  }
+};
+
 const automotiveComponentSchema = {
   type: 'object',
   additionalProperties: false,
@@ -595,6 +611,17 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
       if (!graphBody) throw new Error('Automotive graph response was not valid JSON.');
       const validatedGraph=validateAutomotiveGraph(JSON.parse(extractOutputText(graphBody))),classificationTraceEvidence=semanticResult.graphEvidence||[];
       automotiveGraphAnalysis = { ...correctAutomotiveGraphReasoning({...validatedGraph,classifierGraphEvidence:classificationTraceEvidence}), semanticRequestId: transactionId, imageHash };
+      const inconsistentPids=(automotiveGraphAnalysis.numericEvidence||[]).filter(row=>row.evidenceState==='INCONSISTENT').map(row=>row.pidName);
+      if(inconsistentPids.length){
+        const recoveryPrompt=`Re-read only these inconsistent PIDs from the current supplied image: ${inconsistentPids.join(', ')}. Independently identify the visibly displayed Current, Min, and Max for each named PID. Do not use prior images, cached results, another PID, expected automotive values, arithmetic repair, swapping, sign flipping, copying, clamping, or inference. Return null for any role that is not independently readable. Preserve the visible sign, decimal precision, and unit. Include concise visible evidence for each recovered role.`;
+        markDiagnostic(diagnostic,'R_PID_RECOVERY_REQUESTED',{targetedPidRecoveryAttempted:true,targetedPidRecoveryPids:inconsistentPids});
+        try{
+          const recoveryResponse=await fetchImpl('https://api.openai.com/v1/responses',{method:'POST',headers:{'Authorization':`Bearer ${apiKey}`,'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,store:false,max_output_tokens:900,input:[{role:'user',content:[{type:'input_text',text:recoveryPrompt},{type:'input_image',image_url:`data:${mimeType};base64,${imageBase64}`,detail:'high'}]}],text:{format:{type:'json_schema',name:'nitros_targeted_pid_recovery',strict:true,schema:targetedPidRecoverySchema}}}),signal:analysisSignal});
+          const recoveryBody=await recoveryResponse.json().catch(()=>null);if(!recoveryResponse.ok||!recoveryBody)throw new Error(recoveryBody?.error?.message||`Targeted PID recovery failed with HTTP ${recoveryResponse.status}.`);const parsedRecovery=JSON.parse(extractOutputText(recoveryBody)),allowed=new Set(inconsistentPids.map(name=>name.toLowerCase()));
+          const targetedPidRecovery=(Array.isArray(parsedRecovery?.recoveries)?parsedRecovery.recoveries:[]).filter(item=>allowed.has(String(item?.pidName||'').toLowerCase())).map(item=>({pidName:String(item.pidName),current:Number.isFinite(item.current)?item.current:null,minimum:Number.isFinite(item.minimum)?item.minimum:null,maximum:Number.isFinite(item.maximum)?item.maximum:null,unit:String(item.unit||''),visibleEvidence:cleanStringArray(item.visibleEvidence,'visibleEvidence'),status:item.status==='RECOVERED'?'RECOVERED':'UNREADABLE',semanticRequestId:transactionId,imageHash,generationId:transactionId}));
+          const completeRecoveries=targetedPidRecovery.filter(item=>item.status==='RECOVERED'&&[item.current,item.minimum,item.maximum].every(Number.isFinite));if(completeRecoveries.length){const names=completeRecoveries.map(item=>item.pidName),targetPattern=new RegExp(names.map(name=>name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'i'),numericRole=/\b(?:current|minimum|min|maximum|max)\b/i,recoveredValues=completeRecoveries.flatMap(item=>[`${item.pidName} Current: ${item.current}${item.unit}`,`${item.pidName} Min: ${item.minimum}${item.unit}`,`${item.pidName} Max: ${item.maximum}${item.unit}`]),recoveredGraph={...validatedGraph,valuesAndScales:[...(validatedGraph.valuesAndScales||[]).filter(item=>!(targetPattern.test(item)&&numericRole.test(item))),...recoveredValues],observed:(validatedGraph.observed||[]).filter(item=>!(targetPattern.test(item)&&numericRole.test(item))),classifierGraphEvidence:classificationTraceEvidence},postRecoveryReasoning=correctAutomotiveGraphReasoning(recoveredGraph);automotiveGraphAnalysis={...automotiveGraphAnalysis,targetedPidRecovery,postRecoveryReasoning};}else automotiveGraphAnalysis={...automotiveGraphAnalysis,targetedPidRecovery};markDiagnostic(diagnostic,'R_PID_RECOVERY_EXTRACTED',{targetedPidRecoveryResultPresent:true,targetedPidRecoveryCount:targetedPidRecovery.length});
+        }catch(error){automotiveGraphAnalysis={...automotiveGraphAnalysis,targetedPidRecovery:inconsistentPids.map(pidName=>({pidName,current:null,minimum:null,maximum:null,unit:'',visibleEvidence:[],status:'UNREADABLE',semanticRequestId:transactionId,imageHash,generationId:transactionId}))};markDiagnostic(diagnostic,'R_PID_RECOVERY_FAILED',{targetedPidRecoveryResultPresent:false,targetedPidRecoveryErrorMessage:sanitizeDiagnosticText(error?.message)});}
+      }else automotiveGraphAnalysis={...automotiveGraphAnalysis,targetedPidRecovery:[]};
       markDiagnostic(diagnostic, 'R_GRAPH_ANALYSIS_EXTRACTED', { graphAnalysisResponseParsed: true, graphAnalysisResultPresent: true, graphAnalysisStatus: automotiveGraphAnalysis.status });
     } catch (error) {
       const safeMessage = sanitizeDiagnosticText(error?.message) || 'Automotive graph analysis failed.';
