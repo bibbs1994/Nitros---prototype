@@ -54,7 +54,7 @@ test('delayed iOS voices resolve once and stale queued speech cannot play',()=>{
   assert.deepEqual(h.spoken.map(item=>item.text),['newest response','read last reply']);
 });
 
-test('10.12.54 applies stable natural prosody without changing spoken diagnostic words',()=>{
+test('10.12.55 applies stable natural prosody without changing spoken diagnostic words',()=>{
   const h=speechHarness(voices),text='Ground looks good. Next, check the signal circuit and tell me what you see.';
   h.controller.speak(text,{rate:.94,pitch:.9});
   assert.equal(h.spoken[0].text,text);
@@ -62,6 +62,18 @@ test('10.12.54 applies stable natural prosody without changing spoken diagnostic
   assert.ok(h.spoken[0].pitch>=.98&&h.spoken[0].pitch<=1.02);
   assert.equal(h.spoken[0].volume,1);
   assert.equal(h.controller.provider,'browser-speech-synthesis');
+});
+
+test('phrase analysis varies pacing by response shape while retaining one continuous utterance',()=>{
+  const h=speechHarness(voices),technical='Engine speed is currently 2,167 RPM. Minimum is 742 RPM, and maximum is 2,384 RPM. Those values are internally consistent.';
+  h.controller.speak(technical);
+  assert.equal(h.spoken.length,1);
+  assert.equal(h.spoken[0].text,technical);
+  assert.ok(h.controller.diagnostics.phraseCount>=4);
+  assert.equal(h.controller.diagnostics.pauseProsodyMode,'native-punctuation-aware-conversational');
+  assert.ok(h.controller.diagnostics.requestedRate<.94);
+  h.controller.speak('Exactly.',{force:true});
+  assert.ok(h.controller.diagnostics.requestedRate>.94);
 });
 
 test('all Oliver speech call sites are centralized',()=>{
