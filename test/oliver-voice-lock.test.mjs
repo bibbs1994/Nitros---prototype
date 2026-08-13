@@ -56,7 +56,7 @@ test('delayed iOS voices resolve once and stale queued speech cannot play',()=>{
   assert.deepEqual(h.spoken.map(item=>item.text),['newest response','read last reply']);
 });
 
-test('10.12.56 applies stable natural prosody without changing ordinary spoken diagnostic words',()=>{
+test('10.12.57 applies stable natural prosody without changing ordinary spoken diagnostic words',()=>{
   const h=speechHarness(voices),text='Ground looks good. Next, check the signal circuit and tell me what you see.';
   h.controller.speak(text,{rate:.94,pitch:.9});
   assert.equal(h.spoken[0].text,text);
@@ -72,7 +72,7 @@ test('phrase analysis varies pacing by response shape while retaining one contin
   assert.equal(h.spoken.length,1);
   assert.equal(h.spoken[0].text,technical.replaceAll('RPM','R P M'));
   assert.ok(h.controller.diagnostics.phraseCount>=4);
-  assert.equal(h.controller.diagnostics.pauseProsodyMode,'native-punctuation-aware-conversational');
+  assert.equal(h.controller.diagnostics.pauseProsodyMode,'contextual-native-punctuation-conversational');
   assert.ok(h.controller.diagnostics.requestedRate<.94);
   h.controller.speak('Exactly.',{force:true});
   assert.ok(h.controller.diagnostics.requestedRate>.94);
@@ -91,8 +91,24 @@ test('automotive speech copy uses natural letter names without changing response
   h.controller.speak(visible);
   assert.equal(visible,'Check the PCM, ECM, PID, DTC, O2 sensor, CAN bus, and 5-volt reference at 2,167 RPM.');
   assert.equal(h.spoken[0].text,'Check the P C M, E C M, P I D, D T C, O two sensor, CAN bus, and 5 volt reference at 2,167 R P M.');
-  assert.equal(h.controller.diagnostics.audioProcessing.signal,'clean-dry-isolated-overlay-ready');
+  assert.equal(h.controller.diagnostics.audioProcessing.signal,'clean-dry-isolated-centered-overlay-ready');
+  assert.equal(h.controller.diagnostics.audioProcessing.channelMode,'centered-mono-source');
   assert.equal(h.controller.diagnostics.audioProcessing.mixing,false);
+});
+
+test('validation sequence selects distinct restrained delivery profiles',()=>{
+  const h=speechHarness(voices),samples=[
+    ['Hey Bobby. What are we working on?','technician-question'],
+    ["Okay, I've got engine speed at twenty-one sixty-seven RPM.",'diagnostic-observation'],
+    ["Hold on. Shut the ignition off before you disconnect that connector.",'safety-instruction'],
+    ["Yep. That's exactly what I wanted to see.",'short-confirmation'],
+    ["That changes things. We've got power and ground, so now I want to see what the signal circuit is actually doing.",'diagnostic-reasoning']
+  ];
+  const rates=[];
+  for(const [text,profile] of samples){h.controller.speak(text,{force:true});assert.equal(h.controller.diagnostics.deliveryProfile,profile);rates.push(h.controller.diagnostics.requestedRate)}
+  assert.ok(new Set(rates).size>=4);
+  assert.ok(rates.every(rate=>rate>=.90&&rate<=.97));
+  assert.equal(h.spoken.length,samples.length);
 });
 
 test('playback telemetry records duplicate suppression and explicit interruption',()=>{
