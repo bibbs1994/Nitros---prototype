@@ -38,10 +38,10 @@ test('10.12.28 canonical normalizer rejects malformed and incomplete semantic co
 
 test('10.12.28 keeps the proven analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.23'/);
-  assert.match(html, /10\.12\.41/);
+  assert.match(html, /10\.12\.42/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.41'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.42'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -73,33 +73,33 @@ test('automotive graphs route into Oliver with context-safe structured findings'
   for(const field of ['nitrosTemporalRoutingDecision','nitrosTemporalInterpretationPermissions','nitrosTemporalClaimValidation','nitrosTemporalClaimConflictDetected'])assert.ok(analyzer.includes(field),`missing temporal enforcement diagnostic ${field}`);
 });
 
-test('10.12.41 final shared triplet gate validates and renders one frozen canonical object',()=>{
+test('10.12.42 final shared triplet gate validates and renders one frozen canonical object',()=>{
   const start=analyzer.indexOf('  function canonicalSourceNumber('),end=analyzer.indexOf('  window.NitrosValidateFinalRenderedPid=',start);assert.ok(start>=0&&end>start);const context={};vm.runInNewContext(`${analyzer.slice(start,end)};this.gate=finalizeRenderedNumericEvidence;`,context);
   const row=(pidName,current,minimum,maximum,unit)=>({pidName,current,minimum,maximum,unit,currentPresent:true,minimumPresent:true,maximumPresent:true}),graph={numericEvidence:[row('Long FT #1',6.249,-6.249,5.467,'%'),row('Short FT #1',.781,-2.342,1.563,'%'),row('AFS Voltage B1S1',3.249,3.191,3.303,'V'),row('O2S B1S2',.055,0,.055,'V'),row('Engine Speed',905,899,994,'RPM')],interpretation:['Long FT #1 indicates a diagnosis.','Short FT #1 is observed.'],traceFindings:['Long FT #1 trace conclusion.','O2S B1S2 trace observed.'],diagnosticSignificance:'SIGNIFICANT',nextTest:['Replace component'],numericValidation:{currentMinMaxConsistency:'PASS'},freshResultVerification:'PASS'};
   const failed=context.gate(graph),ltft=failed.finalCanonicalPidEvidence[0];assert.equal(failed.finalRenderValidationStatus,'FAIL');assert.equal(failed.freshResultVerification,'FAIL');assert.deepEqual(Array.from(failed.finalCanonicalPidEvidence,row=>row.invariantResult),['FAIL','PASS','PASS','PASS','PASS']);assert.equal(ltft.currentNumeric,6.249);assert.equal(ltft.currentText,'+6.249%');assert.equal(ltft.maxText,'+5.467%');assert.equal(ltft.invariantFailureReason,'Current exceeds Max.');assert.strictEqual(failed.renderedPidEvidence,failed.finalCanonicalPidEvidence);assert.ok(Object.isFrozen(failed.renderedPidEvidence)&&failed.renderedPidEvidence.every(Object.isFrozen));assert.match(failed.interpretation.join(' '),/Long FT #1 displays Current \+6\.249%, Min -6\.249%, and Max \+5\.467%/);assert.doesNotMatch(failed.traceFindings.join(' '),/Long FT|LTFT/i);assert.match(failed.nextTest[0],/Fuel System Status \/ Closed Loop Status/);assert.equal(failed.numericValidation.authoritativeSource,'SHARED_IMMUTABLE_RENDERED_NUMERIC_TRIPLET');assert.equal(failed.renderedInvariantLog[0].finiteNumberValidation,'PASS');
   for(const [current,minimum,maximum,expected] of [[-6.249,-6.249,-5.467,'PASS'],[1.563,-2.342,1.563,'PASS'],[1,1,1,'PASS'],[1,5,-5,'FAIL'],[-6,-5,5,'FAIL'],[6,-5,5,'FAIL']]){const result=context.gate({numericEvidence:[row('Long FT #1',current,minimum,maximum,'%')],numericValidation:{},freshResultVerification:'PASS',interpretation:[],traceFindings:[]});assert.equal(result.finalCanonicalPidEvidence[0].invariantResult,expected,`${minimum} <= ${current} <= ${maximum}`)}
 });
 
-test('10.12.41 follows final displayed rounding and sign values',()=>{
+test('10.12.42 follows final displayed rounding and sign values',()=>{
   const start=analyzer.indexOf('  function canonicalSourceNumber('),end=analyzer.indexOf('  window.NitrosValidateFinalRenderedPid=',start),context={};vm.runInNewContext(`${analyzer.slice(start,end)};this.gate=finalizeRenderedNumericEvidence;`,context);const row=(current,minimum,maximum)=>({pidName:'Long FT #1',current,minimum,maximum,unit:'%',currentPresent:true,minimumPresent:true,maximumPresent:true});
   const roundedPass=context.gate({numericEvidence:[row(1.00049,1.0004,1.00048)],interpretation:[],traceFindings:[],numericValidation:{},freshResultVerification:'PASS'});assert.equal(roundedPass.renderedPidEvidence[0].currentText,'+1.000%');assert.equal(roundedPass.finalRenderValidationStatus,'PASS');
   const roundedFail=context.gate({numericEvidence:[row(1.00051,1.00049,1.0005)],interpretation:['Long FT #1 is rising.'],traceFindings:['Long FT #1 rises over time.'],numericValidation:{},freshResultVerification:'PASS'});assert.equal(roundedFail.renderedPidEvidence[0].currentText,'+1.001%');assert.equal(roundedFail.renderedPidEvidence[0].maxText,'+1.000%');assert.equal(roundedFail.finalRenderValidationStatus,'FAIL');assert.deepEqual(Array.from(roundedFail.traceFindings),[]);
   const signFailure=context.gate({numericEvidence:[row(-6,-5,-4)],interpretation:[],traceFindings:[],numericValidation:{},freshResultVerification:'PASS'});assert.equal(signFailure.renderedPidEvidence[0].currentText,'-6.000%');assert.equal(signFailure.renderedPidEvidence[0].currentNumeric,-6);assert.equal(signFailure.finalRenderValidationStatus,'FAIL');
 });
 
-test('10.12.41 reproduces the live dual fuel-trim failure safely',()=>{
+test('10.12.42 reproduces the live dual fuel-trim failure safely',()=>{
   const start=analyzer.indexOf('  function canonicalSourceNumber('),end=analyzer.indexOf('  window.NitrosValidateFinalRenderedPid=',start),context={};vm.runInNewContext(`${analyzer.slice(start,end)};this.gate=finalizeRenderedNumericEvidence;`,context);const row=(pidName,current,minimum,maximum)=>({pidName,current,minimum,maximum,unit:'%',currentPresent:true,minimumPresent:true,maximumPresent:true});
   const result=context.gate({numericEvidence:[row('Long FT #1',6.249,6.249,5.467),row('Short FT #1',1.563,2.342,1.563)],interpretation:['Long FT #1 is falling.','Short FT #1 is rising.'],traceFindings:['Long FT #1 drifts rich.','Short FT #1 switches lean.'],numericValidation:{},freshResultVerification:'PASS'});const text=result.interpretation.join(' ');
   assert.equal(result.finalRenderValidationStatus,'FAIL');assert.deepEqual(Array.from(result.renderedPidEvidence,row=>row.invariantResult),['FAIL','FAIL']);assert.equal(result.diagnosticSignificance,'INDETERMINATE');assert.match(text,/Long FT #1 displays Current \+6\.249%, Min \+6\.249%, and Max \+5\.467%/);assert.match(text,/Short FT #1 displays Current \+1\.563%, Min \+2\.342%, and Max \+1\.563%/);assert.doesNotMatch(result.traceFindings.join(' '),/rising|falling|rich|lean|stable|switching|recovering|drifting/i);assert.match(result.nextTest[0],/Fuel System Status \/ Closed Loop Status/);assert.doesNotMatch(result.nextTest.join(' '),/reacquire/i);
 });
 
-test('10.12.41 final rendered parse-back covers invariants and unverifiable values',()=>{
+test('10.12.42 final rendered parse-back covers invariants and unverifiable values',()=>{
   const start=analyzer.indexOf('  function canonicalSourceNumber('),end=analyzer.indexOf('  function finalizeRenderedNumericEvidence(',start),context={};vm.runInNewContext(`${analyzer.slice(start,end)};this.make=createRenderedNumericTriplet;this.assertRows=assertFinalRenderedPidEvidence;this.observed=finalObservedFromRenderedTriplets;`,context);const make=(current,minimum,maximum,unit='%')=>context.make({pidName:'PID',unit,current,minimum,maximum});const cases=[['live failure',6.249,-6.249,-5.467,'FAIL'],['fuel trim pass',.781,-2.342,1.563,'PASS'],['voltage pass',3.249,3.191,3.303,'PASS'],['rpm pass',905,899,994,'PASS'],['zero voltage pass',.055,0,.055,'PASS'],['equal',1,1,1,'PASS'],['below min',1,2,3,'FAIL'],['above max',4,1,3,'FAIL'],['reversed',2,3,1,'FAIL'],['missing current',null,2,7,'UNVERIFIABLE'],['missing min',6,null,7,'UNVERIFIABLE'],['missing max',6,5,null,'UNVERIFIABLE'],['NaN',NaN,5,7,'UNVERIFIABLE']];for(const [name,current,minimum,maximum,expected] of cases)assert.equal(make(current,minimum,maximum).invariantResult,expected,name);
   const positive=make('+6.249','+5.467','+7.030'),negative=make('-6.249','-7.030','-5.467'),voltage=make(.055,0,.1,'V'),rpm=make(905,899,994,'RPM');assert.equal(positive.currentNumeric,6.249);assert.equal(positive.currentText,'+6.249%');assert.equal(negative.currentText,'-6.249%');assert.equal(voltage.currentNumeric,.055);assert.equal(voltage.currentText,'+0.055V');assert.equal(rpm.currentNumeric,905);assert.equal(rpm.currentText,'+905RPM');assert.equal(make(0,0,0).currentText,'0.000%');
   const fallback=context.make({pidName:'Long FT #1',unit:'%',rawCurrent:'+6.249%',numericRange:{minimum:5.467,maximum:7.03}});assert.equal(fallback.currentText,'+6.249%');assert.equal(fallback.minText,'+5.467%');assert.equal(fallback.maxText,'+7.030%');assert.equal(fallback.invariantResult,'PASS');const assertion=context.assertRows(Object.freeze([fallback]));assert.strictEqual(assertion.renderedPidEvidence[0],fallback);const observed=context.observed(['Long FT #1 Current: stale','Plotted trace visible'],[fallback]);assert.deepEqual(Array.from(observed),['Plotted trace visible','Long FT #1 (%) — Min: +5.467%; Current: +6.249%; Max: +7.030%']);assert.equal(assertion.status,'PASS');assert.equal(context.assertRows([make(6,null,7)]).status,'UNVERIFIABLE');
 });
 
-test('10.12.41 renderer reasserts shared triplets before allowing PASS',()=>{
+test('10.12.42 renderer reasserts shared triplets before allowing PASS',()=>{
   assert.match(analyzer,/postRenderAssertion=assertFinalRenderedPidEvidence\(graph\.renderedPidEvidence\|\|graph\.finalCanonicalPidEvidence\|\|\[\]\)/);assert.match(analyzer,/numericFailure=postRenderAssertion\.status==='FAIL'/);assert.match(analyzer,/POST_RENDER_INVARIANT_BLOCKED_FALSE_PASS/);assert.match(analyzer,/Numeric Evidence Consistency: PASS/);
 });
 
@@ -288,7 +288,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.41'/);
+  assert.match(html, /version:'10\.12\.42'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
