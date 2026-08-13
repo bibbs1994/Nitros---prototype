@@ -5,7 +5,7 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const source=html.slice(html.indexOf('window.NitrosOliverSpeech=(()=>{'),html.indexOf('// v10.12.7AP:'));
 
-test('10.12.53 defines Oliver as the permanent professional Nitros voice identity',()=>{
+test('10.12.54 preserves Oliver as the permanent professional Nitros voice identity',()=>{
   for(const marker of ['Oliver — the voice of Nitros','experienced-master-automotive-diagnostic-technician','human','calm','confident','professional','patient','friendly','clear','conversational'])assert.match(source,new RegExp(marker));
   for(const marker of ['robotic','raspy','monotone','metallic','rushed','overacted'])assert.match(source,new RegExp(marker));
 });
@@ -22,10 +22,12 @@ test('professional delivery uses conservative human pacing and subtle variation'
   assert.match(source,/emphasis:'subtle'/);
   assert.match(source,/thoughtPauses:'sentence-punctuation'/);
   assert.match(source,/responseShape:'one-next-action-or-question'/);
-  assert.match(source,/Math\.max\(\.89,Math\.min\(\.94,rate\)\)/);
-  assert.match(source,/Math\.max\(\.975,Math\.min\(\.995,pitch\)\)/);
+  assert.match(source,/OLIVER_VOICE_CONFIG/);
+  assert.match(source,/rate:\.94,pitch:1,volume:1,gain:1/);
+  assert.match(source,/Math\.max\(\.90,Math\.min\(1,rate\)\)/);
+  assert.match(source,/activePlaybackStreams/);
 });
 
 test('developer diagnostics expose selected voice and quality tier',()=>{
-  for(const marker of ['nitrosOliverVoiceIdentity','nitrosOliverVoiceDiagnostic','selectedVoice','qualityTier'])assert.match(html,new RegExp(marker));
+  for(const marker of ['nitrosOliverVoiceIdentity','nitrosOliverVoiceDiagnostic','selectedVoice','voiceLanguage','qualityTier','fallbackUsed','activePlaybackStreams'])assert.match(html,new RegExp(marker));
 });

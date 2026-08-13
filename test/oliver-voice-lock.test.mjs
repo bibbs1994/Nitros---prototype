@@ -37,8 +37,8 @@ test('specification and completed-result replies use one locked voice without du
   h.controller.speak('Cam Sensor Ground passes');
   h.controller.speak('Cam Sensor Ground passes');
   assert.equal(h.spoken.length,2);
-  assert.deepEqual(h.spoken.map(item=>item.voice.voiceURI),['voice-ava','voice-ava']);
-  assert.equal(h.controller.lockedVoiceURI,'voice-ava');
+  assert.deepEqual(h.spoken.map(item=>item.voice.voiceURI),['voice-daniel','voice-daniel']);
+  assert.equal(h.controller.lockedVoiceURI,'voice-daniel');
 });
 
 test('delayed iOS voices resolve once and stale queued speech cannot play',()=>{
@@ -49,17 +49,18 @@ test('delayed iOS voices resolve once and stale queued speech cannot play',()=>{
   h.setVoices(voices);
   assert.deepEqual(h.spoken.map(item=>item.text),['newest response']);
   h.controller.speak('read last reply');
-  assert.deepEqual(h.spoken.map(item=>item.voice.voiceURI),['voice-ava','voice-ava']);
+  assert.deepEqual(h.spoken.map(item=>item.voice.voiceURI),['voice-daniel','voice-daniel']);
   h.runTimers();
   assert.deepEqual(h.spoken.map(item=>item.text),['newest response','read last reply']);
 });
 
-test('10.12.23 applies conservative varied prosody without changing spoken diagnostic words',()=>{
+test('10.12.54 applies stable natural prosody without changing spoken diagnostic words',()=>{
   const h=speechHarness(voices),text='Ground looks good. Next, check the signal circuit and tell me what you see.';
   h.controller.speak(text,{rate:.94,pitch:.9});
   assert.equal(h.spoken[0].text,text);
-  assert.ok(h.spoken[0].rate>=.89&&h.spoken[0].rate<=.94);
-  assert.ok(h.spoken[0].pitch>=.975&&h.spoken[0].pitch<=.995);
+  assert.ok(h.spoken[0].rate>=.90&&h.spoken[0].rate<=1);
+  assert.ok(h.spoken[0].pitch>=.98&&h.spoken[0].pitch<=1.02);
+  assert.equal(h.spoken[0].volume,1);
   assert.equal(h.controller.provider,'browser-speech-synthesis');
 });
 
