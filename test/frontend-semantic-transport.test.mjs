@@ -38,10 +38,10 @@ test('10.12.28 canonical normalizer rejects malformed and incomplete semantic co
 
 test('10.12.28 keeps the proven analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.23'/);
-  assert.match(html, /10\.12\.43/);
+  assert.match(html, /10\.12\.44/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.43'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.44'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -101,6 +101,10 @@ test('10.12.42 final rendered parse-back covers invariants and unverifiable valu
 
 test('10.12.42 renderer reasserts shared triplets before allowing PASS',()=>{
   assert.match(analyzer,/postRenderAssertion=assertFinalRenderedPidEvidence\(graph\.renderedPidEvidence\|\|graph\.finalCanonicalPidEvidence\|\|\[\]\)/);assert.match(analyzer,/numericFailure=postRenderAssertion\.status==='FAIL'/);assert.match(analyzer,/POST_RENDER_INVARIANT_BLOCKED_FALSE_PASS/);assert.match(analyzer,/Numeric Evidence Consistency: PASS/);
+});
+
+test('10.12.44 carries Engine Speed candidate audit into the rendered invariant developer log',()=>{
+  const start=analyzer.indexOf('  function canonicalSourceNumber('),end=analyzer.indexOf('  window.NitrosValidateFinalRenderedPid=',start),context={};vm.runInNewContext(`${analyzer.slice(start,end)};this.gate=finalizeRenderedNumericEvidence;`,context);const candidateAudit={canonicalPid:'Engine Speed',rawEvidenceTokens:['Engine RPM Min 701 Current 2167 Max 3188'],candidates:[{role:'minimum',value:701,status:'ACCEPTED',reason:'PID_LOCAL_EXPLICIT_ROLE_BINDING'},{role:'current',value:2167,status:'ACCEPTED',reason:'PID_LOCAL_EXPLICIT_ROLE_BINDING'},{role:'maximum',value:3188,status:'ACCEPTED',reason:'PID_LOCAL_EXPLICIT_ROLE_BINDING'}]},result=context.gate({numericEvidence:[{pidName:'Engine Speed',unit:'RPM',current:2167,minimum:701,maximum:3188,candidateAudit,rejectedCandidates:[]}],interpretation:[],traceFindings:[],numericValidation:{},freshResultVerification:'PASS'}),log=result.renderedInvariantLog[0];assert.equal(log.pidName,'Engine Speed');assert.deepEqual(Array.from(log.rawEvidenceTokens),candidateAudit.rawEvidenceTokens);assert.equal(log.candidateAudit.canonicalPid,'Engine Speed');assert.deepEqual([log.boundMin,log.boundCurrent,log.boundMax],[701,2167,3188]);assert.deepEqual([log.minText,log.currentText,log.maxText],['+701RPM','+2167RPM','+3188RPM']);assert.equal(log.renderedInvariant,'PASS');
 });
 
 test('10.12.28 preserves supported semantic response shapes and one transient unusable-result retry',()=>{
@@ -288,7 +292,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.43'/);
+  assert.match(html, /version:'10\.12\.44'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
