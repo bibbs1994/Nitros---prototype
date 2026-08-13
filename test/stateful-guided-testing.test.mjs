@@ -41,7 +41,7 @@ test('power and ground passes persist and advance one test at a time',()=>{
   assert.match(h.responses.at(-1),/Next we'll test Cam Signal Activity/i);
 });
 
-test('10.12.62 electrical shop-language observations map through the shared contextual interpreter',()=>{
+test('10.12.63 electrical shop-language observations map through the shared contextual interpreter',()=>{
   const h=harness(),power={id:'power',name:'Power',kind:'reference-voltage',comparator:'range',minimum:4.5,maximum:14.8},ground={id:'ground',name:'Ground',kind:'ground-integrity',comparator:'<=',maximum:.1},signal={id:'signal',name:'Signal',kind:'signal-activity'},continuity={id:'continuity',name:'Circuit Continuity',kind:'circuit-isolation',criterion:'less than 1 ohm'};
   assert.equal(h.interpretFinding(power,"I've got twelve volts there.").result,'pass');
   assert.equal(h.interpretFinding(power,'No power.').result,'fail');
