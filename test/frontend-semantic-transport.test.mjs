@@ -38,10 +38,10 @@ test('10.12.28 canonical normalizer rejects malformed and incomplete semantic co
 
 test('10.12.28 keeps the proven analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.23'/);
-  assert.match(html, /10\.12\.35/);
+  assert.match(html, /10\.12\.36/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.12\.35'/);
+  assert.match(serviceWorker, /const VERSION = '10\.12\.36'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -65,7 +65,7 @@ test('automotive graphs route into Oliver with context-safe structured findings'
   for(const diagnostic of ['nitrosNumericSignNormalization','nitrosNumericEvidenceNormalization','nitrosCurrentMinMaxConsistency','nitrosInvalidPidEvidence','nitrosNumericInconsistencySource','nitrosZeroCrossingValidation','nitrosDirectionalClaimValidation','nitrosDependentInterpretationSuppressed','nitrosDiagnosticSignificanceGuard','nitrosNumericInterpretationGuard','nitrosNumericNarrativeConflict','nitrosNumericNarrativeCorrection'])assert.ok(analyzer.includes(diagnostic),`missing numeric guard diagnostic ${diagnostic}`);
   assert.match(analyzer,/graph\.analysisMode==='PID_SNAPSHOT'\?'AUTOMOTIVE PID SNAPSHOT ANALYSIS':'AUTOMOTIVE PID GRAPH ANALYSIS'/);
   assert.match(analyzer,/freshResultVerification:verified\?'PASS':'FAIL'/);assert.match(analyzer,/nitrosEvidenceType/);assert.match(analyzer,/nitrosSemanticConsistencyStatus/);assert.match(analyzer,/workflowRelevance/);assert.match(analyzer,/camWorkflow/);assert.match(analyzer,/authoritativeWorkflowPreserved:true/);
-  assert.match(analyzer,/Evidence Consistency Failure:/);assert.match(analyzer,/Indeterminate — numeric evidence inconsistency detected/);assert.match(analyzer,/evidenceConsistencyFailures/);
+  assert.match(analyzer,/Numeric Evidence Consistency: FAIL/);assert.match(analyzer,/Diagnostic interpretation blocked\. Re-read or reacquire the evidence before continuing\./);assert.match(analyzer,/evidenceConsistencyFailures/);
   assert.match(analyzer,/<strong>Trace Behavior:<\/strong>/);
   assert.match(analyzer, /NitrosQuickVehicle\?\.getActiveVehicle/);
   assert.match(analyzer, /Possible vehicle-context mismatch/);
@@ -258,7 +258,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.12\.35'/);
+  assert.match(html, /version:'10\.12\.36'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
