@@ -27,7 +27,8 @@ function speechHarness(initialVoices=[]){
 
 const voices=[
   {name:'Ava',lang:'en-US',voiceURI:'voice-ava'},
-  {name:'Daniel',lang:'en-US',voiceURI:'voice-daniel'},
+  {name:'Daniel',lang:'en-GB',voiceURI:'voice-daniel'},
+  {name:'Alex',lang:'en-US',voiceURI:'voice-alex'},
   {name:'English UK',lang:'en-GB',voiceURI:'voice-uk'}
 ];
 
@@ -37,8 +38,9 @@ test('specification and completed-result replies use one locked voice without du
   h.controller.speak('Cam Sensor Ground passes');
   h.controller.speak('Cam Sensor Ground passes');
   assert.equal(h.spoken.length,2);
-  assert.deepEqual(h.spoken.map(item=>item.voice.voiceURI),['voice-daniel','voice-daniel']);
-  assert.equal(h.controller.lockedVoiceURI,'voice-daniel');
+  assert.deepEqual(h.spoken.map(item=>item.voice.voiceURI),['voice-alex','voice-alex']);
+  assert.equal(h.controller.lockedVoiceURI,'voice-alex');
+  assert.equal(h.controller.diagnostics.accentTarget,'neutral-General-American');
 });
 
 test('delayed iOS voices resolve once and stale queued speech cannot play',()=>{
@@ -49,7 +51,7 @@ test('delayed iOS voices resolve once and stale queued speech cannot play',()=>{
   h.setVoices(voices);
   assert.deepEqual(h.spoken.map(item=>item.text),['newest response']);
   h.controller.speak('read last reply');
-  assert.deepEqual(h.spoken.map(item=>item.voice.voiceURI),['voice-daniel','voice-daniel']);
+  assert.deepEqual(h.spoken.map(item=>item.voice.voiceURI),['voice-alex','voice-alex']);
   h.runTimers();
   assert.deepEqual(h.spoken.map(item=>item.text),['newest response','read last reply']);
 });
@@ -68,7 +70,7 @@ test('phrase analysis varies pacing by response shape while retaining one contin
   const h=speechHarness(voices),technical='Engine speed is currently 2,167 RPM. Minimum is 742 RPM, and maximum is 2,384 RPM. Those values are internally consistent.';
   h.controller.speak(technical);
   assert.equal(h.spoken.length,1);
-  assert.equal(h.spoken[0].text,technical);
+  assert.equal(h.spoken[0].text,technical.replaceAll('RPM','R P M'));
   assert.ok(h.controller.diagnostics.phraseCount>=4);
   assert.equal(h.controller.diagnostics.pauseProsodyMode,'native-punctuation-aware-conversational');
   assert.ok(h.controller.diagnostics.requestedRate<.94);
@@ -82,6 +84,15 @@ test('speech-safe pronunciation preserves displayed content while clarifying cod
   assert.equal(visible,'P0340 measured -6.25% at 12.6 V and 40 mV.');
   assert.equal(h.spoken[0].text,'P zero three four zero measured negative 6.25 percent at 12.6 volts and 40 millivolts.');
   assert.equal(h.spoken.length,1);
+});
+
+test('automotive speech copy uses natural letter names without changing response text',()=>{
+  const h=speechHarness(voices),visible='Check the PCM, ECM, PID, DTC, O2 sensor, CAN bus, and 5-volt reference at 2,167 RPM.';
+  h.controller.speak(visible);
+  assert.equal(visible,'Check the PCM, ECM, PID, DTC, O2 sensor, CAN bus, and 5-volt reference at 2,167 RPM.');
+  assert.equal(h.spoken[0].text,'Check the P C M, E C M, P I D, D T C, O two sensor, CAN bus, and 5 volt reference at 2,167 R P M.');
+  assert.equal(h.controller.diagnostics.audioProcessing.signal,'clean-dry-isolated-overlay-ready');
+  assert.equal(h.controller.diagnostics.audioProcessing.mixing,false);
 });
 
 test('playback telemetry records duplicate suppression and explicit interruption',()=>{

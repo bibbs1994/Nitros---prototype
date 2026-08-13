@@ -17,6 +17,11 @@ test('highest available neural or natural English voice wins deterministically',
   assert.match(source,/best-available-browser-voice/);
 });
 
+test('neutral General American male voices outrank British and generic voices',()=>{
+  for(const marker of ['neutral-General-American','generalAmericanMaleNames','fallbackMaleNames','clean-dry-isolated-overlay-ready'])assert.match(source,new RegExp(marker));
+  assert.match(source,/americanMale=us&&matchesName/);
+});
+
 test('professional delivery uses conservative human pacing and subtle variation',()=>{
   assert.match(source,/pace:'smooth-natural'/);
   assert.match(source,/emphasis:'subtle'/);
