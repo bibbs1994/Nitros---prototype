@@ -31,15 +31,15 @@ test('10.12.86 distinguishes manufacturer-specific and unavailable generic defin
   assert.equal(unknown.system,'');
 });
 
-test('10.12.86 resolves all primary DTC families while retaining safe unresolved chassis state',()=>{
+test('10.12.87 resolves all primary DTC families while retaining safe unresolved chassis state',()=>{
   const chassis=knowledge.resolve('C0035',{year:'2012',make:'Chevrolet',model:'Silverado'});
   assert.equal(chassis.dtcFamily,'Chassis');
-  assert.equal(chassis.resolutionStatus,'RESOLVED');
+  assert.equal(chassis.resolutionStatus,'RESOLVED_MANUFACTURER_SPECIFIC');
   assert.match(chassis.definition,/left front wheel speed sensor circuit/i);
   assert.equal(chassis.system,'ABS / Electronic Brake Control');
   assert.equal(chassis.subsystem,'Left Front Wheel Speed Sensor / Circuit');
   assert.equal(chassis.workflow,'Code-Specific Diagnostic');
-  assert.equal(chassis.sourceType,'INTERNAL_APPLICATION_DTC_REGISTRY');
+  assert.equal(chassis.sourceType,'INTERNAL_MANUFACTURER_DTC_REGISTRY');
   assert.equal(knowledge.resolve('P0410').dtcFamily,'Powertrain');
   assert.equal(knowledge.resolve('B1234').dtcFamily,'Body');
   assert.equal(knowledge.resolve('U9999').dtcFamily,'Network / Communication');
@@ -73,14 +73,40 @@ test('10.12.86 promotes P0410 into authoritative system and architecture routing
   assert.equal(h.state.diagnosticConclusionState,'UNCONFIRMED');
 });
 
-test('10.12.86 promotes C0035 into chassis/ABS authoritative routing',()=>{
+test('10.12.87 promotes C0035 into chassis/ABS authoritative routing',()=>{
   const h=routingHarness({vehicle:{year:'2012',make:'Chevrolet',model:'Silverado',engine:'',configuration:''},activeDtc:'C0035',system:'',diagnosticDomain:'',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),resolved=h.apply();
-  assert.equal(resolved.resolutionStatus,'RESOLVED');
+  assert.equal(resolved.resolutionStatus,'RESOLVED_MANUFACTURER_SPECIFIC');
   assert.equal(h.state.dtcFamily,'Chassis');
   assert.equal(h.state.dtcDefinition,'Left Front Wheel Speed Sensor Circuit');
   assert.equal(h.state.affectedSystem,'ABS / Electronic Brake Control');
   assert.equal(h.state.system,'ABS / Electronic Brake Control');
   assert.equal(h.state.diagnosticDomain,'Chassis / ABS / Electronic Brake Control');
+  assert.equal(h.workflowName(),'Code-Specific Diagnostic');
+});
+
+test('10.12.87 resolves GM B1325 by base code without inventing a failure type',()=>{
+  const base=knowledge.resolve('B1325',{year:'2014',make:'Chevrolet',model:'Silverado'}),suffix=knowledge.resolve('B1325-03',{year:'2014',make:'Chevrolet',model:'Silverado'});
+  assert.equal(base.code,'B1325');
+  assert.equal(base.baseCode,'B1325');
+  assert.equal(base.failureTypeSuffix,'');
+  assert.equal(base.dtcFamily,'Body');
+  assert.equal(base.definition,'Device Power 1 Circuit');
+  assert.equal(base.system,'Control Module / Device Power Supply');
+  assert.equal(base.genericOrManufacturerSpecific,'Manufacturer-Specific');
+  assert.equal(base.resolutionStatus,'RESOLVED_MANUFACTURER_SPECIFIC');
+  assert.equal(suffix.code,'B132503');
+  assert.equal(suffix.failureTypeSuffix,'03');
+  assert.equal(suffix.definition,'Device Power 1 Circuit');
+});
+
+test('10.12.87 routes resolved GM B1325 without generic system fallback',()=>{
+  const h=routingHarness({vehicle:{year:'2014',make:'Chevrolet',model:'Silverado',engine:'',configuration:''},activeDtc:'B1325',system:'',diagnosticDomain:'',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),resolved=h.apply();
+  assert.equal(resolved.resolutionStatus,'RESOLVED_MANUFACTURER_SPECIFIC');
+  assert.equal(h.state.dtcDefinition,'Device Power 1 Circuit');
+  assert.equal(h.state.affectedSystem,'Control Module / Device Power Supply');
+  assert.equal(h.state.system,'Control Module / Device Power Supply');
+  assert.equal(h.state.dtcClassification,'Manufacturer-Specific');
+  assert.equal(h.state.dtcResolutionStatus,'RESOLVED_MANUFACTURER_SPECIFIC');
   assert.equal(h.workflowName(),'Code-Specific Diagnostic');
 });
 
