@@ -6,8 +6,8 @@ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 
 const authoritativeStart=html.indexOf("const STATE_KEY='nitros_diagnostic_case_v10120'");
 function extract(name,next){const start=html.indexOf(`function ${name}(`,authoritativeStart),end=html.indexOf(`function ${next}(`,start);assert.ok(start>=0&&end>start);return html.slice(start,end).trim()}
-const symptomFacts=Function(`return (${extract('symptomFacts','concern')})`)();
-const parseVehicle=Function(`const normalize=value=>String(value);return (${extract('parseVehicle','symptomFacts')})`)();
+const symptomFacts=Function(`${extract('blowerOperatingStateEvidence','symptomFacts')};return (${extract('symptomFacts','concern')})`)();
+const parseVehicle=Function(`const normalize=value=>String(value);return (${extract('parseVehicle','blowerOperatingStateEvidence')})`)();
 
 test('10.12.51 normalizes blower high-only language while retaining original wording',()=>{
   const expected='HVAC blower operates only at highest speed / lower blower speeds inoperative';
