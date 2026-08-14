@@ -1,11 +1,11 @@
 'use strict';
 
-const VERSION = '10.12.84';
+const VERSION = '10.12.85';
 const CACHE_PREFIX = 'nitros-mobile-technician-portal-';
 const CACHE_NAME = `${CACHE_PREFIX}${VERSION}`;
 const OBSOLETE_CLASSIFIER_CACHE_PREFIXES = [CACHE_PREFIX, 'nitros-image-classifier-', 'nitros-classifier-'];
 const APP_SHELL = new URL('./index.html', self.registration.scope).href;
-const STATIC_ASSETS = new Set([new URL('./image-analysis-ad.js', self.registration.scope).href]);
+const STATIC_ASSETS = new Set([new URL('./image-analysis-ad.js', self.registration.scope).href, new URL('./dtc-knowledge.js', self.registration.scope).href]);
 
 self.addEventListener('install', event => {
   event.waitUntil(self.skipWaiting());

@@ -1,0 +1,82 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const source=readFileSync(new URL('../dtc-knowledge.js',import.meta.url),'utf8');
+const knowledge=Function('globalThis','window',`${source};return globalThis.NitrosDtcKnowledge`)({},undefined);
+const authority=html.indexOf("const STATE_KEY='nitros_diagnostic_case_v10120'");
+const extractRaw=(startToken,endToken)=>{const start=html.indexOf(startToken,authority),end=html.indexOf(endToken,start);assert.ok(start>=0&&end>start);return html.slice(start,end).trim()};
+const helpers=Function(`${html.slice(html.indexOf('const DTC_PATTERN=',authority),html.indexOf('function add(',authority))};return{parseVehicle,codes}`)();
+const routingHarness=initial=>Function('initial','knowledge',`let state=JSON.parse(JSON.stringify(initial)),guidance={evidence:[],measurements:[],completedTests:[],hypotheses:[]},replies=[];const window={NitrosDtcKnowledge:knowledge};function guidanceState(){return guidance}function selectGuidanceTest(id,name,reason,evidence){state.authoritativeDiagnosticTest={testId:id,displayName:name,status:'AWAITING_RESULT'};guidance.selectedNextTest=state.authoritativeDiagnosticTest;guidance.nextTestReason=reason;guidance.nextRequiredEvidence=evidence}function ask(text){replies.push(text)}${extractRaw('function applyDtcKnowledgeResolution','function nextRequiredIntakeStep')}return{apply:applyDtcKnowledgeResolution,manual:handleManualDtcSystemIdentification,state,guidance,replies,workflowName}`)(initial,knowledge);
+
+test('10.12.85 structured registry resolves representative generic DTCs through one resolver',()=>{
+  const expected=['P0300','P0301','P0340','P0410','P0420','P0455','P0456','P0171','P0172','P0101','P0128','P0442','P0500','P0606','U0100'];
+  assert.deepEqual(expected.filter(code=>knowledge.resolve(code).resolutionStatus!=='RESOLVED'),[]);
+  assert.ok(Object.isFrozen(knowledge.records));
+  const p0410=knowledge.resolve('p 0 4 1 0',{year:'2000',make:'Chevrolet',model:'S10'});
+  assert.equal(p0410.definition,'Secondary Air Injection System Malfunction');
+  assert.equal(p0410.system,'Secondary Air Injection');
+  assert.equal(p0410.genericOrManufacturerSpecific,'Generic / SAE');
+  assert.equal(p0410.sourceType,'INTERNAL_GENERIC_DTC_REGISTRY');
+  assert.equal(knowledge.source.isOemServiceInformation,false);
+});
+
+test('10.12.85 distinguishes manufacturer-specific and unavailable generic definitions without fabrication',()=>{
+  const manufacturer=knowledge.resolve('P1234',{make:'Chevrolet'}),unknown=knowledge.resolve('P2999');
+  assert.equal(manufacturer.resolutionStatus,'REQUIRES_MANUFACTURER_SPECIFIC_INFORMATION');
+  assert.equal(manufacturer.definition,'Requires manufacturer-specific information');
+  assert.equal(unknown.resolutionStatus,'DEFINITION_UNAVAILABLE');
+  assert.equal(unknown.definition,'DTC definition unavailable in current knowledge source');
+  assert.equal(unknown.system,'');
+});
+
+test('10.12.85 accepts S10 in a complete utterance and as a model-only follow-up',()=>{
+  assert.deepEqual(helpers.parseVehicle('2000 Chevrolet S10 with a P0410.'),{year:'2000',make:'Chevrolet',model:'S10',engine:''});
+  const current={year:'2000',make:'Chevrolet',model:'',engine:''},followup=helpers.parseVehicle('S10');
+  assert.deepEqual({...current,...Object.fromEntries(Object.entries(followup).filter(([,value])=>value))},{year:'2000',make:'Chevrolet',model:'S10',engine:''});
+});
+
+test('10.12.85 promotes P0410 into authoritative system and architecture routing',()=>{
+  const h=routingHarness({vehicle:{year:'2000',make:'Chevrolet',model:'S10',engine:'',configuration:''},activeDtc:'P0410',system:'',diagnosticDomain:'',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),resolved=h.apply();
+  assert.equal(resolved.resolutionStatus,'RESOLVED');
+  assert.equal(h.state.dtcDefinition,'Secondary Air Injection System Malfunction');
+  assert.equal(h.state.affectedSystem,'Secondary Air Injection');
+  assert.equal(h.state.system,'Secondary Air Injection');
+  assert.equal(h.state.diagnosticDomain,'Engine Performance / Emissions');
+  assert.equal(h.state.dtcClassification,'Generic / SAE');
+  assert.equal(h.state.dtcResolutionStatus,'RESOLVED');
+  assert.equal(h.workflowName(),'Code-Specific Diagnostic');
+  assert.equal(h.state.stage,'circuit/system-architecture-identification');
+  assert.equal(h.state.intakeStep,'complete');
+  assert.equal(h.state.authoritativeDiagnosticTest.testId,'dtc-system-architecture-identification');
+  assert.match(h.guidance.nextRequiredEvidence,/air pump.*fuse.*relay.*ground.*switching valve.*ECM\/PCM command/i);
+  assert.equal(h.state.componentCondemned,'None');
+  assert.equal(h.state.diagnosticConclusionState,'UNCONFIRMED');
+});
+
+test('10.12.85 enriches established specialized workflows without bypassing their proven intake',()=>{
+  for(const [code,workflow] of [['P0340','Camshaft Position Circuit'],['P0420','Catalyst Efficiency'],['P0308','Misfire Diagnosis']]){
+    const h=routingHarness({vehicle:{year:'2014',make:'Toyota',model:'Camry',configuration:''},activeDtc:code,system:'',diagnosticDomain:'',stage:'vehicle',intakeStep:'vehicle',routingDiagnostics:{},componentCondemned:'None'}),resolved=h.apply();
+    assert.equal(resolved.resolutionStatus,'RESOLVED');assert.ok(h.state.dtcDefinition);assert.ok(h.state.affectedSystem);assert.equal(h.workflowName(),workflow);assert.equal(h.state.stage,'vehicle');assert.equal(h.state.intakeStep,'vehicle');assert.equal(h.state.authoritativeDiagnosticTest,undefined);
+  }
+});
+
+test('10.12.85 promotes a requested manual system answer while keeping definition provenance unresolved',()=>{
+  const h=routingHarness({vehicle:{year:'2000',make:'Chevrolet',model:'S10',configuration:''},activeDtc:'P1234',system:'',diagnosticDomain:'',dtcResolutionStatus:'REQUIRES_MANUFACTURER_SPECIFIC_INFORMATION',stage:'system-identification',intakeStep:'system-identification',routingDiagnostics:{},componentCondemned:'None'});
+  assert.equal(h.manual('Secondary air injection system.'),true);
+  assert.equal(h.state.system,'Secondary Air Injection');
+  assert.equal(h.state.affectedSystem,'Secondary Air Injection');
+  assert.equal(h.state.dtcResolutionStatus,'SYSTEM_IDENTIFIED_BY_TECHNICIAN_DEFINITION_UNRESOLVED');
+  assert.equal(h.state.stage,'circuit/system-architecture-identification');
+  assert.match(h.replies.at(-1),/technician-confirmed affected system.*specific code definition remains unresolved.*no component is condemned/i);
+});
+
+test('10.12.85 production intake resolves after DTC commit and exposes developer fields',()=>{
+  const processSource=html.slice(html.indexOf('function process(',authority),html.indexOf('function renderTranscript(',authority));
+  assert.match(html,/src="\.\/dtc-knowledge\.js"/);
+  assert.match(processSource,/const dtcResolution=state\.activeDtc&&typeof applyDtcKnowledgeResolution==='function'\?applyDtcKnowledgeResolution\(\):null/);
+  assert.match(processSource,/We’ll start by identifying the \$\{state\.affectedSystem\.toLowerCase\(\)\} system architecture/);
+  assert.doesNotMatch(processSource,/what does .*P0410|tell me what .*P0410 means/i);
+  for(const label of ['DTC Definition','Affected System','DTC Classification','DTC Knowledge Source','DTC Resolution Status'])assert.match(html,new RegExp(`${label}:`));
+});

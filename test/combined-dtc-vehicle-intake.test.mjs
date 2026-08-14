@@ -58,7 +58,7 @@ test('V3 Direct AI combined entry delegates to authoritative state and does not 
   assert.match(sendSource,/window\.NitrosDiagnosticV10120\.process\(text\)/);
   assert.match(sendSource,/const authoritative=window\.NitrosDiagnosticV10120\.getState\(\)/);
   const processSource=html.slice(html.indexOf('function process('),html.indexOf('function renderTranscript('));
-  assert.match(processSource,/if\(v\|\|found\.length\)\{advanceIntake\(\)/);
+  assert.match(processSource,/if\(v\|\|found\.length\)\{if\(!dtcArchitectureReady\)advanceIntake\(\)/);
   assert.match(html,/if\(state\.intakeStep==='status'\)return`Is \$\{state\.activeDtc\} current, pending, history, or intermittent\?`/);
 });
 
@@ -116,5 +116,5 @@ test('VO leaves genuinely ambiguous status answers at the status question',()=>{
 test('V4 preserves authoritative persistence and one service-worker authority',()=>{
   assert.match(html,/const STATE_KEY='nitros_diagnostic_case_v10120'/);
   assert.equal((html.match(/navigator\.serviceWorker\.register\(/g)||[]).length,1);
-  assert.match(html,/version:'10\.12\.84'/);
+  assert.match(html,/version:'10\.12\.85'/);
 });
