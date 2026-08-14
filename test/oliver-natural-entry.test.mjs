@@ -10,7 +10,7 @@ function extractedFunction(name,nextName){
   return Function(`return (${html.slice(start,end).trim()})`)();
 }
 
-const naturalVehicle=extractedFunction('naturalVehicle','naturalCodes');
+const naturalVehicle=Function(`${html.slice(html.indexOf('function naturalMeasurementIsolation('),html.indexOf('function naturalCodes('))};return naturalVehicle`)();
 
 test('free-form Phase 1 examples extract year, make, and model',()=>{
   assert.deepEqual(naturalVehicle("I've got a P0340 on a 2014 Toyota Camry."),{year:'2014',make:'Toyota',model:'Camry',engine:''});
@@ -40,8 +40,8 @@ test('plain text DTC entry remains text-first and starts one relevant decision',
   assert.match(html,/openAndSend:text=>\{openMode\('general'\);setTimeout\(\(\)=>send\(text\),100\)\}/);
 });
 
-test('10.12.66 build identity is visible without removing AR Oliver or AQ GPS implementation',()=>{
-  assert.match(html,/10\.12\.66/);
+test('10.12.67 build identity is visible without removing AR Oliver or AQ GPS implementation',()=>{
+  assert.match(html,/10\.12\.67/);
   assert.match(html,/NitrosOliverNaturalEntry/);
   assert.match(html,/window\.NitrosGpsEvidence/);
   assert.match(html,/photoEvidence:persistedPhotos\.map\(item=>\(\{[^\n]+gps:item\.gps/);

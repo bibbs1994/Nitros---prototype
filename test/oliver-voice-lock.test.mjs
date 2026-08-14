@@ -56,7 +56,7 @@ test('delayed iOS voices resolve once and stale queued speech cannot play',()=>{
   assert.deepEqual(h.spoken.map(item=>item.text),['newest response','read last reply']);
 });
 
-test('10.12.66 applies stable natural prosody without changing ordinary spoken diagnostic words',()=>{
+test('10.12.67 applies stable natural prosody without changing ordinary spoken diagnostic words',()=>{
   const h=speechHarness(voices),text='Ground looks good. Next, check the signal circuit and tell me what you see.';
   h.controller.speak(text,{rate:.94,pitch:.9});
   assert.equal(h.spoken[0].text,text);
@@ -111,7 +111,7 @@ test('validation sequence selects distinct restrained delivery profiles',()=>{
   assert.equal(h.spoken.length,samples.length);
 });
 
-test('10.12.66 validation sample is repeatable, conversational, and below full source level',()=>{
+test('10.12.67 validation sample is repeatable, conversational, and below full source level',()=>{
   const h=speechHarness(voices),sample="Okay, I've got a 2016 Jeep Wrangler with the 3.6 liter. Looking at what we have so far, engine speed is sitting at about twenty-one sixty-seven RPM. That part looks normal. Before we condemn anything, let's check the evidence we already have and figure out what test actually makes sense next.";
   assert.equal(h.controller.validationSample,sample);
   assert.equal(h.controller.speakValidationSample(),true);
