@@ -13,7 +13,7 @@ function intakeHarness(initial){
     let state=JSON.parse(JSON.stringify(initial)),rendered=[];
     function vehicleLabel(){return '2012 Toyota Camry'}
     function add(){} function save(){} function speakOliver(){}
-    function normalizeBlowerResult(){return null} function isolateMeasurementContext(){return {spans:[],protectedNumericTokens:[],vehicleSafeText:''}} function diagnosticMeasurement(){return null}
+    function normalizeBlowerResult(){return null} function semanticIntakeRouting(){return false} function isolateMeasurementContext(){return {spans:[],protectedNumericTokens:[],vehicleSafeText:''}} function diagnosticMeasurement(){return null}
     function ask(text){state.lastReply=text;rendered.push({text,state:JSON.parse(JSON.stringify(state))})}
     function isDiagnosticComplete(){return false}
     function ensureGuidedState(){return {currentTestId:'cam-power-reference'}}
