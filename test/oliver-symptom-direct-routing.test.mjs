@@ -19,7 +19,8 @@ test('10.12.51 normalizes blower high-only language while retaining original wor
 
 test('exact live utterance captures engine and manual HVAC configuration',()=>{
   assert.deepEqual(parseVehicle('2016 Jeep Wrangler 3.6 manual three knob HVAC blower only works on high'),{year:'2016',make:'Jeep',model:'Wrangler',engine:'3.6L',configuration:'Manual three-knob HVAC'});
-  assert.match(html,/const eng=\(t\.match\(\/\\b\(\\d\\\.\\d\)\\s\*\(\?:L\|liter\)\?\\b\/i/);
+  assert.match(html,/const explicitEngine=t\.match/);
+  assert.match(html,/vehicleContextEngine=year&&model/);
   assert.match(html,/Manual three-knob HVAC/);
   assert.match(html,/vehicle:\{year:'',make:'',model:'',engine:'',drivetrain:'',configuration:''\}/);
 });
