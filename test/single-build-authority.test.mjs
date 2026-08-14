@@ -5,8 +5,8 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.12.80 has one canonical build authority',()=>{
-  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.12\.80',[\s\S]+release:'Authoritative Symptom Promotion \+ Diagnostic Workflow Routing',[\s\S]+buildDate:'2026-08-14'/);
+test('10.12.81 has one canonical build authority',()=>{
+  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.12\.81',[\s\S]+release:'Multi-Speed Symptom Atomization \+ Complete Evidence Promotion',[\s\S]+buildDate:'2026-08-14'/);
   assert.match(html,/const \{version:VERSION,buildDate:BUILD,release:RELEASE\}=window\.NitrosBuild/);
   assert.match(html,/Authoritative Diagnostic State — v\$\{VERSION\}/);
   assert.match(html,/build:window\.NitrosBuild\.version/);
@@ -26,8 +26,8 @@ test('runtime verification exposes service-worker support, control, URL, and sta
   for(const id of ['nitrosRuntimeAppBuild','nitrosRuntimeSwSupported','nitrosRuntimeSwControlled','nitrosRuntimeSwUrl','nitrosRuntimeSwState'])assert.match(html,new RegExp(`id="${id}"`));
 });
 
-test('service worker uses 10.12.80 version and preserves safe navigation caching',()=>{
-  assert.match(sw,/const VERSION = '10\.12\.80'/);
+test('service worker uses 10.12.81 version and preserves safe navigation caching',()=>{
+  assert.match(sw,/const VERSION = '10\.12\.81'/);
   assert.match(sw,/self\.skipWaiting\(\)/);
   assert.match(sw,/self\.clients\.claim\(\)/);
   assert.match(sw,/fetch\(request, \{ cache: 'no-store' \}\)/);
