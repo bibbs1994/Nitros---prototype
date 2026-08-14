@@ -81,7 +81,7 @@ function statusHarness(input){
     let state={activeDtc:'P0340',dtcs:['P0340'],status:'',stage:'status',intakeStep:'status',additionalTesting:{active:false},history:[]};
     const replies=[];
     function add(){} function ask(text){replies.push(text)} function isDiagnosticComplete(){return false}
-    function isolateMeasurementContext(){return {spans:[],protectedNumericTokens:[]}} function diagnosticMeasurement(){return null}
+    function isolateMeasurementContext(){return {spans:[],protectedNumericTokens:[]}} function diagnosticMeasurement(){return null} function blowerOperatingStateEvidence(){return null}
     function ensureGuidedState(){throw new Error('guided testing must not run during status intake')}
     function handleGuidedFinding(){throw new Error('guided finding must not run during status intake')}
     function parseVehicle(){throw new Error('vehicle parsing must not run for a status answer')}
@@ -116,5 +116,5 @@ test('VO leaves genuinely ambiguous status answers at the status question',()=>{
 test('V4 preserves authoritative persistence and one service-worker authority',()=>{
   assert.match(html,/const STATE_KEY='nitros_diagnostic_case_v10120'/);
   assert.equal((html.match(/navigator\.serviceWorker\.register\(/g)||[]).length,1);
-  assert.match(html,/version:'10\.12\.76'/);
+  assert.match(html,/version:'10\.12\.77'/);
 });
