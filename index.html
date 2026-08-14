@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.69 — High-Only Blower Semantic Classification + Evidence-Aware Next-Test Selection — Build 2026-08-14</title>
+<title>Nitros Mobile Technician Portal v10.12.70 — Authoritative High-Only Blower Pattern Propagation — Build 2026-08-14</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.69 — High-Only Blower Semantic Classification + Evidence-Aware Next-Test Selection — Build 2026-08-14</div>
+  <div class="sub">Mobile Technician Portal v10.12.70 — Authoritative High-Only Blower Pattern Propagation — Build 2026-08-14</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.69 — High-Only Blower Semantic Classification + Evidence-Aware Next-Test Selection · Build 2026-08-14. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.70 — Authoritative High-Only Blower Pattern Propagation · Build 2026-08-14. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.69 — High-Only Blower Semantic Classification + Evidence-Aware Next-Test Selection · Build 2026-08-14</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.70 — Authoritative High-Only Blower Pattern Propagation · Build 2026-08-14</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.69 — High-Only Blower Semantic Classification + Evidence-Aware Next-Test Selection · Build 2026-08-14</div>
+      <div class="eyebrow">Version 10.12.70 — Authoritative High-Only Blower Pattern Propagation · Build 2026-08-14</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1683,13 +1683,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.69 • High-Only Blower Semantic Classification + Evidence-Aware Next-Test Selection • Build 2026-08-14 • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.70 • Authoritative High-Only Blower Pattern Propagation • Build 2026-08-14 • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.12.69',
-  release:'High-Only Blower Semantic Classification + Evidence-Aware Next-Test Selection',
+  version:'10.12.70',
+  release:'Authoritative High-Only Blower Pattern Propagation',
   buildDate:'2026-08-14',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -5325,7 +5325,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">Version 10.12.69 — High-Only Blower Semantic Classification + Evidence-Aware Next-Test Selection · Build 2026-08-14</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">Version 10.12.70 — Authoritative High-Only Blower Pattern Propagation · Build 2026-08-14</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5363,7 +5363,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.69 — High-Only Blower Semantic Classification + Evidence-Aware Next-Test Selection · Build 2026-08-14</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.70 — Authoritative High-Only Blower Pattern Propagation · Build 2026-08-14</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6391,7 +6391,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.69</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.70</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -7395,7 +7395,7 @@ function codes(text){const found=[];for(const m of String(text||'').matchAll(DTC
 function vehicleLabel(){return [state.vehicle.year,state.vehicle.make,state.vehicle.model,state.vehicle.engine].filter(Boolean).join(' ').replace(/\s+/g,' ').trim()}
 function diagnosticMeasurement(text){const normalized=normalizeFinding(text),match=normalized.match(/(-?(?:\d+(?:\.\d+)?|\.\d+))\s*(mv|v|ohms?|ω|kohms?|kω|ma|a|amps?|khz|hz|psi|kpa|inhg|mmhg|°?c|°?f|rpm|%|ms|µs)\b/i);if(!match)return null;const aliases={mv:'mV',v:'V',ohm:'Ω',ohms:'Ω','ω':'Ω',kohm:'kΩ',kohms:'kΩ','kω':'kΩ',ma:'mA',a:'A',amp:'A',amps:'A',khz:'kHz',hz:'Hz',psi:'psi',kpa:'kPa',inhg:'inHg',mmhg:'mmHg',c:'°C','°c':'°C',f:'°F','°f':'°F',rpm:'rpm','%':'%',ms:'ms','µs':'µs'},rawUnit=match[2].toLowerCase(),before=normalized.slice(0,match.index),context=/control(?: signal| wire)?|signal wire|command signal/.test(before)?'control signal':/resistance/.test(before)?'resistance':/current draw|current/.test(before)?'current draw':/battery/.test(before)?'battery voltage':'active diagnostic test';return{value:Number(match[1]),unit:aliases[rawUnit]||match[2],context,rawClause:match[0]}}
 function parseVehicle(text){const t=normalize(text);const year=(t.match(/\b(19\d{2}|20\d{2})\b/)||[])[1]||'';const makes=['Toyota','GMC','Chevrolet','Ford','Honda','Kia','Hyundai','Nissan','Jeep','Dodge','Ram','Volkswagen','VW','BMW','Mini','Subaru','Mazda','Lexus','Acura','Buick','Cadillac','Chrysler'];let make=makes.find(m=>new RegExp('\\b'+m+'\\b','i').test(t))||'';const models=['F-150','Silverado','Camry','Accord','Civic','Corolla','Tacoma','Tundra','RAV4','CR-V','Altima','Sentra','Rogue','Wrangler','Cherokee','Sierra','Ram'];const model=models.find(m=>new RegExp('\\b'+m.replace('-','[- ]?')+'\\b','i').test(t))||'';const approvedModelMakes={Camry:'Toyota',Corolla:'Toyota',Tacoma:'Toyota',Tundra:'Toyota',RAV4:'Toyota',Accord:'Honda',Civic:'Honda','CR-V':'Honda',Altima:'Nissan',Sentra:'Nissan',Rogue:'Nissan',Wrangler:'Jeep',Silverado:'Chevrolet',Sierra:'GMC','F-150':'Ford'};if(!make&&model)make=approvedModelMakes[model]||'';const explicitEngine=t.match(/\b(\d\.\d)\s*(?:l|liters?|litres?)\b|\b(?:engine(?: is| has)?|with the|has (?:a |the )?)(\d\.\d)(?:\s+(?:hemi|turbo))?\b/i),vehicleContextEngine=year&&model?t.match(/\b(\d\.\d)\b(?!\s*(?:(?:mv|v|volts?|a|amps?|ma|ohms?|ω|kω|hz|khz|psi|kpa|inhg|mmhg|rpm|ms|µs)\b|%))/i):null,eng=explicitEngine?(explicitEngine[1]||explicitEngine[2]||''):vehicleContextEngine?.[1]||'',drivetrain=(t.match(/\b(4WD|AWD|FWD|RWD|4X4)\b/i)||[])[1]||'',configuration=/\bmanual\s+(?:three|3)[- ]knob(?:\s+HVAC)?\b/i.test(t)?'Manual three-knob HVAC':/\bautomatic (?:climate|temperature) control\b/i.test(t)?'Automatic climate control':'';return year||make||model||eng||drivetrain||configuration?{year,make:make==='VW'?'Volkswagen':make,model,engine:eng?(eng+'L'):'',...(drivetrain?{drivetrain:drivetrain.toUpperCase()}:{}),...(configuration?{configuration}:{})}:null}
-function blowerOperatingStateEvidence(text){const raw=String(text||'').trim(),lower=raw.toLowerCase().replace(/[’]/g,"'"),states={high:'UNKNOWN',medium:'UNKNOWN',low:'UNKNOWN'},onlyHigh=/\bonly\s+high(?:est)?(?:\s+speed)?\s+(?:works?|operates?|runs?)\b|\b(?:blower\s+)?only\s+(?:works?|operates?|runs?)\s+(?:on\s+)?high\b|\bi\s+only\s+have\s+high(?:\s+speed)?\b|\bhigh(?:est)?(?:\s+speed)?\s+(?:is\s+)?the\s+only\s+(?:speed\s+)?(?:that\s+)?(?:works?|working|operates?|runs?)\b|\b(?:works?|operates?|runs?)\s+(?:on\s+)?high\s+only\b/.test(lower);if(onlyHigh){states.high='OPERATIVE';states.low='INOPERATIVE';states.medium='INOPERATIVE'}else if(/\bhigh(?:est)?(?:\s+speed)?\s+(?:works?|operates?|runs?)\b|\b(?:works?|operates?|runs?)\s+(?:on\s+)?high\b/.test(lower))states.high='OPERATIVE';if(/\b(?:low(?:\s+speed)?(?:\s+and|,)?\s+medium|medium(?:\s+speed)?(?:\s+and|,)?\s+low)(?:\s+speeds?)?\s+(?:are\s+)?(?:dead|inoperative|don'?t(?:\s+work)?|do\s+not\s+work|fail(?:ed)?|not\s+working)\b/.test(lower)){states.low='INOPERATIVE';states.medium='INOPERATIVE'}if(/\blow(?:\s+speed)?\s+(?:is\s+)?(?:dead|inoperative|doesn'?t(?:\s+work)?|does\s+not\s+work|not\s+working)\b/.test(lower))states.low='INOPERATIVE';if(/\bmedium(?:\s+speed)?\s+(?:is\s+)?(?:dead|inoperative|doesn'?t(?:\s+work)?|does\s+not\s+work|not\s+working)\b/.test(lower))states.medium='INOPERATIVE';const operatingPattern=states.high==='OPERATIVE'&&states.low==='INOPERATIVE'&&states.medium==='INOPERATIVE'?'HIGH_ONLY':'PARTIAL_OR_OTHER',meaningful=Object.values(states).some(value=>value!=='UNKNOWN');if(meaningful&&typeof state!=='undefined'){state.blowerOperatingPattern=operatingPattern;state.componentCondemned=state.componentCondemned||'None'}return meaningful?{type:'operating-state',system:'HVAC',component:'Blower Motor / Blower Speed Control',states,operatingPattern,summary:[states.high==='OPERATIVE'&&'High blower speed operative',states.medium==='INOPERATIVE'&&'Medium blower speed inoperative',states.low==='INOPERATIVE'&&'Low blower speed inoperative'].filter(Boolean).join('; '),source:'technician-speech',rawUtterance:raw}:null}
+function blowerOperatingStateEvidence(text){const raw=String(text||'').trim(),lower=raw.toLowerCase().replace(/[’]/g,"'"),states={high:'UNKNOWN',medium:'UNKNOWN',low:'UNKNOWN'},onlyHigh=/\bonly\s+high(?:est)?(?:\s+speed)?\s+(?:works?|operates?|runs?)\b|\b(?:blower\s+)?only\s+(?:works?|operates?|runs?)\s+(?:on\s+)?high\b|\bi\s+only\s+have\s+high(?:\s+speed)?\b|\bhigh(?:est)?(?:\s+speed)?\s+(?:is\s+)?the\s+only\s+(?:speed\s+)?(?:that\s+)?(?:works?|working|operates?|runs?)\b|\b(?:works?|operates?|runs?)\s+(?:on\s+)?high\s+only\b/.test(lower);if(onlyHigh){states.high='OPERATIVE';states.low='INOPERATIVE';states.medium='INOPERATIVE'}else if(/\bhigh(?:est)?(?:\s+speed)?\s+(?:works?|operates?|runs?)\b|\b(?:works?|operates?|runs?)\s+(?:on\s+)?high\b/.test(lower))states.high='OPERATIVE';if(/\b(?:low(?:\s+speed)?(?:\s+and|,)?\s+medium|medium(?:\s+speed)?(?:\s+and|,)?\s+low)(?:\s+speeds?)?\s+(?:are\s+)?(?:dead|inoperative|don'?t(?:\s+work)?|do\s+not\s+work|fail(?:ed)?|not\s+working)\b/.test(lower)){states.low='INOPERATIVE';states.medium='INOPERATIVE'}if(/\blow(?:\s+speed)?\s+(?:is\s+)?(?:dead|inoperative|doesn'?t(?:\s+work)?|does\s+not\s+work|not\s+working)\b/.test(lower))states.low='INOPERATIVE';if(/\bmedium(?:\s+speed)?\s+(?:is\s+)?(?:dead|inoperative|doesn'?t(?:\s+work)?|does\s+not\s+work|not\s+working)\b/.test(lower))states.medium='INOPERATIVE';let operatingPattern=states.high==='OPERATIVE'&&states.low==='INOPERATIVE'&&states.medium==='INOPERATIVE'?'HIGH_ONLY':'PARTIAL_OR_OTHER';const meaningful=Object.values(states).some(value=>value!=='UNKNOWN');if(meaningful&&typeof state!=='undefined'){const normalizedHighOnly=/high speed operative\s*\/\s*low and medium blower speeds inoperative/i.test(String(state.normalizedSymptom||'')),committedHighOnly=state.blowerOperatingPattern==='HIGH_ONLY'||normalizedHighOnly;operatingPattern=operatingPattern==='HIGH_ONLY'||committedHighOnly?'HIGH_ONLY':operatingPattern;state.blowerOperatingPattern=operatingPattern;state.componentCondemned=state.componentCondemned||'None'}return meaningful?{type:'operating-state',system:'HVAC',component:'Blower Motor / Blower Speed Control',states,operatingPattern,summary:[states.high==='OPERATIVE'&&'High blower speed operative',states.medium==='INOPERATIVE'&&'Medium blower speed inoperative',states.low==='INOPERATIVE'&&'Low blower speed inoperative'].filter(Boolean).join('; '),source:'technician-speech',rawUtterance:raw}:null}
 function symptomFacts(text){const raw=String(text||''),operating=blowerOperatingStateEvidence(raw),blower=raw.match(/\b((?:blower|fan|heater fan)[^.?!]*(?:only (?:works?|operates?|runs?) on high|only has high speed)|no low(?:er)? blower speeds?|blower speeds?\s*1\s*2\s*(?:and|&)\s*3\s*(?:do not|don't) work|only maximum fan speed works)\b/i),blowerOperatingContext=operating&&(operating.states.high==='OPERATIVE'||/\b(?:blower|heater fan)\b/i.test(raw));if(blower||blowerOperatingContext)return{original:blower?.[1]||operating.summary,normalized:blower?'HVAC blower operates only at highest speed / lower blower speeds inoperative':'HVAC blower high speed operative / low and medium blower speeds inoperative',system:'HVAC',component:'Blower Motor / Blower Speed Control',domain:'HVAC / Blower Diagnostic',operatingState:operating};const general=(raw.match(/\b(rough idle|runs? rough|stall(?:s|ing)?|no[- ]start|hard start(?:ing)?|hesitat(?:es|ion|ing)|loss of power|low power|misfir(?:e|es|ing)|overheat(?:s|ing)?|(?:check engine|service engine|MIL) light)\b/i)||[])[1]||'';return general?{original:general,normalized:general.toLowerCase(),system:'',component:'',domain:'Symptom-Based Diagnosis'}:null}
 function concern(text){return symptomFacts(text)?.original||''}
 const GUIDED_WORKFLOWS={
@@ -7852,7 +7852,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.69</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.70</strong></li>
 <li><strong>POST-RENDER NUMERIC SOURCE AUDIT:</strong> <span id="nitrosRenderedInvariantLog">Not run</span></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>
