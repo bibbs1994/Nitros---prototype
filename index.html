@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.72 — Authoritative Vehicle + Measurement Evidence Retention &amp; Command/Response Correlation Routing — Build 2026-08-14</title>
+<title>Nitros Mobile Technician Portal v10.12.73 — Authoritative Symptom Promotion + Positive/Negative Blower-State Retention + Workflow Synchronization — Build 2026-08-14</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.72 — Authoritative Vehicle + Measurement Evidence Retention &amp; Command/Response Correlation Routing — Build 2026-08-14</div>
+  <div class="sub">Mobile Technician Portal v10.12.73 — Authoritative Symptom Promotion + Positive/Negative Blower-State Retention + Workflow Synchronization — Build 2026-08-14</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.72 — Authoritative Vehicle + Measurement Evidence Retention &amp; Command/Response Correlation Routing · Build 2026-08-14. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.73 — Authoritative Symptom Promotion + Positive/Negative Blower-State Retention + Workflow Synchronization · Build 2026-08-14. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.72 — Authoritative Vehicle + Measurement Evidence Retention &amp; Command/Response Correlation Routing · Build 2026-08-14</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.73 — Authoritative Symptom Promotion + Positive/Negative Blower-State Retention + Workflow Synchronization · Build 2026-08-14</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.72 — Authoritative Vehicle + Measurement Evidence Retention &amp; Command/Response Correlation Routing · Build 2026-08-14</div>
+      <div class="eyebrow">Version 10.12.73 — Authoritative Symptom Promotion + Positive/Negative Blower-State Retention + Workflow Synchronization · Build 2026-08-14</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1683,13 +1683,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.72 • Authoritative Vehicle + Measurement Evidence Retention &amp; Command/Response Correlation Routing • Build 2026-08-14 • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.73 • Authoritative Symptom Promotion + Positive/Negative Blower-State Retention + Workflow Synchronization • Build 2026-08-14 • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.12.72',
-  release:'Authoritative Vehicle + Measurement Evidence Retention & Command/Response Correlation Routing',
+  version:'10.12.73',
+  release:'Authoritative Symptom Promotion + Positive/Negative Blower-State Retention + Workflow Synchronization',
   buildDate:'2026-08-14',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -5325,7 +5325,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">Version 10.12.72 — Authoritative Vehicle + Measurement Evidence Retention &amp; Command/Response Correlation Routing · Build 2026-08-14</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">Version 10.12.73 — Authoritative Symptom Promotion + Positive/Negative Blower-State Retention + Workflow Synchronization · Build 2026-08-14</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5363,7 +5363,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.72 — Authoritative Vehicle + Measurement Evidence Retention &amp; Command/Response Correlation Routing · Build 2026-08-14</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.73 — Authoritative Symptom Promotion + Positive/Negative Blower-State Retention + Workflow Synchronization · Build 2026-08-14</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6391,7 +6391,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.72</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.73</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -7588,7 +7588,7 @@ function process(raw){const text=String(raw||'').trim();if(!text)return;add('You
 }
 function renderTranscript(){const tr=$('oliverHubTranscript');if(!tr)return;rendering=true;tr.innerHTML=state.history.map(m=>`<div class="oliver-line ${m.who==='You'?'user':'oliver'}"><strong>${esc(m.who)}:</strong> ${esc(repairDiagnosticText(m.text))}</div>`).join('');tr.scrollTop=tr.scrollHeight;rendering=false}
 const handleAdditiveComplaintMeasurementEvidenceBase=handleAdditiveComplaintMeasurementEvidence;
-handleAdditiveComplaintMeasurementEvidence=function(text){const handled=handleAdditiveComplaintMeasurementEvidenceBase(text);if(!handled)return false;const guidance=guidanceState(),measurement=(guidance.measurements||[]).slice().reverse().find(item=>item.testType==='control signal'),operating=(guidance.evidence||[]).slice().reverse().find(item=>item.type==='operating-state');if(measurement&&operating){const pattern=state.blowerOperatingPattern||'UNKNOWN';state.blowerCommandResponseCorrelation=pattern==='HIGH_ONLY'?'HIGH_ONLY_WITH_CONTROL_SIGNAL_RANGE_UNESTABLISHED':'COMMAND_RESPONSE_WITH_CONTROL_SIGNAL_RANGE_UNESTABLISHED';state.diagnosticConclusionState='UNCONFIRMED';guidance.nextTestReason=`${operating.normalizedEvidence}; a ${measurement.value} ${measurement.unit} control signal was measured. Determine whether the command changes across blower-speed selections and whether downstream response correlates.`;guidance.nextRequiredEvidence='Control-signal change and actual blower response at commanded low, medium, and high speeds.';state.routingDiagnostics={...(state.routingDiagnostics||{}),blowerCommandResponseCorrelation:state.blowerCommandResponseCorrelation,nextTestReason:guidance.nextTestReason,observedEvidencePrecedence:'TECHNICIAN_OBSERVED'};}return true};
+handleAdditiveComplaintMeasurementEvidence=function(text){const handled=handleAdditiveComplaintMeasurementEvidenceBase(text);if(!handled)return false;const guidance=guidanceState(),measurement=(guidance.measurements||[]).slice().reverse().find(item=>item.testType==='control signal'),operating=(guidance.evidence||[]).slice().reverse().find(item=>item.type==='operating-state');if(measurement&&operating){const speedStates=operating.facts?.speedStates||{},highOnly=speedStates.high==='OPERATIVE'&&speedStates.medium==='INOPERATIVE'&&speedStates.low==='INOPERATIVE';state.blowerSpeedStates={low:speedStates.low||'UNKNOWN',medium:speedStates.medium||'UNKNOWN',high:speedStates.high||'UNKNOWN'};if(highOnly){if(!state.complaint||state.complaint==='None')state.complaint='Blower operates on high speed but low and medium speeds are inoperative.';if(!state.symptoms||state.symptoms==='None')state.symptoms=state.complaint;state.normalizedSymptom='HVAC blower high speed operative / low and medium blower speeds inoperative';state.blowerOperatingPattern='HIGH_ONLY';state.system='HVAC';state.component='Blower Motor / Blower Speed Control';state.diagnosticDomain='HVAC / Blower Diagnostic'}const pattern=state.blowerOperatingPattern||'UNKNOWN';state.blowerCommandResponseCorrelation=pattern==='HIGH_ONLY'?'HIGH_ONLY_WITH_CONTROL_SIGNAL_RANGE_UNESTABLISHED':'COMMAND_RESPONSE_WITH_CONTROL_SIGNAL_RANGE_UNESTABLISHED';state.diagnosticConclusionState='UNCONFIRMED';state.componentCondemned=state.componentCondemned||'None';guidance.nextTestReason=`${operating.normalizedEvidence}; a ${measurement.value} ${measurement.unit} control signal was measured. Determine whether the command changes across blower-speed selections and whether downstream response correlates.`;guidance.nextRequiredEvidence='Commanded blower speed, actual blower operation, and control-signal voltage or duty-cycle behavior at low, medium, and high.';state.routingDiagnostics={...(state.routingDiagnostics||{}),blowerCommandResponseCorrelation:state.blowerCommandResponseCorrelation,nextTestReason:guidance.nextTestReason,observedEvidencePrecedence:'TECHNICIAN_OBSERVED',authoritativeSymptomPromoted:highOnly?'YES':'NOT_COMPLETE',authoritativeWorkflow:workflowName()};}return true};
 const renderStatusBase=renderStatus;
 renderStatus=function(){renderStatusBase();const box=$('nitrosAuthoritativeStatus'),conversation=guidanceState(),observed=(conversation.evidence||[]).map(item=>item.normalizedEvidence||item.detail).filter(Boolean);if(box&&observed.length)box.innerHTML=box.innerHTML.replace('Evidence: None',`Evidence: ${esc(observed.join(' | '))}`)};
 function renderStatus(){let box=$('nitrosAuthoritativeStatus');const tr=$('oliverHubTranscript');if(!tr)return;if(!box){box=document.createElement('div');box.id='nitrosAuthoritativeStatus';tr.insertAdjacentElement('afterend',box)}const repairInformation=state.repairInformation?.status==='verified'?'VERIFIED':state.repairInformationRequired?'REQUIRED':'NOT REQUIRED',guided=state.componentTestState,completed=guided?.completedTests||[],conversation=guidanceState(),activeTest=state.authoritativeDiagnosticTest;box.innerHTML=`<strong>Authoritative Diagnostic State — v${VERSION}</strong><br>Case: ${esc(state.id)}<br>Vehicle: ${esc(vehicleLabel()||'Blank')}<br>Configuration: ${esc(state.vehicle.configuration||'Unknown')}<br>Active DTC: ${esc(state.activeDtc||'None')}<br>Complaint: ${esc(state.complaint||'None')}<br>Normalized Symptom: ${esc(state.normalizedSymptom||'None')}<br>Workflow: ${esc(workflowName())}<br>Stage: ${esc(state.stage)}<br>Intake Step: ${esc(state.intakeStep)}<br>Previous Repairs: ${esc(state.previousRepairs||'Not recorded')}<br>Previous Testing: ${esc(state.previousTests||'Not recorded')}<br>Repair Information: ${repairInformation}${state.repairInformationSource?` — ${esc(state.repairInformationSource)}`:''}<br>Knowledge Source: ${esc(conversation.knowledgeSource)}<br>Service Information Provider: ${esc(conversation.serviceInformationProvider||'Not connected')}<br>Conversational Evidence: ${esc(conversation.evidence.map(item=>`${item.testId}: ${item.status}`).join(' | ')||'None')}<br>Hypotheses: ${esc(conversation.hypotheses.map(item=>`${item.name}: ${item.status}`).join(' | ')||'None')}<br>Selected Next Test: ${esc(activeTest?.displayName||conversation.selectedNextTest?.displayName||conversation.selectedNextTest?.name||activeTest?.displayName||guided?.nextTest?.name||'None')}<br>Next-Test Reason: ${esc(conversation.nextTestReason||'Not selected')}<br>Next Required Evidence: ${esc(conversation.nextRequiredEvidence||'None')}<br>Current Diagnostic Test: ${esc(activeTest?.displayName||guided?.currentTest?.name||'None')}<br>Current Test Status: ${esc(activeTest?.status||guided?.currentTestStatus||'Not started')}<br>Completed Tests: ${esc(completed.length)}<br>Evidence: ${esc(completed.map(item=>item.normalizedEvidence).join(' | ')||'None')}<br>Failed Tests: ${esc(guided?.failedTests?.length||0)}<br>Passed Tests: ${esc(guided?.passedTests?.length||0)}<br>Next Test: ${esc(guided?.nextTest?.name||'None')}<br>Diagnostic Conclusion State: ${esc(guided?.diagnosticConclusionState||'UNCONFIRMED')}`}
@@ -7859,7 +7859,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.72</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.73</strong></li>
 <li><strong>POST-RENDER NUMERIC SOURCE AUDIT:</strong> <span id="nitrosRenderedInvariantLog">Not run</span></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>
