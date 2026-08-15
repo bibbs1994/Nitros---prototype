@@ -99,7 +99,7 @@ test('10.12.87 resolves GM B1325 by base code without inventing a failure type',
   assert.equal(suffix.definition,'Device Power 1 Circuit');
 });
 
-test('10.12.91 resolves Chevrolet P06DD through manufacturer-enhanced registry data',()=>{
+test('10.12.92 resolves Chevrolet P06DD through manufacturer-enhanced registry data',()=>{
   const resolved=knowledge.resolve('P06DD',{year:'2016',make:'Chevrolet',model:'Silverado'});
   assert.equal(resolved.code,'P06DD');
   assert.equal(resolved.dtcFamily,'Powertrain');
@@ -112,7 +112,7 @@ test('10.12.91 resolves Chevrolet P06DD through manufacturer-enhanced registry d
   assert.equal(resolved.configurationRequiredForProcedure,true);
 });
 
-test('10.12.91 binds and routes P06DD to status/configuration without selecting a measurement or condemning a component',()=>{
+test('10.12.92 binds and routes P06DD to status/configuration without selecting a measurement or condemning a component',()=>{
   const h=routingHarness({vehicle:{year:'2016',make:'Chevrolet',model:'Silverado',engine:'',configuration:''},activeDtc:'P06DD',system:'',diagnosticDomain:'',stage:'vehicle',intakeStep:'vehicle',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),resolved=h.apply();
   assert.equal(resolved.resolutionStatus,'RESOLVED');
   assert.equal(h.state.dtcDefinition,'Engine Oil Pressure Control Circuit Performance / Stuck Off');
@@ -128,7 +128,7 @@ test('10.12.91 binds and routes P06DD to status/configuration without selecting 
   assert.equal(h.state.componentCondemned,'None');
 });
 
-test('10.12.91 rejects a stale blower route before committing the P06DD next test',()=>{
+test('10.12.92 rejects a stale blower route before committing the P06DD next test',()=>{
   const h=routingHarness({id:'CASE-P06DD',vehicle:{year:'2016',make:'Chevrolet',model:'Silverado',engine:'',configuration:''},activeDtc:'P06DD',dtcs:['P06DD'],system:'HVAC',component:'Blower Motor / Blower Speed Control',diagnosticDomain:'HVAC / Blower Diagnostic',complaint:'blower only works on high',symptoms:'blower only works on high',normalizedSymptom:'HVAC blower high only',dtcResolutionStatus:'',dtcDiagnosticCategory:'HVAC Blower',stage:'diagnostic',intakeStep:'complete',authoritativeDiagnosticTest:{testId:'blower-command-response-correlation',displayName:'Blower Speed Function Confirmation',affectedSystem:'HVAC',diagnosticCategory:'HVAC Blower'},componentTestState:{workflowId:'hvac-blower-speed-control'},conversationalGuidance:{evidence:[{testId:'blower-symptom-confirmation'}],hypotheses:[{name:'blower resistor'}],selectedNextTest:{testId:'blower-command-response-correlation',displayName:'Blower Speed Function Confirmation'}},routingDiagnostics:{},componentCondemned:'None'}),resolved=h.apply();
   assert.equal(resolved.resolutionStatus,'RESOLVED');
   assert.equal(h.state.activeDtc,'P06DD');
@@ -142,7 +142,7 @@ test('10.12.91 rejects a stale blower route before committing the P06DD next tes
   assert.doesNotMatch(JSON.stringify({test:h.state.authoritativeDiagnosticTest,system:h.state.system,component:h.state.component,complaint:h.state.complaint,guidance:h.guidance}),/blower|hvac/i);
 });
 
-test('10.12.91 binds resolved DTC state before route cleanup and next-test selection',()=>{
+test('10.12.92 binds resolved DTC state before route cleanup and next-test selection',()=>{
   const source=extractRaw('function applyDtcKnowledgeResolution','function handleManualDtcSystemIdentification');
   const bind=source.indexOf('state.activeDtc=resolved.code'),definition=source.indexOf('state.dtcDefinition=resolved.definition'),clear=source.indexOf("clearIncompatibleResolvedDtcRoute(resolved)"),select=source.indexOf('selectGuidanceTest(resolved.initialTest.id');
   assert.ok(bind>=0&&definition>bind&&clear>definition&&select>clear);

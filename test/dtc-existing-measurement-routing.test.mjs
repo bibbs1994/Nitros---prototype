@@ -20,7 +20,7 @@ function harness(){
   `)();
 }
 
-test('10.12.91 consumes an existing P06DD oil-pressure measurement and requests only missing context',()=>{
+test('10.12.92 consumes an existing P06DD oil-pressure measurement and requests only missing context',()=>{
   const h=harness();
   assert.equal(h.handle('Oil filter has already been changed'),true);
   assert.match(h.state.previousRepairs,/oil filter/i);
@@ -43,25 +43,25 @@ test('10.12.91 consumes an existing P06DD oil-pressure measurement and requests 
   assert.doesNotMatch(h.replies.at(-1),/perform|repeat.*oil-pressure test|continue with the next verified measurement/i);
 });
 
-test('10.12.91 applies later measurement context without discarding the stored reading',()=>{
+test('10.12.92 applies later measurement context without discarding the stored reading',()=>{
   const h=harness();
   h.handle('Oil pressure test has been done, showed 18 psi');
   assert.equal(h.handle('That was measured at hot idle with a mechanical gauge'),true);
   assert.equal(h.state.existingDiagnosticEvidence[0].measurementValue,18);
-  assert.deepEqual(h.state.existingDiagnosticEvidence[0].measurementContext,{temperature:'HOT',operatingCondition:'IDLE',rpm:null,method:'MECHANICAL_GAUGE',location:'UNKNOWN'});
+  assert.deepEqual(h.state.existingDiagnosticEvidence[0].measurementContext,{temperature:'HOT / OPERATING_TEMPERATURE',operatingCondition:'IDLE',rpm:null,method:'MECHANICAL_GAUGE',location:'UNKNOWN'});
   assert.deepEqual(h.state.missingInterpretationContext,['ENGINE_CONFIGURATION']);
   assert.equal(h.state.evidenceConsumed,'YES');
   assert.equal(h.state.authoritativeDiagnosticTest.testId,'engine-configuration-for-oil-pressure-interpretation');
   assert.match(h.replies.at(-1),/Which engine.*4\.3L, 5\.3L, or 6\.2L/i);
 });
 
-test('10.12.91 checks existing P06DD evidence before generic status intake',()=>{
+test('10.12.92 checks existing P06DD evidence before generic status intake',()=>{
   const process=html.slice(html.indexOf('function process('),html.indexOf('function renderTranscript('));
   assert.ok(process.indexOf("handleExistingOilPressureEvidence(text)")<process.indexOf("if(state.intakeStep==='status')"));
   for(const label of ['Existing Diagnostic Evidence','Measurement Type','Measurement Value','Measurement Unit','Measurement Context','Evidence Consumed','Evidence Applied To Step','Missing Interpretation Context'])assert.match(html,new RegExp(`${label}:`));
 });
 
-test('10.12.91 classifies next-test intent and advances forward without storing the question',()=>{
+test('10.12.92 classifies next-test intent and advances forward without storing the question',()=>{
   const h=harness();
   h.state.vehicle.engine='5.3L';
   h.state.complaint='MIL on and low oil pressure';
@@ -84,16 +84,53 @@ test('10.12.91 classifies next-test intent and advances forward without storing 
   assert.equal(h.state.diagnosticConclusionState,'UNCONFIRMED');
   assert.deepEqual({previousTests:h.state.previousTests,previousRepairs:h.state.previousRepairs,complaint:h.state.complaint,evidence:JSON.stringify(h.state.existingDiagnosticEvidence),guidanceEvidence:JSON.stringify(h.state.conversationalGuidance.evidence),measurements:JSON.stringify(h.state.conversationalGuidance.measurements)},before);
   assert.equal(evidence.measurementValue,18);
-  assert.equal(evidence.measurementContext.temperature,'HOT');
+  assert.equal(evidence.measurementContext.temperature,'HOT / OPERATING_TEMPERATURE');
   assert.equal(evidence.measurementContext.operatingCondition,'IDLE');
   assert.doesNotMatch(JSON.stringify(h.state.conversationalGuidance),new RegExp(question.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'));
   assert.match(h.replies.at(-1),/do not repeat.*least intrusive next step.*oil-pressure control command\/feedback review/i);
   assert.doesNotMatch(h.replies.at(-1),/vehicle intake|identify P06DD|mechanical oil-pressure test again/i);
 });
 
-test('10.12.91 guidance gate precedes evidence and status handlers',()=>{
+test('10.12.92 guidance gate precedes evidence and status handlers',()=>{
   const process=html.slice(html.indexOf('function process('),html.indexOf('function renderTranscript('));
   const guidance=process.indexOf('handleDiagnosticGuidanceRequest(text)'),evidence=process.indexOf('handleExistingOilPressureEvidence(text)'),status=process.indexOf("if(state.intakeStep==='status')");
   assert.ok(guidance>=0&&guidance<evidence&&guidance<status);
   for(const label of ['Guidance Request','Guidance Intent','Repeat Mechanical Pressure Test','Route Direction'])assert.match(html,new RegExp(`${label}:`));
+});
+
+test('10.12.92 binds warm-idle phrases to the pending 18 psi measurement instead of creating findings',()=>{
+  const variants=['Hot idle','At hot idle','Engine hot at idle','Fully warmed up at idle','Operating temperature at idle'];
+  for(const phrase of variants){
+    const h=harness();
+    h.state.vehicle.engine='5.3L';
+    h.state.vehicle.configuration='Engine 5.3L';
+    h.state.complaint='MIL on and low oil pressure';
+    h.state.previousRepairs='Oil filter screen';
+    h.state.guidanceRequest='YES';
+    h.state.guidanceIntent='NEXT_TEST';
+    h.state.repeatMechanicalPressureTest='NO';
+    h.state.routeDirection='FORWARD';
+    h.handle('Oil pressure test has been done, showed 18 psi');
+    const before={previousTests:h.state.previousTests,previousRepairs:h.state.previousRepairs,complaint:h.state.complaint,evidenceCount:h.state.conversationalGuidance.evidence.length,measurementCount:h.state.conversationalGuidance.measurements.length};
+    assert.equal(h.handle(phrase),true,phrase);
+    const evidence=h.state.existingDiagnosticEvidence[0];
+    assert.equal(evidence.measurementType,'MECHANICAL_OIL_PRESSURE_TEST',phrase);
+    assert.equal(evidence.measurementValue,18,phrase);
+    assert.equal(evidence.measurementUnit,'psi',phrase);
+    assert.equal(evidence.measurementContext.temperature,'HOT / OPERATING_TEMPERATURE',phrase);
+    assert.equal(evidence.measurementContext.operatingCondition,'IDLE',phrase);
+    assert.deepEqual(h.state.missingInterpretationContext,[],phrase);
+    assert.equal(h.state.evidenceConsumed,'YES',phrase);
+    assert.equal(h.state.guidanceRequest,'YES',phrase);
+    assert.equal(h.state.guidanceIntent,'NEXT_TEST',phrase);
+    assert.equal(h.state.repeatMechanicalPressureTest,'NO',phrase);
+    assert.equal(h.state.routeDirection,'FORWARD',phrase);
+    assert.equal(h.state.vehicle.engine,'5.3L',phrase);
+    assert.equal(h.state.vehicle.configuration,'Engine 5.3L',phrase);
+    assert.equal(h.state.authoritativeDiagnosticTest.testId,'verified-oil-pressure-specification-required',phrase);
+    assert.deepEqual({previousTests:h.state.previousTests,previousRepairs:h.state.previousRepairs,complaint:h.state.complaint,evidenceCount:h.state.conversationalGuidance.evidence.length,measurementCount:h.state.conversationalGuidance.measurements.length},before,phrase);
+    assert.doesNotMatch(JSON.stringify(h.state.conversationalGuidance),new RegExp(phrase,'i'),phrase);
+    assert.match(h.replies.at(-1),/bound.*existing 18 psi.*not a separate finding.*verified applicable oil-pressure specification/i,phrase);
+    assert.doesNotMatch(h.replies.at(-1),/continue with the next verified measurement|repeat.*mechanical.*pressure test/i,phrase);
+  }
 });
