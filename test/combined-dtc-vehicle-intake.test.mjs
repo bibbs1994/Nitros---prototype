@@ -24,6 +24,10 @@ const examples=[
   ['2014 Camry with code P0340','P0340',{year:'2014',make:'Toyota',model:'Camry'}],
   ['Toyota Camry 2014, P0-3.4_0','P0340',{year:'2014',make:'Toyota',model:'Camry'}],
   ['U 0 1 0 0 2018 Ford F-150','U0100',{year:'2018',make:'Ford',model:'F-150'}],
+  ['2016 Chevy Silverado with a code P06DD','P06DD',{year:'2016',make:'Chevrolet',model:'Silverado'}],
+  ['2016 Chevrolet Silverado code P zero six D D','P06DD',{year:'2016',make:'Chevrolet',model:'Silverado'}],
+  ['2016 Chevrolet Silverado code PO6DD','P06DD',{year:'2016',make:'Chevrolet',model:'Silverado'}],
+  ['2016 Chevrolet Silverado code P06 DD','P06DD',{year:'2016',make:'Chevrolet',model:'Silverado'}],
   ['C-0-0-3-5 2017 Chevrolet Silverado','C0035',{year:'2017',make:'Chevrolet',model:'Silverado'}]
 ];
 
@@ -116,5 +120,5 @@ test('VO leaves genuinely ambiguous status answers at the status question',()=>{
 test('V4 preserves authoritative persistence and one service-worker authority',()=>{
   assert.match(html,/const STATE_KEY='nitros_diagnostic_case_v10120'/);
   assert.equal((html.match(/navigator\.serviceWorker\.register\(/g)||[]).length,1);
-  assert.match(html,/version:'10\.12\.87'/);
+  assert.match(html,/version:'10\.12\.88'/);
 });

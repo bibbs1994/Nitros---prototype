@@ -99,6 +99,32 @@ test('10.12.87 resolves GM B1325 by base code without inventing a failure type',
   assert.equal(suffix.definition,'Device Power 1 Circuit');
 });
 
+test('10.12.88 resolves Chevrolet P06DD through manufacturer-enhanced registry data',()=>{
+  const resolved=knowledge.resolve('P06DD',{year:'2016',make:'Chevrolet',model:'Silverado'});
+  assert.equal(resolved.code,'P06DD');
+  assert.equal(resolved.dtcFamily,'Powertrain');
+  assert.equal(resolved.definition,'Engine Oil Pressure Control Circuit Performance / Stuck Off');
+  assert.equal(resolved.system,'Engine Lubrication / Oil Pressure Control');
+  assert.equal(resolved.category,'Engine Oil Pressure Control');
+  assert.equal(resolved.genericOrManufacturerSpecific,'Manufacturer-Enhanced');
+  assert.equal(resolved.resolutionStatus,'RESOLVED');
+  assert.equal(resolved.workflow,'Engine Oil Pressure Control Diagnostic');
+  assert.equal(resolved.configurationRequiredForProcedure,true);
+});
+
+test('10.12.88 routes P06DD without selecting a measurement or condemning a component',()=>{
+  const h=routingHarness({vehicle:{year:'2016',make:'Chevrolet',model:'Silverado',engine:'',configuration:''},activeDtc:'P06DD',system:'',diagnosticDomain:'',stage:'vehicle',intakeStep:'vehicle',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),resolved=h.apply();
+  assert.equal(resolved.resolutionStatus,'RESOLVED');
+  assert.equal(h.state.dtcDefinition,'Engine Oil Pressure Control Circuit Performance / Stuck Off');
+  assert.equal(h.state.affectedSystem,'Engine Lubrication / Oil Pressure Control');
+  assert.equal(h.state.dtcDiagnosticCategory,'Engine Oil Pressure Control');
+  assert.equal(h.state.dtcClassification,'Manufacturer-Enhanced');
+  assert.equal(h.workflowName(),'Engine Oil Pressure Control Diagnostic');
+  assert.equal(h.state.stage,'vehicle');
+  assert.equal(h.state.authoritativeDiagnosticTest,undefined);
+  assert.equal(h.state.componentCondemned,'None');
+});
+
 test('10.12.87 routes resolved GM B1325 without generic system fallback',()=>{
   const h=routingHarness({vehicle:{year:'2014',make:'Chevrolet',model:'Silverado',engine:'',configuration:''},activeDtc:'B1325',system:'',diagnosticDomain:'',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),resolved=h.apply();
   assert.equal(resolved.resolutionStatus,'RESOLVED_MANUFACTURER_SPECIFIC');
