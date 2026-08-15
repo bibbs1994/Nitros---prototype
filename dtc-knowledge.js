@@ -6,7 +6,7 @@ const SOURCE=Object.freeze({
   reference:'Nitros structured SAE/generic OBD-II knowledge seed v1',
   isOemServiceInformation:false
 });
-const APPLICATION_SOURCE=Object.freeze({type:'INTERNAL_MANUFACTURER_DTC_REGISTRY',reference:'Nitros structured manufacturer/application DTC knowledge seed v10.12.90',isOemServiceInformation:false});
+const APPLICATION_SOURCE=Object.freeze({type:'INTERNAL_MANUFACTURER_DTC_REGISTRY',reference:'Nitros structured manufacturer/application DTC knowledge seed v10.12.91',isOemServiceInformation:false});
 const DTC_FAMILIES=Object.freeze({P:'Powertrain',B:'Body',C:'Chassis',U:'Network / Communication'});
 function familyForCode(code){return DTC_FAMILIES[String(code||'').charAt(0)]||''}
 

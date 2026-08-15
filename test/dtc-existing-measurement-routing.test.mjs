@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-const start=html.indexOf('function oilPressureWorkflowActive'),end=html.indexOf('function semanticIntakeRouting',start);
+const start=html.indexOf('function diagnosticGuidanceRequest'),end=html.indexOf('function semanticIntakeRouting',start);
 assert.ok(start>=0&&end>start,'oil-pressure evidence routing helpers were not found');
 const source=html.slice(start,end);
 
@@ -15,11 +15,12 @@ function harness(){
     function guidanceState(){return state.conversationalGuidance}
     function selectGuidanceTest(id,name,reason,requiredEvidence,method,routeContext){state.authoritativeDiagnosticTest={testId:id,displayName:name,reason,requiredEvidence,method,affectedSystem:routeContext.affectedSystem,diagnosticCategory:routeContext.diagnosticCategory,activeDtc:state.activeDtc};state.conversationalGuidance.selectedNextTest=state.authoritativeDiagnosticTest;return state.authoritativeDiagnosticTest}
     function ask(text){replies.push(text)}
-    return {state,replies,handle:handleExistingOilPressureEvidence};
+    function diagnosticTestCompatible(){return true}
+    return {state,replies,handle:handleExistingOilPressureEvidence,guidance:handleDiagnosticGuidanceRequest};
   `)();
 }
 
-test('10.12.90 consumes an existing P06DD oil-pressure measurement and requests only missing context',()=>{
+test('10.12.91 consumes an existing P06DD oil-pressure measurement and requests only missing context',()=>{
   const h=harness();
   assert.equal(h.handle('Oil filter has already been changed'),true);
   assert.match(h.state.previousRepairs,/oil filter/i);
@@ -42,7 +43,7 @@ test('10.12.90 consumes an existing P06DD oil-pressure measurement and requests 
   assert.doesNotMatch(h.replies.at(-1),/perform|repeat.*oil-pressure test|continue with the next verified measurement/i);
 });
 
-test('10.12.90 applies later measurement context without discarding the stored reading',()=>{
+test('10.12.91 applies later measurement context without discarding the stored reading',()=>{
   const h=harness();
   h.handle('Oil pressure test has been done, showed 18 psi');
   assert.equal(h.handle('That was measured at hot idle with a mechanical gauge'),true);
@@ -54,8 +55,45 @@ test('10.12.90 applies later measurement context without discarding the stored r
   assert.match(h.replies.at(-1),/Which engine.*4\.3L, 5\.3L, or 6\.2L/i);
 });
 
-test('10.12.90 checks existing P06DD evidence before generic status intake',()=>{
+test('10.12.91 checks existing P06DD evidence before generic status intake',()=>{
   const process=html.slice(html.indexOf('function process('),html.indexOf('function renderTranscript('));
   assert.ok(process.indexOf("handleExistingOilPressureEvidence(text)")<process.indexOf("if(state.intakeStep==='status')"));
   for(const label of ['Existing Diagnostic Evidence','Measurement Type','Measurement Value','Measurement Unit','Measurement Context','Evidence Consumed','Evidence Applied To Step','Missing Interpretation Context'])assert.match(html,new RegExp(`${label}:`));
+});
+
+test('10.12.91 classifies next-test intent and advances forward without storing the question',()=>{
+  const h=harness();
+  h.state.vehicle.engine='5.3L';
+  h.state.complaint='MIL on and low oil pressure';
+  h.state.previousRepairs='Oil filter screen';
+  h.handle('Oil pressure test has been done, showed 18 psi');
+  h.handle('Measured at hot idle with a mechanical gauge');
+  const evidence=h.state.existingDiagnosticEvidence[0];
+  h.state.vehicle.engine='5.3L';
+  const before={previousTests:h.state.previousTests,previousRepairs:h.state.previousRepairs,complaint:h.state.complaint,evidence:JSON.stringify(h.state.existingDiagnosticEvidence),guidanceEvidence:JSON.stringify(h.state.conversationalGuidance.evidence),measurements:JSON.stringify(h.state.conversationalGuidance.measurements)};
+  const question='What would be the least intrusive test other than the mechanical oil pressure test at hot idle? What should be my next test?';
+  assert.equal(h.guidance(question),true);
+  assert.equal(h.state.guidanceRequest,'YES');
+  assert.equal(h.state.guidanceIntent,'NEXT_TEST');
+  assert.equal(h.state.evidenceConsumed,'YES');
+  assert.equal(h.state.repeatMechanicalPressureTest,'NO');
+  assert.equal(h.state.routeDirection,'FORWARD');
+  assert.equal(h.state.authoritativeDiagnosticTest.testId,'oil-pressure-control-command-feedback-review');
+  assert.equal(h.state.authoritativeDiagnosticTest.affectedSystem,'Engine Lubrication / Oil Pressure Control');
+  assert.equal(h.state.authoritativeDiagnosticTest.diagnosticCategory,'Engine Oil Pressure Control');
+  assert.equal(h.state.diagnosticConclusionState,'UNCONFIRMED');
+  assert.deepEqual({previousTests:h.state.previousTests,previousRepairs:h.state.previousRepairs,complaint:h.state.complaint,evidence:JSON.stringify(h.state.existingDiagnosticEvidence),guidanceEvidence:JSON.stringify(h.state.conversationalGuidance.evidence),measurements:JSON.stringify(h.state.conversationalGuidance.measurements)},before);
+  assert.equal(evidence.measurementValue,18);
+  assert.equal(evidence.measurementContext.temperature,'HOT');
+  assert.equal(evidence.measurementContext.operatingCondition,'IDLE');
+  assert.doesNotMatch(JSON.stringify(h.state.conversationalGuidance),new RegExp(question.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'));
+  assert.match(h.replies.at(-1),/do not repeat.*least intrusive next step.*oil-pressure control command\/feedback review/i);
+  assert.doesNotMatch(h.replies.at(-1),/vehicle intake|identify P06DD|mechanical oil-pressure test again/i);
+});
+
+test('10.12.91 guidance gate precedes evidence and status handlers',()=>{
+  const process=html.slice(html.indexOf('function process('),html.indexOf('function renderTranscript('));
+  const guidance=process.indexOf('handleDiagnosticGuidanceRequest(text)'),evidence=process.indexOf('handleExistingOilPressureEvidence(text)'),status=process.indexOf("if(state.intakeStep==='status')");
+  assert.ok(guidance>=0&&guidance<evidence&&guidance<status);
+  for(const label of ['Guidance Request','Guidance Intent','Repeat Mechanical Pressure Test','Route Direction'])assert.match(html,new RegExp(`${label}:`));
 });
