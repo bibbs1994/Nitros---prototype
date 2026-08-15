@@ -99,7 +99,7 @@ test('10.12.87 resolves GM B1325 by base code without inventing a failure type',
   assert.equal(suffix.definition,'Device Power 1 Circuit');
 });
 
-test('10.12.98 resolves Chevrolet P06DD through manufacturer-enhanced registry data',()=>{
+test('10.12.99 resolves Chevrolet P06DD through manufacturer-enhanced registry data',()=>{
   const resolved=knowledge.resolve('P06DD',{year:'2016',make:'Chevrolet',model:'Silverado'});
   assert.equal(resolved.code,'P06DD');
   assert.equal(resolved.dtcFamily,'Powertrain');
@@ -112,7 +112,7 @@ test('10.12.98 resolves Chevrolet P06DD through manufacturer-enhanced registry d
   assert.equal(resolved.configurationRequiredForProcedure,true);
 });
 
-test('10.12.98 binds and routes P06DD to status/configuration without selecting a measurement or condemning a component',()=>{
+test('10.12.99 binds and routes P06DD to status/configuration without selecting a measurement or condemning a component',()=>{
   const h=routingHarness({vehicle:{year:'2016',make:'Chevrolet',model:'Silverado',engine:'',configuration:''},activeDtc:'P06DD',system:'',diagnosticDomain:'',stage:'vehicle',intakeStep:'vehicle',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),resolved=h.apply();
   assert.equal(resolved.resolutionStatus,'RESOLVED');
   assert.equal(h.state.dtcDefinition,'Engine Oil Pressure Control Circuit Performance / Stuck Off');
@@ -128,7 +128,7 @@ test('10.12.98 binds and routes P06DD to status/configuration without selecting 
   assert.equal(h.state.componentCondemned,'None');
 });
 
-test('10.12.98 rejects a stale blower route before committing the P06DD next test',()=>{
+test('10.12.99 rejects a stale blower route before committing the P06DD next test',()=>{
   const h=routingHarness({id:'CASE-P06DD',vehicle:{year:'2016',make:'Chevrolet',model:'Silverado',engine:'',configuration:''},activeDtc:'P06DD',dtcs:['P06DD'],system:'HVAC',component:'Blower Motor / Blower Speed Control',diagnosticDomain:'HVAC / Blower Diagnostic',complaint:'blower only works on high',symptoms:'blower only works on high',normalizedSymptom:'HVAC blower high only',dtcResolutionStatus:'',dtcDiagnosticCategory:'HVAC Blower',stage:'diagnostic',intakeStep:'complete',authoritativeDiagnosticTest:{testId:'blower-command-response-correlation',displayName:'Blower Speed Function Confirmation',affectedSystem:'HVAC',diagnosticCategory:'HVAC Blower'},componentTestState:{workflowId:'hvac-blower-speed-control'},conversationalGuidance:{evidence:[{testId:'blower-symptom-confirmation'}],hypotheses:[{name:'blower resistor'}],selectedNextTest:{testId:'blower-command-response-correlation',displayName:'Blower Speed Function Confirmation'}},routingDiagnostics:{},componentCondemned:'None'}),resolved=h.apply();
   assert.equal(resolved.resolutionStatus,'RESOLVED');
   assert.equal(h.state.activeDtc,'P06DD');
@@ -142,14 +142,14 @@ test('10.12.98 rejects a stale blower route before committing the P06DD next tes
   assert.doesNotMatch(JSON.stringify({test:h.state.authoritativeDiagnosticTest,system:h.state.system,component:h.state.component,complaint:h.state.complaint,guidance:h.guidance}),/blower|hvac/i);
 });
 
-test('10.12.98 binds resolved DTC state before route cleanup and next-test selection',()=>{
+test('10.12.99 binds resolved DTC state before route cleanup and next-test selection',()=>{
   const source=extractRaw('function applyDtcKnowledgeResolution','function handleManualDtcSystemIdentification');
   const bind=source.indexOf('state.activeDtc=resolved.code'),definition=source.indexOf('state.dtcDefinition=resolved.definition'),clear=source.indexOf("clearIncompatibleResolvedDtcRoute(resolved)"),select=source.indexOf('selectGuidanceTest(resolved.initialTest.id');
   assert.ok(bind>=0&&definition>bind&&clear>definition&&select>clear);
   assert.match(html,/incomingDtcCodes=codes\(text\)[\s\S]+if\(!incomingDtcCodes\.length\)\{[\s\S]+found=incomingDtcCodes/);
 });
 
-test('10.12.98 resolves Phase-1 multi-system registry records without using engine routing',()=>{
+test('10.12.99 resolves Phase-1 multi-system registry records without using engine routing',()=>{
   const vehicle={year:'2016',make:'Chevrolet',model:'Silverado',engine:'5.3L'};
   const cases=[
     ['P0750','Transmission / Transaxle Diagnostic','Transmission / Transaxle Control','Transmission Control Module (TCM) / PCM'],
@@ -170,7 +170,37 @@ test('10.12.98 resolves Phase-1 multi-system registry records without using engi
   }
 });
 
-test('10.12.98 promotes resolved module metadata into authoritative workflow state',()=>{
+test('10.12.99 resolves P0741 to a scan-tool-first TCC workflow without fabricating a reporting module',()=>{
+  const vehicle={year:'2015',make:'Chevrolet',model:'Silverado',engine:'5.3L'},resolved=knowledge.resolve('P0741',vehicle);
+  assert.equal(resolved.resolutionStatus,'RESOLVED');
+  assert.equal(resolved.dtcFamily,'Powertrain');
+  assert.equal(resolved.definition,'Torque Converter Clutch Circuit Performance / Stuck Off');
+  assert.equal(resolved.system,'Transmission / Torque Converter Clutch');
+  assert.equal(resolved.subsystem,'Torque Converter Clutch / TCC');
+  assert.equal(resolved.category,'Transmission / Torque Converter Clutch Performance');
+  assert.equal(resolved.genericOrManufacturerSpecific,'Generic / SAE');
+  assert.equal(resolved.controllingModule,'');
+  assert.equal(resolved.workflow,'Code-Specific Diagnostic');
+  assert.equal(resolved.initialTest.id,'p0741-tcc-command-slip-response');
+  assert.match(resolved.initialTest.requiredEvidence,/bidirectional.*TCC commanded state.*TCC slip RPM/i);
+  const h=routingHarness({vehicle:{...vehicle,configuration:'5.3L'},activeDtc:'P0741',system:'',diagnosticDomain:'',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),bound=h.apply();
+  assert.equal(bound.code,'P0741');
+  assert.equal(h.state.dtcReportingModule,'');
+  assert.equal(h.state.stage,'diagnostic-testing');
+  assert.equal(h.state.intakeStep,'complete');
+  assert.equal(h.state.authoritativeDiagnosticTest.testId,'p0741-tcc-command-slip-response');
+  assert.equal(h.state.componentCondemned,'None');
+});
+
+test('10.12.99 consumes inline DTC status and MIL state before direct next-test routing',()=>{
+  assert.match(html,/inlineStatus=diagnosticStatus\(text\),inlineMilStatus=milStatus\(text\)/);
+  assert.match(html,/state\.status=inlineStatus\|\|'';state\.milStatus=inlineMilStatus\|\|''/);
+  assert.match(html,/function milStatus\(text\)\{[\s\S]+check\[- \]engine light[\s\S]+return'ON'/);
+  assert.match(html,/diagnosticGuidanceRequest\(text\)\)\{state\.intakeStep='complete';state\.stage='diagnostic-testing'/);
+  for(const label of ['DTC Status','MIL Status'])assert.match(html,new RegExp(`${label}:`));
+});
+
+test('10.12.99 promotes resolved module metadata into authoritative workflow state',()=>{
   const h=routingHarness({vehicle:{year:'2016',make:'Chevrolet',model:'Silverado',engine:'5.3L',configuration:'5.3L'},activeDtc:'P0750',system:'',diagnosticDomain:'',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),resolved=h.apply();
   assert.equal(resolved.workflow,'Transmission / Transaxle Diagnostic');
   assert.equal(h.state.system,'Transmission / Transaxle Control');
