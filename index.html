@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.12.95 — Authoritative Configuration Binding + No-Reask Enforcement — Build 2026-08-15</title>
+<title>Nitros Mobile Technician Portal v10.12.96 — Mobile Diagnostic Viewport Containment — Build 2026-08-15</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -520,7 +520,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.12.95 — Authoritative Configuration Binding + No-Reask Enforcement — Build 2026-08-15</div>
+  <div class="sub">Mobile Technician Portal v10.12.96 — Mobile Diagnostic Viewport Containment — Build 2026-08-15</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -534,7 +534,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.12.95 — Authoritative Configuration Binding + No-Reask Enforcement · Build 2026-08-15. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.12.96 — Mobile Diagnostic Viewport Containment · Build 2026-08-15. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -697,7 +697,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.12.95 — Authoritative Configuration Binding + No-Reask Enforcement · Build 2026-08-15</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.12.96 — Mobile Diagnostic Viewport Containment · Build 2026-08-15</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -764,7 +764,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.12.95 — Authoritative Configuration Binding + No-Reask Enforcement · Build 2026-08-15</div>
+      <div class="eyebrow">Version 10.12.96 — Mobile Diagnostic Viewport Containment · Build 2026-08-15</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1683,13 +1683,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.12.95 • Authoritative Configuration Binding + No-Reask Enforcement • Build 2026-08-15 • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.12.96 • Mobile Diagnostic Viewport Containment • Build 2026-08-15 • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.12.95',
-  release:'Authoritative Configuration Binding + No-Reask Enforcement',
+  version:'10.12.96',
+  release:'Mobile Diagnostic Viewport Containment',
   buildDate:'2026-08-15',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -5325,7 +5325,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">Version 10.12.95 — Authoritative Configuration Binding + No-Reask Enforcement · Build 2026-08-15</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">Version 10.12.96 — Mobile Diagnostic Viewport Containment · Build 2026-08-15</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5363,7 +5363,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.95 — Authoritative Configuration Binding + No-Reask Enforcement · Build 2026-08-15</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.12.96 — Mobile Diagnostic Viewport Containment · Build 2026-08-15</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6385,13 +6385,24 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 .diag-tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.diag-tool-grid button,.diag-wide-btn{border:1px solid var(--diag-line);background:#0b263b;color:#fff;border-radius:10px;padding:10px;font-weight:800}.diag-wide-btn{width:100%;margin-top:7px}
 #diagViewer{position:fixed;inset:0;z-index:10060;background:#02070c;display:none;flex-direction:column}#diagViewer.active{display:flex}.diag-viewer-head{display:flex;align-items:center;padding:10px;border-bottom:1px solid #36576e;gap:8px}.diag-viewer-head strong{flex:1}.diag-viewer-stage{flex:1;overflow:auto;display:grid;place-items:center;touch-action:none}.diag-viewer-stage img{max-width:none;transform-origin:center;transition:transform .08s;user-select:none;-webkit-user-drag:none}.diag-viewer-controls{display:flex;gap:8px;padding:10px;justify-content:center;border-top:1px solid #36576e}.diag-viewer-controls button{font-size:18px;padding:9px 16px;border-radius:10px;border:1px solid #41657d;background:#0a2233;color:#fff}
 .diag-hidden{display:none!important}
+/* v10.12.96: diagnostic output is information-dense, so wrap rather than widen any mobile surface. */
+#oliverDiagnosticMode,#oliverDiagnosticMode *,#diagViewer,#diagViewer *{box-sizing:border-box;min-width:0}
+#oliverDiagnosticMode{max-width:100vw;overflow-x:hidden;overscroll-behavior-x:none}
+.diag-body,.diag-main,.diag-chat,.diag-side,.diag-composer,.diag-message,.diag-message .test-card,.diag-card,.diag-card-value,#nitrosAuthoritativeStatus{max-width:100%;min-width:0}
+.diag-body,.diag-chat,.diag-side{overflow-x:hidden;overscroll-behavior-x:none}
+.diag-chat,.diag-side{touch-action:pan-y}
+.diag-message{width:min(900px,100%);overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap}
+.diag-message :is(p,div,span,strong,code,pre),.diag-card-value,#nitrosAuthoritativeStatus,#nitrosAuthoritativeStatus *{max-width:100%;overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap}
+.diag-message pre,#nitrosAuthoritativeStatus pre{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;overflow-x:hidden}
+.diag-compose-row,.diag-tool-grid{max-width:100%;min-width:0}
+.diag-quick{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
 @media(max-width:800px){.diag-body{display:block;overflow:auto}.diag-main{min-height:calc(100vh - 66px)}.diag-side{border-left:0;border-top:1px solid var(--diag-line);padding-bottom:90px}.diag-message{font-size:18px}.diag-message .criteria{grid-template-columns:1fr}.diag-topbar{align-items:flex-start}.diag-top-actions .label{display:none}.diag-compose-row{grid-template-columns:auto minmax(0,1fr)}#diagSend{grid-column:1/-1;min-height:48px}.diag-context{white-space:normal;max-height:36px}.diag-tool-grid{grid-template-columns:1fr 1fr}}
 @media(min-width:801px){#oliverDiagnosticMode{font-size:16px}}
 </style>
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.95</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.12.96</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -7934,7 +7945,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.95</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.12.96</strong></li>
 <li><strong>POST-RENDER NUMERIC SOURCE AUDIT:</strong> <span id="nitrosRenderedInvariantLog">Not run</span></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>
