@@ -23,7 +23,7 @@ function harness(){
   `)(knowledge);
 }
 
-test('10.12.97 consumes an existing P06DD oil-pressure measurement and requests only missing context',()=>{
+test('10.12.98 consumes an existing P06DD oil-pressure measurement and requests only missing context',()=>{
   const h=harness();
   assert.equal(h.handle('Oil filter has already been changed'),true);
   assert.match(h.state.previousRepairs,/oil filter/i);
@@ -46,7 +46,7 @@ test('10.12.97 consumes an existing P06DD oil-pressure measurement and requests 
   assert.doesNotMatch(h.replies.at(-1),/perform|repeat.*oil-pressure test|continue with the next verified measurement/i);
 });
 
-test('10.12.97 applies later measurement context without discarding the stored reading',()=>{
+test('10.12.98 applies later measurement context without discarding the stored reading',()=>{
   const h=harness();
   h.handle('Oil pressure test has been done, showed 18 psi');
   assert.equal(h.handle('That was measured at hot idle with a mechanical gauge'),true);
@@ -58,13 +58,13 @@ test('10.12.97 applies later measurement context without discarding the stored r
   assert.match(h.replies.at(-1),/Which engine.*4\.3L, 5\.3L, or 6\.2L/i);
 });
 
-test('10.12.97 checks existing P06DD evidence before generic status intake',()=>{
+test('10.12.98 checks existing P06DD evidence before generic status intake',()=>{
   const process=html.slice(html.indexOf('function process('),html.indexOf('function renderTranscript('));
   assert.ok(process.indexOf("handleExistingOilPressureEvidence(text)")<process.indexOf("if(state.intakeStep==='status')"));
   for(const label of ['Existing Diagnostic Evidence','Measurement Type','Measurement Value','Measurement Unit','Measurement Context','Evidence Consumed','Evidence Applied To Step','Missing Interpretation Context'])assert.match(html,new RegExp(`${label}:`));
 });
 
-test('10.12.97 classifies next-test intent and advances forward without storing the question',()=>{
+test('10.12.98 classifies next-test intent and advances forward without storing the question',()=>{
   const h=harness();
   h.state.vehicle.engine='5.3L';
   h.state.complaint='MIL on and low oil pressure';
@@ -94,14 +94,14 @@ test('10.12.97 classifies next-test intent and advances forward without storing 
   assert.doesNotMatch(h.replies.at(-1),/vehicle intake|identify P06DD|mechanical oil-pressure test again/i);
 });
 
-test('10.12.97 guidance gate precedes evidence and status handlers',()=>{
+test('10.12.98 guidance gate precedes evidence and status handlers',()=>{
   const process=html.slice(html.indexOf('function process('),html.indexOf('function renderTranscript('));
   const guidance=process.indexOf('handleDiagnosticGuidanceRequest(text)'),evidence=process.indexOf('handleExistingOilPressureEvidence(text)'),status=process.indexOf("if(state.intakeStep==='status')");
   assert.ok(guidance>=0&&guidance<evidence&&guidance<status);
   for(const label of ['Guidance Request','Guidance Intent','Repeat Mechanical Pressure Test','Route Direction'])assert.match(html,new RegExp(`${label}:`));
 });
 
-test('10.12.97 binds warm-idle phrases to the pending 18 psi measurement instead of creating findings',()=>{
+test('10.12.98 binds warm-idle phrases to the pending 18 psi measurement instead of creating findings',()=>{
   const variants=['Hot idle','At hot idle','Engine hot at idle','Fully warmed up at idle','Operating temperature at idle'];
   for(const phrase of variants){
     const h=harness();
@@ -143,7 +143,7 @@ test('10.12.97 binds warm-idle phrases to the pending 18 psi measurement instead
   }
 });
 
-test('10.12.97 resolves the verified 2016 Silverado 5.3L P06DD criterion from structured knowledge',()=>{
+test('10.12.98 resolves the verified 2016 Silverado 5.3L P06DD criterion from structured knowledge',()=>{
   const resolved=knowledge.resolveSpecification({code:'P06DD',vehicle:{year:'2016',make:'Chevrolet',model:'Silverado',engine:'5.3L'},measurementContext:{temperature:'HOT / OPERATING_TEMPERATURE',operatingCondition:'IDLE'}});
   assert.equal(resolved.resolutionStatus,'RESOLVED_VERIFIED_APPLICABLE_SPECIFICATION');
   assert.equal(resolved.id,'GM-PIP5407-P06DD-2016');
@@ -154,7 +154,7 @@ test('10.12.97 resolves the verified 2016 Silverado 5.3L P06DD criterion from st
   assert.match(resolved.sourceReference,/PIP5407/i);
 });
 
-test('10.12.97 engine follow-up immediately resolves, interprets, and advances the stored hot-idle result',()=>{
+test('10.12.98 engine follow-up immediately resolves, interprets, and advances the stored hot-idle result',()=>{
   const h=harness();
   h.state.complaint='MIL on and low oil pressure';
   h.state.previousRepairs='Oil filter and filter screen checked';
@@ -178,13 +178,13 @@ test('10.12.97 engine follow-up immediately resolves, interprets, and advances t
   assert.doesNotMatch(h.replies.at(-1),/load the specification|provide the oil-pressure specification|please repeat|perform another mechanical|run another mechanical/i);
 });
 
-test('10.12.97 combined P06DD intake consumes inline prior pressure evidence before returning',()=>{
+test('10.12.98 combined P06DD intake consumes inline prior pressure evidence before returning',()=>{
   const process=html.slice(html.indexOf('function process('),html.indexOf('function renderTranscript('));
   assert.match(process,/if\(found\.length&&dtcResolution\?\.resolutionStatus==='RESOLVED'&&typeof handleExistingOilPressureEvidence==='function'&&handleExistingOilPressureEvidence\(text\)\)return/);
   for(const label of ['Specification Resolution Status','Resolved Diagnostic Specification','Measurement Interpretation','Interpretation Reason'])assert.match(html,new RegExp(`${label}:`));
 });
 
-test('10.12.97 completes and advances an inline 5.3L hot-idle P06DD measurement',()=>{
+test('10.12.98 completes and advances an inline 5.3L hot-idle P06DD measurement',()=>{
   for(const phrase of ['18 psi hot idle','18 psi at hot idle','18 psi @ hot idle','18 psi hot idol','18 psi engine hot at idle']){
     const h=harness();
     h.state.vehicle.engine='5.3L';
@@ -206,12 +206,12 @@ test('10.12.97 completes and advances an inline 5.3L hot-idle P06DD measurement'
   }
 });
 
-test('10.12.97 isolates blower-only status fields from a P06DD workflow',()=>{
+test('10.12.98 isolates blower-only status fields from a P06DD workflow',()=>{
   assert.match(html,/blowerWorkflow=state\.componentTestState\?\.workflowId==='hvac-blower-speed-control'/);
   assert.match(html,/if\(!box\|\|state\.componentTestState\?\.workflowId!=='hvac-blower-speed-control'\)return;const output=/);
 });
 
-test('10.12.97 promotes accepted 5.3L case history before P06DD configuration routing',()=>{
+test('10.12.98 promotes accepted 5.3L case history before P06DD configuration routing',()=>{
   const h=harness();
   h.state.previousTests='2016 Chevy Silverado 5.3 P06DD current MIL on; mechanical test already completed.';
   assert.equal(h.handle('Mechanical oil pressure test shows 18 psi at hot idle'),true);

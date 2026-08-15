@@ -5,8 +5,8 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.12.97 has one canonical build authority',()=>{
-  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.12\.97',[\s\S]+release:'Sticky Header \/ Scroll Offset Containment',[\s\S]+buildDate:'2026-08-15'/);
+test('10.12.98 has one canonical build authority',()=>{
+  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.12\.98',[\s\S]+release:'Universal Multi-System DTC Registry Expansion — Phase 1',[\s\S]+buildDate:'2026-08-15'/);
   assert.match(html,/const \{version:VERSION,buildDate:BUILD,release:RELEASE\}=window\.NitrosBuild/);
   assert.match(html,/Authoritative Diagnostic State — v\$\{VERSION\}/);
   assert.match(html,/build:window\.NitrosBuild\.version/);
@@ -26,8 +26,8 @@ test('runtime verification exposes service-worker support, control, URL, and sta
   for(const id of ['nitrosRuntimeAppBuild','nitrosRuntimeSwSupported','nitrosRuntimeSwControlled','nitrosRuntimeSwUrl','nitrosRuntimeSwState'])assert.match(html,new RegExp(`id="${id}"`));
 });
 
-test('service worker uses 10.12.97 version and preserves safe navigation caching',()=>{
-  assert.match(sw,/const VERSION = '10\.12\.97'/);
+test('service worker uses 10.12.98 version and preserves safe navigation caching',()=>{
+  assert.match(sw,/const VERSION = '10\.12\.98'/);
   assert.match(sw,/self\.skipWaiting\(\)/);
   assert.match(sw,/self\.clients\.claim\(\)/);
   assert.match(sw,/fetch\(request, \{ cache: 'no-store' \}\)/);
@@ -37,13 +37,13 @@ test('service worker uses 10.12.97 version and preserves safe navigation caching
   assert.doesNotMatch(sw,/caches\.clear|localStorage|indexedDB/i);
 });
 
-test('10.12.97 contains long diagnostic output inside the mobile viewport',()=>{
+test('10.12.98 contains long diagnostic output inside the mobile viewport',()=>{
   assert.match(html,/#oliverDiagnosticMode\{max-width:100vw;overflow-x:hidden;overscroll-behavior-x:none\}/);
   assert.match(html,/\.diag-message\{width:min\(900px,100%\);overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap\}/);
   assert.match(html,/#nitrosAuthoritativeStatus,#nitrosAuthoritativeStatus \*\{max-width:100%;overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap\}/);
 });
 
-test('10.12.97 gives Oliver Hub header and scrolling content separate mobile layout regions',()=>{
+test('10.12.98 gives Oliver Hub header and scrolling content separate mobile layout regions',()=>{
   assert.match(html,/\.oliver-hub-card\{display:flex;flex-direction:column;min-height:0;overflow:hidden\}/);
   assert.match(html,/\.oliver-hub-head\{position:relative;z-index:2;flex:none\}/);
   assert.match(html,/\.oliver-hub-body\{min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;flex:1;scroll-padding-top:1px\}/);

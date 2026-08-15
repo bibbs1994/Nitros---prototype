@@ -99,7 +99,7 @@ test('10.12.87 resolves GM B1325 by base code without inventing a failure type',
   assert.equal(suffix.definition,'Device Power 1 Circuit');
 });
 
-test('10.12.97 resolves Chevrolet P06DD through manufacturer-enhanced registry data',()=>{
+test('10.12.98 resolves Chevrolet P06DD through manufacturer-enhanced registry data',()=>{
   const resolved=knowledge.resolve('P06DD',{year:'2016',make:'Chevrolet',model:'Silverado'});
   assert.equal(resolved.code,'P06DD');
   assert.equal(resolved.dtcFamily,'Powertrain');
@@ -112,7 +112,7 @@ test('10.12.97 resolves Chevrolet P06DD through manufacturer-enhanced registry d
   assert.equal(resolved.configurationRequiredForProcedure,true);
 });
 
-test('10.12.97 binds and routes P06DD to status/configuration without selecting a measurement or condemning a component',()=>{
+test('10.12.98 binds and routes P06DD to status/configuration without selecting a measurement or condemning a component',()=>{
   const h=routingHarness({vehicle:{year:'2016',make:'Chevrolet',model:'Silverado',engine:'',configuration:''},activeDtc:'P06DD',system:'',diagnosticDomain:'',stage:'vehicle',intakeStep:'vehicle',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),resolved=h.apply();
   assert.equal(resolved.resolutionStatus,'RESOLVED');
   assert.equal(h.state.dtcDefinition,'Engine Oil Pressure Control Circuit Performance / Stuck Off');
@@ -128,7 +128,7 @@ test('10.12.97 binds and routes P06DD to status/configuration without selecting 
   assert.equal(h.state.componentCondemned,'None');
 });
 
-test('10.12.97 rejects a stale blower route before committing the P06DD next test',()=>{
+test('10.12.98 rejects a stale blower route before committing the P06DD next test',()=>{
   const h=routingHarness({id:'CASE-P06DD',vehicle:{year:'2016',make:'Chevrolet',model:'Silverado',engine:'',configuration:''},activeDtc:'P06DD',dtcs:['P06DD'],system:'HVAC',component:'Blower Motor / Blower Speed Control',diagnosticDomain:'HVAC / Blower Diagnostic',complaint:'blower only works on high',symptoms:'blower only works on high',normalizedSymptom:'HVAC blower high only',dtcResolutionStatus:'',dtcDiagnosticCategory:'HVAC Blower',stage:'diagnostic',intakeStep:'complete',authoritativeDiagnosticTest:{testId:'blower-command-response-correlation',displayName:'Blower Speed Function Confirmation',affectedSystem:'HVAC',diagnosticCategory:'HVAC Blower'},componentTestState:{workflowId:'hvac-blower-speed-control'},conversationalGuidance:{evidence:[{testId:'blower-symptom-confirmation'}],hypotheses:[{name:'blower resistor'}],selectedNextTest:{testId:'blower-command-response-correlation',displayName:'Blower Speed Function Confirmation'}},routingDiagnostics:{},componentCondemned:'None'}),resolved=h.apply();
   assert.equal(resolved.resolutionStatus,'RESOLVED');
   assert.equal(h.state.activeDtc,'P06DD');
@@ -142,11 +142,41 @@ test('10.12.97 rejects a stale blower route before committing the P06DD next tes
   assert.doesNotMatch(JSON.stringify({test:h.state.authoritativeDiagnosticTest,system:h.state.system,component:h.state.component,complaint:h.state.complaint,guidance:h.guidance}),/blower|hvac/i);
 });
 
-test('10.12.97 binds resolved DTC state before route cleanup and next-test selection',()=>{
+test('10.12.98 binds resolved DTC state before route cleanup and next-test selection',()=>{
   const source=extractRaw('function applyDtcKnowledgeResolution','function handleManualDtcSystemIdentification');
   const bind=source.indexOf('state.activeDtc=resolved.code'),definition=source.indexOf('state.dtcDefinition=resolved.definition'),clear=source.indexOf("clearIncompatibleResolvedDtcRoute(resolved)"),select=source.indexOf('selectGuidanceTest(resolved.initialTest.id');
   assert.ok(bind>=0&&definition>bind&&clear>definition&&select>clear);
   assert.match(html,/incomingDtcCodes=codes\(text\)[\s\S]+if\(!incomingDtcCodes\.length\)\{[\s\S]+found=incomingDtcCodes/);
+});
+
+test('10.12.98 resolves Phase-1 multi-system registry records without using engine routing',()=>{
+  const vehicle={year:'2016',make:'Chevrolet',model:'Silverado',engine:'5.3L'};
+  const cases=[
+    ['P0750','Transmission / Transaxle Diagnostic','Transmission / Transaxle Control','Transmission Control Module (TCM) / PCM'],
+    ['C0035','Code-Specific Diagnostic','ABS / Electronic Brake Control','Vehicle Control Module',{...vehicle,year:'2012'}],
+    ['B1325','Code-Specific Diagnostic','Control Module / Device Power Supply','Vehicle Control Module',{...vehicle,year:'2014'}],
+    ['U0100','Network / Module Communication Diagnostic','Controller Area Network Communication','Gateway / Communicating Modules'],
+    ['C0327','Transfer Case / 4WD Diagnostic','Transfer Case / 4WD Control','Transfer Case Control Module (TCCM)'],
+    ['C0407','Differential / Driveline Diagnostic','Differential / Driveline Control','Differential / Driveline Control Module']
+  ];
+  for(const [code,workflow,system,module,applicableVehicle=vehicle] of cases){
+    const resolved=knowledge.resolve(code,applicableVehicle);
+    assert.ok(/^RESOLVED/.test(resolved.resolutionStatus),code);
+    assert.equal(resolved.workflow,workflow,code);
+    assert.equal(resolved.system,system,code);
+    assert.equal(resolved.controllingModule,module,code);
+    assert.ok(resolved.requiredEvidence,code);
+    assert.ok(resolved.nextTestCategory,code);
+  }
+});
+
+test('10.12.98 promotes resolved module metadata into authoritative workflow state',()=>{
+  const h=routingHarness({vehicle:{year:'2016',make:'Chevrolet',model:'Silverado',engine:'5.3L',configuration:'5.3L'},activeDtc:'P0750',system:'',diagnosticDomain:'',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),resolved=h.apply();
+  assert.equal(resolved.workflow,'Transmission / Transaxle Diagnostic');
+  assert.equal(h.state.system,'Transmission / Transaxle Control');
+  assert.equal(h.state.dtcReportingModule,'Transmission Control Module (TCM) / PCM');
+  assert.equal(h.state.dtcModuleCategory,'Transmission / Transaxle');
+  assert.equal(/engine performance/i.test(h.state.diagnosticDomain),false);
 });
 
 test('10.12.87 routes resolved GM B1325 without generic system fallback',()=>{
@@ -183,5 +213,5 @@ test('10.12.86 production intake resolves after DTC commit and exposes developer
   assert.match(processSource,/const dtcResolution=state\.activeDtc&&typeof applyDtcKnowledgeResolution==='function'\?applyDtcKnowledgeResolution\(\):null/);
   assert.match(processSource,/We’ll start by identifying the \$\{state\.affectedSystem\.toLowerCase\(\)\} system architecture/);
   assert.doesNotMatch(processSource,/what does .*P0410|tell me what .*P0410 means/i);
-  for(const label of ['DTC Family','DTC Definition','Affected System','DTC Classification','DTC Knowledge Source','DTC Resolution Status'])assert.match(html,new RegExp(`${label}:`));
+  for(const label of ['DTC Family','DTC Definition','Affected System','Reporting Module','Module Category','DTC Classification','DTC Knowledge Source','DTC Resolution Status'])assert.match(html,new RegExp(`${label}:`));
 });

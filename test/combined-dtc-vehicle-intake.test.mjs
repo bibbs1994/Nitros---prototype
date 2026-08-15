@@ -122,5 +122,5 @@ test('VO leaves genuinely ambiguous status answers at the status question',()=>{
 test('V4 preserves authoritative persistence and one service-worker authority',()=>{
   assert.match(html,/const STATE_KEY='nitros_diagnostic_case_v10120'/);
   assert.equal((html.match(/navigator\.serviceWorker\.register\(/g)||[]).length,1);
-  assert.match(html,/version:'10\.12\.97'/);
+  assert.match(html,/version:'10\.12\.98'/);
 });
