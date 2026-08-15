@@ -8,7 +8,7 @@ const knowledge=Function('globalThis','window',`${source};return globalThis.Nitr
 const authority=html.indexOf("const STATE_KEY='nitros_diagnostic_case_v10120'");
 const extractRaw=(startToken,endToken)=>{const start=html.indexOf(startToken,authority),end=html.indexOf(endToken,start);assert.ok(start>=0&&end>start);return html.slice(start,end).trim()};
 const helpers=Function(`${html.slice(html.indexOf('const DTC_PATTERN=',authority),html.indexOf('function add(',authority))};return{parseVehicle,codes}`)();
-const routingHarness=initial=>Function('initial','knowledge',`let state=JSON.parse(JSON.stringify(initial)),guidance={evidence:[],measurements:[],completedTests:[],hypotheses:[]},replies=[];const window={NitrosDtcKnowledge:knowledge};function guidanceState(){return guidance}function selectGuidanceTest(id,name,reason,evidence){state.authoritativeDiagnosticTest={testId:id,displayName:name,status:'AWAITING_RESULT'};guidance.selectedNextTest=state.authoritativeDiagnosticTest;guidance.nextTestReason=reason;guidance.nextRequiredEvidence=evidence}function ask(text){replies.push(text)}${extractRaw('function applyDtcKnowledgeResolution','function nextRequiredIntakeStep')}return{apply:applyDtcKnowledgeResolution,manual:handleManualDtcSystemIdentification,state,guidance,replies,workflowName}`)(initial,knowledge);
+const routingHarness=initial=>Function('initial','knowledge',`let state=JSON.parse(JSON.stringify(initial)),guidance={evidence:[],measurements:[],completedTests:[],hypotheses:[]},replies=[];const window={NitrosDtcKnowledge:knowledge};const blankGuidance=()=>({evidence:[],measurements:[],completedTests:[],hypotheses:[],selectedNextTest:null,nextTestReason:'',nextRequiredEvidence:''});function guidanceState(){return guidance=Object.assign(blankGuidance(),state.conversationalGuidance||guidance)}function diagnosticTestCompatible(test,system=state.affectedSystem||state.system,category=state.dtcDiagnosticCategory){const identity=\`${'${test?.testId||\'\'} ${test?.displayName||\'\'}'}\`.toLowerCase(),context=\`${'${system||\'\'} ${category||\'\'}'}\`.toLowerCase();return !(/blower|hvac/.test(identity)&&!/blower|hvac/.test(context))}function selectGuidanceTest(id,name,reason,evidence,method,routeContext={}){state.authoritativeDiagnosticTest={testId:id,displayName:name,status:'AWAITING_RESULT',affectedSystem:routeContext.affectedSystem||state.affectedSystem||state.system||'',diagnosticCategory:routeContext.diagnosticCategory||state.dtcDiagnosticCategory||'',activeDtc:state.activeDtc};guidance.selectedNextTest=state.authoritativeDiagnosticTest;guidance.nextTestReason=reason;guidance.nextRequiredEvidence=evidence;return state.authoritativeDiagnosticTest}function ask(text){replies.push(text)}${extractRaw('function clearIncompatibleResolvedDtcRoute','function nextRequiredIntakeStep')}return{apply:applyDtcKnowledgeResolution,manual:handleManualDtcSystemIdentification,state,get guidance(){return guidance},replies,workflowName}`)(initial,knowledge);
 
 test('10.12.86 structured registry resolves representative generic DTCs through one resolver',()=>{
   const expected=['P0300','P0301','P0340','P0410','P0420','P0455','P0456','P0171','P0172','P0101','P0128','P0442','P0500','P0606','U0100'];
@@ -99,7 +99,7 @@ test('10.12.87 resolves GM B1325 by base code without inventing a failure type',
   assert.equal(suffix.definition,'Device Power 1 Circuit');
 });
 
-test('10.12.88 resolves Chevrolet P06DD through manufacturer-enhanced registry data',()=>{
+test('10.12.89 resolves Chevrolet P06DD through manufacturer-enhanced registry data',()=>{
   const resolved=knowledge.resolve('P06DD',{year:'2016',make:'Chevrolet',model:'Silverado'});
   assert.equal(resolved.code,'P06DD');
   assert.equal(resolved.dtcFamily,'Powertrain');
@@ -112,7 +112,7 @@ test('10.12.88 resolves Chevrolet P06DD through manufacturer-enhanced registry d
   assert.equal(resolved.configurationRequiredForProcedure,true);
 });
 
-test('10.12.88 routes P06DD without selecting a measurement or condemning a component',()=>{
+test('10.12.89 binds and routes P06DD to status/configuration without selecting a measurement or condemning a component',()=>{
   const h=routingHarness({vehicle:{year:'2016',make:'Chevrolet',model:'Silverado',engine:'',configuration:''},activeDtc:'P06DD',system:'',diagnosticDomain:'',stage:'vehicle',intakeStep:'vehicle',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),resolved=h.apply();
   assert.equal(resolved.resolutionStatus,'RESOLVED');
   assert.equal(h.state.dtcDefinition,'Engine Oil Pressure Control Circuit Performance / Stuck Off');
@@ -121,8 +121,32 @@ test('10.12.88 routes P06DD without selecting a measurement or condemning a comp
   assert.equal(h.state.dtcClassification,'Manufacturer-Enhanced');
   assert.equal(h.workflowName(),'Engine Oil Pressure Control Diagnostic');
   assert.equal(h.state.stage,'vehicle');
-  assert.equal(h.state.authoritativeDiagnosticTest,undefined);
+  assert.equal(h.state.activeDtc,'P06DD');
+  assert.equal(h.state.authoritativeDiagnosticTest.testId,'dtc-status-configuration-establishment');
+  assert.equal(h.state.authoritativeDiagnosticTest.affectedSystem,'Engine Lubrication / Oil Pressure Control');
+  assert.equal(h.state.authoritativeDiagnosticTest.diagnosticCategory,'Engine Oil Pressure Control');
   assert.equal(h.state.componentCondemned,'None');
+});
+
+test('10.12.89 rejects a stale blower route before committing the P06DD next test',()=>{
+  const h=routingHarness({id:'CASE-P06DD',vehicle:{year:'2016',make:'Chevrolet',model:'Silverado',engine:'',configuration:''},activeDtc:'P06DD',dtcs:['P06DD'],system:'HVAC',component:'Blower Motor / Blower Speed Control',diagnosticDomain:'HVAC / Blower Diagnostic',complaint:'blower only works on high',symptoms:'blower only works on high',normalizedSymptom:'HVAC blower high only',dtcResolutionStatus:'',dtcDiagnosticCategory:'HVAC Blower',stage:'diagnostic',intakeStep:'complete',authoritativeDiagnosticTest:{testId:'blower-command-response-correlation',displayName:'Blower Speed Function Confirmation',affectedSystem:'HVAC',diagnosticCategory:'HVAC Blower'},componentTestState:{workflowId:'hvac-blower-speed-control'},conversationalGuidance:{evidence:[{testId:'blower-symptom-confirmation'}],hypotheses:[{name:'blower resistor'}],selectedNextTest:{testId:'blower-command-response-correlation',displayName:'Blower Speed Function Confirmation'}},routingDiagnostics:{},componentCondemned:'None'}),resolved=h.apply();
+  assert.equal(resolved.resolutionStatus,'RESOLVED');
+  assert.equal(h.state.activeDtc,'P06DD');
+  assert.equal(h.state.system,'Engine Lubrication / Oil Pressure Control');
+  assert.equal(h.state.component,'');
+  assert.equal(h.state.complaint,'');
+  assert.equal(h.state.componentTestState,null);
+  assert.deepEqual(h.guidance.hypotheses,[]);
+  assert.deepEqual(h.guidance.evidence,[]);
+  assert.equal(h.state.authoritativeDiagnosticTest.testId,'dtc-status-configuration-establishment');
+  assert.doesNotMatch(JSON.stringify({test:h.state.authoritativeDiagnosticTest,system:h.state.system,component:h.state.component,complaint:h.state.complaint,guidance:h.guidance}),/blower|hvac/i);
+});
+
+test('10.12.89 binds resolved DTC state before route cleanup and next-test selection',()=>{
+  const source=extractRaw('function applyDtcKnowledgeResolution','function handleManualDtcSystemIdentification');
+  const bind=source.indexOf('state.activeDtc=resolved.code'),definition=source.indexOf('state.dtcDefinition=resolved.definition'),clear=source.indexOf("clearIncompatibleResolvedDtcRoute(resolved)"),select=source.indexOf('selectGuidanceTest(resolved.initialTest.id');
+  assert.ok(bind>=0&&definition>bind&&clear>definition&&select>clear);
+  assert.match(html,/incomingDtcCodes=codes\(text\)[\s\S]+if\(!incomingDtcCodes\.length\)\{[\s\S]+found=incomingDtcCodes/);
 });
 
 test('10.12.87 routes resolved GM B1325 without generic system fallback',()=>{
@@ -139,7 +163,7 @@ test('10.12.87 routes resolved GM B1325 without generic system fallback',()=>{
 test('10.12.86 enriches established specialized workflows without bypassing their proven intake',()=>{
   for(const [code,workflow] of [['P0340','Camshaft Position Circuit'],['P0420','Catalyst Efficiency'],['P0308','Misfire Diagnosis']]){
     const h=routingHarness({vehicle:{year:'2014',make:'Toyota',model:'Camry',configuration:''},activeDtc:code,system:'',diagnosticDomain:'',stage:'vehicle',intakeStep:'vehicle',routingDiagnostics:{},componentCondemned:'None'}),resolved=h.apply();
-    assert.equal(resolved.resolutionStatus,'RESOLVED');assert.ok(h.state.dtcDefinition);assert.ok(h.state.affectedSystem);assert.equal(h.workflowName(),workflow);assert.equal(h.state.stage,'vehicle');assert.equal(h.state.intakeStep,'vehicle');assert.equal(h.state.authoritativeDiagnosticTest,undefined);
+    assert.equal(resolved.resolutionStatus,'RESOLVED');assert.ok(h.state.dtcDefinition);assert.ok(h.state.affectedSystem);assert.equal(h.workflowName(),workflow);assert.equal(h.state.stage,'vehicle');assert.equal(h.state.intakeStep,'vehicle');assert.equal(h.state.authoritativeDiagnosticTest,null);
   }
 });
 

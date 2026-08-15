@@ -25,6 +25,7 @@ const examples=[
   ['Toyota Camry 2014, P0-3.4_0','P0340',{year:'2014',make:'Toyota',model:'Camry'}],
   ['U 0 1 0 0 2018 Ford F-150','U0100',{year:'2018',make:'Ford',model:'F-150'}],
   ['2016 Chevy Silverado with a code P06DD','P06DD',{year:'2016',make:'Chevrolet',model:'Silverado'}],
+  ['2016 Chevrolet Silverado with a P06DD and the check engine light is on','P06DD',{year:'2016',make:'Chevrolet',model:'Silverado'}],
   ['2016 Chevrolet Silverado code P zero six D D','P06DD',{year:'2016',make:'Chevrolet',model:'Silverado'}],
   ['2016 Chevrolet Silverado code PO6DD','P06DD',{year:'2016',make:'Chevrolet',model:'Silverado'}],
   ['2016 Chevrolet Silverado code P06 DD','P06DD',{year:'2016',make:'Chevrolet',model:'Silverado'}],
@@ -51,7 +52,8 @@ test('ordinary prose does not fabricate a DTC',()=>{
 
 test('authoritative processing applies vehicle, every DTC, and concern before returning',()=>{
   const processSource=html.slice(html.indexOf('function process('),html.indexOf('function renderTranscript('));
-  assert.match(processSource,/const v=parseVehicle\(text\),found=codes\(text\),reportedConcern=concern\(text\)/);
+  assert.match(processSource,/incomingDtcCodes=codes\(text\)/);
+  assert.match(processSource,/const v=parseVehicle\(text\),found=incomingDtcCodes,reportedConcern=concern\(text\)/);
   assert.match(processSource,/state\.dtcs=\[\.\.\.new Set\(\[\.\.\.found,\.\.\.state\.dtcs\]\)\]/);
   assert.match(processSource,/if\(v\|\|found\.length\)/);
 });
@@ -89,7 +91,7 @@ function statusHarness(input){
     function ensureGuidedState(){throw new Error('guided testing must not run during status intake')}
     function handleGuidedFinding(){throw new Error('guided finding must not run during status intake')}
     function parseVehicle(){throw new Error('vehicle parsing must not run for a status answer')}
-    function codes(){throw new Error('repeated DTC must not be processed as new intake')}
+    function codes(){return []}
     function concern(){throw new Error('concern parsing must not run for a status answer')}
     function advanceIntake(){state.intakeStep=state.status?'complaint':'status';state.stage=state.intakeStep}
     function nextQuestion(){return state.status?'What is the customer complaint?':\`Is \${state.activeDtc} current, pending, history, or intermittent?\`}
@@ -120,5 +122,5 @@ test('VO leaves genuinely ambiguous status answers at the status question',()=>{
 test('V4 preserves authoritative persistence and one service-worker authority',()=>{
   assert.match(html,/const STATE_KEY='nitros_diagnostic_case_v10120'/);
   assert.equal((html.match(/navigator\.serviceWorker\.register\(/g)||[]).length,1);
-  assert.match(html,/version:'10\.12\.88'/);
+  assert.match(html,/version:'10\.12\.89'/);
 });
