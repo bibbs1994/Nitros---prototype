@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.13.02 — Diagnostic Validation Series — Build 2026-08-16</title>
+<title>Nitros Mobile Technician Portal v10.13.03 — Diagnostic Validation Series — Build 2026-08-16</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -525,7 +525,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.13.02 — Diagnostic Validation Series — Build 2026-08-16</div>
+  <div class="sub">Mobile Technician Portal v10.13.03 — Diagnostic Validation Series — Build 2026-08-16</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -539,7 +539,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.13.02 — Diagnostic Validation Series · Build 2026-08-16. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.13.03 — Diagnostic Validation Series · Build 2026-08-16. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -702,7 +702,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow">Version 10.13.02 — Diagnostic Validation Series · Build 2026-08-16</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow">Version 10.13.03 — Diagnostic Validation Series · Build 2026-08-16</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -769,7 +769,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow">Version 10.13.02 — Diagnostic Validation Series · Build 2026-08-16</div>
+      <div class="eyebrow">Version 10.13.03 — Diagnostic Validation Series · Build 2026-08-16</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1688,12 +1688,12 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note">Nitros Mobile Technician Portal v10.13.02 • Diagnostic Validation Series • Build 2026-08-16 • Evidence-based workflow</div>
+<div class="footer-note">Nitros Mobile Technician Portal v10.13.03 • Diagnostic Validation Series • Build 2026-08-16 • Evidence-based workflow</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.13.02',
+  version:'10.13.03',
   release:'Diagnostic Validation Series',
   buildDate:'2026-08-16',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
@@ -5330,7 +5330,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">Version 10.13.02 — Diagnostic Validation Series · Build 2026-08-16</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div style="font-size:.78rem;color:#b9c8d8">Version 10.13.03 — Diagnostic Validation Series · Build 2026-08-16</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5368,7 +5368,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.13.02 — Diagnostic Validation Series · Build 2026-08-16</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.13.03 — Diagnostic Validation Series · Build 2026-08-16</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6407,7 +6407,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.13.02</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.13.03</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -7543,6 +7543,9 @@ const applyDtcKnowledgeResolutionBase=applyDtcKnowledgeResolution;
 applyDtcKnowledgeResolution=function(){const resolved=applyDtcKnowledgeResolutionBase();if(!resolved)return resolved;state.dtcFamily=resolved.dtcFamily||window.NitrosDtcKnowledge?.familyForCode?.(state.activeDtc)||'';if(resolved.resolutionStatus==='RESOLVED_MANUFACTURER_SPECIFIC'){state.system=resolved.system;state.diagnosticDomain=resolved.diagnosticDomain||'Code-Specific Diagnostic';if(state.vehicle.year&&state.vehicle.make&&state.vehicle.model&&resolved.architectureFirst!==false){state.vehicle.configuration=state.vehicle.configuration||'Unresolved — requires architecture/service information';state.stage='circuit/system-architecture-identification';state.intakeStep='complete';guidanceState().diagnosticStage='circuit/system-architecture-identification';selectGuidanceTest('dtc-system-architecture-identification','Circuit/System Architecture Identification',`${state.activeDtc} identifies the ${resolved.system} system, but the exact vehicle architecture must be established before selecting a measurement.`,`Identify which of these known system elements are present and how they are connected: ${(resolved.primaryComponents||[]).join(', ')}. Use observable configuration or verified service information; do not assume exact terminals or component layout.`,'system-architecture-identification')}state.routingDiagnostics={...(state.routingDiagnostics||{}),affectedSystem:state.affectedSystem||'Unknown / Unresolved',routingDecision:'DTC_SYSTEM_ARCHITECTURE_IDENTIFICATION'};}else if(!state.affectedSystem)state.affectedSystem='Unknown / Unresolved';return resolved};
 const applyDtcKnowledgeResolutionWithManufacturerRouting=applyDtcKnowledgeResolution;
 applyDtcKnowledgeResolution=function(){const resolved=applyDtcKnowledgeResolutionWithManufacturerRouting();if(resolved?.resolutionStatus==='RESOLVED'&&resolved.initialTest){state.system=resolved.system;state.diagnosticDomain=resolved.diagnosticDomain||'Code-Specific Diagnostic';selectGuidanceTest(resolved.initialTest.id,resolved.initialTest.name,resolved.initialTest.reason,resolved.initialTest.requiredEvidence,'dtc-code-specific-initial-test',{affectedSystem:resolved.system,diagnosticCategory:resolved.category});if(resolved.initialTest.advanceToDiagnosticTesting){state.stage='diagnostic-testing';state.intakeStep='complete';guidanceState().diagnosticStage='testing';state.routeDirection='FORWARD'}state.routingDiagnostics={...(state.routingDiagnostics||{}),routingDecision:'DTC_CODE_SPECIFIC_INITIAL_TEST',selectedTestCompatibility:'COMPATIBLE'};}return resolved};
+const applyDtcKnowledgeResolutionWithInitialTestRouting=applyDtcKnowledgeResolution;
+function reconcileResolvedDtcState(resolved){if(!resolved||resolved.resolutionStatus!=='RESOLVED')return true;state.resolvedDtcCode=resolved.code;state.activeDtc=resolved.code;state.dtcs=[...new Set([resolved.code,...(state.dtcs||[])].filter(Boolean))];const conflict=state.activeDtc!==resolved.code||state.dtcDefinition!==resolved.definition||state.affectedSystem!==resolved.system||state.dtcDiagnosticCategory!==resolved.category||state.dtcWorkflow!==resolved.workflow;if(!conflict)return true;state.stage='dtc-state-reconciliation';state.intakeStep='complete';state.authoritativeDiagnosticTest=null;state.componentTestState=null;selectGuidanceTest('dtc-state-reconciliation','Resolved DTC State Reconciliation','Resolved DTC metadata conflicts with the current case state, so unrelated symptom routing is blocked until the authoritative DTC state is reconciled.','Re-enter or confirm the active DTC and retain the current vehicle context before selecting a diagnostic test.','dtc-state-reconciliation',{affectedSystem:resolved.system,diagnosticCategory:resolved.category});state.routingDiagnostics={...(state.routingDiagnostics||{}),routingDecision:'DTC_STATE_RECONCILIATION_REQUIRED',selectedTestCompatibility:'BLOCKED_CONFLICT'};return false}
+applyDtcKnowledgeResolution=function(){const resolved=applyDtcKnowledgeResolutionWithInitialTestRouting();if(resolved?.resolutionStatus==='RESOLVED')reconcileResolvedDtcState(resolved);return resolved};
 function workflowName(){if(state.dtcWorkflow)return state.dtcWorkflow;if(state.diagnosticDomain)return state.diagnosticDomain;if(state.activeDtc==='P0420'||state.activeDtc==='P0430')return'Catalyst Efficiency';if(state.activeDtc==='P0340'||state.activeDtc==='P0342')return'Camshaft Position Circuit';if(/^P030[0-8]$/.test(state.activeDtc))return'Misfire Diagnosis';if(!state.activeDtc&&(state.complaint||state.symptoms))return'Symptom-Based Diagnosis';return state.activeDtc?'Code-Specific Diagnostic':'Vehicle Intake'}
 function nextRequiredIntakeStep(){if(!state.vehicle.year||!state.vehicle.make||!state.vehicle.model)return'vehicle';if(!state.activeDtc&&!state.complaint)return'dtc';if(state.activeDtc&&!state.status)return'status';if(state.activeDtc&&!state.complaint)return'complaint';if(state.activeDtc&&!state.symptoms)return'symptoms';if(!state.previousRepairs)return'previous-repairs';if(!state.previousTests)return'previous-testing';return'complete'}
 function advanceIntake(){state.intakeStep=nextRequiredIntakeStep();state.stage=({vehicle:'vehicle',dtc:'dtc',status:'status',complaint:'complaint',symptoms:'symptoms','previous-repairs':'repairs','previous-testing':'tests',complete:'diagnostic'})[state.intakeStep];return state.intakeStep}
@@ -7955,7 +7958,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 <div style="margin:18px;padding:16px;border:1px solid #2d4261;border-radius:12px;background:#0d192a;color:#fff">
 <h3>Runtime Verification</h3>
 <ul>
-<li>App Build: <strong id="nitrosRuntimeAppBuild">10.13.02</strong></li>
+<li>App Build: <strong id="nitrosRuntimeAppBuild">10.13.03</strong></li>
 <li><strong>POST-RENDER NUMERIC SOURCE AUDIT:</strong> <span id="nitrosRenderedInvariantLog">Not run</span></li>
 <li>Service Worker Supported: <strong id="nitrosRuntimeSwSupported">Checking</strong></li>
 <li>Service Worker Controlled: <strong id="nitrosRuntimeSwControlled">Checking</strong></li>

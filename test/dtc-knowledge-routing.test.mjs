@@ -241,6 +241,21 @@ test('10.13.02 resolves and routes generic transmission range P-codes before any
   }
 });
 
+test('10.13.03 binds resolved P0704 to the active DTC and blocks unrelated symptom routing',()=>{
+  const vehicle={year:'2007',make:'Ford',model:'F-150',engine:'',configuration:''},h=routingHarness({vehicle:{...vehicle},activeDtc:'P0704',system:'',diagnosticDomain:'',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),resolved=h.apply();
+  assert.equal(resolved.resolutionStatus,'RESOLVED');
+  assert.equal(h.state.activeDtc,'P0704');
+  assert.equal(h.state.resolvedDtcCode,'P0704');
+  assert.equal(h.state.dtcDefinition,'Clutch Switch Input Circuit Malfunction');
+  assert.equal(h.state.affectedSystem,'Clutch Pedal / Start Enable Input');
+  assert.equal(h.state.dtcWorkflow,'Code-Specific Diagnostic');
+  assert.equal(h.state.authoritativeDiagnosticTest.testId,'p0704-configuration-and-clutch-input');
+  assert.doesNotMatch(JSON.stringify(h.state),/blower|hvac|fan-speed|resistor/i);
+  assert.match(html,/function reconcileResolvedDtcState\(resolved\)/);
+  assert.match(html,/state\.activeDtc=resolved\.code/);
+  assert.match(html,/routingDecision:'DTC_STATE_RECONCILIATION_REQUIRED'/);
+});
+
 test('10.13.01 persists case ownership and rejects a restored mismatched evidence owner',()=>{
   assert.match(html,/state\.evidenceCaseId=state\.id/);
   assert.match(html,/state\.evidenceCaseId&&state\.evidenceCaseId!==state\.id\)state=blank\(\)/);
