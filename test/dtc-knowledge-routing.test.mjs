@@ -224,6 +224,23 @@ test('10.13.01 resolves generic SAE P0704 independently of transmission applicab
   assert.equal(resolved.workflow,'Code-Specific Diagnostic');
 });
 
+test('10.13.02 resolves and routes generic transmission range P-codes before any unavailable fallback',()=>{
+  const vehicle={year:'2007',make:'Ford',model:'F-150',engine:'',configuration:''};
+  for(const [code,definition,workflow,testId] of [
+    ['P0705','Transmission Range Sensor Circuit Malfunction / PRNDL Input','Transmission Range / Gear-Position Input Diagnostic','p0705-range-input-scan-tool-comparison'],
+    ['P0706','Transmission Range Sensor A Circuit Range/Performance','Transmission Range / Gear-Position Input Diagnostic','p0706-range-performance-scan-tool-comparison']
+  ]){
+    const resolved=knowledge.resolve(code,vehicle),h=routingHarness({vehicle:{...vehicle},activeDtc:code,system:'',diagnosticDomain:'',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'});
+    assert.equal(resolved.resolutionStatus,'RESOLVED',code);
+    assert.equal(resolved.definition,definition,code);
+    assert.equal(resolved.dtcFamily,'Powertrain',code);
+    assert.equal(resolved.workflow,workflow,code);
+    h.apply();
+    assert.equal(h.state.authoritativeDiagnosticTest.testId,testId,code);
+    assert.equal(h.state.stage,'diagnostic-testing',code);
+  }
+});
+
 test('10.13.01 persists case ownership and rejects a restored mismatched evidence owner',()=>{
   assert.match(html,/state\.evidenceCaseId=state\.id/);
   assert.match(html,/state\.evidenceCaseId&&state\.evidenceCaseId!==state\.id\)state=blank\(\)/);

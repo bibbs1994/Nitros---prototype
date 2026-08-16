@@ -1,6 +1,6 @@
 'use strict';
 
-const VERSION = '10.13.01';
+const VERSION = '10.13.02';
 const CACHE_PREFIX = 'nitros-mobile-technician-portal-';
 const CACHE_NAME = `${CACHE_PREFIX}${VERSION}`;
 const OBSOLETE_CLASSIFIER_CACHE_PREFIXES = [CACHE_PREFIX, 'nitros-image-classifier-', 'nitros-classifier-'];
