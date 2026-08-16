@@ -380,13 +380,13 @@ test('10.13.10 holds P0704 functional evidence pending until architecture is con
   assert.equal(automatic.state.authoritativeDiagnosticTest.testId,'p0704-architecture-contradiction-review');
 });
 
-test('10.13.11 intercepts pause controls before diagnostic intake and requires explicit resume',()=>{
+test('10.13.12 hard-locks stopped diagnostics while retaining later observations',()=>{
   const start=html.indexOf('const processWithCaseIsolation=process;'),end=html.indexOf('function renderTranscript(',start),control=html.slice(start,end);
   assert.match(control,/authoritativeDiagnosticState='PAUSED'/);
   assert.match(control,/autoAdvance=false;state\.pendingNextTest=null;state\.queuedDiagnosticAction=null;state\.activePromptForMeasurement=null/);
   assert.match(control,/The diagnostic is paused\. Say “resume” or “continue diagnosis” when you want to continue\./);
   assert.match(control,/authoritativeDiagnosticState='ACTIVE';state\.autoAdvance=true/);
-  assert.doesNotMatch(control,/add\('You',text\)/);
+  assert.match(control,/Recorded\. Diagnostic testing remains stopped/);
   assert.match(html,/Diagnostic Mode: \$\{esc\(state\.authoritativeDiagnosticState\|\|'ACTIVE'\)\}/);
 });
 
