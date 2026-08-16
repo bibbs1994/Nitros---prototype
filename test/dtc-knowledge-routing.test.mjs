@@ -11,6 +11,8 @@ const helpers=Function(`${html.slice(html.indexOf('const DTC_PATTERN=',authority
 const routingHarness=initial=>Function('initial','knowledge',`let state=JSON.parse(JSON.stringify(initial)),guidance={evidence:[],measurements:[],completedTests:[],hypotheses:[]},replies=[];const window={NitrosDtcKnowledge:knowledge};const blankGuidance=()=>({evidence:[],measurements:[],completedTests:[],hypotheses:[],selectedNextTest:null,nextTestReason:'',nextRequiredEvidence:''});function guidanceState(){return guidance=Object.assign(blankGuidance(),state.conversationalGuidance||guidance)}function diagnosticTestCompatible(test,system=state.affectedSystem||state.system,category=state.dtcDiagnosticCategory){const identity=\`${'${test?.testId||\'\'} ${test?.displayName||\'\'}'}\`.toLowerCase(),context=\`${'${system||\'\'} ${category||\'\'}'}\`.toLowerCase();return !(/blower|hvac/.test(identity)&&!/blower|hvac/.test(context))}function selectGuidanceTest(id,name,reason,evidence,method,routeContext={}){state.authoritativeDiagnosticTest={testId:id,displayName:name,status:'AWAITING_RESULT',affectedSystem:routeContext.affectedSystem||state.affectedSystem||state.system||'',diagnosticCategory:routeContext.diagnosticCategory||state.dtcDiagnosticCategory||'',activeDtc:state.activeDtc};guidance.selectedNextTest=state.authoritativeDiagnosticTest;guidance.nextTestReason=reason;guidance.nextRequiredEvidence=evidence;return state.authoritativeDiagnosticTest}function ask(text){replies.push(text)}${extractRaw('function clearIncompatibleResolvedDtcRoute','function nextRequiredIntakeStep')}return{apply:applyDtcKnowledgeResolution,manual:handleManualDtcSystemIdentification,state,get guidance(){return guidance},replies,workflowName}`)(initial,knowledge);
 const p0704EvidenceHarness=initial=>Function('initial',`let state=JSON.parse(JSON.stringify(initial)),guidance={evidence:[],measurements:[],completedTests:[],hypotheses:[]},replies=[];function guidanceState(){return guidance}function selectGuidanceTest(id,name,reason,evidence,method,routeContext={}){state.authoritativeDiagnosticTest={testId:id,displayName:name,status:'AWAITING_RESULT',affectedSystem:routeContext.affectedSystem||state.affectedSystem||'',diagnosticCategory:routeContext.diagnosticCategory||state.dtcDiagnosticCategory||'',activeDtc:state.activeDtc};guidance.selectedNextTest=state.authoritativeDiagnosticTest;guidance.nextTestReason=reason;guidance.nextRequiredEvidence=evidence;return state.authoritativeDiagnosticTest}function ask(text){replies.push(text)}${extractRaw('function p0704ArchitectureFromEvidence','function process')}return{handle:handleP0704ArchitectureDiscriminationEvidence,state,get guidance(){return guidance},replies}`)(initial);
 
+const p0704ArchitectureGateHarness=initial=>{const start=html.indexOf('function p0704ArchitectureFromEvidence',authority),end=html.indexOf('const processAuthoritativeEntry=process;',start);assert.ok(start>=0&&end>start);return Function('initial',`let state=JSON.parse(JSON.stringify(initial)),guidance={evidence:[],measurements:[],completedTests:[],hypotheses:[]},replies=[];function guidanceState(){return guidance}function selectGuidanceTest(id,name,reason,evidence,method,routeContext={}){state.authoritativeDiagnosticTest={testId:id,displayName:name,status:'AWAITING_RESULT',affectedSystem:routeContext.affectedSystem||state.affectedSystem||state.system||'',diagnosticCategory:routeContext.diagnosticCategory||state.dtcDiagnosticCategory||'',activeDtc:state.activeDtc};guidance.selectedNextTest=state.authoritativeDiagnosticTest;guidance.nextTestReason=reason;guidance.nextRequiredEvidence=evidence;return state.authoritativeDiagnosticTest}function ask(text){replies.push(text)}${html.slice(start,end)}return{handle:handleP0704ArchitectureDiscriminationEvidence,state,get guidance(){return guidance},replies}`)(initial)};
+
 test('10.12.86 structured registry resolves representative generic DTCs through one resolver',()=>{
   const expected=['P0300','P0301','P0340','P0410','P0420','P0455','P0456','P0171','P0172','P0101','P0128','P0442','P0500','P0606','U0100'];
   assert.deepEqual(expected.filter(code=>knowledge.resolve(code).resolutionStatus!=='RESOLVED'),[]);
@@ -352,6 +354,30 @@ test('10.13.09 advances a failed P0704 switch functional result to local isolati
   assert.match(h.replies.at(-1),/without repeating it.*physically actuates.*local input\/output electrical state.*PCM PID/i);
   assert.doesNotMatch(h.replies.at(-1),/continue with the next verified measurement|replace/i);
   assert.equal(h.state.componentCondemned,'None');
+});
+
+test('10.13.10 holds P0704 functional evidence pending until architecture is confirmed',()=>{
+  const base={id:'CASE-P0704-GATE',vehicle:{year:'2007',make:'Ford',model:'F-150',engine:'',configuration:'Architecture Discrimination Required'},activeDtc:'P0704',dtcDefinition:'Clutch Switch Input Circuit Malfunction',dtcResolutionStatus:'RESOLVED',affectedSystem:'Clutch Pedal / Start Enable Input',dtcDiagnosticCategory:'Powertrain Input Circuit',stage:'architecture-discrimination',intakeStep:'complete',existingDiagnosticEvidence:[],technicianObservations:[],previousTests:'',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'};
+  const manual=p0704ArchitectureGateHarness(base);
+  assert.equal(manual.handle('Start never changed when pedal was applied.'),true);
+  assert.equal(manual.state.stage,'p0704-architecture-confirmation');
+  assert.equal(manual.state.architectureResolutionState,'ARCHITECTURE_REQUIRED');
+  assert.equal(manual.state.architectureApplicability,'UNDETERMINED');
+  assert.equal(manual.state.pendingArchitectureEvidence.at(-1).status,'PENDING_ARCHITECTURE');
+  assert.match(manual.replies.at(-1),/transmission architecture must be established.*manual or automatic/i);
+  assert.equal(manual.handle('Manual transmission.'),true);
+  assert.equal(manual.state.architectureResolutionState,'ARCHITECTURE_CONFIRMED_APPLICABLE');
+  assert.equal(manual.state.architectureApplicability,'APPLICABLE');
+  assert.equal(manual.state.pendingArchitectureEvidence.at(-1).status,'CONSUMED');
+  assert.equal(manual.state.stage,'local-component-isolation');
+  assert.equal(manual.state.authoritativeDiagnosticTest.testId,'p0704-switch-actuation-and-local-state-isolation');
+  const automatic=p0704ArchitectureGateHarness(base);
+  automatic.handle('Start never changed when pedal was applied.');
+  assert.equal(automatic.handle('Automatic transmission.'),true);
+  assert.equal(automatic.state.architectureResolutionState,'ARCHITECTURE_CONFLICT');
+  assert.equal(automatic.state.architectureApplicability,'NOT_APPLICABLE');
+  assert.equal(automatic.state.stage,'dtc-architecture-contradiction');
+  assert.equal(automatic.state.authoritativeDiagnosticTest.testId,'p0704-architecture-contradiction-review');
 });
 
 test('10.13.01 persists case ownership and rejects a restored mismatched evidence owner',()=>{
