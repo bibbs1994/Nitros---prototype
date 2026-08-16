@@ -338,6 +338,22 @@ test('10.13.08 consumes a starter-relay no-change result and advances to command
   assert.equal(h.state.componentCondemned,'None');
 });
 
+test('10.13.09 advances a failed P0704 switch functional result to local isolation without repeating it',()=>{
+  const h=p0704EvidenceHarness({id:'CASE-P0704-SWITCH',vehicle:{year:'2007',make:'Ford',model:'F-150',engine:'',configuration:'Architecture Discrimination Required'},activeDtc:'P0704',dtcDefinition:'Clutch Switch Input Circuit Malfunction',dtcResolutionStatus:'RESOLVED',affectedSystem:'Clutch Pedal / Start Enable Input',dtcDiagnosticCategory:'Powertrain Input Circuit',stage:'architecture-discrimination',intakeStep:'complete',existingDiagnosticEvidence:[],technicianObservations:[],previousTests:'',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'});
+  assert.equal(h.handle('Switch does not change.'),true);
+  assert.equal(h.state.activeDtc,'P0704');
+  assert.equal(h.state.dtcDefinition,'Clutch Switch Input Circuit Malfunction');
+  assert.equal(h.state.existingDiagnosticEvidence.at(-1).normalizedEvidence,'P0704_SWITCH_FUNCTIONAL_TEST_FAILED_NO_STATE_CHANGE');
+  assert.equal(h.state.existingDiagnosticEvidence.at(-1).status,'FAIL');
+  assert.equal(h.state.diagnosticProgressionState,'FAILED_FUNCTIONAL_RESULT');
+  assert.equal(h.state.stage,'local-component-isolation');
+  assert.equal(h.state.currentDiagnosticBranch,'LOCAL_COMPONENT_ISOLATION');
+  assert.equal(h.state.authoritativeDiagnosticTest.testId,'p0704-switch-actuation-and-local-state-isolation');
+  assert.match(h.replies.at(-1),/without repeating it.*physically actuates.*local input\/output electrical state.*PCM PID/i);
+  assert.doesNotMatch(h.replies.at(-1),/continue with the next verified measurement|replace/i);
+  assert.equal(h.state.componentCondemned,'None');
+});
+
 test('10.13.01 persists case ownership and rejects a restored mismatched evidence owner',()=>{
   assert.match(html,/state\.evidenceCaseId=state\.id/);
   assert.match(html,/state\.evidenceCaseId&&state\.evidenceCaseId!==state\.id\)state=blank\(\)/);
