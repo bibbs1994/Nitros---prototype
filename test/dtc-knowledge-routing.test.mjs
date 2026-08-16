@@ -292,6 +292,21 @@ test('10.13.05 consumes a P0704 no-start-enable observation and advances after o
   assert.equal(h.state.componentCondemned,'None');
 });
 
+test('10.13.06 binds P0704 to its authoritative family and rejects a stale HVAC workflow',()=>{
+  const h=routingHarness({id:'CASE-P0704-BIND',vehicle:{year:'2007',make:'Ford',model:'F-150',engine:'',configuration:''},activeDtc:'P0704',dtcs:['P0704'],system:'HVAC',component:'Blower Motor / Blower Speed Control',diagnosticDomain:'HVAC / Blower Diagnostic',dtcRouteKey:'CASE-OLD|P0000|2007|Ford|F-150',authoritativeDiagnosticTest:{testId:'blower-lower-speed-command-test',displayName:'Blower Lower-Speed Command Test',affectedSystem:'HVAC',diagnosticCategory:'HVAC Blower'},componentTestState:{workflowId:'hvac-blower-speed-control'},conversationalGuidance:{evidence:[{testId:'prior-evidence'}],measurements:[],completedTests:[],hypotheses:[],selectedNextTest:{testId:'blower-lower-speed-command-test',displayName:'Blower Lower-Speed Command Test'}},routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),resolved=h.apply();
+  assert.equal(resolved.code,'P0704');
+  assert.equal(h.state.activeDtc,'P0704');
+  assert.equal(h.state.dtcDefinition,'Clutch Switch Input Circuit Malfunction');
+  assert.equal(h.state.dtcReportingModule,'Powertrain Control Module (PCM)');
+  assert.equal(h.state.authoritativeDiagnosticFamily,'Powertrain / Clutch Pedal / Start Enable Input');
+  assert.equal(h.state.selectedWorkflowFamily,h.state.authoritativeDiagnosticFamily);
+  assert.equal(h.state.selectedWorkflowId,'p0704-start-enable-architecture-discrimination');
+  assert.equal(h.state.workflowCompatibilityResult,'PASS');
+  assert.doesNotMatch(JSON.stringify({test:h.state.authoritativeDiagnosticTest,system:h.state.system,domain:h.state.diagnosticDomain}),/blower|hvac|resistor|fan-speed/i);
+  assert.match(html,/if\(symptom&&!found\.length&&!state\.activeDtc\)/);
+  assert.match(html,/Workflow Binding:/);
+});
+
 test('10.13.01 persists case ownership and rejects a restored mismatched evidence owner',()=>{
   assert.match(html,/state\.evidenceCaseId=state\.id/);
   assert.match(html,/state\.evidenceCaseId&&state\.evidenceCaseId!==state\.id\)state=blank\(\)/);

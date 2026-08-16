@@ -25,8 +25,8 @@ test('exact live utterance captures engine and manual HVAC configuration',()=>{
   assert.match(html,/vehicle:\{year:'',make:'',model:'',engine:'',drivetrain:'',configuration:''\}/);
 });
 
-test('symptom without a DTC atomically enters HVAC diagnosis',()=>{
-  assert.match(html,/if\(symptom&&!found\.length\)\{state\.activeDtc='';state\.intakeStep='complete';state\.stage='diagnostic'/);
+test('symptom without an active DTC atomically enters HVAC diagnosis',()=>{
+  assert.match(html,/if\(symptom&&!found\.length&&!state\.activeDtc\)\{state\.activeDtc='';state\.intakeStep='complete';state\.stage='diagnostic'/);
   assert.match(html,/No trouble code is required to start this diagnosis/);
   assert.match(html,/blower-symptom-confirmation/);
   assert.match(html,/no component is confirmed failed/);
