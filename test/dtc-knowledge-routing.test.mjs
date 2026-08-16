@@ -214,6 +214,21 @@ test('10.13.00 starts a different-vehicle natural DTC entry from blank authorita
   assert.equal(resolved.workflow,'Camshaft Position Circuit');
 });
 
+test('10.13.01 resolves generic SAE P0704 independently of transmission applicability',()=>{
+  const resolved=knowledge.resolve('P0704',{year:'2007',make:'Ford',model:'F-150'});
+  assert.equal(resolved.resolutionStatus,'RESOLVED');
+  assert.equal(resolved.dtcFamily,'Powertrain');
+  assert.equal(resolved.genericOrManufacturerSpecific,'Generic / SAE');
+  assert.equal(resolved.definition,'Clutch Switch Input Circuit Malfunction');
+  assert.equal(resolved.system,'Clutch Pedal / Start Enable Input');
+  assert.equal(resolved.workflow,'Code-Specific Diagnostic');
+});
+
+test('10.13.01 persists case ownership and rejects a restored mismatched evidence owner',()=>{
+  assert.match(html,/state\.evidenceCaseId=state\.id/);
+  assert.match(html,/state\.evidenceCaseId&&state\.evidenceCaseId!==state\.id\)state=blank\(\)/);
+});
+
 test('10.12.99 promotes resolved module metadata into authoritative workflow state',()=>{
   const h=routingHarness({vehicle:{year:'2016',make:'Chevrolet',model:'Silverado',engine:'5.3L',configuration:'5.3L'},activeDtc:'P0750',system:'',diagnosticDomain:'',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),resolved=h.apply();
   assert.equal(resolved.workflow,'Transmission / Transaxle Diagnostic');
