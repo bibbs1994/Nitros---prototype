@@ -200,6 +200,20 @@ test('10.12.99 consumes inline DTC status and MIL state before direct next-test 
   for(const label of ['DTC Status','MIL Status'])assert.match(html,new RegExp(`${label}:`));
 });
 
+test('10.13.00 starts a different-vehicle natural DTC entry from blank authoritative state',()=>{
+  const start=html.indexOf('const processAuthoritativeEntry=process;'),end=html.indexOf('function renderTranscript(',start),guard=html.slice(start,end);
+  assert.match(guard,/incomingCodes=codes\(text\),incomingVehicle=incomingCodes\.length\?parseVehicle\(text\):null/);
+  assert.match(guard,/hasPriorVehicle/);
+  assert.match(guard,/differentVehicle/);
+  assert.match(guard,/incomingCodes\.length&&hasPriorVehicle&&differentVehicle\)state=blank\(\)/);
+  const resolved=knowledge.resolve('P0340',{year:'2014',make:'Toyota',model:'Camry'});
+  assert.equal(resolved.dtcFamily,'Powertrain');
+  assert.equal(resolved.definition,'Camshaft Position Sensor A Circuit (Bank 1 or Single Sensor)');
+  assert.equal(resolved.system,'Camshaft Position Sensing');
+  assert.equal(resolved.subsystem,'Sensor A Circuit');
+  assert.equal(resolved.workflow,'Camshaft Position Circuit');
+});
+
 test('10.12.99 promotes resolved module metadata into authoritative workflow state',()=>{
   const h=routingHarness({vehicle:{year:'2016',make:'Chevrolet',model:'Silverado',engine:'5.3L',configuration:'5.3L'},activeDtc:'P0750',system:'',diagnosticDomain:'',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),resolved=h.apply();
   assert.equal(resolved.workflow,'Transmission / Transaxle Diagnostic');
