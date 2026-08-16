@@ -285,10 +285,10 @@ test('10.13.05 consumes a P0704 no-start-enable observation and advances after o
   assert.match(h.replies.at(-1),/automatic or manual transmission/i);
   assert.doesNotMatch(h.replies.at(-1),/continue with the next verified measurement/i);
   assert.equal(h.handle('Automatic transmission.'),true);
-  assert.equal(h.state.stage,'clutch-start-enable-circuit-isolation');
+  assert.equal(h.state.stage,'dtc-architecture-contradiction');
   assert.equal(h.state.architectureDetermination,'AUTOMATIC_RANGE_START_PERMISSION');
-  assert.equal(h.state.authoritativeDiagnosticTest.testId,'p0704-range-start-permission-isolation');
-  assert.match(h.replies.at(-1),/Park and Neutral.*range.*permission state/i);
+  assert.equal(h.state.authoritativeDiagnosticTest.testId,'p0704-architecture-contradiction-review');
+  assert.match(h.replies.at(-1),/automatic-transmission configuration conflicts.*VIN\/configuration.*reporting module/i);
   assert.equal(h.state.componentCondemned,'None');
 });
 
@@ -321,6 +321,20 @@ test('10.13.07 treats a P0704 start-command no-change finding as evidence and ad
   assert.equal(h.state.currentDiagnosticBranch,'CLUTCH_INPUT_TRANSITION_ISOLATION');
   assert.equal(h.state.authoritativeDiagnosticTest.testId,'p0704-clutch-input-transition-isolation');
   assert.match(h.replies.at(-1),/clutch-pedal switch\/input circuit.*PCM clutch\/start-enable PID.*state should transition/i);
+  assert.equal(h.state.componentCondemned,'None');
+});
+
+test('10.13.08 consumes a starter-relay no-change result and advances to command correlation',()=>{
+  const h=p0704EvidenceHarness({id:'CASE-P0704-RELAY',vehicle:{year:'2007',make:'Ford',model:'F-150',engine:'',configuration:'Manual transmission / clutch start-enable input (technician confirmed)'},activeDtc:'P0704',dtcDefinition:'Clutch Switch Input Circuit Malfunction',dtcResolutionStatus:'RESOLVED',affectedSystem:'Clutch Pedal / Start Enable Input',dtcDiagnosticCategory:'Powertrain Input Circuit',stage:'clutch-start-enable-circuit-isolation',intakeStep:'complete',existingDiagnosticEvidence:[],technicianObservations:[],routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'});
+  assert.equal(h.handle('Starter relay never changes state.'),true);
+  assert.equal(h.state.activeDtc,'P0704');
+  assert.equal(h.state.existingDiagnosticEvidence.at(-1).normalizedEvidence,'STARTER_RELAY_STATE_NOT_CHANGED');
+  assert.equal(h.state.existingDiagnosticEvidence.at(-1).rawObservation,'Starter relay never changes state.');
+  assert.equal(h.state.stage,'start-enable-relay-command-isolation');
+  assert.equal(h.state.currentDiagnosticBranch,'STARTER_RELAY_COMMAND_ISOLATION');
+  assert.equal(h.state.authoritativeDiagnosticTest.testId,'p0704-starter-relay-command-isolation');
+  assert.match(h.replies.at(-1),/starter-relay control circuit.*PCM clutch\/start-enable PID.*should change/i);
+  assert.doesNotMatch(h.replies.at(-1),/continue with the next verified measurement|replace/i);
   assert.equal(h.state.componentCondemned,'None');
 });
 
