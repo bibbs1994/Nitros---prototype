@@ -307,6 +307,23 @@ test('10.13.06 binds P0704 to its authoritative family and rejects a stale HVAC 
   assert.match(html,/Workflow Binding:/);
 });
 
+test('10.13.07 treats a P0704 start-command no-change finding as evidence and advances the branch',()=>{
+  const h=p0704EvidenceHarness({id:'CASE-P0704-PROGRESSION',vehicle:{year:'2007',make:'Ford',model:'F-150',engine:'',configuration:'Architecture Discrimination Required'},activeDtc:'P0704',dtcDefinition:'Clutch Switch Input Circuit Malfunction',dtcResolutionStatus:'RESOLVED',dtcReportingModule:'Powertrain Control Module (PCM)',affectedSystem:'Clutch Pedal / Start Enable Input',dtcDiagnosticCategory:'Powertrain Input Circuit',stage:'architecture-discrimination',intakeStep:'complete',existingDiagnosticEvidence:[],technicianObservations:[],routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'});
+  assert.equal(h.handle('Start command did not change.'),true);
+  assert.equal(h.state.activeDtc,'P0704');
+  assert.equal(h.state.dtcDefinition,'Clutch Switch Input Circuit Malfunction');
+  assert.equal(h.state.existingDiagnosticEvidence.at(-1).normalizedEvidence,'START_COMMAND_STATE_NOT_CHANGED');
+  assert.equal(h.state.existingDiagnosticEvidence.at(-1).rawObservation,'Start command did not change.');
+  assert.equal(h.state.stage,'p0704-architecture-confirmation');
+  assert.doesNotMatch(h.replies.at(-1),/continue with the next verified measurement/i);
+  assert.equal(h.handle('Manual transmission.'),true);
+  assert.equal(h.state.stage,'clutch-start-enable-circuit-isolation');
+  assert.equal(h.state.currentDiagnosticBranch,'CLUTCH_INPUT_TRANSITION_ISOLATION');
+  assert.equal(h.state.authoritativeDiagnosticTest.testId,'p0704-clutch-input-transition-isolation');
+  assert.match(h.replies.at(-1),/clutch-pedal switch\/input circuit.*PCM clutch\/start-enable PID.*state should transition/i);
+  assert.equal(h.state.componentCondemned,'None');
+});
+
 test('10.13.01 persists case ownership and rejects a restored mismatched evidence owner',()=>{
   assert.match(html,/state\.evidenceCaseId=state\.id/);
   assert.match(html,/state\.evidenceCaseId&&state\.evidenceCaseId!==state\.id\)state=blank\(\)/);
