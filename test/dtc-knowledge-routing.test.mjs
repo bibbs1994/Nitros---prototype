@@ -9,6 +9,7 @@ const authority=html.indexOf("const STATE_KEY='nitros_diagnostic_case_v10120'");
 const extractRaw=(startToken,endToken)=>{const start=html.indexOf(startToken,authority),end=html.indexOf(endToken,start);assert.ok(start>=0&&end>start);return html.slice(start,end).trim()};
 const helpers=Function(`${html.slice(html.indexOf('const DTC_PATTERN=',authority),html.indexOf('function add(',authority))};return{parseVehicle,codes}`)();
 const routingHarness=initial=>Function('initial','knowledge',`let state=JSON.parse(JSON.stringify(initial)),guidance={evidence:[],measurements:[],completedTests:[],hypotheses:[]},replies=[];const window={NitrosDtcKnowledge:knowledge};const blankGuidance=()=>({evidence:[],measurements:[],completedTests:[],hypotheses:[],selectedNextTest:null,nextTestReason:'',nextRequiredEvidence:''});function guidanceState(){return guidance=Object.assign(blankGuidance(),state.conversationalGuidance||guidance)}function diagnosticTestCompatible(test,system=state.affectedSystem||state.system,category=state.dtcDiagnosticCategory){const identity=\`${'${test?.testId||\'\'} ${test?.displayName||\'\'}'}\`.toLowerCase(),context=\`${'${system||\'\'} ${category||\'\'}'}\`.toLowerCase();return !(/blower|hvac/.test(identity)&&!/blower|hvac/.test(context))}function selectGuidanceTest(id,name,reason,evidence,method,routeContext={}){state.authoritativeDiagnosticTest={testId:id,displayName:name,status:'AWAITING_RESULT',affectedSystem:routeContext.affectedSystem||state.affectedSystem||state.system||'',diagnosticCategory:routeContext.diagnosticCategory||state.dtcDiagnosticCategory||'',activeDtc:state.activeDtc};guidance.selectedNextTest=state.authoritativeDiagnosticTest;guidance.nextTestReason=reason;guidance.nextRequiredEvidence=evidence;return state.authoritativeDiagnosticTest}function ask(text){replies.push(text)}${extractRaw('function clearIncompatibleResolvedDtcRoute','function nextRequiredIntakeStep')}return{apply:applyDtcKnowledgeResolution,manual:handleManualDtcSystemIdentification,state,get guidance(){return guidance},replies,workflowName}`)(initial,knowledge);
+const p0704EvidenceHarness=initial=>Function('initial',`let state=JSON.parse(JSON.stringify(initial)),guidance={evidence:[],measurements:[],completedTests:[],hypotheses:[]},replies=[];function guidanceState(){return guidance}function selectGuidanceTest(id,name,reason,evidence,method,routeContext={}){state.authoritativeDiagnosticTest={testId:id,displayName:name,status:'AWAITING_RESULT',affectedSystem:routeContext.affectedSystem||state.affectedSystem||'',diagnosticCategory:routeContext.diagnosticCategory||state.dtcDiagnosticCategory||'',activeDtc:state.activeDtc};guidance.selectedNextTest=state.authoritativeDiagnosticTest;guidance.nextTestReason=reason;guidance.nextRequiredEvidence=evidence;return state.authoritativeDiagnosticTest}function ask(text){replies.push(text)}${extractRaw('function p0704ArchitectureFromEvidence','function process')}return{handle:handleP0704ArchitectureDiscriminationEvidence,state,get guidance(){return guidance},replies}`)(initial);
 
 test('10.12.86 structured registry resolves representative generic DTCs through one resolver',()=>{
   const expected=['P0300','P0301','P0340','P0410','P0420','P0455','P0456','P0171','P0172','P0101','P0128','P0442','P0500','P0606','U0100'];
@@ -270,6 +271,25 @@ test('10.13.04 keeps P0704 active through architecture discrimination instead of
   assert.match(html,/Accessories\/electrical functions reported operational; primary complaint is no-start\/start-enable failure/);
   assert.match(html,/genericSymptomRestatementSuppressed:'YES'/);
   assert.doesNotMatch(html,/P0704[\s\S]{0,500}Configuration: Unresolved — requires architecture\/service information/);
+});
+
+test('10.13.05 consumes a P0704 no-start-enable observation and advances after one architecture fact',()=>{
+  const h=p0704EvidenceHarness({id:'CASE-P0704',vehicle:{year:'2007',make:'Ford',model:'F-150',engine:'',configuration:'Architecture Discrimination Required'},activeDtc:'P0704',dtcDefinition:'Clutch Switch Input Circuit Malfunction',dtcResolutionStatus:'RESOLVED',affectedSystem:'Clutch Pedal / Start Enable Input',dtcDiagnosticCategory:'Powertrain Input Circuit',stage:'architecture-discrimination',intakeStep:'complete',existingDiagnosticEvidence:[],technicianObservations:[],routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'});
+  assert.equal(h.handle('Did not see start enable.'),true);
+  assert.equal(h.state.stage,'p0704-architecture-confirmation');
+  assert.equal(h.state.activeDtc,'P0704');
+  assert.equal(h.state.dtcResolutionStatus,'RESOLVED');
+  assert.equal(h.state.existingDiagnosticEvidence.at(-1).normalizedEvidence,'START_ENABLE_INPUT_NOT_OBSERVED');
+  assert.equal(h.state.existingDiagnosticEvidence.at(-1).rawObservation,'Did not see start enable.');
+  assert.equal(h.state.routingDiagnostics.genericFindingFallbackPrevented,'YES');
+  assert.match(h.replies.at(-1),/automatic or manual transmission/i);
+  assert.doesNotMatch(h.replies.at(-1),/continue with the next verified measurement/i);
+  assert.equal(h.handle('Automatic transmission.'),true);
+  assert.equal(h.state.stage,'clutch-start-enable-circuit-isolation');
+  assert.equal(h.state.architectureDetermination,'AUTOMATIC_RANGE_START_PERMISSION');
+  assert.equal(h.state.authoritativeDiagnosticTest.testId,'p0704-range-start-permission-isolation');
+  assert.match(h.replies.at(-1),/Park and Neutral.*range.*permission state/i);
+  assert.equal(h.state.componentCondemned,'None');
 });
 
 test('10.13.01 persists case ownership and rejects a restored mismatched evidence owner',()=>{
