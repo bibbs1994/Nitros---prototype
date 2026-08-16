@@ -249,11 +249,27 @@ test('10.13.03 binds resolved P0704 to the active DTC and blocks unrelated sympt
   assert.equal(h.state.dtcDefinition,'Clutch Switch Input Circuit Malfunction');
   assert.equal(h.state.affectedSystem,'Clutch Pedal / Start Enable Input');
   assert.equal(h.state.dtcWorkflow,'Code-Specific Diagnostic');
-  assert.equal(h.state.authoritativeDiagnosticTest.testId,'p0704-configuration-and-clutch-input');
+  assert.equal(h.state.authoritativeDiagnosticTest.testId,'p0704-start-enable-architecture-discrimination');
   assert.doesNotMatch(JSON.stringify(h.state),/blower|hvac|fan-speed|resistor/i);
   assert.match(html,/function reconcileResolvedDtcState\(resolved\)/);
   assert.match(html,/state\.activeDtc=resolved\.code/);
   assert.match(html,/routingDecision:'DTC_STATE_RECONCILIATION_REQUIRED'/);
+});
+
+test('10.13.04 keeps P0704 active through architecture discrimination instead of a configuration dead end',()=>{
+  const vehicle={year:'2007',make:'Ford',model:'F-150',engine:'',configuration:''},h=routingHarness({vehicle:{...vehicle},activeDtc:'P0704',system:'',diagnosticDomain:'',routingDiagnostics:{},componentCondemned:'None',diagnosticConclusionState:'UNCONFIRMED'}),resolved=h.apply();
+  assert.equal(resolved.resolutionStatus,'RESOLVED');
+  assert.equal(h.state.activeDtc,'P0704');
+  assert.equal(h.state.vehicle.configuration,'Architecture Discrimination Required');
+  assert.equal(h.state.stage,'architecture-discrimination');
+  assert.equal(h.state.intakeStep,'complete');
+  assert.equal(h.state.authoritativeDiagnosticTest.testId,'p0704-start-enable-architecture-discrimination');
+  assert.match(h.guidance.nextRequiredEvidence,/clutch-pedal\/safety input.*start-permission or transmission-range input.*starter-relay/i);
+  assert.equal(h.state.componentCondemned,'None');
+  assert.match(html,/function recordP0704NoStartObservation\(text\)/);
+  assert.match(html,/Accessories\/electrical functions reported operational; primary complaint is no-start\/start-enable failure/);
+  assert.match(html,/genericSymptomRestatementSuppressed:'YES'/);
+  assert.doesNotMatch(html,/P0704[\s\S]{0,500}Configuration: Unresolved — requires architecture\/service information/);
 });
 
 test('10.13.01 persists case ownership and rejects a restored mismatched evidence owner',()=>{
