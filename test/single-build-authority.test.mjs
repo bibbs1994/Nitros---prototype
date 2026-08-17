@@ -5,8 +5,8 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.13.22 has one canonical build authority',()=>{
-  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.22',[\s\S]+release:'Compound Evidence Test Completion & Component Condemnation',[\s\S]+buildDate:'2026-08-17'/);
+test('10.13.23 has one canonical build authority',()=>{
+  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.23',[\s\S]+release:'Natural-Language Evidence Normalization & Condemnation',[\s\S]+buildDate:'2026-08-17'/);
   assert.match(html,/const \{version:VERSION,buildDate:BUILD,release:RELEASE\}=window\.NitrosBuild/);
   assert.match(html,/Authoritative Diagnostic State — v\$\{VERSION\}/);
   assert.match(html,/build:window\.NitrosBuild\.version/);
@@ -26,8 +26,8 @@ test('runtime verification exposes service-worker support, control, URL, and sta
   for(const id of ['nitrosRuntimeAppBuild','nitrosRuntimeSwSupported','nitrosRuntimeSwControlled','nitrosRuntimeSwUrl','nitrosRuntimeSwState'])assert.match(html,new RegExp(`id="${id}"`));
 });
 
-test('service worker uses 10.13.22 version and preserves safe navigation caching',()=>{
-  assert.match(sw,/const VERSION = '10\.13\.22'/);
+test('service worker uses 10.13.23 version and preserves safe navigation caching',()=>{
+  assert.match(sw,/const VERSION = '10\.13\.23'/);
   assert.match(sw,/self\.skipWaiting\(\)/);
   assert.match(sw,/self\.clients\.claim\(\)/);
   assert.match(sw,/fetch\(request, \{ cache: 'no-store' \}\)/);
@@ -100,6 +100,14 @@ test('10.13.22 atomically commits and judges compound switch evidence',()=>{
   assert.match(html,/facts\.mechanicalActuation&&facts\.inputVoltage>0&&facts\.outputVoltage===0&&facts\.outputTransitionObserved===false/);
   assert.match(html,/state\.componentCondemned='Clutch Start-Enable Switch'/);
   assert.match(html,/state\.diagnosticWorkflowState='REPAIR_OR_VERIFICATION'/);
+});
+
+test('10.13.23 normalizes switch evidence by semantic role across turns',()=>{
+  assert.match(html,/parseCompoundCircuitEvidenceWithSemanticRoles/);
+  assert.match(html,/going in\|input\|feed\|power in\|hot\|battery voltage/);
+  assert.match(html,/coming out\|output\|leaving\|other side\|signal out\|switched side/);
+  assert.match(html,/press\(\?:ed\|ing\)\?\|push\(\?:ed\|ing\)\?\|depress/);
+  assert.match(html,/const prior=\(state\.existingDiagnosticEvidence\|\|\[\]\)\.slice\(\)\.reverse\(\)\.find/);
 });
 
 test('10.12.99 contains long diagnostic output inside the mobile viewport',()=>{
