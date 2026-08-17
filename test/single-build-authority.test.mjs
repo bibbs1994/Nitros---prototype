@@ -5,8 +5,8 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.13.18 has one canonical build authority',()=>{
-  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.18',[\s\S]+release:'Persistent Architecture Resolution \/ No-Reentry Gate',[\s\S]+buildDate:'2026-08-16'/);
+test('10.13.19 has one canonical build authority',()=>{
+  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.19',[\s\S]+release:'Authoritative Evidence Commit \/ Measurement State Synchronization',[\s\S]+buildDate:'2026-08-16'/);
   assert.match(html,/const \{version:VERSION,buildDate:BUILD,release:RELEASE\}=window\.NitrosBuild/);
   assert.match(html,/Authoritative Diagnostic State — v\$\{VERSION\}/);
   assert.match(html,/build:window\.NitrosBuild\.version/);
@@ -26,8 +26,8 @@ test('runtime verification exposes service-worker support, control, URL, and sta
   for(const id of ['nitrosRuntimeAppBuild','nitrosRuntimeSwSupported','nitrosRuntimeSwControlled','nitrosRuntimeSwUrl','nitrosRuntimeSwState'])assert.match(html,new RegExp(`id="${id}"`));
 });
 
-test('service worker uses 10.13.18 version and preserves safe navigation caching',()=>{
-  assert.match(sw,/const VERSION = '10\.13\.18'/);
+test('service worker uses 10.13.19 version and preserves safe navigation caching',()=>{
+  assert.match(sw,/const VERSION = '10\.13\.19'/);
   assert.match(sw,/self\.skipWaiting\(\)/);
   assert.match(sw,/self\.clients\.claim\(\)/);
   assert.match(sw,/fetch\(request, \{ cache: 'no-store' \}\)/);
@@ -66,6 +66,14 @@ test('10.13.18 persists resolved architecture and prevents gate re-entry',()=>{
   assert.match(html,/persisted\?\.status==='RESOLVED'&&persisted\.caseId===state\.id&&persisted\.dtc===state\.activeDtc/);
   assert.match(html,/state\.architectureQuestionAllowed=false/);
   assert.match(html,/Illegal architecture re-entry repaired/);
+});
+
+test('10.13.19 commits applicable voltage readings through the authoritative evidence path',()=>{
+  assert.match(html,/function activeAwaitingDiagnosticTest\(\)/);
+  assert.match(html,/function commitAuthoritativeVoltageEvidence\(text\)/);
+  assert.match(html,/measurementType:'Voltage',measurementValue:value,measurementUnit:'V'/);
+  assert.match(html,/state\.evidenceConsumed='YES';state\.evidenceAppliedToStep=test\.testId;state\.evidenceWrite='ALLOWED'/);
+  assert.match(html,/A single static voltage reading is retained but does not establish the requested input\/PID transition/);
 });
 
 test('10.12.99 contains long diagnostic output inside the mobile viewport',()=>{
