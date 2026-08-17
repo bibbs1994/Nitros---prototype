@@ -5,8 +5,8 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.13.35 has one canonical build authority',()=>{
-  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.35',[\s\S]+release:'Conclusive Component-Failure Decision Lock',[\s\S]+buildDate:'2026-08-17'/);
+test('10.13.36 has one canonical build authority',()=>{
+  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.36',[\s\S]+release:'Natural-Language Intake & State Normalization Fix',[\s\S]+buildDate:'2026-08-17'/);
   assert.match(html,/const \{version:VERSION,buildDate:BUILD,release:RELEASE\}=window\.NitrosBuild/);
   assert.match(html,/Authoritative Diagnostic State — v\$\{VERSION\}/);
   assert.match(html,/build:window\.NitrosBuild\.version/);
@@ -26,8 +26,8 @@ test('runtime verification exposes service-worker support, control, URL, and sta
   for(const id of ['nitrosRuntimeAppBuild','nitrosRuntimeSwSupported','nitrosRuntimeSwControlled','nitrosRuntimeSwUrl','nitrosRuntimeSwState'])assert.match(html,new RegExp(`id="${id}"`));
 });
 
-test('service worker uses 10.13.35 version and preserves safe navigation caching',()=>{
-  assert.match(sw,/const VERSION = '10\.13\.35'/);
+test('service worker uses 10.13.36 version and preserves safe navigation caching',()=>{
+  assert.match(sw,/const VERSION = '10\.13\.36'/);
   assert.match(sw,/self\.skipWaiting\(\)/);
   assert.match(sw,/self\.clients\.claim\(\)/);
   assert.match(sw,/fetch\(request, \{ cache: 'no-store' \}\)/);
@@ -199,6 +199,14 @@ test('10.13.35 locks conclusive component transfer failures into repair verifica
   assert.match(html,/state\.diagnosticStatus='CONCLUSIVE FAILURE'/);
   assert.match(html,/state\.authoritativeDiagnosticState='TERMINAL_CONCLUSION'/);
   assert.match(html,/state\.suppressAdditionalComponentTests=true/);
+});
+
+test('10.13.36 captures two-digit year, stick shift, and no-crank shorthand',()=>{
+  assert.match(html,/function captureMechanicShorthandIntake\(text\)/);
+  assert.match(html,/year=truck\?\.\[1\]\?2000\+Number\(truck\[1\]\):null/);
+  assert.match(html,/stick\(\?: shift\)\?\|manual\|standard\|clutch pedal/);
+  assert.match(html,/state\.normalizedSymptom='No-crank \/ starter receives no voltage'/);
+  assert.match(html,/normalizeDiagnosticEvidenceWithShorthand/);
 });
 
 test('10.12.99 contains long diagnostic output inside the mobile viewport',()=>{
