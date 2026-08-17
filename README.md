@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.37 adds whole-utterance vehicle and mechanical-guidance intake while preserving the evidence-driven diagnostic workflows.
+Version 10.13.38 binds answers to pending mechanical questions and preserves hands-on mechanical guidance mode.
 
 ## Secure semantic analyzer
 
