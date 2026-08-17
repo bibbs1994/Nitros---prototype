@@ -5,8 +5,8 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.13.24 has one canonical build authority',()=>{
-  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.24',[\s\S]+release:'Semantic Diagnostic Evidence Reasoning',[\s\S]+buildDate:'2026-08-17'/);
+test('10.13.25 has one canonical build authority',()=>{
+  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.25',[\s\S]+release:'Evidence-Driven Diagnostic Core Reset',[\s\S]+buildDate:'2026-08-17'/);
   assert.match(html,/const \{version:VERSION,buildDate:BUILD,release:RELEASE\}=window\.NitrosBuild/);
   assert.match(html,/Authoritative Diagnostic State — v\$\{VERSION\}/);
   assert.match(html,/build:window\.NitrosBuild\.version/);
@@ -26,8 +26,8 @@ test('runtime verification exposes service-worker support, control, URL, and sta
   for(const id of ['nitrosRuntimeAppBuild','nitrosRuntimeSwSupported','nitrosRuntimeSwControlled','nitrosRuntimeSwUrl','nitrosRuntimeSwState'])assert.match(html,new RegExp(`id="${id}"`));
 });
 
-test('service worker uses 10.13.24 version and preserves safe navigation caching',()=>{
-  assert.match(sw,/const VERSION = '10\.13\.24'/);
+test('service worker uses 10.13.25 version and preserves safe navigation caching',()=>{
+  assert.match(sw,/const VERSION = '10\.13\.25'/);
   assert.match(sw,/self\.skipWaiting\(\)/);
   assert.match(sw,/self\.clients\.claim\(\)/);
   assert.match(sw,/fetch\(request, \{ cache: 'no-store' \}\)/);
@@ -115,6 +115,14 @@ test('10.13.24 normalizes condition, command, input, and output roles independen
   assert.match(html,/clutch\\s\+\(\?:pedal\\s\+\)\?\(\?:depressed\|down\|pushed\|operated\|fully depressed\)/);
   assert.match(html,/const values=\[\.\.\.raw\.matchAll/);
   assert.match(html,/if\(facts\.mechanicalActuation&&facts\.inputVoltage>0&&facts\.outputVoltage===0\)facts\.outputTransitionObserved=false/);
+});
+
+test('10.13.25 evaluates evidence before scripted progression',()=>{
+  assert.match(html,/function normalizeDiagnosticEvidence\(text,context=\{\}\)/);
+  assert.match(html,/function evaluateEvidenceDrivenCase\(facts\)/);
+  assert.match(html,/!test\|\|!facts\.mechanicalActuation\|\|!\(facts\.inputVoltage>0\)\|\|facts\.outputVoltage!==0/);
+  assert.match(html,/state\.diagnosticStatus='FAULT_CONFIRMED'/);
+  assert.match(html,/state\.repairRecommendation='Replace the clutch start-enable switch/);
 });
 
 test('10.12.99 contains long diagnostic output inside the mobile viewport',()=>{
