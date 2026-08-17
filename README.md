@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.12.23 adds the Oliver Appointment Dedicated Field Commit Fix while preserving the 10.12.18 PID evidence gate and verified portal workflows.
+Version 10.13.37 adds whole-utterance vehicle and mechanical-guidance intake while preserving the evidence-driven diagnostic workflows.
 
 ## Secure semantic analyzer
 
