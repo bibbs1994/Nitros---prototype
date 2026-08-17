@@ -5,8 +5,8 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.13.27 has one canonical build authority',()=>{
-  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.27',[\s\S]+release:'Configuration Fact Normalization & Architecture State Handoff',[\s\S]+buildDate:'2026-08-17'/);
+test('10.13.28 has one canonical build authority',()=>{
+  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.28',[\s\S]+release:'Diagnostic Pattern & Actionable Test Engine',[\s\S]+buildDate:'2026-08-17'/);
   assert.match(html,/const \{version:VERSION,buildDate:BUILD,release:RELEASE\}=window\.NitrosBuild/);
   assert.match(html,/Authoritative Diagnostic State — v\$\{VERSION\}/);
   assert.match(html,/build:window\.NitrosBuild\.version/);
@@ -26,8 +26,8 @@ test('runtime verification exposes service-worker support, control, URL, and sta
   for(const id of ['nitrosRuntimeAppBuild','nitrosRuntimeSwSupported','nitrosRuntimeSwControlled','nitrosRuntimeSwUrl','nitrosRuntimeSwState'])assert.match(html,new RegExp(`id="${id}"`));
 });
 
-test('service worker uses 10.13.27 version and preserves safe navigation caching',()=>{
-  assert.match(sw,/const VERSION = '10\.13\.27'/);
+test('service worker uses 10.13.28 version and preserves safe navigation caching',()=>{
+  assert.match(sw,/const VERSION = '10\.13\.28'/);
   assert.match(sw,/self\.skipWaiting\(\)/);
   assert.match(sw,/self\.clients\.claim\(\)/);
   assert.match(sw,/fetch\(request, \{ cache: 'no-store' \}\)/);
@@ -138,6 +138,14 @@ test('10.13.27 commits normalized transmission facts before workflow gating',()=
   assert.match(html,/automatic\|auto\|no clutch pedal\|prndl/);
   assert.match(html,/state\.architectureFact=\{\.\.\.fact,raw:text/);
   assert.match(html,/state\.pendingRequirement=null;state\.architectureResolutionState='RESOLVED';state\.architectureGate='COMPLETE'/);
+});
+
+test('10.13.28 creates an executable current test after configuration is resolved',()=>{
+  assert.match(html,/function createActionableDiagnosticTest\(\)/);
+  assert.match(html,/technicianInstruction:'At the clutch start-enable switch, use a digital voltmeter/);
+  assert.match(html,/operatingCondition:'Key held in START; clutch pedal fully depressed/);
+  assert.match(html,/state\.currentDiagnosticTest=test;state\.authoritativeDiagnosticTest=test/);
+  assert.match(html,/if\(manual&&isDiagnosticActionRequest\(text\)&&\(!active\|\|!active\.technicianInstruction\)\)/);
 });
 
 test('10.12.99 contains long diagnostic output inside the mobile viewport',()=>{
