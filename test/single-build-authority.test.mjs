@@ -5,8 +5,8 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.13.33 has one canonical build authority',()=>{
-  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.33',[\s\S]+release:'Fact-First Diagnostic Context Guard',[\s\S]+buildDate:'2026-08-17'/);
+test('10.13.34 has one canonical build authority',()=>{
+  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.34',[\s\S]+release:'Natural-Language Intake Complaint Capture',[\s\S]+buildDate:'2026-08-17'/);
   assert.match(html,/const \{version:VERSION,buildDate:BUILD,release:RELEASE\}=window\.NitrosBuild/);
   assert.match(html,/Authoritative Diagnostic State — v\$\{VERSION\}/);
   assert.match(html,/build:window\.NitrosBuild\.version/);
@@ -26,8 +26,8 @@ test('runtime verification exposes service-worker support, control, URL, and sta
   for(const id of ['nitrosRuntimeAppBuild','nitrosRuntimeSwSupported','nitrosRuntimeSwControlled','nitrosRuntimeSwUrl','nitrosRuntimeSwState'])assert.match(html,new RegExp(`id="${id}"`));
 });
 
-test('service worker uses 10.13.33 version and preserves safe navigation caching',()=>{
-  assert.match(sw,/const VERSION = '10\.13\.33'/);
+test('service worker uses 10.13.34 version and preserves safe navigation caching',()=>{
+  assert.match(sw,/const VERSION = '10\.13\.34'/);
   assert.match(sw,/self\.skipWaiting\(\)/);
   assert.match(sw,/self\.clients\.claim\(\)/);
   assert.match(sw,/fetch\(request, \{ cache: 'no-store' \}\)/);
@@ -183,6 +183,14 @@ test('10.13.33 builds response context from extracted current-case facts',()=>{
   assert.match(html,/function preflightDiagnosticResponse\(text\)/);
   assert.match(html,/status:'REJECTED_OFF_TOPIC_RESPONSE'/);
   assert.match(html,/status:'PASS_CURRENT_CASE_FACTS_ONLY'/);
+});
+
+test('10.13.34 captures no-crank complaints before DTC intake gating',()=>{
+  assert.match(html,/function normalizeIntakeComplaint\(text\)/);
+  assert.match(html,/complaint:'No crank when clutch pedal is applied'/);
+  assert.match(html,/state\.normalizedSymptom=intake\.normalizedSymptom/);
+  assert.match(html,/state\.dtcOptional='YES'/);
+  assert.match(html,/state\.diagnosticWorkflowState='STARTING_NO_CRANK'/);
 });
 
 test('10.12.99 contains long diagnostic output inside the mobile viewport',()=>{
