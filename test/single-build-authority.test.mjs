@@ -5,8 +5,8 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.13.17 has one canonical build authority',()=>{
-  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.17',[\s\S]+release:'Architecture Resolution Gate \/ Mandatory State Transition',[\s\S]+buildDate:'2026-08-16'/);
+test('10.13.18 has one canonical build authority',()=>{
+  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.18',[\s\S]+release:'Persistent Architecture Resolution \/ No-Reentry Gate',[\s\S]+buildDate:'2026-08-16'/);
   assert.match(html,/const \{version:VERSION,buildDate:BUILD,release:RELEASE\}=window\.NitrosBuild/);
   assert.match(html,/Authoritative Diagnostic State — v\$\{VERSION\}/);
   assert.match(html,/build:window\.NitrosBuild\.version/);
@@ -26,8 +26,8 @@ test('runtime verification exposes service-worker support, control, URL, and sta
   for(const id of ['nitrosRuntimeAppBuild','nitrosRuntimeSwSupported','nitrosRuntimeSwControlled','nitrosRuntimeSwUrl','nitrosRuntimeSwState'])assert.match(html,new RegExp(`id="${id}"`));
 });
 
-test('service worker uses 10.13.17 version and preserves safe navigation caching',()=>{
-  assert.match(sw,/const VERSION = '10\.13\.17'/);
+test('service worker uses 10.13.18 version and preserves safe navigation caching',()=>{
+  assert.match(sw,/const VERSION = '10\.13\.18'/);
   assert.match(sw,/self\.skipWaiting\(\)/);
   assert.match(sw,/self\.clients\.claim\(\)/);
   assert.match(sw,/fetch\(request, \{ cache: 'no-store' \}\)/);
@@ -58,6 +58,14 @@ test('10.13.17 blocks unrelated input behind the architecture requirement gate',
   assert.match(html,/if\(requirement\.type==='architecture-discrimination'&&architecture\)/);
   assert.match(html,/That information does not answer the current configuration question/);
   assert.match(html,/state\.pendingRequirement=null;state\.architectureResolutionState='ARCHITECTURE_CONFIRMED'/);
+});
+
+test('10.13.18 persists resolved architecture and prevents gate re-entry',()=>{
+  assert.match(html,/architectureResolution=\{status:'RESOLVED',value,source:'technician-confirmed'/);
+  assert.match(html,/completedDiagnosticGates\.includes\('architecture-discrimination'\)/);
+  assert.match(html,/persisted\?\.status==='RESOLVED'&&persisted\.caseId===state\.id&&persisted\.dtc===state\.activeDtc/);
+  assert.match(html,/state\.architectureQuestionAllowed=false/);
+  assert.match(html,/Illegal architecture re-entry repaired/);
 });
 
 test('10.12.99 contains long diagnostic output inside the mobile viewport',()=>{
