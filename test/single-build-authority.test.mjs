@@ -5,8 +5,8 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.13.15 has one canonical build authority',()=>{
-  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.15',[\s\S]+release:'Hard Stop-State Dispatcher Enforcement',[\s\S]+buildDate:'2026-08-16'/);
+test('10.13.16 has one canonical build authority',()=>{
+  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.16',[\s\S]+release:'Command Dispatcher Precedence Lock \/ Evidence Containment',[\s\S]+buildDate:'2026-08-16'/);
   assert.match(html,/const \{version:VERSION,buildDate:BUILD,release:RELEASE\}=window\.NitrosBuild/);
   assert.match(html,/Authoritative Diagnostic State — v\$\{VERSION\}/);
   assert.match(html,/build:window\.NitrosBuild\.version/);
@@ -26,8 +26,8 @@ test('runtime verification exposes service-worker support, control, URL, and sta
   for(const id of ['nitrosRuntimeAppBuild','nitrosRuntimeSwSupported','nitrosRuntimeSwControlled','nitrosRuntimeSwUrl','nitrosRuntimeSwState'])assert.match(html,new RegExp(`id="${id}"`));
 });
 
-test('service worker uses 10.13.15 version and preserves safe navigation caching',()=>{
-  assert.match(sw,/const VERSION = '10\.13\.15'/);
+test('service worker uses 10.13.16 version and preserves safe navigation caching',()=>{
+  assert.match(sw,/const VERSION = '10\.13\.16'/);
   assert.match(sw,/self\.skipWaiting\(\)/);
   assert.match(sw,/self\.clients\.claim\(\)/);
   assert.match(sw,/fetch\(request, \{ cache: 'no-store' \}\)/);
@@ -37,11 +37,19 @@ test('service worker uses 10.13.15 version and preserves safe navigation caching
   assert.doesNotMatch(sw,/caches\.clear|localStorage|indexedDB/i);
 });
 
-test('hard stop dispatcher records evidence without diagnostic progression',()=>{
-  assert.match(html,/function isHardStopState\(value\)\{return\['STOPPED','HOLD','PAUSED','COMPLETE','COMPLETED','AWAITING_REVIEW','TERMINATED','CANCELLED','ABORTED','AWAITING_TECHNICIAN_FINDING'\]/);
-  assert.match(html,/const processWithDispatcherGuard=process;[\s\S]+state\.dispatcherGuard='BLOCKED_HARD_STOP'/);
-  assert.match(html,/status:'OBSERVED_NO_PROGRESSION'/);
+test('hard stop dispatcher blocks progression without converting control inputs to evidence',()=>{
+  assert.match(html,/function isHardStopState\(value\)\{return\['STOPPED','HOLD','PAUSED','COMPLETE','COMPLETED','AWAITING_REVIEW','AWAITING_REQUIRED_INFORMATION','REPAIR_DECISION_REQUIRED','TERMINATED','CANCELLED','ABORTED','AWAITING_TECHNICIAN_FINDING'\]/);
+  assert.match(html,/classification==='HARD_STOP_COMMAND'[\s\S]+authoritativeDiagnosticState='STOPPED'/);
+  assert.match(html,/state\.pendingNextTest=null;state\.queuedDiagnosticAction=null;state\.activePromptForMeasurement=null/);
   assert.match(html,/function canAdvanceDiagnostic\(\)\{return state\.authoritativeDiagnosticState==='ACTIVE'&&canDispatchDiagnosticAction\('advance'\)\}/);
+});
+
+test('10.13.16 dispatcher classifies commands before evidence handling',()=>{
+  assert.match(html,/function classifyDiagnosticInput\(raw\)\{[\s\S]+HARD_STOP_COMMAND[\s\S]+PROGRESSION_COMMAND[\s\S]+REPEAT_COMMAND/);
+  assert.match(html,/if\(classification==='PROGRESSION_COMMAND'\)\{if\(current!=='ACTIVE'\)/);
+  assert.match(html,/diagnosticDispatcherAudit\(text,classification\)/);
+  assert.match(html,/if\(isHardStopState\(current\)\)\{diagnosticDispatcherAudit\(text,'UNKNOWN_INPUT'\)/);
+  assert.match(html,/Input Classification: \$\{esc\(state\.dispatcherClassification/);
 });
 
 test('10.12.99 contains long diagnostic output inside the mobile viewport',()=>{
