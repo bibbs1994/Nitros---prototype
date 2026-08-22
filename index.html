@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.13.40 — Multiple Active RO Support — Build 2026-08-22</title>
+<title>Nitros Mobile Technician Portal v10.13.41 — Saved Work Queue Removal — Build 2026-08-22</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -525,7 +525,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.13.40 — Multiple Active RO Support — Build 2026-08-22</div>
+  <div class="sub">Mobile Technician Portal v10.13.41 — Saved Work Queue Removal — Build 2026-08-22</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -539,7 +539,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.13.40 — Multiple Active RO Support · Build 2026-08-22. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.13.41 — Saved Work Queue Removal · Build 2026-08-22. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -703,7 +703,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow nitros-build-identity">Version 10.13.40 — Multiple Active RO Support · Build 2026-08-22</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow nitros-build-identity">Version 10.13.41 — Saved Work Queue Removal · Build 2026-08-22</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -770,7 +770,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow nitros-build-identity">Version 10.13.40 — Multiple Active RO Support · Build 2026-08-22</div>
+      <div class="eyebrow nitros-build-identity">Version 10.13.41 — Saved Work Queue Removal · Build 2026-08-22</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1689,13 +1689,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.40 • Multiple Active RO Support • Build 2026-08-22</div>
+<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.41 • Saved Work Queue Removal • Build 2026-08-22</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.13.40',
-  release:'Multiple Active RO Support',
+  version:'10.13.41',
+  release:'Saved Work Queue Removal',
   buildDate:'2026-08-22',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -5332,7 +5332,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div class="nitros-build-identity" style="font-size:.78rem;color:#b9c8d8">Version 10.13.40 — Multiple Active RO Support · Build 2026-08-22</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div class="nitros-build-identity" style="font-size:.78rem;color:#b9c8d8">Version 10.13.41 — Saved Work Queue Removal · Build 2026-08-22</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5370,7 +5370,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.13.40 — Multiple Active RO Support · Build 2026-08-22</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.13.41 — Saved Work Queue Removal · Build 2026-08-22</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6409,7 +6409,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.13.40</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.13.41</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -8065,6 +8065,7 @@ document.addEventListener("DOMContentLoaded",()=>{
  async function get(id){if(!id)return null;if(!db)await openDb();return request(db.transaction(STORE,'readonly').objectStore(STORE),'get',id)}
  async function listActive(){if(!db)await openDb();const rows=await request(db.transaction(STORE,'readonly').objectStore(STORE),'getAll');return rows.filter(row=>row.status==='active').sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)))}
  async function remove(id){if(!id)return;if(!db)await openDb();const tx=db.transaction(STORE,'readwrite');await request(tx.objectStore(STORE),'delete',id)}
+ async function archiveSavedWork(id){const record=await get(id);if(!record||record.status!=='active')return false;await put({...record,status:'archived',archivedAt:iso(),saveReason:'removed from saved work'});const f=record.draft?.fields||{},v=record.draft?.selectedVehicle||{};if(typeof saveCustomerHistoryRecord==='function')saveCustomerHistoryRecord({checkInId:`saved-work-${record.id}`,repairOrder:f.roNumber||f.workOrderNumber||record.id,timestamp:record.updatedAt||iso(),customer:{name:f.customerName||'',phone:f.phone||'',email:f.email||''},vehicle:{year:v.year||f.vehicleYear||'',make:v.make||f.vehicleMake||'',model:v.model||f.vehicleModel||'',vin:record.vin||f.vinInput||''},mileage:record.mileage||f.mileage||'',concern:record.complaint||f.concern||'',technicianInspection:{findings:record.notes?.findings||f.technicianFindings||'',recommendation:record.repairInformation?.recommendations||f.repairRecommendations||''},workOrder:{repairStatus:record.repairInformation?.status||f.repairStatus||'Saved work removed',completionNotes:'Retained from Saved Work',activeMilliseconds:record.laborTimer?.accumulatedElapsedMsBeforeCurrentRun||0},retainedSavedWork:true,activeRepairRecordId:record.id,notes:record.notes,diagnosticInformation:record.diagnosticInformation,photoStorageReference:record.photoStorageReference});return true}
  function ensureActive(){if(activeId)return activeId;activeId=uid();createdAt=iso();localStorage.setItem(POINTER,activeId);diagnostic();return activeId}
  function timerRecord(){const clock=core?.getJobClock?.()||{};return {roId:activeId,status:clock.state==='finished'?'stopped':clock.state||'not_started',originalStartTimestamp:clock.originalStartTimestamp||clock.startedAt||clock.timeline?.find(x=>/started/i.test(x.type||''))?.timestamp||clock.activeStartedAt||null,mostRecentResumeTimestamp:clock.activeStartedAt||null,accumulatedElapsedMsBeforeCurrentRun:Number(clock.activeMs||clock.accumulatedActiveMs)||0,accumulatedPausedMs:Number(clock.pausedMs||clock.accumulatedPausedMs)||0,pauseStartedTimestamp:clock.pauseStartedAt||null,lastSavedTimestamp:iso(),timeline:Array.isArray(clock.timeline)?clock.timeline:[]}}
  function hasMeaningfulData(draft){const f=draft?.fields||{};return Boolean(draft?.selectedVehicle||Object.entries(f).some(([key,value])=>!['arrivalMethod','fuelLevel','brakesStatus','tiresStatus','steeringStatus','fluidsStatus','batteryStatus','lightsStatus','laborSystem','laborRate','authorizationStatus','authorizationMethod','repairStatus'].includes(key)&&String(value??'').trim()))}
@@ -8082,13 +8083,16 @@ document.addEventListener("DOMContentLoaded",()=>{
  function confirmDiscard(){return new Promise(resolve=>{let modal=$('activeRoDiscardConfirm');if(!modal){modal=document.createElement('div');modal.id='activeRoDiscardConfirm';modal.className='smart-evidence-modal';modal.innerHTML='<div class="smart-evidence-dialog"><div class="smart-evidence-head"><div><div class="eyebrow">Permanent deletion</div><h2>Discard current draft?</h2><p>This permanently removes the draft and its RO-specific work. This cannot be undone.</p></div></div><div class="grid two"><button class="btn ghost" data-confirm="cancel">Keep Current RO</button><button class="btn primary" data-confirm="discard">Permanently Discard Draft</button></div></div>';document.body.appendChild(modal)}modal.classList.remove('hidden');modal.querySelectorAll('[data-confirm]').forEach(button=>button.onclick=()=>{modal.classList.add('hidden');resolve(button.dataset.confirm==='discard')});})}
  async function startNewRepairOrder(){if(activeId&&hasMeaningfulData(core.collectDraft())){const choice=await chooseNewRoAction();if(choice==='return')return;if(choice==='discard'&&!(await confirmDiscard()))return;if(choice==='discard')await abandon('Explicit Discard Repair Order');else await persist('save current and start new',true)}activeId='';createdAt='';localStorage.removeItem(POINTER);core.resetActiveWorkspace(true);localStorage.removeItem('nitros_diagnostic_case_v10120');ensureActive();await core.setActivePhotoRecord?.(activeId);await persist('new repair order',true);core.showScreen('checkin');}
  async function openRepairOrder(id){if(!id||id===activeId)return restoreActive(id);await persist('switch repair order',true);return restoreActive(id)}
- async function renderActiveRepairOrders(){const box=$('activeRepairOrderList');if(!box)return;const records=await listActive();box.innerHTML=records.map(record=>{const f=record.draft?.fields||{},v=record.draft?.selectedVehicle||{};const label=[f.roNumber||f.workOrderNumber||record.id,f.customerName,[v.year||f.vehicleYear,v.make||f.vehicleMake,v.model||f.vehicleModel].filter(Boolean).join(' ')].filter(Boolean).join(' • ');return `<button class="btn secondary small active-ro-open" type="button" data-ro-id="${record.id}">${label||record.id}</button>`}).join('');box.querySelectorAll('.active-ro-open').forEach(button=>button.addEventListener('click',()=>openRepairOrder(button.dataset.roId)));}
+ function savedWorkLabel(record){const f=record.draft?.fields||{},v=record.draft?.selectedVehicle||{},vehicle=[v.year||f.vehicleYear,v.make||f.vehicleMake,v.model||f.vehicleModel].filter(Boolean).join(' '),customer=f.customerName||record.customerInformation?.name||'',ro=f.roNumber||f.workOrderNumber||record.id,concern=f.concern||record.complaint||'';return {title:[customer,vehicle].filter(Boolean).join(' • ')||ro,detail:[ro,concern].filter(Boolean).join(' • ')}}
+ function confirmRemoveSavedWork(record){const label=savedWorkLabel(record);return new Promise(resolve=>{let modal=$('removeSavedWorkConfirm');if(!modal){modal=document.createElement('div');modal.id='removeSavedWorkConfirm';modal.className='smart-evidence-modal';modal.innerHTML='<div class="smart-evidence-dialog"><div class="smart-evidence-head"><div><div class="eyebrow">Saved Work</div><h2>Remove from Saved Work?</h2><p id="removeSavedWorkIdentity"></p><p>This removes the RO from your active mobile work list. Customer and repair history will be retained.</p></div></div><div class="grid two"><button class="btn secondary" data-remove-choice="cancel">Cancel</button><button class="btn primary" data-remove-choice="remove">Remove from Saved Work</button></div></div>';document.body.appendChild(modal)}$('removeSavedWorkIdentity').textContent=`${label.title}\n${label.detail}`;modal.classList.remove('hidden');modal.querySelectorAll('[data-remove-choice]').forEach(button=>button.onclick=()=>{modal.classList.add('hidden');resolve(button.dataset.removeChoice==='remove')});})}
+ async function removeFromSavedWork(id){const record=await get(id);if(!record||!(await confirmRemoveSavedWork(record)))return false;if(id===activeId)await persist('remove from saved work',true);await archiveSavedWork(id);if(id===activeId){activeId='';createdAt='';localStorage.removeItem(POINTER);core.resetActiveWorkspace(true);localStorage.removeItem('nitros_diagnostic_case_v10120');core.showScreen('home')}await renderActiveRepairOrders();return true}
+ async function renderActiveRepairOrders(){const box=$('activeRepairOrderList');if(!box)return;const records=await listActive();box.innerHTML=records.map(record=>{const label=savedWorkLabel(record);return `<div class="row"><button class="btn secondary small active-ro-open" type="button" data-ro-id="${record.id}"><strong>${label.title}</strong><br><small>${label.detail}</small></button><button class="btn ghost small active-ro-menu" type="button" data-ro-id="${record.id}" aria-label="Saved Work actions">⋯</button></div>`}).join('');box.querySelectorAll('.active-ro-open').forEach(button=>button.addEventListener('click',()=>openRepairOrder(button.dataset.roId)));box.querySelectorAll('.active-ro-menu').forEach(button=>button.addEventListener('click',()=>removeFromSavedWork(button.dataset.roId)));}
  document.addEventListener('click',event=>{const newButton=event.target.closest('#newRepairOrder');if(newButton){event.preventDefault();event.stopImmediatePropagation();startNewRepairOrder();return}if(event.target.closest('#discardDraft')){event.preventDefault();event.stopImmediatePropagation();if(activeId)confirmDiscard().then(ok=>ok&&abandon('Explicit Discard Repair Order'))}},true);
  $('submitCheckin')?.addEventListener('click',()=>setTimeout(()=>{const ok=$('submitStatus')?.classList.contains('ok')&&!localStorage.getItem(core.draftKey);if(ok)abandon('Complete Repair Order')},900));
  ['startJob','pauseJob','resumeJob','finishJob'].forEach(id=>$(id)?.addEventListener('click',()=>setTimeout(()=>persist(`timer control ${id}`,true),0)));
  window.addEventListener('pagehide',()=>persist('pagehide',true));document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persist('background',true)});
  window.addEventListener('nitros-ro-stage-change',event=>{if(event.detail?.id==='home')renderActiveRepairOrders()});
- window.NitrosActiveRepairPersistence={version:VERSION,schemaVersion:SCHEMA_VERSION,getActiveId:()=>activeId,persistNow:()=>persist('manual diagnostic',true),restore:restoreActive,listActive,open:openRepairOrder,startNew:startNewRepairOrder,renderActiveRepairOrders,getDiagnostics:()=>({activeId,db:DB_NAME,lastError,restored,restoreAt,stage:core?.getScreen?.(),timer:timerRecord()})};
+ window.NitrosActiveRepairPersistence={version:VERSION,schemaVersion:SCHEMA_VERSION,getActiveId:()=>activeId,persistNow:()=>persist('manual diagnostic',true),restore:restoreActive,listActive,open:openRepairOrder,startNew:startNewRepairOrder,removeFromSavedWork,renderActiveRepairOrders,getDiagnostics:()=>({activeId,db:DB_NAME,lastError,restored,restoreAt,stage:core?.getScreen?.(),timer:timerRecord()})};
  const boot=async()=>{try{await openDb();await restoreActive()}catch(error){warn(error)}diagnostic()};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,120),{once:true});else setTimeout(boot,120);
 })();
 </script>
