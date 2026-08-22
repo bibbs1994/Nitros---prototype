@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.45 makes the persistent bottom-bar Active Jobs control save and open the existing Active Jobs switcher reliably.
+Version 10.13.46 makes the persistent bottom-bar Active Jobs control save and open the existing Active Jobs switcher reliably.
 
 ## Secure semantic analyzer
 

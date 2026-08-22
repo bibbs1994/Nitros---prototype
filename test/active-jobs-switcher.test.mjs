@@ -17,6 +17,9 @@ test('opening the switcher saves current work and displays human-readable active
   assert.match(html,/savedWorkLabel\(record\)/);
   assert.match(html,/Current job/);
   assert.match(html,/document\.addEventListener\('click',event=>\{if\(!event\.target\.closest\('#quickActiveJobs'\)\)return;event\.preventDefault\(\);event\.stopImmediatePropagation\(\);showActiveJobs\(\)\},true\)/);
+  assert.match(html,/escape=value=>String\(value\?\?''\)\.replace/);
+  const rendererSource=html.slice(html.indexOf('async function renderActiveRepairOrders'),html.indexOf('let activeJobsOpening'));
+  assert.doesNotMatch(rendererSource,/escapeHtml\(/);
 });
 
 test('switching uses the existing isolated RO restore and New Walk-In saves instead of discarding',()=>{

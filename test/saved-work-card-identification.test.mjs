@@ -25,7 +25,7 @@ test('concern is a concise separate display line and internal id is only a fallb
   assert.equal(label.ro,'RO-22');
   assert.ok(label.concern.length<=96);
   assert.match(label.concern,/…$/);
-  assert.match(html,/history-meta">\$\{escapeHtml\(label\.concern\)\}/);
+  assert.match(html,/history-meta">\$\{escape\(label\.concern\)\}/);
 });
 
 test('card remains independently selectable and retains the Saved Work removal action',()=>{
