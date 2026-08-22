@@ -22,9 +22,9 @@ test('opening the switcher saves current work and displays human-readable active
   assert.doesNotMatch(rendererSource,/escapeHtml\(/);
 });
 
-test('switching uses the existing isolated RO restore and New Walk-In saves instead of discarding',()=>{
+test('switching uses the existing isolated RO restore and New Walk-In honors draft protection',()=>{
   assert.match(html,/await openRepairOrder\(button\.dataset\.roId\)/);
-  assert.match(html,/activeJobsNewRo'\)\?\.addEventListener\('click',async\(\)=>\{\$\('activeJobsModal'\)\?\.classList\.add\('hidden'\);await startNewRepairOrder\(true\)\}/);
-  assert.match(html,/const choice=skipChoice\?'save':await chooseNewRoAction\(\)/);
+  assert.match(html,/activeJobsNewRo'\)\?\.addEventListener\('click',async\(\)=>\{\$\('activeJobsModal'\)\?\.classList\.add\('hidden'\);await startNewRepairOrder\(\)\}/);
+  assert.match(html,/const choice=await chooseNewRoAction\(\)/);
   assert.match(html,/await core\.setActivePhotoRecord\?\.\(activeId\)/);
 });

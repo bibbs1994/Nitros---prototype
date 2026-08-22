@@ -27,6 +27,6 @@ test('archived saved work is retained in customer history and excluded from the 
 });
 
 test('permanent draft deletion remains a separate, explicitly worded action',()=>{
-  assert.match(html,/Permanently Delete Test Draft|Permanently Discard Draft/);
+  assert.match(html,/Permanently Delete Test Draft|Confirm Discard & Start New RO/);
   assert.match(html,/async function abandon\(reason\)/);
 });

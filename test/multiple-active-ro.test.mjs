@@ -11,14 +11,20 @@ test('multiple active ROs use stable IndexedDB records and an active pointer',()
   assert.match(html,/async function openRepairOrder\(id\)/);
 });
 
-test('new RO flow saves current work, offers return, and requires second discard confirmation',()=>{
+test('new RO flow protects an unfinished draft and requires confirmed discard',()=>{
+  assert.match(html,/Keep Current RO/);
   assert.match(html,/Save Current RO & Start New RO/);
-  assert.match(html,/Return to Current RO/);
-  assert.match(html,/Discard Current Draft/);
-  assert.match(html,/Permanently Discard Draft/);
-  assert.match(html,/await persist\('save current and start new',true\)/);
+  assert.match(html,/Discard Draft & Start New RO/);
+  assert.match(html,/Cancel — Keep Draft/);
+  assert.match(html,/Confirm Discard & Start New RO/);
+  assert.match(html,/if\(choice==='keep'\)\{await restoreActive\(activeId\);return\}/);
+  assert.match(html,/if\(choice==='discard'&&!\(await confirmDiscard\(\)\)\)return/);
+  assert.match(html,/await abandon\('Confirmed discard before starting new repair order'\)/);
+  assert.match(html,/else await persist\('save current and start new',true\)/);
+  assert.match(html,/activeJobsNewRo[\s\S]*?await startNewRepairOrder\(\)/);
+  assert.doesNotMatch(html,/startNewRepairOrder\(true\)/);
   assert.match(html,/core\.resetActiveWorkspace\(true\)/);
-  assert.doesNotMatch(html,/Starting a new repair order will discard that active draft/);
+  assert.match(html,/Other saved and active jobs will remain available/);
 });
 
 test('active RO restore isolates diagnostics and photo records by RO id',()=>{

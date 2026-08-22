@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.47 lowers the persistent bottom toolbar slightly on non-inset mobile viewports so the Vehicle control remains fully visible and tappable, while preserving iPhone safe-area clearance.
+Version 10.13.48 protects unfinished repair-order drafts with a two-step discard confirmation while preserving unrelated active and saved jobs.
 
 ## Secure semantic analyzer
 
