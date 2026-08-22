@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.38 binds answers to pending mechanical questions and preserves hands-on mechanical guidance mode.
+Version 10.13.39 makes the large Add Evidence control contextual to the active evidence workflow while preserving the permanent toolbar entry point.
 
 ## Secure semantic analyzer
 

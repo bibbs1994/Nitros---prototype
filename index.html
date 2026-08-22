@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.13.38 — Pending-Question Binding + Mechanical Guidance Mode Lock — Build 2026-08-17</title>
+<title>Nitros Mobile Technician Portal v10.13.39 — Contextual Add Evidence Button — Build 2026-08-22</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -525,7 +525,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.13.38 — Pending-Question Binding + Mechanical Guidance Mode Lock — Build 2026-08-17</div>
+  <div class="sub">Mobile Technician Portal v10.13.39 — Contextual Add Evidence Button — Build 2026-08-22</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -539,7 +539,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.13.38 — Pending-Question Binding + Mechanical Guidance Mode Lock · Build 2026-08-17. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.13.39 — Contextual Add Evidence Button · Build 2026-08-22. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -702,7 +702,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow nitros-build-identity">Version 10.13.38 — Pending-Question Binding + Mechanical Guidance Mode Lock · Build 2026-08-17</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow nitros-build-identity">Version 10.13.39 — Contextual Add Evidence Button · Build 2026-08-22</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -769,7 +769,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow nitros-build-identity">Version 10.13.38 — Pending-Question Binding + Mechanical Guidance Mode Lock · Build 2026-08-17</div>
+      <div class="eyebrow nitros-build-identity">Version 10.13.39 — Contextual Add Evidence Button · Build 2026-08-22</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1688,14 +1688,14 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.38 • Pending-Question Binding + Mechanical Guidance Mode Lock • Build 2026-08-17</div>
+<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.39 • Contextual Add Evidence Button • Build 2026-08-22</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.13.38',
-  release:'Pending-Question Binding + Mechanical Guidance Mode Lock',
-  buildDate:'2026-08-17',
+  version:'10.13.39',
+  release:'Contextual Add Evidence Button',
+  buildDate:'2026-08-22',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
 window.NitrosOliverSpeech=(()=>{
@@ -4696,22 +4696,22 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   // v8.1.3 Smart Evidence System — independent layer using the approved photo evidence database.
   (()=>{
     const DB_NAME="nitros_photo_evidence_v1", STORE="photos", ACTIVE="active-draft";
-    const allowedScreens=new Set(["technician","estimate","workorder","review"]);
     const btn=document.getElementById("floatingEvidenceButton"), modal=document.getElementById("smartEvidenceModal");
     const input=document.getElementById("evidencePhotoInput"), preview=document.getElementById("evidencePreview"), canvas=document.getElementById("annotationCanvas"), wrap=document.getElementById("annotationWrap");
-    let originalBlob=null,pendingGps=null,pendingCapturedAt=null,drawing=false,startX=0,startY=0,mode="freehand",snapshot=null;
+    let originalBlob=null,pendingGps=null,pendingCapturedAt=null,drawing=false,startX=0,startY=0,mode="freehand",snapshot=null,evidenceWorkflowActive=false;
     const ctx=canvas?.getContext("2d");
     function openDb(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB_NAME,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE,{keyPath:"key"})};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
     async function put(entry){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(entry);tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
     async function list(recordId){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,"readonly"),r=tx.objectStore(STORE).getAll();r.onsuccess=()=>resolve((r.result||[]).filter(x=>x.recordId===recordId&&String(x.fieldId||"").startsWith("additionalEvidence_")));r.onerror=()=>reject(r.error);tx.oncomplete=()=>db.close()})}
     async function compress(file){const b=await createImageBitmap(file),max=1600,scale=Math.min(1,max/Math.max(b.width,b.height)),c=document.createElement("canvas");c.width=Math.round(b.width*scale);c.height=Math.round(b.height*scale);c.getContext("2d").drawImage(b,0,0,c.width,c.height);b.close?.();return await new Promise(res=>c.toBlob(x=>res(x||file),"image/jpeg",.84))}
     function currentScreen(){return document.querySelector(".screen.active")?.id||"home"}
-    function updateButton(){btn?.classList.toggle("visible",allowedScreens.has(currentScreen()))}
-    const observer=new MutationObserver(updateButton);document.querySelectorAll(".screen").forEach(s=>observer.observe(s,{attributes:true,attributeFilter:["class"]}));updateButton();
+    function updateButton(){btn?.classList.toggle("visible",evidenceWorkflowActive)}
     function identity(){const profile=(()=>{try{return JSON.parse(localStorage.getItem("nitros_portal_v8_profile")||"null")}catch(e){return null}})();return {technician:profile?.name||document.getElementById("technicianName")?.value.trim()||document.getElementById("assignedTechnician")?.value.trim()||"Not entered",vin:document.getElementById("vinInput")?.value.trim().toUpperCase()||"Not entered",repairOrder:document.getElementById("roNumber")?.value.trim()||document.getElementById("workOrderNumber")?.value.trim()||"Pending",deviceIdentity:navigator.userAgent,gps:pendingGps,photoCaptureTimestamp:pendingCapturedAt}}
-    function openModal(){modal.classList.remove("hidden");renderTimeline();document.getElementById("evidenceTitle").focus()}
-    function closeModal(){modal.classList.add("hidden")}
+    function openModal(){evidenceWorkflowActive=true;updateButton();modal.classList.remove("hidden");renderTimeline();document.getElementById("evidenceTitle").focus()}
+    function closeModal(){evidenceWorkflowActive=false;updateButton();modal.classList.add("hidden")}
     btn?.addEventListener("click",openModal);document.getElementById("closeSmartEvidence")?.addEventListener("click",closeModal);
+    window.addEventListener("nitros-open-evidence-workflow",openModal);
+    window.addEventListener("nitros-ro-stage-change",closeModal);
     function fitCanvas(){if(!preview.naturalWidth)return;const r=wrap.getBoundingClientRect();canvas.width=Math.max(1,Math.round(r.width));canvas.height=Math.max(1,Math.round(r.height));ctx.lineWidth=4;ctx.lineCap="round";ctx.strokeStyle="#ff3b30"}
     input?.addEventListener("change",async()=>{const file=input.files?.[0];if(!file)return;pendingCapturedAt=new Date().toISOString();[originalBlob,pendingGps]=await Promise.all([compress(file),window.NitrosGpsEvidence.capture()]);preview.src=URL.createObjectURL(originalBlob);preview.onload=()=>{document.getElementById("annotationSection").classList.remove("hidden");requestAnimationFrame(fitCanvas)};const st=document.getElementById("evidencePhotoStatus");st.className="status ok";st.textContent=`Photo loaded. Location: ${window.NitrosGpsEvidence.label(pendingGps)}. Add optional markings, then save.`});
     window.addEventListener("resize",()=>{if(!document.getElementById("annotationSection")?.classList.contains("hidden"))fitCanvas()});
@@ -4725,7 +4725,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     function annotatedBlob(){return new Promise(resolve=>{const c=document.createElement("canvas"),img=preview;c.width=img.naturalWidth;c.height=img.naturalHeight;const x=c.getContext("2d");x.drawImage(img,0,0,c.width,c.height);x.drawImage(canvas,0,0,c.width,c.height);c.toBlob(b=>resolve(b),"image/jpeg",.86)})}
     async function renderTimeline(){const box=document.getElementById("activeEvidenceTimeline"),items=await list(ACTIVE);items.sort((a,b)=>String(a.capturedAt).localeCompare(String(b.capturedAt)));box.innerHTML=items.length?items.map(i=>`<div class="evidence-timeline-item ${i.severity==="Vehicle Unsafe to Operate"?"severity-unsafe":i.severity==="Safety Concern"?"severity-safety":""}" data-evidence-id="${escapeText(i.evidenceId||i.fieldId||i.key)}"><strong>${escapeText(i.title||i.label)}</strong><small>${escapeText(new Date(i.capturedAt).toLocaleString())} • ${escapeText(i.category||"Other")} • ${escapeText(i.severity||"Information Only")}<br>${escapeText(i.notes||"No notes")}${i.repairLine?`<br>Repair line: ${escapeText(i.repairLine)}`:""}<br>${window.NitrosGpsEvidence.html(i.gps,escapeText)}</small></div>`).join(""):'<div class="status">No additional evidence has been recorded yet.</div>';box.querySelectorAll(".evidence-timeline-item").forEach((card,index)=>card.addEventListener("click",()=>window.NitrosGpsEvidence.diagnoseEvidence(items[index])))}
     function escapeText(v){return String(v??"").replace(/[&<>\"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-    document.getElementById("saveSmartEvidence")?.addEventListener("click",async()=>{const status=document.getElementById("smartEvidenceSaveStatus"),title=document.getElementById("evidenceTitle").value.trim(),notes=document.getElementById("evidenceNotes").value.trim();if(!originalBlob){status.className="status warn";status.textContent="Take or select an evidence photo before saving.";return}if(!title){status.className="status warn";status.textContent="Enter a short evidence title before saving.";return}try{status.className="status";status.textContent="Saving original and annotated evidence on this device…";const id=`additionalEvidence_${Date.now()}`,capturedAt=new Date().toISOString(),meta={recordId:ACTIVE,capturedAt,title,category:document.getElementById("evidenceCategory").value,severity:document.getElementById("evidenceSeverity").value,repairLine:document.getElementById("evidenceRepairLine").value.trim(),notes,sourceScreen:currentScreen(),...identity()};await put({...meta,key:`${ACTIVE}:${id}_original`,fieldId:`${id}_original`,label:`${title} — Original`,blob:originalBlob,mimeType:originalBlob.type||"image/jpeg",evidenceType:"additional-original"});const ann=await annotatedBlob();await put({...meta,key:`${ACTIVE}:${id}_annotated`,fieldId:`${id}_annotated`,label:`${title} — Annotated`,blob:ann,mimeType:"image/jpeg",evidenceType:"additional-annotated"});status.className="status ok";status.textContent="Evidence saved and added to the repair-order timeline.";["evidenceTitle","evidenceRepairLine","evidenceNotes"].forEach(id=>document.getElementById(id).value="");input.value="";originalBlob=null;document.getElementById("annotationSection").classList.add("hidden");ctx.clearRect(0,0,canvas.width,canvas.height);await renderTimeline()}catch(err){console.error(err);status.className="status bad";status.textContent="Evidence could not be saved. Check browser storage and try again."}});
+    document.getElementById("saveSmartEvidence")?.addEventListener("click",async()=>{const status=document.getElementById("smartEvidenceSaveStatus"),title=document.getElementById("evidenceTitle").value.trim(),notes=document.getElementById("evidenceNotes").value.trim();if(!originalBlob){status.className="status warn";status.textContent="Take or select an evidence photo before saving.";return}if(!title){status.className="status warn";status.textContent="Enter a short evidence title before saving.";return}try{status.className="status";status.textContent="Saving original and annotated evidence on this device…";const id=`additionalEvidence_${Date.now()}`,capturedAt=new Date().toISOString(),meta={recordId:ACTIVE,capturedAt,title,category:document.getElementById("evidenceCategory").value,severity:document.getElementById("evidenceSeverity").value,repairLine:document.getElementById("evidenceRepairLine").value.trim(),notes,sourceScreen:currentScreen(),...identity()};await put({...meta,key:`${ACTIVE}:${id}_original`,fieldId:`${id}_original`,label:`${title} — Original`,blob:originalBlob,mimeType:originalBlob.type||"image/jpeg",evidenceType:"additional-original"});const ann=await annotatedBlob();await put({...meta,key:`${ACTIVE}:${id}_annotated`,fieldId:`${id}_annotated`,label:`${title} — Annotated`,blob:ann,mimeType:"image/jpeg",evidenceType:"additional-annotated"});status.className="status ok";status.textContent="Evidence saved and added to the repair-order timeline.";evidenceWorkflowActive=false;updateButton();["evidenceTitle","evidenceRepairLine","evidenceNotes"].forEach(id=>document.getElementById(id).value="");input.value="";originalBlob=null;document.getElementById("annotationSection").classList.add("hidden");ctx.clearRect(0,0,canvas.width,canvas.height);await renderTimeline()}catch(err){console.error(err);status.className="status bad";status.textContent="Evidence could not be saved. Check browser storage and try again."}});
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;document.getElementById("dictateEvidenceNotes")?.addEventListener("click",()=>{if(!SR){alert("Voice dictation is not available in this browser.");return}rec=new SR();rec.lang="en-US";rec.interimResults=false;rec.onresult=e=>{const t=e.results[0][0].transcript,n=document.getElementById("evidenceNotes");n.value=(n.value?`${n.value} `:"")+t};rec.start()});
   })();
 
@@ -4858,7 +4858,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
       if(view){searchModal.classList.add('hidden');viewHistoryRecord(view.dataset.recordId)}
     });
     document.getElementById('runGlobalSearch')?.addEventListener('click',runSearch);document.getElementById('showRecentRecords')?.addEventListener('click',showRecentRecords);document.getElementById('globalSearchInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')runSearch()});
-    document.getElementById('quickEvidence')?.addEventListener('click',()=>{if(document.getElementById('floatingEvidenceButton')?.classList.contains('visible'))document.getElementById('floatingEvidenceButton').click();else{go('technician');setTimeout(()=>document.getElementById('floatingEvidenceButton')?.click(),100)}});
+    document.getElementById('quickEvidence')?.addEventListener('click',()=>window.dispatchEvent(new CustomEvent('nitros-open-evidence-workflow')));
     document.getElementById('quickVoice')?.addEventListener('click',()=>voiceModal.classList.remove('hidden'));document.getElementById('closeVoiceNote')?.addEventListener('click',()=>voiceModal.classList.add('hidden'));
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;document.getElementById('dictateQuickVoice')?.addEventListener('click',()=>{if(!SR){document.getElementById('quickVoiceStatus').textContent='Voice dictation is not available in this browser.';return}const r=new SR();r.lang='en-US';r.onresult=e=>{const t=e.results[0][0].transcript,n=document.getElementById('quickVoiceText');n.value=(n.value?`${n.value} `:'')+t};r.start()});
     document.getElementById('saveQuickVoice')?.addEventListener('click',()=>{const t=document.getElementById('quickVoiceText').value.trim(),n=document.getElementById('internalTechnicianNotes');if(!t){document.getElementById('quickVoiceStatus').textContent='Dictate or type a note before saving.';return}if(n){n.value=(n.value?`${n.value}\n`:'')+`[${new Date().toLocaleString()}] ${t}`;n.dispatchEvent(new Event('input',{bubbles:true}))}document.getElementById('quickVoiceText').value='';document.getElementById('quickVoiceStatus').className='status ok';document.getElementById('quickVoiceStatus').textContent='Voice note saved to the active repair.'});
@@ -5330,7 +5330,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div class="nitros-build-identity" style="font-size:.78rem;color:#b9c8d8">Version 10.13.38 — Pending-Question Binding + Mechanical Guidance Mode Lock · Build 2026-08-17</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div class="nitros-build-identity" style="font-size:.78rem;color:#b9c8d8">Version 10.13.39 — Contextual Add Evidence Button · Build 2026-08-22</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5368,7 +5368,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.13.38 — Pending-Question Binding + Mechanical Guidance Mode Lock · Build 2026-08-17</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.13.39 — Contextual Add Evidence Button · Build 2026-08-22</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6407,7 +6407,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.13.38</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.13.39</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
