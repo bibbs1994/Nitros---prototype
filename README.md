@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.44 makes the large Add Evidence control contextual to the active evidence workflow while preserving the permanent toolbar entry point.
+Version 10.13.45 makes the persistent bottom-bar Active Jobs control save and open the existing Active Jobs switcher reliably.
 
 ## Secure semantic analyzer
 

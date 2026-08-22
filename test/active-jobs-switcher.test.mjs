@@ -12,11 +12,11 @@ test('persistent quick toolbar exposes Active Jobs without adding a floating ove
 });
 
 test('opening the switcher saves current work and displays human-readable active RO cards',()=>{
-  assert.match(html,/async function showActiveJobs\(\)\{await persist\('open active jobs switcher',true\);await renderActiveJobs\(\)/);
+  assert.match(html,/async function showActiveJobs\(\)\{if\(activeJobsOpening\)return;activeJobsOpening=true;try\{await persist\('open active jobs switcher',true\);await renderActiveJobs\(\)/);
   assert.match(html,/async function renderActiveJobs\(\)/);
   assert.match(html,/savedWorkLabel\(record\)/);
   assert.match(html,/Current job/);
-  assert.match(html,/quickActiveJobs'\)\?\.addEventListener\('click',showActiveJobs\)/);
+  assert.match(html,/document\.addEventListener\('click',event=>\{if\(!event\.target\.closest\('#quickActiveJobs'\)\)return;event\.preventDefault\(\);event\.stopImmediatePropagation\(\);showActiveJobs\(\)\},true\)/);
 });
 
 test('switching uses the existing isolated RO restore and New Walk-In saves instead of discarding',()=>{
