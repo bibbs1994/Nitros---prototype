@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.42 makes the large Add Evidence control contextual to the active evidence workflow while preserving the permanent toolbar entry point.
+Version 10.13.43 makes the large Add Evidence control contextual to the active evidence workflow while preserving the permanent toolbar entry point.
 
 ## Secure semantic analyzer
 
