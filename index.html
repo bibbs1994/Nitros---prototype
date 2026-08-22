@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.13.39 — Contextual Add Evidence Button — Build 2026-08-22</title>
+<title>Nitros Mobile Technician Portal v10.13.40 — Multiple Active RO Support — Build 2026-08-22</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -525,7 +525,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.13.39 — Contextual Add Evidence Button — Build 2026-08-22</div>
+  <div class="sub">Mobile Technician Portal v10.13.40 — Multiple Active RO Support — Build 2026-08-22</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -539,7 +539,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.13.39 — Contextual Add Evidence Button · Build 2026-08-22. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.13.40 — Multiple Active RO Support · Build 2026-08-22. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -596,6 +596,7 @@ canvas.graph-preview,canvas.ocr-preview{
         <button id="resumeDraft" class="btn primary small" type="button">Resume Current Job</button>
         <button id="discardDraft" class="btn ghost small" type="button">Discard Saved Draft</button>
       </div>
+      <div id="activeRepairOrderList" class="grid" style="margin-top:10px"></div>
     </div>
 
   </div>
@@ -702,7 +703,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow nitros-build-identity">Version 10.13.39 — Contextual Add Evidence Button · Build 2026-08-22</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow nitros-build-identity">Version 10.13.40 — Multiple Active RO Support · Build 2026-08-22</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -769,7 +770,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow nitros-build-identity">Version 10.13.39 — Contextual Add Evidence Button · Build 2026-08-22</div>
+      <div class="eyebrow nitros-build-identity">Version 10.13.40 — Multiple Active RO Support · Build 2026-08-22</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1688,13 +1689,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.39 • Contextual Add Evidence Button • Build 2026-08-22</div>
+<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.40 • Multiple Active RO Support • Build 2026-08-22</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.13.39',
-  release:'Contextual Add Evidence Button',
+  version:'10.13.40',
+  release:'Multiple Active RO Support',
   buildDate:'2026-08-22',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -1785,7 +1786,7 @@ window.NitrosGpsEvidence=(()=>{
 
   const PHOTO_DB_NAME="nitros_photo_evidence_v1";
   const PHOTO_STORE="photos";
-  const ACTIVE_PHOTO_RECORD="active-draft";
+  let ACTIVE_PHOTO_RECORD="active-draft";
   const PHOTO_FIELDS={
     photoFrontLeft:"Front-left corner",photoFrontRight:"Front-right corner",photoRearLeft:"Rear-left corner",photoRearRight:"Rear-right corner",
     photoOdometer:"Arrival odometer",photoVin:"VIN label",technicianPhoto:"Technician evidence",photoFinalOdometer:"Final road-test odometer"
@@ -1979,11 +1980,11 @@ window.NitrosGpsEvidence=(()=>{
     return true;
   }
 
-  function resetActiveWorkspace(){
+  function resetActiveWorkspace(preservePhotoEvidence=false){
     stopCamera();
     clearTimeout(draftSaveTimer);
     localStorage.removeItem(DRAFT_KEY);
-    clearPhotoRecord(ACTIVE_PHOTO_RECORD).then(()=>{activePhotoEvidence={};renderActivePhotoEvidence();});
+    if(!preservePhotoEvidence)clearPhotoRecord(ACTIVE_PHOTO_RECORD).then(()=>{activePhotoEvidence={};renderActivePhotoEvidence();});
 
     selectedVehicle=null;
     editingCheckInId=null;
@@ -4606,7 +4607,8 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   document.getElementById("retryDecode")?.addEventListener("click",()=>{showScreen("checkin");identifyVehicle();});
   window.NitrosRepairOrderCore={
     draftKey:DRAFT_KEY,
-    activePhotoRecord:ACTIVE_PHOTO_RECORD,
+    get activePhotoRecord(){return ACTIVE_PHOTO_RECORD;},
+    setActivePhotoRecord:async recordId=>{ACTIVE_PHOTO_RECORD=recordId||"active-draft";activePhotoEvidence={};await loadActivePhotoEvidence();},
     collectDraft,
     restoreDraft,
     resetActiveWorkspace,
@@ -4695,7 +4697,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
   // v8.1.3 Smart Evidence System — independent layer using the approved photo evidence database.
   (()=>{
-    const DB_NAME="nitros_photo_evidence_v1", STORE="photos", ACTIVE="active-draft";
+    const DB_NAME="nitros_photo_evidence_v1", STORE="photos", activeRecord=()=>window.NitrosRepairOrderCore?.activePhotoRecord||"active-draft";
     const btn=document.getElementById("floatingEvidenceButton"), modal=document.getElementById("smartEvidenceModal");
     const input=document.getElementById("evidencePhotoInput"), preview=document.getElementById("evidencePreview"), canvas=document.getElementById("annotationCanvas"), wrap=document.getElementById("annotationWrap");
     let originalBlob=null,pendingGps=null,pendingCapturedAt=null,drawing=false,startX=0,startY=0,mode="freehand",snapshot=null,evidenceWorkflowActive=false;
@@ -4723,20 +4725,20 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     function up(e){if(!drawing)return;move(e);drawing=false}
     ["pointerdown"].forEach(n=>canvas?.addEventListener(n,down));["pointermove"].forEach(n=>canvas?.addEventListener(n,move));["pointerup","pointercancel","pointerleave"].forEach(n=>canvas?.addEventListener(n,up));
     function annotatedBlob(){return new Promise(resolve=>{const c=document.createElement("canvas"),img=preview;c.width=img.naturalWidth;c.height=img.naturalHeight;const x=c.getContext("2d");x.drawImage(img,0,0,c.width,c.height);x.drawImage(canvas,0,0,c.width,c.height);c.toBlob(b=>resolve(b),"image/jpeg",.86)})}
-    async function renderTimeline(){const box=document.getElementById("activeEvidenceTimeline"),items=await list(ACTIVE);items.sort((a,b)=>String(a.capturedAt).localeCompare(String(b.capturedAt)));box.innerHTML=items.length?items.map(i=>`<div class="evidence-timeline-item ${i.severity==="Vehicle Unsafe to Operate"?"severity-unsafe":i.severity==="Safety Concern"?"severity-safety":""}" data-evidence-id="${escapeText(i.evidenceId||i.fieldId||i.key)}"><strong>${escapeText(i.title||i.label)}</strong><small>${escapeText(new Date(i.capturedAt).toLocaleString())} • ${escapeText(i.category||"Other")} • ${escapeText(i.severity||"Information Only")}<br>${escapeText(i.notes||"No notes")}${i.repairLine?`<br>Repair line: ${escapeText(i.repairLine)}`:""}<br>${window.NitrosGpsEvidence.html(i.gps,escapeText)}</small></div>`).join(""):'<div class="status">No additional evidence has been recorded yet.</div>';box.querySelectorAll(".evidence-timeline-item").forEach((card,index)=>card.addEventListener("click",()=>window.NitrosGpsEvidence.diagnoseEvidence(items[index])))}
+    async function renderTimeline(){const box=document.getElementById("activeEvidenceTimeline"),items=await list(activeRecord());items.sort((a,b)=>String(a.capturedAt).localeCompare(String(b.capturedAt)));box.innerHTML=items.length?items.map(i=>`<div class="evidence-timeline-item ${i.severity==="Vehicle Unsafe to Operate"?"severity-unsafe":i.severity==="Safety Concern"?"severity-safety":""}" data-evidence-id="${escapeText(i.evidenceId||i.fieldId||i.key)}"><strong>${escapeText(i.title||i.label)}</strong><small>${escapeText(new Date(i.capturedAt).toLocaleString())} • ${escapeText(i.category||"Other")} • ${escapeText(i.severity||"Information Only")}<br>${escapeText(i.notes||"No notes")}${i.repairLine?`<br>Repair line: ${escapeText(i.repairLine)}`:""}<br>${window.NitrosGpsEvidence.html(i.gps,escapeText)}</small></div>`).join(""):'<div class="status">No additional evidence has been recorded yet.</div>';box.querySelectorAll(".evidence-timeline-item").forEach((card,index)=>card.addEventListener("click",()=>window.NitrosGpsEvidence.diagnoseEvidence(items[index])))}
     function escapeText(v){return String(v??"").replace(/[&<>\"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-    document.getElementById("saveSmartEvidence")?.addEventListener("click",async()=>{const status=document.getElementById("smartEvidenceSaveStatus"),title=document.getElementById("evidenceTitle").value.trim(),notes=document.getElementById("evidenceNotes").value.trim();if(!originalBlob){status.className="status warn";status.textContent="Take or select an evidence photo before saving.";return}if(!title){status.className="status warn";status.textContent="Enter a short evidence title before saving.";return}try{status.className="status";status.textContent="Saving original and annotated evidence on this device…";const id=`additionalEvidence_${Date.now()}`,capturedAt=new Date().toISOString(),meta={recordId:ACTIVE,capturedAt,title,category:document.getElementById("evidenceCategory").value,severity:document.getElementById("evidenceSeverity").value,repairLine:document.getElementById("evidenceRepairLine").value.trim(),notes,sourceScreen:currentScreen(),...identity()};await put({...meta,key:`${ACTIVE}:${id}_original`,fieldId:`${id}_original`,label:`${title} — Original`,blob:originalBlob,mimeType:originalBlob.type||"image/jpeg",evidenceType:"additional-original"});const ann=await annotatedBlob();await put({...meta,key:`${ACTIVE}:${id}_annotated`,fieldId:`${id}_annotated`,label:`${title} — Annotated`,blob:ann,mimeType:"image/jpeg",evidenceType:"additional-annotated"});status.className="status ok";status.textContent="Evidence saved and added to the repair-order timeline.";evidenceWorkflowActive=false;updateButton();["evidenceTitle","evidenceRepairLine","evidenceNotes"].forEach(id=>document.getElementById(id).value="");input.value="";originalBlob=null;document.getElementById("annotationSection").classList.add("hidden");ctx.clearRect(0,0,canvas.width,canvas.height);await renderTimeline()}catch(err){console.error(err);status.className="status bad";status.textContent="Evidence could not be saved. Check browser storage and try again."}});
+    document.getElementById("saveSmartEvidence")?.addEventListener("click",async()=>{const status=document.getElementById("smartEvidenceSaveStatus"),title=document.getElementById("evidenceTitle").value.trim(),notes=document.getElementById("evidenceNotes").value.trim();if(!originalBlob){status.className="status warn";status.textContent="Take or select an evidence photo before saving.";return}if(!title){status.className="status warn";status.textContent="Enter a short evidence title before saving.";return}try{status.className="status";status.textContent="Saving original and annotated evidence on this device…";const id=`additionalEvidence_${Date.now()}`,capturedAt=new Date().toISOString(),recordId=activeRecord(),meta={recordId,capturedAt,title,category:document.getElementById("evidenceCategory").value,severity:document.getElementById("evidenceSeverity").value,repairLine:document.getElementById("evidenceRepairLine").value.trim(),notes,sourceScreen:currentScreen(),...identity()};await put({...meta,key:`${recordId}:${id}_original`,fieldId:`${id}_original`,label:`${title} — Original`,blob:originalBlob,mimeType:originalBlob.type||"image/jpeg",evidenceType:"additional-original"});const ann=await annotatedBlob();await put({...meta,key:`${recordId}:${id}_annotated`,fieldId:`${id}_annotated`,label:`${title} — Annotated`,blob:ann,mimeType:"image/jpeg",evidenceType:"additional-annotated"});status.className="status ok";status.textContent="Evidence saved and added to the repair-order timeline.";evidenceWorkflowActive=false;updateButton();["evidenceTitle","evidenceRepairLine","evidenceNotes"].forEach(id=>document.getElementById(id).value="");input.value="";originalBlob=null;document.getElementById("annotationSection").classList.add("hidden");ctx.clearRect(0,0,canvas.width,canvas.height);await renderTimeline()}catch(err){console.error(err);status.className="status bad";status.textContent="Evidence could not be saved. Check browser storage and try again."}});
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;document.getElementById("dictateEvidenceNotes")?.addEventListener("click",()=>{if(!SR){alert("Voice dictation is not available in this browser.");return}rec=new SR();rec.lang="en-US";rec.interimResults=false;rec.onresult=e=>{const t=e.results[0][0].transcript,n=document.getElementById("evidenceNotes");n.value=(n.value?`${n.value} `:"")+t};rec.start()});
   })();
 
   // v8.1.3 Complete Evidence Timeline — chronological view of every active repair-order image.
   (()=>{
-    const DB_NAME="nitros_photo_evidence_v1", STORE="photos", ACTIVE="active-draft";
+    const DB_NAME="nitros_photo_evidence_v1", STORE="photos", activeRecord=()=>window.NitrosRepairOrderCore?.activePhotoRecord||"active-draft";
     const modal=document.getElementById("completeTimelineModal"), listBox=document.getElementById("completeTimelineList"), status=document.getElementById("completeTimelineStatus");
     let entries=[], objectUrls=[];
     const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
     function openDb(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB_NAME,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE,{keyPath:"key"})};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
-    function all(){return openDb().then(db=>new Promise((resolve,reject)=>{const tx=db.transaction(STORE,"readonly"),r=tx.objectStore(STORE).getAll();r.onsuccess=()=>resolve((r.result||[]).filter(x=>x.recordId===ACTIVE));r.onerror=()=>reject(r.error);tx.oncomplete=()=>db.close()}))}
+    function all(){return openDb().then(db=>new Promise((resolve,reject)=>{const tx=db.transaction(STORE,"readonly"),r=tx.objectStore(STORE).getAll();r.onsuccess=()=>resolve((r.result||[]).filter(x=>x.recordId===activeRecord()));r.onerror=()=>reject(r.error);tx.oncomplete=()=>db.close()}))}
     function stageFor(i){const f=String(i.fieldId||"");if(/finalOdometer|road/i.test(f))return "Road-Test / Completion";if(/FrontLeft|FrontRight|RearLeft|RearRight/i.test(f))return "Walk-Around";if(/photoOdometer|photoVin/i.test(f))return "Arrival / Intake";if(/^additionalEvidence_/i.test(f))return "Additional Finding";return "Diagnosis / Repair"}
     function preferred(items){const map=new Map();for(const i of items){const raw=String(i.fieldId||i.key||"");const group=raw.replace(/_(original|annotated)$/i,"");const old=map.get(group);if(!old||/annotated$/i.test(raw))map.set(group,i)}return [...map.values()]}
     function titleFor(i){return i.title||i.label||({photoFrontLeft:"Front-left corner",photoFrontRight:"Front-right corner",photoRearLeft:"Rear-left corner",photoRearRight:"Rear-right corner",photoOdometer:"Arrival odometer",photoVin:"VIN identification",technicianPhoto:"Technician repair evidence",photoFinalOdometer:"Final road-test odometer"}[i.fieldId])||"Repair-order evidence"}
@@ -5330,7 +5332,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div class="nitros-build-identity" style="font-size:.78rem;color:#b9c8d8">Version 10.13.39 — Contextual Add Evidence Button · Build 2026-08-22</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div class="nitros-build-identity" style="font-size:.78rem;color:#b9c8d8">Version 10.13.40 — Multiple Active RO Support · Build 2026-08-22</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5368,7 +5370,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.13.39 — Contextual Add Evidence Button · Build 2026-08-22</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.13.40 — Multiple Active RO Support · Build 2026-08-22</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6407,7 +6409,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.13.39</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.13.40</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -8061,6 +8063,7 @@ document.addEventListener("DOMContentLoaded",()=>{
  function openDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,SCHEMA_VERSION);req.onupgradeneeded=()=>{const next=req.result;if(!next.objectStoreNames.contains(STORE)){const store=next.createObjectStore(STORE,{keyPath:'id'});store.createIndex('status','status',{unique:false});store.createIndex('updatedAt','updatedAt',{unique:false})}};req.onsuccess=()=>{db=req.result;db.onversionchange=()=>db.close();diagnostic();resolve(db)};req.onerror=()=>reject(req.error||new Error('IndexedDB open failed'));req.onblocked=()=>reject(new Error('IndexedDB upgrade blocked'))})}
  async function put(record){if(!db)await openDb();const tx=db.transaction(STORE,'readwrite');await request(tx.objectStore(STORE),'put',record)}
  async function get(id){if(!id)return null;if(!db)await openDb();return request(db.transaction(STORE,'readonly').objectStore(STORE),'get',id)}
+ async function listActive(){if(!db)await openDb();const rows=await request(db.transaction(STORE,'readonly').objectStore(STORE),'getAll');return rows.filter(row=>row.status==='active').sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)))}
  async function remove(id){if(!id)return;if(!db)await openDb();const tx=db.transaction(STORE,'readwrite');await request(tx.objectStore(STORE),'delete',id)}
  function ensureActive(){if(activeId)return activeId;activeId=uid();createdAt=iso();localStorage.setItem(POINTER,activeId);diagnostic();return activeId}
  function timerRecord(){const clock=core?.getJobClock?.()||{};return {roId:activeId,status:clock.state==='finished'?'stopped':clock.state||'not_started',originalStartTimestamp:clock.originalStartTimestamp||clock.startedAt||clock.timeline?.find(x=>/started/i.test(x.type||''))?.timestamp||clock.activeStartedAt||null,mostRecentResumeTimestamp:clock.activeStartedAt||null,accumulatedElapsedMsBeforeCurrentRun:Number(clock.activeMs||clock.accumulatedActiveMs)||0,accumulatedPausedMs:Number(clock.pausedMs||clock.accumulatedPausedMs)||0,pauseStartedTimestamp:clock.pauseStartedAt||null,lastSavedTimestamp:iso(),timeline:Array.isArray(clock.timeline)?clock.timeline:[]}}
@@ -8068,18 +8071,24 @@ document.addEventListener("DOMContentLoaded",()=>{
  async function persist(reason='autosave',immediate=false){if(restoring||!core)return;let draft;try{draft=core.collectDraft()}catch(error){warn(error);return}if(!activeId&&!hasMeaningfulData(draft))return;ensureActive();const now=iso();createdAt=createdAt||now;let diagnosticInformation=null;try{diagnosticInformation=JSON.parse(localStorage.getItem('nitros_diagnostic_case_v10120')||'null')}catch(_){}try{await put({schemaVersion:SCHEMA_VERSION,id:activeId,createdAt,updatedAt:now,status:'active',build:VERSION,currentWorkflowStage:draft.screen||core.getScreen()||'customer',customerInformation:{name:draft.fields?.customerName||'',phone:draft.fields?.phone||'',email:draft.fields?.email||''},vehicleInformation:draft.selectedVehicle||{year:draft.fields?.vehicleYear||'',make:draft.fields?.vehicleMake||'',model:draft.fields?.vehicleModel||'',engine:draft.fields?.vehicleEngine||''},vin:draft.fields?.vinInput||draft.selectedVehicle?.vin||'',mileage:draft.fields?.mileage||'',complaint:draft.fields?.concern||'',intakeInformation:draft.fields||{},laborEntries:draft.estimateLines||[],laborTimer:timerRecord(),diagnosticInformation,repairInformation:{status:draft.fields?.repairStatus||'',findings:draft.fields?.technicianFindings||'',recommendations:draft.fields?.repairRecommendations||''},notes:{advisor:draft.fields?.advisorNotes||'',technician:draft.fields?.internalTechnicianNotes||'',findings:draft.fields?.technicianFindings||''},photoStorageReference:core.activePhotoRecord||null,draft,saveReason:reason});lastError='';const el=$('nitrosPersistenceAutosave');if(el)el.textContent=now;diagnostic()}catch(error){warn(error)}}
  function queue(reason='field change'){clearTimeout(persistTimer);persistTimer=setTimeout(()=>persist(reason),350)}
  function restoreTimer(saved){if(!saved||!core)return;const state=saved.status==='stopped'?'finished':saved.status,clock=core.getJobClock()||{};const resume=Number(saved.mostRecentResumeTimestamp)||Date.parse(saved.mostRecentResumeTimestamp)||Date.now(),pause=Number(saved.pauseStartedTimestamp)||Date.parse(saved.pauseStartedTimestamp)||Date.now();core.setJobClock({...clock,state,originalStartTimestamp:saved.originalStartTimestamp||null,activeStartedAt:state==='running'?resume:null,pauseStartedAt:state==='paused'?pause:null,activeMs:Number(saved.accumulatedElapsedMsBeforeCurrentRun)||0,pausedMs:Number(saved.accumulatedPausedMs)||0,timeline:Array.isArray(saved.timeline)?saved.timeline:[]})}
- async function restoreActive(){activeId=localStorage.getItem(POINTER)||'';if(!activeId){diagnostic();return false}try{const record=await get(activeId);if(!record||record.status!=='active'){activeId='';localStorage.removeItem(POINTER);diagnostic();return false}if(Number(record.schemaVersion)>SCHEMA_VERSION)throw new Error(`Stored RO schema ${record.schemaVersion} is newer than supported schema ${SCHEMA_VERSION}`);restoring=true;createdAt=record.createdAt||iso();localStorage.setItem(core.draftKey,JSON.stringify(record.draft||{}));core.restoreDraft(false);restoreTimer(record.laborTimer);const target=record.currentWorkflowStage||record.draft?.screen||'customer';restored=true;restoreAt=iso();restoring=false;if(localStorage.getItem('nitros_portal_v8_profile'))core.showScreen(target,false);else $('portalSignIn')?.addEventListener('click',()=>setTimeout(()=>core.showScreen(target,false),250),{once:true});diagnostic();core.setSaveStatus?.(navigator.onLine?'saved':'offline',`Active repair order ${activeId} restored`);return true}catch(error){restoring=false;warn(error);return false}}
+ async function restoreActive(id=localStorage.getItem(POINTER)||''){activeId=id||'';if(!activeId){diagnostic();return false}try{const record=await get(activeId);if(!record||record.status!=='active'){activeId='';localStorage.removeItem(POINTER);diagnostic();return false}if(Number(record.schemaVersion)>SCHEMA_VERSION)throw new Error(`Stored RO schema ${record.schemaVersion} is newer than supported schema ${SCHEMA_VERSION}`);restoring=true;createdAt=record.createdAt||iso();localStorage.setItem(POINTER,activeId);localStorage.setItem(core.draftKey,JSON.stringify(record.draft||{}));await core.setActivePhotoRecord?.(activeId);if(record.diagnosticInformation)localStorage.setItem('nitros_diagnostic_case_v10120',JSON.stringify(record.diagnosticInformation));else localStorage.removeItem('nitros_diagnostic_case_v10120');core.restoreDraft(false);restoreTimer(record.laborTimer);const target=record.currentWorkflowStage||record.draft?.screen||'customer';restored=true;restoreAt=iso();restoring=false;if(localStorage.getItem('nitros_portal_v8_profile'))core.showScreen(target,false);else $('portalSignIn')?.addEventListener('click',()=>setTimeout(()=>core.showScreen(target,false),250),{once:true});diagnostic();core.setSaveStatus?.(navigator.onLine?'saved':'offline',`Active repair order ${activeId} restored`);return true}catch(error){restoring=false;warn(error);return false}}
  async function abandon(reason){const id=activeId;activeId='';createdAt='';localStorage.removeItem(POINTER);diagnostic();try{if(id)await remove(id)}catch(error){warn(error)}console.info(`[Nitros Active RO Persistence] ${reason}`,id)}
  const roScreens=new Set(['checkin','vehicle','customer','inspection','technician','estimate','workorder','review']);
  const inRoContext=()=>roScreens.has(core?.getScreen?.());
- window.addEventListener('nitros-ro-stage-change',event=>{if(roScreens.has(event.detail?.id)){ensureActive();persist('workflow stage',true)}});
+ window.addEventListener('nitros-ro-stage-change',event=>{if(roScreens.has(event.detail?.id)){ensureActive();core.setActivePhotoRecord?.(activeId).then(()=>persist('workflow stage',true))}});
  document.addEventListener('input',event=>{if(inRoContext()&&event.target.matches('input,textarea,select')){ensureActive();queue('field input')}},true);
  document.addEventListener('change',event=>{if(inRoContext()&&event.target.matches('input,textarea,select')){ensureActive();persist('field change',true)}},true);
- document.addEventListener('click',event=>{const newButton=event.target.closest('#newRepairOrder');if(newButton&&activeId&&hasMeaningfulData(core.collectDraft())){if(!confirm(`Another unfinished repair order (${activeId}) is active. Starting a new repair order will discard that active draft. Continue?`)){event.preventDefault();event.stopImmediatePropagation();return}abandon('Explicit New Repair Order');core.resetActiveWorkspace();ensureActive();persist('new repair order',true)}else if(newButton&&!activeId){ensureActive();persist('new repair order',true)}if(event.target.closest('#discardDraft')){if(activeId&&!confirm(`Discard unfinished repair order ${activeId}? This cannot be undone.`)){event.preventDefault();event.stopImmediatePropagation();return}abandon('Explicit Discard Repair Order')}},true);
+ function chooseNewRoAction(){return new Promise(resolve=>{let modal=$('activeRoChoice');if(!modal){modal=document.createElement('div');modal.id='activeRoChoice';modal.className='smart-evidence-modal';modal.innerHTML='<div class="smart-evidence-dialog"><div class="smart-evidence-head"><div><div class="eyebrow">Active Repair Order</div><h2>Start another repair order?</h2><p>Your current RO will remain available unless you explicitly discard it.</p></div></div><div class="grid"><button class="btn primary" data-choice="save">Save Current RO & Start New RO</button><button class="btn secondary" data-choice="return">Return to Current RO</button><button class="btn ghost" data-choice="discard">Discard Current Draft</button></div></div>';document.body.appendChild(modal)}modal.classList.remove('hidden');modal.querySelectorAll('[data-choice]').forEach(button=>button.onclick=()=>{modal.classList.add('hidden');resolve(button.dataset.choice)});})}
+ function confirmDiscard(){return new Promise(resolve=>{let modal=$('activeRoDiscardConfirm');if(!modal){modal=document.createElement('div');modal.id='activeRoDiscardConfirm';modal.className='smart-evidence-modal';modal.innerHTML='<div class="smart-evidence-dialog"><div class="smart-evidence-head"><div><div class="eyebrow">Permanent deletion</div><h2>Discard current draft?</h2><p>This permanently removes the draft and its RO-specific work. This cannot be undone.</p></div></div><div class="grid two"><button class="btn ghost" data-confirm="cancel">Keep Current RO</button><button class="btn primary" data-confirm="discard">Permanently Discard Draft</button></div></div>';document.body.appendChild(modal)}modal.classList.remove('hidden');modal.querySelectorAll('[data-confirm]').forEach(button=>button.onclick=()=>{modal.classList.add('hidden');resolve(button.dataset.confirm==='discard')});})}
+ async function startNewRepairOrder(){if(activeId&&hasMeaningfulData(core.collectDraft())){const choice=await chooseNewRoAction();if(choice==='return')return;if(choice==='discard'&&!(await confirmDiscard()))return;if(choice==='discard')await abandon('Explicit Discard Repair Order');else await persist('save current and start new',true)}activeId='';createdAt='';localStorage.removeItem(POINTER);core.resetActiveWorkspace(true);localStorage.removeItem('nitros_diagnostic_case_v10120');ensureActive();await core.setActivePhotoRecord?.(activeId);await persist('new repair order',true);core.showScreen('checkin');}
+ async function openRepairOrder(id){if(!id||id===activeId)return restoreActive(id);await persist('switch repair order',true);return restoreActive(id)}
+ async function renderActiveRepairOrders(){const box=$('activeRepairOrderList');if(!box)return;const records=await listActive();box.innerHTML=records.map(record=>{const f=record.draft?.fields||{},v=record.draft?.selectedVehicle||{};const label=[f.roNumber||f.workOrderNumber||record.id,f.customerName,[v.year||f.vehicleYear,v.make||f.vehicleMake,v.model||f.vehicleModel].filter(Boolean).join(' ')].filter(Boolean).join(' • ');return `<button class="btn secondary small active-ro-open" type="button" data-ro-id="${record.id}">${label||record.id}</button>`}).join('');box.querySelectorAll('.active-ro-open').forEach(button=>button.addEventListener('click',()=>openRepairOrder(button.dataset.roId)));}
+ document.addEventListener('click',event=>{const newButton=event.target.closest('#newRepairOrder');if(newButton){event.preventDefault();event.stopImmediatePropagation();startNewRepairOrder();return}if(event.target.closest('#discardDraft')){event.preventDefault();event.stopImmediatePropagation();if(activeId)confirmDiscard().then(ok=>ok&&abandon('Explicit Discard Repair Order'))}},true);
  $('submitCheckin')?.addEventListener('click',()=>setTimeout(()=>{const ok=$('submitStatus')?.classList.contains('ok')&&!localStorage.getItem(core.draftKey);if(ok)abandon('Complete Repair Order')},900));
  ['startJob','pauseJob','resumeJob','finishJob'].forEach(id=>$(id)?.addEventListener('click',()=>setTimeout(()=>persist(`timer control ${id}`,true),0)));
  window.addEventListener('pagehide',()=>persist('pagehide',true));document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persist('background',true)});
- window.NitrosActiveRepairPersistence={version:VERSION,schemaVersion:SCHEMA_VERSION,getActiveId:()=>activeId,persistNow:()=>persist('manual diagnostic',true),restore:restoreActive,getDiagnostics:()=>({activeId,db:DB_NAME,lastError,restored,restoreAt,stage:core?.getScreen?.(),timer:timerRecord()})};
+ window.addEventListener('nitros-ro-stage-change',event=>{if(event.detail?.id==='home')renderActiveRepairOrders()});
+ window.NitrosActiveRepairPersistence={version:VERSION,schemaVersion:SCHEMA_VERSION,getActiveId:()=>activeId,persistNow:()=>persist('manual diagnostic',true),restore:restoreActive,listActive,open:openRepairOrder,startNew:startNewRepairOrder,renderActiveRepairOrders,getDiagnostics:()=>({activeId,db:DB_NAME,lastError,restored,restoreAt,stage:core?.getScreen?.(),timer:timerRecord()})};
  const boot=async()=>{try{await openDb();await restoreActive()}catch(error){warn(error)}diagnostic()};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,120),{once:true});else setTimeout(boot,120);
 })();
 </script>
