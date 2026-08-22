@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.46 makes the persistent bottom-bar Active Jobs control save and open the existing Active Jobs switcher reliably.
+Version 10.13.47 lowers the persistent bottom toolbar slightly on non-inset mobile viewports so the Vehicle control remains fully visible and tappable, while preserving iPhone safe-area clearance.
 
 ## Secure semantic analyzer
 
