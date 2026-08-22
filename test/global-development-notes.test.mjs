@@ -13,6 +13,11 @@ test('global development note has an independent floating overlay and save wordi
   assert.match(html,/\.global-dev-note-fab\{position:fixed[\s\S]*?safe-area-inset-bottom/);
 });
 
+test('mobile Dev Note clears the Vehicle control with a 56px upward offset',()=>{
+  assert.match(html,/\.global-dev-note-fab\{position:fixed[\s\S]*?bottom:max\(174px,calc\(env\(safe-area-inset-bottom\) \+ 170px\)\)/);
+  assert.match(html,/\.quick-vehicle-fab\{position:fixed[\s\S]*?bottom:max\(88px,calc\(env\(safe-area-inset-bottom\) \+ 84px\)\)/);
+});
+
 test('global development notes persist with build timestamp and screen but no RO association',()=>{
   assert.match(script,/nitros_global_development_notes_v1/);
   assert.match(script,/localStorage\.setItem\(STORAGE_KEY,JSON\.stringify\(notes\)\)/);
