@@ -47,3 +47,14 @@ test('Building Estimate has deterministic controls and preserves estimate contex
   assert.match(html,/current==='estimate'\?'Building Estimate'/);
   assert.match(guided,/estimate:'The estimate converts documented findings into priced, authorized repair work\.'/);
 });
+
+test('Job Clock stage completes once and routes to the real Completion Wizard screen',()=>{
+  assert.match(html,/id:'workorder-internal-technician-notes',[\s\S]*?nextScreen:'review'/);
+  assert.match(html,/review:\[\{id:'review-save-report',screen:'review',target:'#submitCheckin'/);
+  assert.match(guided,/let state=null,[\s\S]*?contextualCompletedStages=\[\]/);
+  assert.match(guided,/function completeContextualStage\(step,currentScreen\)/);
+  assert.match(guided,/contextualCompletedStages\.push\(currentScreen\)/);
+  assert.match(guided,/navigateToStep\(\{screen:nextScreen\}\)/);
+  assert.match(guided,/if\(completeContextualStage\(contextualStep,currentScreen\)\)return/);
+  assert.match(guided,/if\(!contextualCompletedStages\.includes\(currentScreen\)\)step=window\.NitrosContextualScreenAssistance\?\.discoverNext/);
+});
