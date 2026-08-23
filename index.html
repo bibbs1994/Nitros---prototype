@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.13.52 — Ask Oliver Contextual Assistance — Build 2026-08-22</title>
+<title>Nitros Mobile Technician Portal v10.13.53 — Contextual Screen Assistance Routing Fix — Build 2026-08-23</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -526,7 +526,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.13.52 — Ask Oliver Contextual Assistance — Build 2026-08-22</div>
+  <div class="sub">Mobile Technician Portal v10.13.53 — Contextual Screen Assistance Routing Fix — Build 2026-08-23</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -541,7 +541,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.13.52 — Ask Oliver Contextual Assistance · Build 2026-08-22. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.13.53 — Contextual Screen Assistance Routing Fix · Build 2026-08-23. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -706,7 +706,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow nitros-build-identity">Version 10.13.52 — Ask Oliver Contextual Assistance · Build 2026-08-22</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow nitros-build-identity">Version 10.13.53 — Contextual Screen Assistance Routing Fix · Build 2026-08-23</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -773,7 +773,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow nitros-build-identity">Version 10.13.52 — Ask Oliver Contextual Assistance · Build 2026-08-22</div>
+      <div class="eyebrow nitros-build-identity">Version 10.13.53 — Contextual Screen Assistance Routing Fix · Build 2026-08-23</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1695,14 +1695,14 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.52 • Ask Oliver Contextual Assistance • Build 2026-08-22</div>
+<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.53 • Contextual Screen Assistance Routing Fix • Build 2026-08-23</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.13.52',
-  release:'Ask Oliver Contextual Assistance',
-  buildDate:'2026-08-22',
+  version:'10.13.53',
+  release:'Contextual Screen Assistance Routing Fix',
+  buildDate:'2026-08-23',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
 window.NitrosOliverSpeech=(()=>{
@@ -5648,8 +5648,9 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   function addEvent(type,detail){const i=identity(),all=readAll();all.push({id:Date.now()+'_'+Math.random().toString(36).slice(2,7),key:i.key,type,detail,at:new Date().toISOString(),technician:value('technicianName')||value('assignedTechnician')||'Technician'});writeAll(all);renderTimeline()}
   function refreshIdentity(){const i=identity(),c=consultationContext||{};const location=[c.screen,c.section].filter(Boolean).join(' • ');$('smartOliverIdentity').textContent=`Active context: ${i.customer} • ${i.vehicle} • ${i.ro}${location?` • ${location}`:''}`}
   function context(){const c=consultationContext||{};return {id:identity(),concern:value('customerConcern')||value('concern')||value('appointmentConcern')||c.concern||'',dtcs:value('dtcCodes')||value('scanResults')||c.dtcs||'',findings:value('inspectionFindings')||value('technicianFindings')||c.findings||'',notes:value('internalTechnicianNotes')||c.notes||'',status:value('repairStatus')||c.stage||'',screen:c.screen||'',section:c.section||'',mileage:c.mileage||'',vin:c.vin||'',measurements:c.measurements||'',photos:c.photos||[]}}
-  function answer(q){const c=context(),t=q.toLowerCase();let r='';
-    if(t.includes('next')||t.includes('diagnos')) r=`Recommended next action:\n1. Verify the customer concern under the stated operating conditions.\n2. Perform and document a complete system scan.\n3. Review DTCs, freeze-frame data, and relevant live data.\n4. Choose the least intrusive test that can prove or disprove the leading cause.\n\nCurrent concern: ${c.concern||'not entered yet'}.`;
+  function answer(q){const c=context(),t=q.toLowerCase(),ui=window.NitrosContextualScreenAssistance?.resolve(q,c);let r='';
+    if(ui?.intent){r=ui.message;window.NitrosContextualScreenAssistance.show(ui.target);}
+    else if(t.includes('next')||t.includes('diagnos')) r=`Recommended next action:\n1. Verify the customer concern under the stated operating conditions.\n2. Perform and document a complete system scan.\n3. Review DTCs, freeze-frame data, and relevant live data.\n4. Choose the least intrusive test that can prove or disprove the leading cause.\n\nCurrent concern: ${c.concern||'not entered yet'}.`;
     else if(t.includes('missing')||t.includes('complete')){runCompleteness();r='I ran the repair completeness check. Open the Completeness tab to review every missing or completed item.'}
     else if(t.includes('summar')) r=`Repair summary for ${c.id.customer}, ${c.id.vehicle}:\nConcern: ${c.concern||'Not entered'}\nDTC/scan information: ${c.dtcs||'Not entered'}\nFindings: ${c.findings||'Not entered'}\nRepair status: ${c.status||'Not entered'}\nTechnician notes: ${c.notes||'None recorded'}`;
     else r=`I recorded your question in the active repair context. Based on the information currently entered, verify the complaint first, separate verified facts from assumptions, and document the result of each test before selecting the next test.${c.section?`\n\nCurrent inspection section: ${c.section}.`:''}${c.measurements?`\nMeasurements available: ${c.measurements}.`:''}\n\nCurrent concern: ${c.concern||'not entered'}.`;
@@ -5693,6 +5694,33 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 </script>
 
 
+<script id="nitros-contextual-screen-assistance">
+(()=>{'use strict';
+ const screen=()=>window.NitrosRepairOrderCore?.getScreen?.()||document.querySelector('.screen.active')?.id||'home';
+ const registry=Object.freeze({
+  technician:[
+   {id:'battery',target:'#batteryStatus',title:'Battery and charging',incomplete:el=>/not inspected/i.test(el.value)},
+   {id:'lights',target:'#lightsStatus',title:'Lights, wipers, and visibility',incomplete:el=>/not inspected/i.test(el.value)},
+   {id:'fluids',target:'#fluidsStatus',title:'Fluids and leaks',incomplete:el=>/not inspected/i.test(el.value)},
+   {id:'tires',target:'#tiresStatus',title:'Tire condition',incomplete:el=>/not inspected/i.test(el.value)},
+   {id:'brakes',target:'#brakesStatus',title:'Brake condition',incomplete:el=>/not inspected/i.test(el.value)},
+   {id:'steering',target:'#steeringStatus',title:'Steering and suspension',incomplete:el=>/not inspected/i.test(el.value)},
+   ...['#lfTread','#rfTread','#lrTread','#rrTread','#lfPad','#rfPad','#lrPad','#rrPad','#frontRotor','#rearRotor','#technicianPhoto','#technicianFindings','#technicianRecommendation'].map((target,index)=>({id:`inspection-detail-${index}`,target,title:'Inspection detail',incomplete:el=>el.type==='file'?!el.files?.length:!String(el.value||'').trim()}))
+  ],
+  schedule:[{target:'#appointmentCustomer',title:'Customer details',incomplete:el=>!el.value.trim()},{target:'#appointmentVehicle',title:'Vehicle details',incomplete:el=>!el.value.trim()},{target:'#appointmentDate',title:'Appointment date',incomplete:el=>!el.value}],
+  dashboard:[{target:'#workboardRefresh',title:'Refresh the technician workboard',incomplete:()=>true}],
+  home:[{target:'#quickActiveJobs',title:'Open Active Jobs',incomplete:()=>true}]
+ });
+ let highlighted=null,timer=null;
+ function actions(current=screen()){return registry[current]||registry[current==='inspection'?'technician':current]||[]}
+ function next(current=screen()){return actions(current).map(action=>({...action,el:document.querySelector(action.target)})).find(action=>action.el&&action.incomplete(action.el))||null}
+ function clear(){if(highlighted)highlighted.classList.remove('nitros-walkthrough-target','nitros-walkthrough-field');highlighted=null;clearTimeout(timer)}
+ function show(action){clear();const item=action?.el?action:{...action,el:document.querySelector(action?.target)};if(!item?.el)return false;item.el.scrollIntoView({behavior:'smooth',block:'center',inline:'nearest'});item.el.classList.add('nitros-walkthrough-target');if(/^(INPUT|TEXTAREA|SELECT)$/.test(item.el.tagName))item.el.classList.add('nitros-walkthrough-field');highlighted=item.el;timer=setTimeout(clear,7000);return true}
+ function isUiHelp(text){const t=String(text||'').toLowerCase().replace(/[’']/g,'').trim();return /\b(what (?:do|am) i (?:do|supposed to do)|what(?:s| is) next|what do i do next|what do i do now|where do i start|help me (?:with )?(?:this )?(?:screen|page)|how do i use this|walk me through this|show me(?: what to do)?|show me the next one)\b/.test(t)||/^(?:next|what now|what do i do now)\??$/.test(t)}
+ function resolve(text,context={}){if(!isUiHelp(text))return{intent:false};const current=context.screen||screen(),target=next(current),name=current==='technician'?'Technician Digital Inspection':current==='schedule'?'Appointments & Morning Briefing':current==='dashboard'?'Technician Dashboard':current==='home'?'Home':current;const message=target?current==='technician'?`You’re on the Technician Digital Inspection. I’ll take you through the inspection in order. Start with ${target.title}.`:`You’re on ${name}. Start with ${target.title}. I’ve highlighted the relevant control.`:`You’re on the ${name}. I can guide you through this screen, but I couldn’t locate the next control.`;return{intent:true,type:'contextual_ui_help',screen:current,target,message};}
+ window.NitrosContextualScreenAssistance=Object.freeze({registry,resolve,show,next,clear,actions});
+})();
+</script>
 <script id="nitros-ask-oliver-toolbar">
 (()=>{'use strict';
   const button=document.getElementById('quickAskOliver');
