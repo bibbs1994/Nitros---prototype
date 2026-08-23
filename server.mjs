@@ -4,9 +4,11 @@ import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { analyzeSemanticImage } from './semantic-analyzer-core.mjs';
 import { MAX_JSON_BYTES, allowedOrigin, clientAddress, enforceRateLimit, publicError, validateDeclaredLength, validateJsonContentType } from './backend-http-security.mjs';
+import { SupportTicketRepository } from './support-ticket-repository.mjs';
 
 const root = fileURLToPath(new URL('.', import.meta.url)).replace(/[\\/]+$/, '');
 const port = Number(process.env.PORT || 8787);
+const supportTickets = new SupportTicketRepository(process.env.SUPPORT_TICKET_STORE || resolve(root, 'data', 'support-tickets.json'));
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml' };
 
 async function loadLocalEnvironment() {
@@ -37,10 +39,39 @@ async function readJson(request) {
   try { return JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { throw Object.assign(new Error('Request JSON is invalid.'), { statusCode: 400 }); }
 }
 
+function supportError(response, error) {
+  const status = Number(error?.statusCode) || 500;
+  const body = status >= 500 ? { error: 'Support ticket service is unavailable.', code: 'SUPPORT_TICKET_UNAVAILABLE' } : { error: error.message || 'Support ticket request is invalid.', code: error.code || 'INVALID_SUPPORT_TICKET' };
+  return sendJson(response, status, body);
+}
+
 await loadLocalEnvironment();
 createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
+    if (url.pathname === '/api/support-tickets' || url.pathname.startsWith('/api/support-tickets/')) {
+      response.setHeader('Vary', 'Origin');
+      const origin = request.headers.origin;
+      if (origin) {
+        if (!allowedOrigin(origin)) return sendJson(response, 403, { error: 'Origin is not allowed.', code: 'ORIGIN_FORBIDDEN' });
+        response.setHeader('Access-Control-Allow-Origin', origin);
+      }
+      if (request.method === 'OPTIONS') {
+        response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
+        response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        return response.writeHead(204, { 'Cache-Control': 'no-store' }).end();
+      }
+      try {
+        enforceRateLimit(`support-ticket|${clientAddress(request.headers, request.socket.remoteAddress || 'unknown')}`);
+        const id = decodeURIComponent(url.pathname.slice('/api/support-tickets/'.length));
+        if (request.method === 'GET' && url.pathname === '/api/support-tickets') return sendJson(response, 200, { tickets: await supportTickets.list() });
+        if (request.method === 'GET' && id) { const ticket = await supportTickets.get(id); return ticket ? sendJson(response, 200, { ticket }) : sendJson(response, 404, { error: 'Support ticket was not found.', code: 'TICKET_NOT_FOUND' }); }
+        if (request.method === 'POST' && url.pathname === '/api/support-tickets') { validateJsonContentType(request.headers['content-type']); validateDeclaredLength(request.headers['content-length']); const result = await supportTickets.create(await readJson(request)); return sendJson(response, result.created ? 201 : 200, { ticket: result.ticket, duplicate: !result.created }); }
+        if (request.method === 'PATCH' && id) { validateJsonContentType(request.headers['content-type']); validateDeclaredLength(request.headers['content-length']); const ticket = await supportTickets.update(id, await readJson(request)); return ticket ? sendJson(response, 200, { ticket }) : sendJson(response, 404, { error: 'Support ticket was not found.', code: 'TICKET_NOT_FOUND' }); }
+        response.setHeader('Allow', 'GET, POST, PATCH, OPTIONS');
+        return sendJson(response, 405, { error: 'Method not allowed.', code: 'METHOD_NOT_ALLOWED' });
+      } catch (error) { return supportError(response, error); }
+    }
     if (url.pathname === '/api/semantic-image-analysis') {
       response.setHeader('Vary', 'Origin');
       response.setHeader('X-Content-Type-Options', 'nosniff');
