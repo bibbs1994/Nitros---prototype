@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.50 keeps Guided Walkthrough steps synchronized with the real Nitros portal screen navigation without modifying repair-order data.
+Version 10.13.51 guides each real vehicle-documentation photo control before additional Evidence and makes Show Me reliably scroll and highlight its assigned target.
 
 ## Secure semantic analyzer
 

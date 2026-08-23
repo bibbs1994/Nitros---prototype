@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.13.50 — Guided Walkthrough Navigation — Build 2026-08-22</title>
+<title>Nitros Mobile Technician Portal v10.13.51 — Guided Walkthrough Photo Targets — Build 2026-08-22</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -526,7 +526,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.13.50 — Guided Walkthrough Navigation — Build 2026-08-22</div>
+  <div class="sub">Mobile Technician Portal v10.13.51 — Guided Walkthrough Photo Targets — Build 2026-08-22</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -541,7 +541,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.13.50 — Guided Walkthrough Navigation · Build 2026-08-22. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.13.51 — Guided Walkthrough Photo Targets · Build 2026-08-22. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -706,7 +706,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow nitros-build-identity">Version 10.13.50 — Guided Walkthrough Navigation · Build 2026-08-22</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow nitros-build-identity">Version 10.13.51 — Guided Walkthrough Photo Targets · Build 2026-08-22</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -773,7 +773,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow nitros-build-identity">Version 10.13.50 — Guided Walkthrough Navigation · Build 2026-08-22</div>
+      <div class="eyebrow nitros-build-identity">Version 10.13.51 — Guided Walkthrough Photo Targets · Build 2026-08-22</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1188,12 +1188,12 @@ canvas.graph-preview,canvas.ocr-preview{
 
     <h3>Vehicle documentation photos</h3>
     <div class="photo-grid">
-      <div class="field"><label for="photoFrontLeft">Front-left corner <strong>(required)</strong></label><input id="photoFrontLeft" type="file" accept="image/*" capture="environment" required></div>
-      <div class="field"><label for="photoFrontRight">Front-right corner <strong>(required)</strong></label><input id="photoFrontRight" type="file" accept="image/*" capture="environment" required></div>
-      <div class="field"><label for="photoRearLeft">Rear-left corner <strong>(required)</strong></label><input id="photoRearLeft" type="file" accept="image/*" capture="environment" required></div>
-      <div class="field"><label for="photoRearRight">Rear-right corner <strong>(required)</strong></label><input id="photoRearRight" type="file" accept="image/*" capture="environment" required></div>
-      <div class="field"><label for="photoOdometer">Odometer</label><input id="photoOdometer" type="file" accept="image/*" capture="environment"></div>
-      <div class="field"><label for="photoVin">VIN label</label><input id="photoVin" type="file" accept="image/*" capture="environment"></div>
+      <div class="field"><label for="photoFrontLeft">Front-left corner <strong>(required)</strong></label><input id="photoFrontLeft" data-walkthrough-target="photo-front-left" type="file" accept="image/*" capture="environment" required></div>
+      <div class="field"><label for="photoFrontRight">Front-right corner <strong>(required)</strong></label><input id="photoFrontRight" data-walkthrough-target="photo-front-right" type="file" accept="image/*" capture="environment" required></div>
+      <div class="field"><label for="photoRearLeft">Rear-left corner <strong>(required)</strong></label><input id="photoRearLeft" data-walkthrough-target="photo-rear-left" type="file" accept="image/*" capture="environment" required></div>
+      <div class="field"><label for="photoRearRight">Rear-right corner <strong>(required)</strong></label><input id="photoRearRight" data-walkthrough-target="photo-rear-right" type="file" accept="image/*" capture="environment" required></div>
+      <div class="field"><label for="photoOdometer">Odometer</label><input id="photoOdometer" data-walkthrough-target="photo-odometer" type="file" accept="image/*" capture="environment"></div>
+      <div class="field"><label for="photoVin">VIN label</label><input id="photoVin" data-walkthrough-target="photo-vin" type="file" accept="image/*" capture="environment"></div>
     </div>
     <div id="photoStatus" class="status warn">Four corner photos are required before continuing.</div>
 
@@ -1694,13 +1694,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.50 • Guided Walkthrough Navigation • Build 2026-08-22</div>
+<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.51 • Guided Walkthrough Photo Targets • Build 2026-08-22</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.13.50',
-  release:'Guided Walkthrough Navigation',
+  version:'10.13.51',
+  release:'Guided Walkthrough Photo Targets',
   buildDate:'2026-08-22',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -5337,7 +5337,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div class="nitros-build-identity" style="font-size:.78rem;color:#b9c8d8">Version 10.13.50 — Guided Walkthrough Navigation · Build 2026-08-22</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div class="nitros-build-identity" style="font-size:.78rem;color:#b9c8d8">Version 10.13.51 — Guided Walkthrough Photo Targets · Build 2026-08-22</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5375,7 +5375,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.13.50 — Guided Walkthrough Navigation · Build 2026-08-22</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.13.51 — Guided Walkthrough Photo Targets · Build 2026-08-22</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="exitRoGuide" class="oliver-guide-close" type="button">Exit RO</button><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6414,7 +6414,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.13.50</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.13.51</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="exitRoDiagnostic" class="diag-icon-btn" type="button">Exit RO</button><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -8459,7 +8459,12 @@ document.addEventListener("DOMContentLoaded",()=>{
   {id:'dashboard',role:'technician',screen:'home',target:'[data-go="dashboard"]',title:'Open Technician Dashboard',instruction:'Open the Technician Dashboard to see shop and assigned-work context.',why:'The dashboard helps the technician begin with the right active job.'},
   {id:'active-job',role:'technician',screen:'dashboard',target:'#quickActiveJobs',title:'Select or open assigned RO',instruction:'Use Active Jobs to open the correct saved repair order.',why:'Confirming the RO prevents notes and evidence being attached to the wrong vehicle.'},
   {id:'confirm-vehicle',role:'technician',screen:'checkin',target:'#quickVehicleButton',title:'Confirm correct vehicle',instruction:'Use the Vehicle button to verify the active RO vehicle details.',why:'Vehicle identity should be confirmed before inspection or diagnosis.'},
-  {id:'walkaround',role:'technician',screen:'inspection',target:'#inspection',title:'Begin vehicle walk-around',instruction:'Continue through the existing inspection workflow to document the vehicle condition.',why:'A walk-around establishes observable condition before repair work.',future:true},
+  {id:'photo-front-left',role:'technician',screen:'inspection',target:'[data-walkthrough-target="photo-front-left"]',title:'Front-left corner photo',instruction:'Use the real Choose File control to capture the required front-left corner documentation photo.',why:'This records the vehicle condition before repair work begins.'},
+  {id:'photo-front-right',role:'technician',screen:'inspection',target:'[data-walkthrough-target="photo-front-right"]',title:'Front-right corner photo',instruction:'Use the real Choose File control to capture the required front-right corner documentation photo.',why:'Each corner is separately documented for an accurate walk-around.'},
+  {id:'photo-rear-left',role:'technician',screen:'inspection',target:'[data-walkthrough-target="photo-rear-left"]',title:'Rear-left corner photo',instruction:'Use the real Choose File control to capture the required rear-left corner documentation photo.',why:'Each corner is separately documented for an accurate walk-around.'},
+  {id:'photo-rear-right',role:'technician',screen:'inspection',target:'[data-walkthrough-target="photo-rear-right"]',title:'Rear-right corner photo',instruction:'Use the real Choose File control to capture the required rear-right corner documentation photo.',why:'The four required corner photos establish the basic arrival condition.'},
+  {id:'photo-odometer',role:'technician',screen:'inspection',target:'[data-walkthrough-target="photo-odometer"]',title:'Odometer photo',instruction:'Use the real Choose File control to capture the arrival odometer when available.',why:'Mileage evidence supports the repair-order record.'},
+  {id:'photo-vin',role:'technician',screen:'inspection',target:'[data-walkthrough-target="photo-vin"]',title:'VIN label photo',instruction:'Use the real Choose File control to capture the VIN label when available.',why:'A VIN photo helps verify vehicle identity in the documentation.'},
   {id:'evidence',role:'technician',screen:'inspection',target:'#quickEvidence',title:'Capture photos and evidence',instruction:'Use the existing Evidence control for relevant photos or concerns.',why:'Evidence keeps observations attached to the correct repair order.'},
   {id:'diagnostics',role:'technician',screen:'assistant',target:'#oliverHubLaunch',title:'Continue into diagnostics',instruction:'Open the existing Oliver diagnostic workflow when diagnosis is needed.',why:'The diagnostic workflow records evidence before a repair decision.'},
   {id:'repair',role:'technician',screen:'workorder',target:'#repairStatus',title:'Record repair recommendation',instruction:'Use the existing RO repair information fields to record the recommendation.',why:'Recommendations must be available to the office and customer authorization workflow.'},
@@ -8468,9 +8473,10 @@ document.addEventListener("DOMContentLoaded",()=>{
   {id:'complete',role:'office',screen:'review',title:'Final RO completion',instruction:'Future / Not Yet Available: final closeout guidance will connect to the production closeout control when available.',why:'A walkthrough never closes an RO automatically.',future:true}
  ];
  const read=()=>{try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');return saved&&typeof saved==='object'?saved:null}catch(_){return null}},write=()=>{if(state)localStorage.setItem(STORAGE_KEY,JSON.stringify(state))},context=()=>({screen:window.NitrosRepairOrderCore?.getScreen?.()||document.querySelector('.screen.active')?.id||'home',roId:localStorage.getItem('activeRepairOrderId')||'',vehicle:window.NitrosQuickVehicle?.getActiveVehicle?.()?.vin||''});
- const current=()=>steps[state?.stepIndex||0],target=step=>step?.target?document.querySelector(step.target):null;
+ const current=()=>steps[state?.stepIndex||0],target=step=>{if(!step?.target)return null;const el=document.querySelector(step.target);if(!el)console.warn('Guided Walkthrough target not found.',{stepId:step.id,target:step.target,screen:context().screen});return el};
  function clearHighlight(){if(highlighted){highlighted.classList.remove('nitros-walkthrough-target','nitros-walkthrough-field');highlighted=null}}
- function showHighlight(){clearHighlight();const el=target(current());if(!el)return false;highlighted=el;el.classList.add('nitros-walkthrough-target');if(/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))el.classList.add('nitros-walkthrough-field');el.scrollIntoView({behavior:'smooth',block:'center'});return true}
+ function positionPanelForTarget(el){const panel=$('guidedWalkthroughPanel'),rect=el.getBoundingClientRect();panel.classList.toggle('near-top',rect.top>innerHeight*.52)}
+ function showHighlight(){clearHighlight();const step=current(),el=target(step);if(!el)return false;el.scrollIntoView({behavior:'smooth',block:'center',inline:'nearest'});requestAnimationFrame(()=>{positionPanelForTarget(el);highlighted=el;el.classList.add('nitros-walkthrough-target');if(/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))el.classList.add('nitros-walkthrough-field')});return true}
  function navigateToStep(step){if(!step||step.future||!step.screen)return false;const core=window.NitrosRepairOrderCore,currentScreen=context().screen;if(currentScreen===step.screen)return true;try{if(typeof core?.showScreen==='function'){core.showScreen(step.screen);return true}if(typeof window.showScreen==='function'){window.showScreen(step.screen);return true}}catch(error){console.warn('Guided Walkthrough navigation could not change portal screen.',error)}return false}
  function render(){if(!state?.active)return;const step=current();navigateToStep(step);const ctx=context();state.context={...ctx,updatedAt:now()};write();$('guidedWalkthroughKicker').textContent=`${state.roleLabel||'Full Workflow'} • Step ${state.stepIndex+1} of ${steps.length}`;$('guidedWalkthroughTitle').textContent=step.title;$('guidedWalkthroughInstruction').textContent=step.instruction;$('guidedWalkthroughFuture').hidden=!step.future;$('guidedWalkthroughContext').textContent=`Current portal screen: ${ctx.screen}${ctx.roId?` • Active RO: ${ctx.roId}`:''}${ctx.vehicle?` • Vehicle: ${ctx.vehicle}`:''}`;$('guidedWalkthroughBack').disabled=state.stepIndex===0;$('guidedWalkthroughNext').textContent=state.stepIndex===steps.length-1?'Finish':'Next';$('guidedWalkthroughOverlay').hidden=false;const el=target(step),panel=$('guidedWalkthroughPanel');panel.classList.toggle('near-top',Boolean(el&&el.getBoundingClientRect().top>innerHeight*.56));showHighlight()}
  function start(restart=false){const prior=read();state={active:true,walkthroughId:'full-workflow-phase-1',role:'full',roleLabel:'Full Workflow',stepIndex:restart?0:(prior?.stepIndex||0),completed:restart?[]:(prior?.completed||[]),skipped:restart?[]:(prior?.skipped||[]),startedAt:restart||!prior?.startedAt?now():prior.startedAt,updatedAt:now(),context:context()};write();$('guidedWalkthroughMenu').hidden=true;render()}
@@ -8479,7 +8485,7 @@ document.addEventListener("DOMContentLoaded",()=>{
  function menu(){const saved=read(),hasProgress=Boolean(saved&&(saved.active||saved.stepIndex>0||saved.completed?.length||saved.skipped?.length));state=saved;$('guidedWalkthroughResume').hidden=!hasProgress;$('guidedWalkthroughMenuStatus').textContent=hasProgress?`Progress saved at step ${(saved.stepIndex||0)+1} of ${steps.length}.`:'Choose a walkthrough action. Restart only clears walkthrough progress, never RO data.';$('guidedWalkthroughMenu').hidden=false}
  function help(kind){const step=current(),box=$('guidedWalkthroughHelp');const text=kind==='why'?step.why:kind==='help'?'Need help with this step? Use Show Me to highlight the real control, Repeat for the instruction, or continue using the normal portal controls. Support ticket routing is Future / Not Yet Available.':step.instruction;box.textContent=text;box.classList.add('open');clearTimeout(helpTimer);helpTimer=setTimeout(()=>box.classList.remove('open'),7000)}
  $('guidedWalkthroughLaunch').addEventListener('click',menu);$('guidedWalkthroughStart').addEventListener('click',()=>start(false));$('guidedWalkthroughResume').addEventListener('click',()=>start(false));$('guidedWalkthroughRestart').addEventListener('click',()=>{if(confirm('Restart the walkthrough? This only clears walkthrough progress; it will not change any repair order or vehicle data.'))start(true)});$('guidedWalkthroughExitMenu').addEventListener('click',()=>$('guidedWalkthroughMenu').hidden=true);$('guidedWalkthroughNext').addEventListener('click',()=>advance(1));$('guidedWalkthroughBack').addEventListener('click',()=>advance(-1));$('guidedWalkthroughSkip').addEventListener('click',()=>advance(1,true));$('guidedWalkthroughRepeat').addEventListener('click',()=>help('repeat'));$('guidedWalkthroughShow').addEventListener('click',showHighlight);$('guidedWalkthroughWhy').addEventListener('click',()=>help('why'));$('guidedWalkthroughHelpButton').addEventListener('click',()=>help('help'));$('guidedWalkthroughExit').addEventListener('click',stop);
- document.addEventListener('click',event=>{if(!state?.active)return;const el=target(current());if(el&&(event.target===el||el.contains(event.target)))setTimeout(()=>advance(1),120);else if(event.target.closest('[data-screen],[data-go],.active-job-switch,#quickActiveJobs'))setTimeout(render,180)},true);document.addEventListener('change',event=>{const el=target(current());if(el&&event.target===el)setTimeout(()=>advance(1),120)},true);window.addEventListener('pageshow',()=>{state=read();if(state?.active)render()});window.addEventListener('storage',event=>{if(event.key==='activeRepairOrderId'&&state?.active)render()});
+ document.addEventListener('click',event=>{if(!state?.active)return;const el=target(current());if(el&&(event.target===el||el.contains(event.target))&&/^(BUTTON|A)$/.test(el.tagName))setTimeout(()=>advance(1),120);else if(event.target.closest('[data-screen],[data-go],.active-job-switch,#quickActiveJobs'))setTimeout(render,180)},true);document.addEventListener('change',event=>{const el=target(current());if(el&&event.target===el)setTimeout(()=>advance(1),120)},true);window.addEventListener('resize',()=>{if(state?.active)showHighlight()});window.addEventListener('pageshow',()=>{state=read();if(state?.active)render()});window.addEventListener('storage',event=>{if(event.key==='activeRepairOrderId'&&state?.active)render()});
  window.NitrosGuidedWalkthrough=Object.freeze({storageKey:STORAGE_KEY,steps,start:()=>start(false),resume:()=>start(false),restart:()=>start(true),exit:stop,getState:()=>read(),showMe:showHighlight,why:()=>help('why')});
 })();
 </script>

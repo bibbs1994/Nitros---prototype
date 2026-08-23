@@ -26,6 +26,19 @@ test('post-appointment steps navigate with the existing portal screen architectu
   assert.match(script,/id:'dashboard',[\s\S]*?screen:'home'/);
 });
 
+test('inspection documentation photos precede Evidence and Show Me resolves each stable target',()=>{
+  const expected=['photo-front-left','photo-front-right','photo-rear-left','photo-rear-right','photo-odometer','photo-vin'];
+  for(const id of expected)assert.match(html,new RegExp(`data-walkthrough-target="${id}"`));
+  const positions=expected.map(id=>script.indexOf(`id:'${id}'`));
+  assert.ok(positions.every((position,index)=>position>=0&&(index===0||position>positions[index-1])));
+  assert.ok(script.indexOf("id:'evidence'")>positions.at(-1));
+  assert.match(script,/Guided Walkthrough target not found/);
+  assert.match(script,/el\.scrollIntoView\(\{behavior:'smooth',block:'center',inline:'nearest'\}\)/);
+  assert.match(script,/function positionPanelForTarget\(el\)/);
+  assert.match(script,/window\.addEventListener\('resize',\(\)=>\{if\(state\?\.active\)showHighlight\(\)\}\)/);
+  assert.match(script,/\^\(BUTTON\|A\)\$\/\.test\(el\.tagName\)/);
+});
+
 test('walkthrough progress is isolated, resumable, restart-confirmed, and non-destructive',()=>{
   assert.match(script,/STORAGE_KEY='nitros_guided_walkthrough_v1'/);
   assert.match(script,/active:true/);
