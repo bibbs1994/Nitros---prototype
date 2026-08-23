@@ -6,9 +6,12 @@ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const ticket=html.match(/<script id="nitros-support-ticket-service">([\s\S]*?)<\/script>/)?.[1]||'';
 const guided=html.match(/<script id="nitros-guided-walkthrough-phase1">([\s\S]*?)<\/script>/)?.[1]||'';
 
-test('Need help opens the centralized local-first support ticket flow',()=>{
-  for(const id of ['nitrosSupportTicket','nitrosSupportTicketCategory','nitrosSupportTicketNote','nitrosSupportTicketSummary','nitrosSupportTicketSend','nitrosSupportTicketCancel'])assert.match(html,new RegExp(`id="${id}"`));
-  assert.match(html,/Report a Problem \/ Send Ticket/);
+test('Need help opens a dedicated support-choice panel instead of the normal Ask Oliver panel',()=>{
+  for(const id of ['nitrosSupportTicket','nitrosSupportTicketChoice','nitrosSupportTicketHelp','nitrosSupportTicketReport','nitrosSupportTicketForm','nitrosSupportTicketCategory','nitrosSupportTicketNote','nitrosSupportTicketScreenshot','nitrosSupportTicketSummary','nitrosSupportTicketSend','nitrosSupportTicketCancel'])assert.match(html,new RegExp(`id="${id}"`));
+  assert.match(html,/Need Help \/ Report a Problem/);
+  assert.match(html,/I need help using this screen/);
+  assert.match(html,/Something isn't working \/ Report a bug/);
+  assert.match(html,/Create Support Ticket/);
   assert.match(html,/What went wrong\?/);
   assert.match(ticket,/const KEY='nitros_support_tickets_v1'/);
   assert.match(ticket,/window\.NitrosSupportTickets=Object\.freeze\(\{storageKey:KEY,open,close,create,getTickets:read,buildSupportDiagnosticSnapshot:snapshot\}\)/);
@@ -31,11 +34,14 @@ test('ticket creation is double-tap guarded and does not reset the walkthrough',
   assert.match(guided,/contextualMode,walkthrough:state/);
 });
 
-test('ticket service validates the description, persists the category, and keeps support independent',()=>{
+test('ticket service validates the description, persists category and attachment metadata, and keeps support independent',()=>{
   assert.match(ticket,/const userNote=\$\('nitrosSupportTicketNote'\)\.value\.trim\(\)/);
-  assert.match(ticket,/Enter a short description of what went wrong before sending the ticket\./);
+  assert.match(ticket,/Enter a short description of what went wrong before creating the ticket\./);
   assert.match(ticket,/category:\$\('nitrosSupportTicketCategory'\)\.value/);
-  assert.match(ticket,/Ticket sent — Support Ticket #\$\{ticket\.id\}/);
+  assert.match(ticket,/Support ticket created successfully\. Ticket #\$\{ticket\.id\}/);
+  assert.match(ticket,/screenshotAttachment:draft\.attachment/);
+  assert.match(ticket,/function helpUsingScreen\(\)/);
+  assert.match(ticket,/nitrosSupportTicketReport'\)\.addEventListener\('click',report\)/);
   assert.match(ticket,/currentStepId/);
   assert.match(ticket,/currentStepName/);
   assert.match(ticket,/previousRoute/);
