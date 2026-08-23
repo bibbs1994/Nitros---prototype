@@ -4,7 +4,7 @@ Version 10.13.67 adds local-first support-ticket delivery with a persistent offl
 
 ## Local test server
 
-Run `powershell -ExecutionPolicy Bypass -File .\Start-NitrosTestServer.ps1` from this project to host the local test API on `127.0.0.1:8787`. The launcher finds `node.exe`, starts `server.mjs` from the repository root, and records non-secret startup output under `data\logs`. It is deliberately loopback-only and is not a public server.
+Run `powershell -ExecutionPolicy Bypass -File .\Start-NitrosTestServer.ps1` from this project to host the local test API on port `8787`. The launcher finds `node.exe`, starts `server.mjs` from the repository root, binds to `0.0.0.0` for private-LAN testing, and records non-secret startup output under `data\logs`. It does not create a firewall rule, router rule, tunnel, or public DNS record.
 
 ## Secure semantic analyzer
 

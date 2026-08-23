@@ -8,6 +8,7 @@ import { SupportTicketRepository } from './support-ticket-repository.mjs';
 
 const root = fileURLToPath(new URL('.', import.meta.url)).replace(/[\\/]+$/, '');
 const port = Number(process.env.PORT || 8787);
+const host = process.env.HOST || '0.0.0.0';
 const supportTickets = new SupportTicketRepository(process.env.SUPPORT_TICKET_STORE || resolve(root, 'data', 'support-tickets.json'));
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml' };
 
@@ -113,4 +114,4 @@ createServer(async (request, response) => {
     const status = Number(error.statusCode) || (error.code === 'ENOENT' ? 404 : 500);
     sendJson(response, status, { error: error.message || 'Server error.', transportStatus: error.transportStatus || null });
   }
-}).listen(port, '127.0.0.1', () => console.log(`Nitros secure server listening on http://127.0.0.1:${port}`));
+}).listen(port, host, () => console.log(`Nitros secure server listening on http://${host}:${port}`));

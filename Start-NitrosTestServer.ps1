@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
   [ValidateRange(1, 65535)]
-  [int]$Port = 8787
+  [int]$Port = 8787,
+  [string]$HostAddress = '0.0.0.0'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -16,6 +17,9 @@ if (-not (Test-Path -LiteralPath $ServerFile -PathType Leaf)) {
 $NodePath = (Get-Command node.exe -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Source)
 if (-not $NodePath) {
   $NitrosUserProfile = [Environment]::GetFolderPath('UserProfile')
+  if (-not $NitrosUserProfile) {
+    $NitrosUserProfile = $ProjectRoot -replace '\\OneDrive\\.*$', ''
+  }
   $CodexRuntimeRoot = Join-Path $NitrosUserProfile '.cache\codex-runtimes'
   if (Test-Path -LiteralPath $CodexRuntimeRoot) {
     $NodePath = Get-ChildItem -LiteralPath $CodexRuntimeRoot -Recurse -Filter node.exe -File -ErrorAction SilentlyContinue |
@@ -30,7 +34,8 @@ if (-not $NodePath) {
 New-Item -ItemType Directory -Path $LogDirectory -Force | Out-Null
 $LogFile = Join-Path $LogDirectory ("nitros-server-{0:yyyyMMdd}.log" -f (Get-Date))
 $env:PORT = [string]$Port
+$env:HOST = $HostAddress
 Set-Location -LiteralPath $ProjectRoot
-"[{0:o}] Starting Nitros test server on 127.0.0.1:{1} with {2}" -f (Get-Date).ToUniversalTime(), $Port, $NodePath | Tee-Object -FilePath $LogFile -Append
+"[{0:o}] Starting Nitros test server on {1}:{2} with {3}" -f (Get-Date).ToUniversalTime(), $HostAddress, $Port, $NodePath | Tee-Object -FilePath $LogFile -Append
 & $NodePath $ServerFile 2>&1 | Tee-Object -FilePath $LogFile -Append
 exit $LASTEXITCODE
