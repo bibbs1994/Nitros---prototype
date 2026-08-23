@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.49 adds an optional, persistent Guided Walkthrough framework that guides users through real Nitros portal controls without modifying repair-order data.
+Version 10.13.50 keeps Guided Walkthrough steps synchronized with the real Nitros portal screen navigation without modifying repair-order data.
 
 ## Secure semantic analyzer
 

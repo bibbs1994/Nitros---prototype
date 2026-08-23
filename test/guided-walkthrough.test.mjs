@@ -11,8 +11,19 @@ test('Guided Walkthrough is an optional real-portal guidance layer',()=>{
   assert.match(script,/target:'\[data-go="schedule"\]'/);
   assert.match(script,/target:'#quickActiveJobs'/);
   assert.match(script,/target:'#quickVehicleButton'/);
+  assert.match(script,/target:'#saveAppointment'/);
   assert.match(script,/document\.addEventListener\('click'/);
   assert.match(script,/el\.scrollIntoView/);
+});
+
+test('post-appointment steps navigate with the existing portal screen architecture',()=>{
+  assert.match(script,/function navigateToStep\(step\)\{if\(!step\|\|step\.future\|\|!step\.screen\)return false/);
+  assert.match(script,/core\.showScreen\(step\.screen\)/);
+  assert.match(script,/window\.showScreen\(step\.screen\)/);
+  assert.match(script,/function render\(\)\{if\(!state\?\.active\)return;const step=current\(\);navigateToStep\(step\)/);
+  assert.match(script,/advance\(delta,skipped=false\)[\s\S]*?render\(\)/);
+  assert.match(script,/id:'checkin',[\s\S]*?screen:'home'/);
+  assert.match(script,/id:'dashboard',[\s\S]*?screen:'home'/);
 });
 
 test('walkthrough progress is isolated, resumable, restart-confirmed, and non-destructive',()=>{

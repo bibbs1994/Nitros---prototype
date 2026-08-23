@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.13.49 — Guided Walkthrough Phase 1 — Build 2026-08-22</title>
+<title>Nitros Mobile Technician Portal v10.13.50 — Guided Walkthrough Navigation — Build 2026-08-22</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -526,7 +526,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.13.49 — Guided Walkthrough Phase 1 — Build 2026-08-22</div>
+  <div class="sub">Mobile Technician Portal v10.13.50 — Guided Walkthrough Navigation — Build 2026-08-22</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -541,7 +541,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.13.49 — Guided Walkthrough Phase 1 · Build 2026-08-22. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.13.50 — Guided Walkthrough Navigation · Build 2026-08-22. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -706,7 +706,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow nitros-build-identity">Version 10.13.49 — Guided Walkthrough Phase 1 · Build 2026-08-22</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow nitros-build-identity">Version 10.13.50 — Guided Walkthrough Navigation · Build 2026-08-22</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -773,7 +773,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow nitros-build-identity">Version 10.13.49 — Guided Walkthrough Phase 1 · Build 2026-08-22</div>
+      <div class="eyebrow nitros-build-identity">Version 10.13.50 — Guided Walkthrough Navigation · Build 2026-08-22</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1694,13 +1694,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.49 • Guided Walkthrough Phase 1 • Build 2026-08-22</div>
+<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.50 • Guided Walkthrough Navigation • Build 2026-08-22</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.13.49',
-  release:'Guided Walkthrough Phase 1',
+  version:'10.13.50',
+  release:'Guided Walkthrough Navigation',
   buildDate:'2026-08-22',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -5337,7 +5337,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="smartOliverPanel" class="smart-oliver-panel hidden" aria-live="polite">
   <section id="smartOliverDialog" class="smart-oliver-dialog" role="dialog" aria-label="Oliver Smart Repair Assistant">
     <header id="smartOliverHead" class="smart-oliver-head">
-      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div class="nitros-build-identity" style="font-size:.78rem;color:#b9c8d8">Version 10.13.49 — Guided Walkthrough Phase 1 · Build 2026-08-22</div></div>
+      <div><strong>🧠 Oliver Smart Repair Assistant</strong><div class="nitros-build-identity" style="font-size:.78rem;color:#b9c8d8">Version 10.13.50 — Guided Walkthrough Navigation · Build 2026-08-22</div></div>
       <div style="display:flex;gap:6px"><button id="smartOliverMin" class="btn ghost small" type="button">Minimize</button><button id="smartOliverClose" class="btn ghost small" type="button">Close</button></div>
     </header>
     <div class="smart-oliver-body">
@@ -5375,7 +5375,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 <div id="oliverGuidePanel" class="oliver-guide-panel hidden" role="dialog" aria-modal="true" aria-labelledby="oliverGuideTitle">
   <div class="oliver-guide-dialog">
     <div class="oliver-guide-head">
-      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.13.49 — Guided Walkthrough Phase 1 · Build 2026-08-22</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
+      <div style="display:flex;gap:12px"><div class="oliver-guide-avatar">O</div><div><div id="oliverGuideTitle" class="oliver-guide-title">Oliver Guided Test Assistant</div><div class="oliver-guide-sub">Version 10.13.50 — Guided Walkthrough Navigation · Build 2026-08-22</div><div class="oliver-guide-drag-note">↕ Drag this header to move Oliver</div></div></div>
       <div class="oliver-guide-head-actions"><button id="exitRoGuide" class="oliver-guide-close" type="button">Exit RO</button><button id="oliverGuideMinimize" class="oliver-guide-close" type="button" aria-label="Minimize Oliver guide">Minimize</button><button id="oliverGuideClose" class="oliver-guide-close" type="button">Close</button></div>
     </div>
     <div class="oliver-guide-command">
@@ -6414,7 +6414,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 
 <section id="oliverDiagnosticMode" aria-label="Oliver full-screen diagnostic mode">
   <header class="diag-topbar">
-    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.13.49</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
+    <div class="diag-topbar-main"><div class="diag-title">Oliver Diagnostic Mode <span class="diag-status">v10.13.50</span></div><div id="diagContextLine" class="diag-context">Loading active repair context…</div></div>
     <div class="diag-top-actions"><button id="exitRoDiagnostic" class="diag-icon-btn" type="button">Exit RO</button><button id="diagSpeakToggle" class="diag-icon-btn" type="button">🔊 <span class="label">Voice On</span></button><button id="diagExit" class="diag-icon-btn" type="button" aria-label="Close Oliver diagnostic mode">✕ <span class="label">Return to RO</span></button></div>
   </header>
   <div class="diag-body">
@@ -8454,7 +8454,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   {id:'vehicle',role:'office',screen:'schedule',target:'#appointmentVehicle',title:'Enter or select the vehicle',instruction:'Record the customer vehicle using the existing appointment form.',why:'This connects the visit to the vehicle the shop will service.'},
   {id:'concern',role:'office',screen:'schedule',target:'#appointmentConcern',title:'Record the customer concern',instruction:'Capture the customer’s words and the concern they want addressed.',why:'A clear concern gives the technician an accurate starting point.'},
   {id:'appointment-comments',role:'office',screen:'schedule',target:'#appointmentNotes',title:'Add appointment comments',instruction:'Add any useful appointment or drop-off notes.',why:'Notes preserve details that may not fit in the concern.'},
-  {id:'appointment-save',role:'office',screen:'schedule',target:'#appointmentSave',title:'Save appointment',instruction:'Save the appointment using the normal portal action.',why:'This keeps the appointment available for the team.'},
+  {id:'appointment-save',role:'office',screen:'schedule',target:'#saveAppointment',title:'Save appointment',instruction:'Save the appointment using the normal portal action.',why:'This keeps the appointment available for the team.'},
   {id:'checkin',role:'office',screen:'home',target:'#newRepairOrder',title:'Begin check-in RO',instruction:'Start or open the real repair order when the vehicle arrives.',why:'The RO is the container for vehicle data, evidence, diagnostics, and repair work.'},
   {id:'dashboard',role:'technician',screen:'home',target:'[data-go="dashboard"]',title:'Open Technician Dashboard',instruction:'Open the Technician Dashboard to see shop and assigned-work context.',why:'The dashboard helps the technician begin with the right active job.'},
   {id:'active-job',role:'technician',screen:'dashboard',target:'#quickActiveJobs',title:'Select or open assigned RO',instruction:'Use Active Jobs to open the correct saved repair order.',why:'Confirming the RO prevents notes and evidence being attached to the wrong vehicle.'},
@@ -8471,7 +8471,8 @@ document.addEventListener("DOMContentLoaded",()=>{
  const current=()=>steps[state?.stepIndex||0],target=step=>step?.target?document.querySelector(step.target):null;
  function clearHighlight(){if(highlighted){highlighted.classList.remove('nitros-walkthrough-target','nitros-walkthrough-field');highlighted=null}}
  function showHighlight(){clearHighlight();const el=target(current());if(!el)return false;highlighted=el;el.classList.add('nitros-walkthrough-target');if(/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))el.classList.add('nitros-walkthrough-field');el.scrollIntoView({behavior:'smooth',block:'center'});return true}
- function render(){if(!state?.active)return;const step=current(),ctx=context();state.context={...ctx,updatedAt:now()};write();$('guidedWalkthroughKicker').textContent=`${state.roleLabel||'Full Workflow'} • Step ${state.stepIndex+1} of ${steps.length}`;$('guidedWalkthroughTitle').textContent=step.title;$('guidedWalkthroughInstruction').textContent=step.instruction;$('guidedWalkthroughFuture').hidden=!step.future;$('guidedWalkthroughContext').textContent=`Current portal screen: ${ctx.screen}${ctx.roId?` • Active RO: ${ctx.roId}`:''}${ctx.vehicle?` • Vehicle: ${ctx.vehicle}`:''}`;$('guidedWalkthroughBack').disabled=state.stepIndex===0;$('guidedWalkthroughNext').textContent=state.stepIndex===steps.length-1?'Finish':'Next';$('guidedWalkthroughOverlay').hidden=false;const el=target(step),panel=$('guidedWalkthroughPanel');panel.classList.toggle('near-top',Boolean(el&&el.getBoundingClientRect().top>innerHeight*.56));showHighlight()}
+ function navigateToStep(step){if(!step||step.future||!step.screen)return false;const core=window.NitrosRepairOrderCore,currentScreen=context().screen;if(currentScreen===step.screen)return true;try{if(typeof core?.showScreen==='function'){core.showScreen(step.screen);return true}if(typeof window.showScreen==='function'){window.showScreen(step.screen);return true}}catch(error){console.warn('Guided Walkthrough navigation could not change portal screen.',error)}return false}
+ function render(){if(!state?.active)return;const step=current();navigateToStep(step);const ctx=context();state.context={...ctx,updatedAt:now()};write();$('guidedWalkthroughKicker').textContent=`${state.roleLabel||'Full Workflow'} • Step ${state.stepIndex+1} of ${steps.length}`;$('guidedWalkthroughTitle').textContent=step.title;$('guidedWalkthroughInstruction').textContent=step.instruction;$('guidedWalkthroughFuture').hidden=!step.future;$('guidedWalkthroughContext').textContent=`Current portal screen: ${ctx.screen}${ctx.roId?` • Active RO: ${ctx.roId}`:''}${ctx.vehicle?` • Vehicle: ${ctx.vehicle}`:''}`;$('guidedWalkthroughBack').disabled=state.stepIndex===0;$('guidedWalkthroughNext').textContent=state.stepIndex===steps.length-1?'Finish':'Next';$('guidedWalkthroughOverlay').hidden=false;const el=target(step),panel=$('guidedWalkthroughPanel');panel.classList.toggle('near-top',Boolean(el&&el.getBoundingClientRect().top>innerHeight*.56));showHighlight()}
  function start(restart=false){const prior=read();state={active:true,walkthroughId:'full-workflow-phase-1',role:'full',roleLabel:'Full Workflow',stepIndex:restart?0:(prior?.stepIndex||0),completed:restart?[]:(prior?.completed||[]),skipped:restart?[]:(prior?.skipped||[]),startedAt:restart||!prior?.startedAt?now():prior.startedAt,updatedAt:now(),context:context()};write();$('guidedWalkthroughMenu').hidden=true;render()}
  function stop(){clearHighlight();if(state){state.active=false;state.updatedAt=now();write()}$('guidedWalkthroughOverlay').hidden=true;clearTimeout(helpTimer)}
  function advance(delta,skipped=false){if(!state)return;const index=state.stepIndex;if(delta>0){(skipped?state.skipped:state.completed).includes(index)||(skipped?state.skipped:state.completed).push(index)}state.stepIndex=Math.max(0,Math.min(steps.length-1,index+delta));if(index===steps.length-1&&delta>0){stop();return}render()}
