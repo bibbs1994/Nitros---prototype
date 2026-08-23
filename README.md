@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.48 protects unfinished repair-order drafts with a two-step discard confirmation while preserving unrelated active and saved jobs.
+Version 10.13.49 adds an optional, persistent Guided Walkthrough framework that guides users through real Nitros portal controls without modifying repair-order data.
 
 ## Secure semantic analyzer
 
