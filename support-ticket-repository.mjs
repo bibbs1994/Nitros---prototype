@@ -2,13 +2,13 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
-export const SUPPORT_TICKET_STATUSES = Object.freeze(['Open', 'In Progress', 'Fixed', 'Resolved']);
+export const SUPPORT_TICKET_STATUSES = Object.freeze(['Open', 'In Progress', 'Fixed', 'Closed']);
 const MAX_TEXT = 20_000;
 const text = value => typeof value === 'string' ? value.slice(0, MAX_TEXT) : value;
 const object = value => value && typeof value === 'object' && !Array.isArray(value) ? value : {};
 
 function normalizeStatus(value) {
-  const legacy = { New: 'Open', OPEN: 'Open', Reviewing: 'In Progress', 'Fix In Progress': 'In Progress', 'Ready for Retest': 'Fixed', Closed: 'Resolved' };
+  const legacy = { New: 'Open', OPEN: 'Open', Reviewing: 'In Progress', 'Fix In Progress': 'In Progress', 'Ready for Retest': 'Fixed', Resolved: 'Closed' };
   const status = legacy[value] || value || 'Open';
   if (!SUPPORT_TICKET_STATUSES.includes(status)) throw Object.assign(new Error('Ticket status is invalid.'), { statusCode: 400, code: 'INVALID_TICKET_STATUS' });
   return status;
@@ -44,7 +44,7 @@ export function normalizeSupportTicket(input, existing = null) {
     description,
     capturedContext: object(raw.capturedContext || raw.snapshot || prior.capturedContext),
     appVersion: text(raw.appVersion ?? prior.appVersion ?? ''),
-    developerNotes: text(raw.developerNotes ?? prior.developerNotes ?? ''),
+    developerNotes: text(raw.developerNotes ?? raw.developmentNotes ?? prior.developerNotes ?? prior.developmentNotes ?? ''),
     fixDescription: text(raw.fixDescription ?? prior.fixDescription ?? ''),
     resolutionNotes: text(raw.resolutionNotes ?? raw.resolutionNote ?? prior.resolutionNotes ?? prior.resolutionNote ?? '')
   };

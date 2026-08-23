@@ -19,5 +19,7 @@ test('support ticket repository persists, deduplicates local retries, and update
     const persisted = await reloaded.get(created.ticket.id);
     assert.equal(persisted.fixDescription, 'Corrected handler.');
     assert.equal((await reloaded.update(created.ticket.id, { status: 'Fixed' })).status, 'Fixed');
+    assert.equal((await reloaded.update(created.ticket.id, { status: 'Closed', developmentNotes: 'Closed from the dashboard.' })).status, 'Closed');
+    assert.equal((await reloaded.get(created.ticket.id)).developerNotes, 'Closed from the dashboard.');
   } finally { await rm(directory, { recursive: true, force: true }); }
 });

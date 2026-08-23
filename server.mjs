@@ -103,6 +103,12 @@ createServer(async (request, response) => {
         return sendJson(response, failure.status, failure.body);
       }
     }
+    if (url.pathname === '/dashboard') {
+      if (request.method !== 'GET' && request.method !== 'HEAD') return sendJson(response, 405, { error: 'Method not allowed.' });
+      const bytes = await readFile(resolve(root, 'dashboard.html'));
+      response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+      return response.end(request.method === 'HEAD' ? undefined : bytes);
+    }
     if (request.method !== 'GET' && request.method !== 'HEAD') return sendJson(response, 405, { error: 'Method not allowed.' });
     const relative = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname).replace(/^\/+/, '');
     const target = resolve(root, relative);
