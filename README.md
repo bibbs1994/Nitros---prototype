@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.65 adds a Development / Support Ticket Inbox for reviewing, triaging, annotating, and resolving mobile support tickets from the existing persisted ticket store.
+Version 10.13.66 aligns the mobile Notes, Support Tickets, and Vehicle utility buttons into a safe, vertically ordered right-side group.
 
 ## Secure semantic analyzer
 
