@@ -40,3 +40,10 @@ test('unresolved contextual next steps retain ticket-ready diagnostics',()=>{
   for(const field of ['UNRESOLVED_NEXT_CONTROL','route:currentScreen','inspectionSection','activeRO','vehicle','currentStepId','lastSuccessfulTarget','attemptedNextTarget','recentActions','nitros:contextual-walkthrough-unresolved'])assert.match(guided,new RegExp(field.replace(/[?:]/g,'\\$&')));
   assert.match(guided,/Walkthrough could not determine the next control\./);
 });
+
+test('Building Estimate has deterministic controls and preserves estimate context after the inspection transition',()=>{
+  for(const id of ['estimate-labor-rate','estimate-repair-operation','estimate-labor-lookup','estimate-labor-hours','estimate-line-description','estimate-line-parts','estimate-add-line','estimate-supplies','estimate-tax','estimate-authorization-status','estimate-create-workorder'])assert.match(html,new RegExp(`id:'${id}'`));
+  assert.match(guided,/const liveScreen=context\(\)\.screen;if\(liveScreen!==contextualPayload\?\.screenId\)contextualPayload=/);
+  assert.match(html,/current==='estimate'\?'Building Estimate'/);
+  assert.match(guided,/estimate:'The estimate converts documented findings into priced, authorized repair work\.'/);
+});
