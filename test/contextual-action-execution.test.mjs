@@ -58,3 +58,14 @@ test('Job Clock stage completes once and routes to the real Completion Wizard sc
   assert.match(guided,/if\(completeContextualStage\(contextualStep,currentScreen\)\)return/);
   assert.match(guided,/if\(!contextualCompletedStages\.includes\(currentScreen\)\)step=window\.NitrosContextualScreenAssistance\?\.discoverNext/);
 });
+
+test('appointment walkthrough has stable forward-only fields and uses the rendered appointment context',()=>{
+  for(const id of ['appointment-customer','appointment-phone','appointment-vehicle','appointment-date','appointment-time','appointment-concern','appointment-save'])assert.match(html,new RegExp(`id:'${id}'`));
+  assert.match(html,/id:'appointment-phone',[\s\S]*?replace\(\/\\D\/g,''\)/);
+  assert.match(html,/id:'appointment-save',[\s\S]*?nextScreen:'home'/);
+  assert.match(html,/index=afterStepId\?available\.findIndex\(action=>action\.id===afterStepId\):-1/);
+  assert.match(html,/candidates=afterStepId\?available\.slice\(index>=0\?index\+1:0\):available/);
+  assert.match(html,/candidates\.find\(action=>action\.incomplete\(action\.el\)\)/);
+  assert.match(html,/current==='schedule'\?'New Appointment \/ Schedule a vehicle'/);
+  assert.match(guided,/current==='schedule'\?'New Appointment \/ Schedule a vehicle'/);
+});
