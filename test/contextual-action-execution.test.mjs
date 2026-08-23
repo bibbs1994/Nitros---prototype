@@ -18,3 +18,14 @@ test('Next and Show Me act on the actual current contextual target',()=>{
   assert.match(guided,/guidedWalkthroughShow'\)\.addEventListener\('click',\(\)=>contextualMode\?executeContextualAction\(contextualStep\)/);
   assert.match(guided,/afterStepId:.*contextualStep\?\.id/);
 });
+
+test('Why uses the active contextual field rather than the full walkthrough fallback',()=>{
+  assert.match(guided,/function whyContextual\(\)\{const step=contextualStep/);
+  assert.match(guided,/step\?\.why\|\|step\?\.instruction/);
+  assert.match(guided,/guidedWalkthroughWhy'\)\.addEventListener\('click',\(\)=>contextualMode\?whyContextual\(\):help\('why'\)/);
+  assert.doesNotMatch(guided,/guidedWalkthroughWhy'\)\.addEventListener\('click',\(\)=>help\('why'\)/);
+});
+
+test('Digital Inspection steps have field-specific Why explanations',()=>{
+  for(const phrase of ['tire pressure','remaining pad material','Rotor condition','Fluid level, condition','Lighting and wiper condition','Battery condition and charging','Photos preserve evidence'])assert.match(html,new RegExp(phrase,'i'));
+});
