@@ -15,7 +15,7 @@ test('Need help opens a dedicated support-choice panel instead of the normal Ask
   assert.match(html,/Create Support Ticket/);
   assert.match(html,/What went wrong\?/);
   assert.match(ticket,/const KEY='nitros_support_tickets_v1'/);
-  assert.match(ticket,/window\.NitrosSupportTickets=Object\.freeze\(\{storageKey:KEY,open,close,create,getTickets:read,buildSupportDiagnosticSnapshot:snapshot\}\)/);
+  assert.match(ticket,/window\.NitrosSupportTickets=Object\.freeze\(\{storageKey:KEY,open,close,create,getTickets:read,syncPendingTickets,buildSupportDiagnosticSnapshot:snapshot\}\)/);
   assert.match(guided,/function openSupportTicket\(\)/);
   assert.match(guided,/guidedWalkthroughHelpButton'\)\.addEventListener\('click',openSupportTicket\)/);
   assert.doesNotThrow(()=>new Function(ticket),'support ticket service must parse and initialize');
@@ -24,9 +24,9 @@ test('Need help opens a dedicated support-choice panel instead of the normal Ask
   assert.match(guided,/support\.open\(/);
 });
 
-test('support tickets include persistent IDs, offline sync state, and a sanitized diagnostic snapshot',()=>{
+test('support tickets include persistent IDs, an offline sync queue, and a sanitized diagnostic snapshot',()=>{
   assert.match(ticket,/NT-\$\{day\}-\$\{String\(next\)\.padStart\(4,'0'\)\}/);
-  for(const field of ['createdAt','createdAtLocal',"status:'New'","syncState:navigator.onLine?'PENDING_SYNC':'LOCAL'",'screenContext','oliverContext','walkthroughContext','workflowContext','focusedElement','recentActions','recentErrors','deviceInfo','attachmentMetadata'])assert.ok(ticket.includes(field),field);
+  for(const field of ['createdAt','createdAtLocal',"status:'New'","syncState:'PENDING_SYNC'","syncStatus:'PENDING_SYNC'",'serverTicketId','lastSyncAttemptAt','syncedAt','syncError','screenContext','oliverContext','walkthroughContext','workflowContext','focusedElement','recentActions','recentErrors','deviceInfo','attachmentMetadata'])assert.ok(ticket.includes(field),field);
   assert.match(ticket,/secret=\/password\|passcode\|token\|secret\|api\.\?key\|cookie\|card\|payment\|credential\/i/);
   assert.match(ticket,/screenshot:\{supported:false,status:'deferred',reason:/);
 });
@@ -43,7 +43,7 @@ test('ticket service validates the description, persists category and attachment
   assert.match(ticket,/const userNote=\$\('nitrosSupportTicketNote'\)\.value\.trim\(\)/);
   assert.match(ticket,/Enter a short description of what went wrong before creating the ticket\./);
   assert.match(ticket,/category:\$\('nitrosSupportTicketCategory'\)\.value/);
-  assert.match(ticket,/Support ticket created successfully\. Ticket #\$\{ticket\.id\}/);
+  assert.match(ticket,/saved locally\. Delivering to support/);
   assert.match(ticket,/screenshotAttachment:draft\.attachment/);
   assert.match(ticket,/function helpUsingScreen\(\)/);
   assert.match(ticket,/nitrosSupportTicketReport'\)\.addEventListener\('click',report\)/);
@@ -51,6 +51,22 @@ test('ticket service validates the description, persists category and attachment
   assert.match(ticket,/currentStepName/);
   assert.match(ticket,/previousRoute/);
   assert.doesNotMatch(ticket,/NitrosGuidedWalkthrough\.(?:start|resume|restart|exit)/);
+});
+
+test('support-ticket delivery is local-first, retryable, bounded, and idempotent at the API boundary',()=>{
+  assert.match(html,/name="nitros-support-ticket-endpoint"/);
+  assert.match(ticket,/127\\\.0\\\.0\\\.1/);
+  assert.match(ticket,/function syncTicket\(localId\)/);
+  assert.match(ticket,/function syncPendingTickets\(\)/);
+  assert.match(ticket,/sourceLocalId:ticket\.id/);
+  assert.match(ticket,/new AbortController\(\)/);
+  assert.match(ticket,/setTimeout\(\(\)=>controller\.abort\(\),4500\)/);
+  assert.match(ticket,/syncStatus:'SYNCHRONIZED'/);
+  assert.match(ticket,/Delivery pending\. The app will retry when the support service is available\./);
+  assert.match(ticket,/window\.addEventListener\('online',\(\)=>void syncPendingTickets\(\)\)/);
+  assert.match(ticket,/setTimeout\(\(\)=>void syncPendingTickets\(\),300\)/);
+  assert.match(ticket,/saved and delivered to support/);
+  assert.match(ticket,/saved locally; delivery is pending and will retry automatically/);
 });
 
 test('development support inbox uses the existing support-ticket records and preserves auditable triage updates',()=>{

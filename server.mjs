@@ -53,7 +53,8 @@ createServer(async (request, response) => {
       response.setHeader('Vary', 'Origin');
       const origin = request.headers.origin;
       if (origin) {
-        if (!allowedOrigin(origin)) return sendJson(response, 403, { error: 'Origin is not allowed.', code: 'ORIGIN_FORBIDDEN' });
+        const sameOrigin = new URL(origin).host === request.headers.host;
+        if (!sameOrigin && !allowedOrigin(origin)) return sendJson(response, 403, { error: 'Origin is not allowed.', code: 'ORIGIN_FORBIDDEN' });
         response.setHeader('Access-Control-Allow-Origin', origin);
       }
       if (request.method === 'OPTIONS') {

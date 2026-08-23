@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.66 aligns the mobile Notes, Support Tickets, and Vehicle utility buttons into a safe, vertically ordered right-side group.
+Version 10.13.67 adds local-first support-ticket delivery with a persistent offline sync queue.
 
 ## Secure semantic analyzer
 
