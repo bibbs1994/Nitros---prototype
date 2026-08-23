@@ -15,7 +15,9 @@ test('recommended-entry language receives a separate contextual composition inte
 test('authorization notes prefer the actual field and never invent approval',()=>{
   assert.match(contextual,/estimate-authorization-notes/);
   assert.match(guided,/\^\(Approved\|Partially Approved\)\$/i);
-  assert.match(guided,/I don’t see confirmed authorization recorded yet/);
+  assert.match(guided,/isAuthorizationNotes=step\?\.id==='estimate-authorization-notes'\|\|target==='#authorizationNotes'/);
+  assert.match(guided,/Example\/template/);
+  assert.doesNotMatch(guided,/authorization-notes\|authorization notes/);
   assert.match(guided,/Customer approved \$\{approvedItems\}/);
   assert.match(guided,/method&&method!==\'Not recorded\'/);
   assert.match(guided,/\$0\\\.00/);
@@ -34,4 +36,12 @@ test('toolbar retains only the active screen field for generic recommended-entry
   assert.match(html,/fieldScreenId:field\?\.screenId\|\|''/);
   assert.match(html,/lastFieldContext\?\.screenId===screen\?\.id\?lastFieldContext:null/);
   assert.match(contextual,/context\.fieldScreenId===current\?context\.fieldId:''/);
+  assert.match(html,/window\.NitrosAskOliverContext=Object\.freeze\(\{get:context\}\)/);
+  assert.match(guided,/liveContext=window\.NitrosAskOliverContext\?\.get\?\.\(\)\|\|\{\}/);
+});
+
+test('authorization notes cannot fall through to diagnostic note guidance',()=>{
+  assert.match(guided,/if\(isAuthorizationNotes\)\{/);
+  assert.match(guided,/if\(\/findings\|diagnostic\|notes\/i\.test/);
+  assert.match(guided,/I recognize \$\{field\.toLowerCase\(\)\}, but I don’t have field-specific guidance/);
 });
