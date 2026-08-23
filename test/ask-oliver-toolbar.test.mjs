@@ -11,17 +11,19 @@ test('Ask Oliver is a persistent seventh toolbar action, not a new floating cont
   assert.doesNotMatch(html,/ask-oliver-(?:fab|floating)/i);
 });
 
-test('Ask Oliver carries active RO and inspection context into the existing assistant',()=>{
+test('Ask Oliver carries active RO and inspection context into Guided Walkthrough assistance',()=>{
   assert.match(toolbar,/window\.NitrosRepairOrderCore\?\.collectDraft\?\.\(\)/);
-  for(const field of ['customer','ro','vehicle','vin','mileage','stage','screen','section','findings','measurements','notes','dtcs','photos'])assert.match(toolbar,new RegExp(`${field}(?::|,)`));
-  assert.match(toolbar,/window\.NitrosSmartOliver\?\.openContextual\?\.\(context\(\)\)/);
-  assert.match(html,/window\.NitrosSmartOliver=Object\.freeze\(\{openContextual:openConsultation/);
-  assert.match(html,/Current inspection section: \$\{c\.section\}/);
+  for(const field of ['customer','ro','vehicle','vin','mileage','stage','screenId','screen','section','findings','measurements','notes','dtcs','photos'])assert.match(toolbar,new RegExp(`${field}(?::|,)`));
+  assert.match(toolbar,/window\.NitrosGuidedWalkthrough\?\.openContextual\?\.\(context\(\)\)/);
+  assert.doesNotMatch(toolbar,/NitrosSmartOliver/);
+  assert.match(html,/openContextual,exit:stop/);
+  assert.match(html,/Current inspection section: \$\{payload\.section\}/);
 });
 
-test('opening and closing contextual Oliver preserves the active screen and scroll position',()=>{
-  assert.match(html,/returnPosition=\{screen:payload\.screen\|\|document\.querySelector\('\.screen\.active'\)\?\.id\|\|'',scrollY:window\.scrollY\}/);
-  assert.match(html,/requestAnimationFrame\(\(\)=>window\.scrollTo\(0,saved\.scrollY\)\)/);
+test('toolbar opens contextual mode without navigating the active portal screen',()=>{
+  assert.match(html,/function openContextual\(payload=\{\}\)\{state=null;contextualMode=true/);
+  assert.match(html,/Current portal screen: \$\{name\}/);
+  assert.match(html,/guidedWalkthroughContextualAsk/);
   assert.doesNotMatch(toolbar,/NitrosGuidedWalkthrough\.(?:start|restart)/);
   assert.doesNotMatch(toolbar,/(?:showScreen|startNewRepairOrder|openRepairOrder)\(/);
 });
