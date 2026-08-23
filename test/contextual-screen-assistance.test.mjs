@@ -13,9 +13,10 @@ test('contextual UI questions route before diagnostic guidance',()=>{
 });
 
 test('inspection help uses detailed controls and a shared show-me registry',()=>{
-  for(const target of ['#batteryStatus','#lightsStatus','#fluidsStatus','#tiresStatus','#brakesStatus','#lfTread','#lfPad','#frontRotor','#technicianPhoto','#technicianFindings'])assert.match(contextual,new RegExp(target.replace(/[.#]/g,'\\$&')));
+  for(const target of ['#photoFrontLeft','#photoFrontRight','#photoRearLeft','#photoRearRight','#inspectionNotes','#batteryStatus','#lightsStatus','#fluidsStatus','#tiresStatus','#brakesStatus','#lfTread','#lfPad','#frontRotor','#technicianPhoto','#technicianFindings'])assert.match(contextual,new RegExp(target.replace(/[.#]/g,'\\$&')));
   assert.match(contextual,/Object\.freeze\(\{registry,resolve,show,next,clear,actions\}\)/);
   assert.match(contextual,/scrollIntoView\(\{behavior:'smooth',block:'center'/);
+  for(const field of ['screenId:current','stepId:target','targetId:target','action:target','nextStepId'])assert.match(contextual,new RegExp(field.replace(/[?.]/g,'\\$&')));
 });
 
 test('a diagnostic code question remains outside contextual UI matching',()=>{
