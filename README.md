@@ -1,12 +1,14 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.67 adds local-first support-ticket delivery with a persistent offline sync queue.
+Version 10.13.68 wires local-first mobile support tickets to the MSI private-LAN support server.
 
 ## Local test server
 
 Run `powershell -ExecutionPolicy Bypass -File .\Start-NitrosTestServer.ps1` from this project to host the local test API on port `8787`. The launcher finds `node.exe`, starts `server.mjs` from the repository root, binds to `0.0.0.0` for private-LAN testing, and records non-secret startup output under `data\logs`. It does not create a firewall rule, router rule, tunnel, or public DNS record.
 
 The local support dashboard is available at `http://localhost:8787/dashboard` and, on the private LAN, `http://192.168.4.24:8787/dashboard`. Tickets are durably stored in the ignored local file `data\support-tickets.json` using atomic write-and-rename updates.
+
+For private-LAN testing, the mobile support-ticket queue posts to `http://192.168.4.24:8787/api/support-tickets` and preserves a local retry record whenever the server is unavailable. Load the portal from the MSI LAN server (`http://192.168.4.24:8787/`) for this test path. A portal loaded from HTTPS GitHub Pages cannot post to this HTTP-only LAN endpoint because browsers block mixed content; no browser-security bypass is used.
 
 ## Secure semantic analyzer
 
