@@ -8,7 +8,7 @@ const guided=html.match(/<script id="nitros-guided-walkthrough-phase1">([\s\S]*?
 
 test('recommended-entry language receives a separate contextual composition intent',()=>{
   assert.match(contextual,/function isRecommendedEntry\(text\)/);
-  for(const pattern of [/what should i \(\?:put\|write\|say\)/i,/give me \(\?:an \)\?example/i,/help me fill/i,/how should i word/i,/suggest a note/i])assert.match(contextual,pattern);
+  for(const pattern of [/what should i \(\?:put\|write\|say\)/i,/give me \(\?:an \)\?\(\?:example\|rough idea\)/i,/help me fill/i,/how should i word/i,/suggest a note/i])assert.match(contextual,pattern);
   assert.match(contextual,/const type=isRecommendedEntry\(text\)\?'contextual_recommended_entry'/);
 });
 
@@ -62,4 +62,14 @@ test('Pause note purpose and why questions resolve without changing walkthrough 
   assert.match(contextual,/why do i need \(\?:a \)\?pause note/);
   assert.match(contextual,/current==='workorder'\?'Digital Work Order'/);
   assert.match(contextual,/A pause note preserves workflow continuity/);
+});
+
+test('Internal technician notes have stable field-specific guidance and safe examples',()=>{
+  assert.match(contextual,/id:'workorder-internal-technician-notes',screen:'workorder',target:'#internalTechnicianNotes'/);
+  assert.match(contextual,/Internal technician notes preserve verified shop information/);
+  assert.match(guided,/isInternalTechnicianNotes=step\?\.id==='workorder-internal-technician-notes'\|\|target==='#internalTechnicianNotes'/);
+  assert.match(guided,/Use this area for internal findings and work notes/);
+  assert.match(guided,/Vehicle inspected for customer concern/);
+  assert.match(guided,/Record any actual measurements, components inspected, unusual conditions, and work performed/);
+  assert.match(contextual,/what should my \(\?:tech \)\?notes say/);
 });
