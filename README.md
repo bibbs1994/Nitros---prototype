@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.64 fixes the Guided Walkthrough Need help? action so it opens the existing support panel without changing the active repair order, vehicle, inspection screen, entered data, or walkthrough step.
+Version 10.13.65 adds a Development / Support Ticket Inbox for reviewing, triaging, annotating, and resolving mobile support tickets from the existing persisted ticket store.
 
 ## Secure semantic analyzer
 

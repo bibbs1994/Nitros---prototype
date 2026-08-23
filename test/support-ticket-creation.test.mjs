@@ -5,6 +5,7 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const ticket=html.match(/<script id="nitros-support-ticket-service">([\s\S]*?)<\/script>/)?.[1]||'';
 const guided=html.match(/<script id="nitros-guided-walkthrough-phase1">([\s\S]*?)<\/script>/)?.[1]||'';
+const inbox=html.match(/<script id="nitros-support-ticket-inbox">([\s\S]*?)<\/script>/)?.[1]||'';
 
 test('Need help opens a dedicated support-choice panel instead of the normal Ask Oliver panel',()=>{
   for(const id of ['nitrosSupportTicket','nitrosSupportTicketChoice','nitrosSupportTicketHelp','nitrosSupportTicketReport','nitrosSupportTicketForm','nitrosSupportTicketCategory','nitrosSupportTicketNote','nitrosSupportTicketScreenshot','nitrosSupportTicketSummary','nitrosSupportTicketSend','nitrosSupportTicketCancel'])assert.match(html,new RegExp(`id="${id}"`));
@@ -25,7 +26,7 @@ test('Need help opens a dedicated support-choice panel instead of the normal Ask
 
 test('support tickets include persistent IDs, offline sync state, and a sanitized diagnostic snapshot',()=>{
   assert.match(ticket,/NT-\$\{day\}-\$\{String\(next\)\.padStart\(4,'0'\)\}/);
-  for(const field of ['createdAt','createdAtLocal',"status:'OPEN'","syncState:navigator.onLine?'PENDING_SYNC':'LOCAL'",'screenContext','oliverContext','walkthroughContext','workflowContext','focusedElement','recentActions','recentErrors','deviceInfo','attachmentMetadata'])assert.ok(ticket.includes(field),field);
+  for(const field of ['createdAt','createdAtLocal',"status:'New'","syncState:navigator.onLine?'PENDING_SYNC':'LOCAL'",'screenContext','oliverContext','walkthroughContext','workflowContext','focusedElement','recentActions','recentErrors','deviceInfo','attachmentMetadata'])assert.ok(ticket.includes(field),field);
   assert.match(ticket,/secret=\/password\|passcode\|token\|secret\|api\.\?key\|cookie\|card\|payment\|credential\/i/);
   assert.match(ticket,/screenshot:\{supported:false,status:'deferred',reason:/);
 });
@@ -50,4 +51,21 @@ test('ticket service validates the description, persists category and attachment
   assert.match(ticket,/currentStepName/);
   assert.match(ticket,/previousRoute/);
   assert.doesNotMatch(ticket,/NitrosGuidedWalkthrough\.(?:start|resume|restart|exit)/);
+});
+
+test('development support inbox uses the existing support-ticket records and preserves auditable triage updates',()=>{
+  for(const id of ['nitrosSupportInboxButton','nitrosSupportInbox','nitrosSupportInboxSearch','nitrosSupportInboxFilter','nitrosSupportInboxList','nitrosSupportInboxDetail'])assert.match(html,new RegExp(`id="${id}"`));
+  for(const id of ['nitrosSupportInboxDevelopmentNotes','nitrosSupportInboxResolutionNote'])assert.match(inbox,new RegExp(id));
+  for(const status of ['New','Reviewing','Fix In Progress','Ready for Retest','Resolved','Closed'])assert.match(inbox,new RegExp(`['"]${status}['"]`));
+  assert.match(inbox,/window\.NitrosSupportTickets\?\.storageKey\|\|'nitros_support_tickets_v1'/);
+  assert.match(inbox,/userNote/);
+  assert.match(inbox,/developmentNotes/);
+  assert.match(inbox,/resolutionNote/);
+  assert.match(ticket,/Ticket created/);
+  assert.match(inbox,/Status changed/);
+  assert.match(inbox,/Development note updated/);
+  assert.match(inbox,/Resolution note updated/);
+  assert.match(ticket,/status:'New'/);
+  assert.match(ticket,/nitros:support-ticket-created/);
+  assert.doesNotThrow(()=>new Function(inbox),'support inbox service must parse');
 });
