@@ -3,3 +3,4 @@
 .env.*.local
 node_modules/
 data/support-tickets.json
+data/logs/
