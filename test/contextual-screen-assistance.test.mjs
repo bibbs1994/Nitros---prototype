@@ -8,13 +8,13 @@ const contextual=html.match(/<script id="nitros-contextual-screen-assistance">([
 test('contextual UI questions route before diagnostic guidance',()=>{
   assert.match(html,/ui=window\.NitrosContextualScreenAssistance\?\.resolve\(q,c\)/);
   assert.match(html,/if\(ui\?\.intent\)\{r=ui\.message;window\.NitrosContextualScreenAssistance\.show\(ui\.target\);\}/);
-  assert.match(contextual,/type:'contextual_ui_help'/);
+  assert.match(contextual,/'contextual_ui_help'/);
   for(const phrase of ['where do i start','how do i use this','walk me through this','show me the next one'])assert.match(contextual,new RegExp(phrase));
 });
 
 test('inspection help uses detailed controls and a shared show-me registry',()=>{
   for(const target of ['#photoFrontLeft','#photoFrontRight','#photoRearLeft','#photoRearRight','#inspectionNotes','#batteryStatus','#lightsStatus','#fluidsStatus','#tiresStatus','#brakesStatus','#lfTread','#lfPad','#frontRotor','#technicianPhoto','#technicianFindings'])assert.match(contextual,new RegExp(target.replace(/[.#]/g,'\\$&')));
-  assert.match(contextual,/Object\.freeze\(\{registry,resolve,show,next,discoverNext,clear,actions\}\)/);
+  assert.match(contextual,/Object\.freeze\(\{registry,resolve,isRecommendedEntry,show,next,discoverNext,clear,actions\}\)/);
   assert.match(contextual,/scrollIntoView\(\{behavior:'smooth',block:'center'/);
   for(const field of ['screenId:current','stepId:target','targetId:target','action:target','nextStepId'])assert.match(contextual,new RegExp(field.replace(/[?.]/g,'\\$&')));
 });

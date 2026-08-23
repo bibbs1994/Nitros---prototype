@@ -1,0 +1,37 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const contextual=html.match(/<script id="nitros-contextual-screen-assistance">([\s\S]*?)<\/script>/)?.[1]||'';
+const guided=html.match(/<script id="nitros-guided-walkthrough-phase1">([\s\S]*?)<\/script>/)?.[1]||'';
+
+test('recommended-entry language receives a separate contextual composition intent',()=>{
+  assert.match(contextual,/function isRecommendedEntry\(text\)/);
+  for(const pattern of [/what should i \(\?:put\|write\)/i,/give me \(\?:an \)\?example/i,/help me fill/i,/how should i word/i,/suggest a note/i])assert.match(contextual,pattern);
+  assert.match(contextual,/const type=isRecommendedEntry\(text\)\?'contextual_recommended_entry'/);
+});
+
+test('authorization notes prefer the actual field and never invent approval',()=>{
+  assert.match(contextual,/estimate-authorization-notes/);
+  assert.match(guided,/\^\(Approved\|Partially Approved\)\$/i);
+  assert.match(guided,/I don’t see confirmed authorization recorded yet/);
+  assert.match(guided,/Customer approved \$\{approvedItems\}/);
+  assert.match(guided,/method&&method!==\'Not recorded\'/);
+  assert.match(guided,/\$0\\\.00/);
+});
+
+test('suggested entries remain field-aware and definition questions remain explanatory',()=>{
+  assert.match(guided,/function suggestedEntry\(question,step\)/);
+  assert.match(guided,/Tire measurements should be actual observed values/);
+  assert.match(guided,/Document the measured result, the test conditions/);
+  assert.match(guided,/result\.type==='contextual_definition'/);
+  assert.match(guided,/result\.target\?\.why\|\|result\.instruction/);
+});
+
+test('toolbar retains only the active screen field for generic recommended-entry questions',()=>{
+  assert.match(html,/let lastFieldContext=null/);
+  assert.match(html,/fieldScreenId:field\?\.screenId\|\|''/);
+  assert.match(html,/lastFieldContext\?\.screenId===screen\?\.id\?lastFieldContext:null/);
+  assert.match(contextual,/context\.fieldScreenId===current\?context\.fieldId:''/);
+});
