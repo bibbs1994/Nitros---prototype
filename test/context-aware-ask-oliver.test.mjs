@@ -8,7 +8,7 @@ const guided=html.match(/<script id="nitros-guided-walkthrough-phase1">([\s\S]*?
 
 test('recommended-entry language receives a separate contextual composition intent',()=>{
   assert.match(contextual,/function isRecommendedEntry\(text\)/);
-  for(const pattern of [/what should i \(\?:put\|write\)/i,/give me \(\?:an \)\?example/i,/help me fill/i,/how should i word/i,/suggest a note/i])assert.match(contextual,pattern);
+  for(const pattern of [/what should i \(\?:put\|write\|say\)/i,/give me \(\?:an \)\?example/i,/help me fill/i,/how should i word/i,/suggest a note/i])assert.match(contextual,pattern);
   assert.match(contextual,/const type=isRecommendedEntry\(text\)\?'contextual_recommended_entry'/);
 });
 
@@ -44,4 +44,22 @@ test('authorization notes cannot fall through to diagnostic note guidance',()=>{
   assert.match(guided,/if\(isAuthorizationNotes\)\{/);
   assert.match(guided,/if\(\/findings\|diagnostic\|notes\/i\.test/);
   assert.match(guided,/I recognize \$\{field\.toLowerCase\(\)\}, but I don’t have field-specific guidance/);
+});
+
+test('Pause note has a stable work-order step and field-specific contextual guidance',()=>{
+  assert.match(contextual,/id:'workorder-pause-note',screen:'workorder',target:'#pauseNote'/);
+  assert.match(contextual,/why:'A pause note preserves workflow continuity/);
+  assert.match(guided,/isPauseNote=step\?\.id==='workorder-pause-note'\|\|target==='#pauseNote'/);
+  assert.match(guided,/if\(isPauseNote\)\{/);
+  assert.match(guided,/Diagnosis paused pending additional testing/);
+  assert.match(guided,/Repair paused while waiting for ordered parts/);
+  assert.match(guided,/Work paused pending customer authorization/);
+  assert.match(guided,/Only document the actual reason this RO is being paused/);
+});
+
+test('Pause note purpose and why questions resolve without changing walkthrough navigation',()=>{
+  assert.match(contextual,/what is this \(\?:field\|screen\) for/);
+  assert.match(contextual,/why do i need \(\?:a \)\?pause note/);
+  assert.match(contextual,/current==='workorder'\?'Digital Work Order'/);
+  assert.match(contextual,/A pause note preserves workflow continuity/);
 });
