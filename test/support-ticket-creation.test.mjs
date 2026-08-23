@@ -10,13 +10,17 @@ test('Need help opens a dedicated support-choice panel instead of the normal Ask
   for(const id of ['nitrosSupportTicket','nitrosSupportTicketChoice','nitrosSupportTicketHelp','nitrosSupportTicketReport','nitrosSupportTicketForm','nitrosSupportTicketCategory','nitrosSupportTicketNote','nitrosSupportTicketScreenshot','nitrosSupportTicketSummary','nitrosSupportTicketSend','nitrosSupportTicketCancel'])assert.match(html,new RegExp(`id="${id}"`));
   assert.match(html,/Need Help \/ Report a Problem/);
   assert.match(html,/I need help using this screen/);
-  assert.match(html,/Something isn't working \/ Report a bug/);
+  assert.match(html,/Something is not working \/ Report a bug/);
   assert.match(html,/Create Support Ticket/);
   assert.match(html,/What went wrong\?/);
   assert.match(ticket,/const KEY='nitros_support_tickets_v1'/);
   assert.match(ticket,/window\.NitrosSupportTickets=Object\.freeze\(\{storageKey:KEY,open,close,create,getTickets:read,buildSupportDiagnosticSnapshot:snapshot\}\)/);
   assert.match(guided,/function openSupportTicket\(\)/);
   assert.match(guided,/guidedWalkthroughHelpButton'\)\.addEventListener\('click',openSupportTicket\)/);
+  assert.doesNotThrow(()=>new Function(ticket),'support ticket service must parse and initialize');
+  assert.match(ticket,/currentStepId:contextual\.currentStep\|\|source\.currentStep\|\|\(walk\?\.stepIndex\?\?''\)/);
+  assert.match(guided,/const support=window\.NitrosSupportTickets;if\(typeof support\?\.open!=='function'\)/);
+  assert.match(guided,/support\.open\(/);
 });
 
 test('support tickets include persistent IDs, offline sync state, and a sanitized diagnostic snapshot',()=>{

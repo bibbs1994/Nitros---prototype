@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.52 adds Ask Oliver to the persistent active-RO toolbar, handing Oliver the current repair-order and inspection-screen context without starting Guided Walkthrough.
+Version 10.13.64 fixes the Guided Walkthrough Need help? action so it opens the existing support panel without changing the active repair order, vehicle, inspection screen, entered data, or walkthrough step.
 
 ## Secure semantic analyzer
 
