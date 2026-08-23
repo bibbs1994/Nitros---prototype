@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.68 wires local-first mobile support tickets to the MSI private-LAN support server.
+Version 10.13.69 wires local-first mobile support tickets, including the available technician profile, to the MSI private-LAN support server.
 
 ## Local test server
 
