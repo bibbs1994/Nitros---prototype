@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
-<title>Nitros Mobile Technician Portal v10.13.51 — Guided Walkthrough Photo Targets — Build 2026-08-22</title>
+<title>Nitros Mobile Technician Portal v10.13.52 — Ask Oliver Contextual Assistance — Build 2026-08-22</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -236,7 +236,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
   .status-track{display:flex;gap:7px;overflow-x:auto;padding:6px 0 10px;scrollbar-width:thin}
   .status-step{min-width:118px;padding:11px 9px;border:1px solid var(--line);border-radius:13px;background:#081321;color:var(--muted);font-size:12px;font-weight:800;text-align:center}
   .status-step.complete{border-color:var(--ok);color:#d8ffed}.status-step.current{border-color:var(--accent);background:#29170b;color:#fff}
-  .quick-toolbar{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;z-index:85;width:min(720px,calc(100% - 20px));display:none;grid-template-columns:repeat(6,1fr);gap:6px;padding:8px;background:rgba(7,17,31,.96);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 36px rgba(0,0,0,.55);backdrop-filter:blur(8px)}
+  .quick-toolbar{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;z-index:85;width:min(720px,calc(100% - 20px));display:none;grid-template-columns:repeat(7,1fr);gap:6px;padding:8px;background:rgba(7,17,31,.96);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 36px rgba(0,0,0,.55);backdrop-filter:blur(8px)}
   .quick-toolbar.visible{display:grid}.quick-toolbar button{padding:11px 5px;border-radius:12px;font-size:11px;line-height:1.2}
   .productivity-modal{position:fixed;inset:0;z-index:190;background:rgba(0,0,0,.88);padding:12px;overflow:auto}
   .productivity-modal-card{width:min(900px,100%);margin:0 auto;background:#0d192a;border:1px solid var(--line);border-radius:20px;padding:18px}
@@ -526,7 +526,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.13.51 — Guided Walkthrough Photo Targets — Build 2026-08-22</div>
+  <div class="sub">Mobile Technician Portal v10.13.52 — Ask Oliver Contextual Assistance — Build 2026-08-22</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -541,7 +541,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.13.51 — Guided Walkthrough Photo Targets · Build 2026-08-22. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.13.52 — Ask Oliver Contextual Assistance · Build 2026-08-22. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -706,7 +706,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow nitros-build-identity">Version 10.13.51 — Guided Walkthrough Photo Targets · Build 2026-08-22</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow nitros-build-identity">Version 10.13.52 — Ask Oliver Contextual Assistance · Build 2026-08-22</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -773,7 +773,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow nitros-build-identity">Version 10.13.51 — Guided Walkthrough Photo Targets · Build 2026-08-22</div>
+      <div class="eyebrow nitros-build-identity">Version 10.13.52 — Ask Oliver Contextual Assistance · Build 2026-08-22</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1615,6 +1615,7 @@ canvas.graph-preview,canvas.ocr-preview{
 
 <div id="quickToolbar" class="quick-toolbar" aria-label="Quick actions">
   <button id="quickSearch" class="btn secondary" type="button">🔎<br>Search</button>
+  <button id="quickAskOliver" class="btn secondary" type="button" aria-label="Ask Oliver for help with this repair order">🧠<br>Ask Oliver</button>
   <button id="quickEvidence" class="btn primary" type="button">📷<br>Evidence</button>
   <button id="quickVoice" class="btn secondary" type="button">🎙️<br>Voice Note</button>
   <button id="quickFlashlight" class="btn secondary" type="button">🔦<br>Light</button>
@@ -1694,13 +1695,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.51 • Guided Walkthrough Photo Targets • Build 2026-08-22</div>
+<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.52 • Ask Oliver Contextual Assistance • Build 2026-08-22</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.13.51',
-  release:'Guided Walkthrough Photo Targets',
+  version:'10.13.52',
+  release:'Ask Oliver Contextual Assistance',
   buildDate:'2026-08-22',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -5635,6 +5636,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   const $=id=>document.getElementById(id), KEY='nitros_v824_oliver_repair_timeline';
   const panel=$('smartOliverPanel'), dialog=$('smartOliverDialog'), head=$('smartOliverHead');
   const value=id=>$(id)?.value?.trim?.()||'';
+  let consultationContext=null, returnPosition=null;
   function identity(){
     const customer=value('customerName')||value('appointmentCustomer')||'Customer not entered';
     const vehicle=[value('vehicleYear'),value('vehicleMake'),value('vehicleModel')].filter(Boolean).join(' ')||value('appointmentVehicle')||'Vehicle not entered';
@@ -5644,13 +5646,13 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   function readAll(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}}
   function writeAll(v){localStorage.setItem(KEY,JSON.stringify(v.slice(-300)))}
   function addEvent(type,detail){const i=identity(),all=readAll();all.push({id:Date.now()+'_'+Math.random().toString(36).slice(2,7),key:i.key,type,detail,at:new Date().toISOString(),technician:value('technicianName')||value('assignedTechnician')||'Technician'});writeAll(all);renderTimeline()}
-  function refreshIdentity(){const i=identity();$('smartOliverIdentity').textContent=`Active context: ${i.customer} • ${i.vehicle} • ${i.ro}`}
-  function context(){return {id:identity(),concern:value('customerConcern')||value('concern')||value('appointmentConcern'),dtcs:value('dtcCodes')||value('scanResults'),findings:value('inspectionFindings')||value('technicianFindings'),notes:value('internalTechnicianNotes'),status:value('repairStatus')}}
+  function refreshIdentity(){const i=identity(),c=consultationContext||{};const location=[c.screen,c.section].filter(Boolean).join(' • ');$('smartOliverIdentity').textContent=`Active context: ${i.customer} • ${i.vehicle} • ${i.ro}${location?` • ${location}`:''}`}
+  function context(){const c=consultationContext||{};return {id:identity(),concern:value('customerConcern')||value('concern')||value('appointmentConcern')||c.concern||'',dtcs:value('dtcCodes')||value('scanResults')||c.dtcs||'',findings:value('inspectionFindings')||value('technicianFindings')||c.findings||'',notes:value('internalTechnicianNotes')||c.notes||'',status:value('repairStatus')||c.stage||'',screen:c.screen||'',section:c.section||'',mileage:c.mileage||'',vin:c.vin||'',measurements:c.measurements||'',photos:c.photos||[]}}
   function answer(q){const c=context(),t=q.toLowerCase();let r='';
     if(t.includes('next')||t.includes('diagnos')) r=`Recommended next action:\n1. Verify the customer concern under the stated operating conditions.\n2. Perform and document a complete system scan.\n3. Review DTCs, freeze-frame data, and relevant live data.\n4. Choose the least intrusive test that can prove or disprove the leading cause.\n\nCurrent concern: ${c.concern||'not entered yet'}.`;
     else if(t.includes('missing')||t.includes('complete')){runCompleteness();r='I ran the repair completeness check. Open the Completeness tab to review every missing or completed item.'}
     else if(t.includes('summar')) r=`Repair summary for ${c.id.customer}, ${c.id.vehicle}:\nConcern: ${c.concern||'Not entered'}\nDTC/scan information: ${c.dtcs||'Not entered'}\nFindings: ${c.findings||'Not entered'}\nRepair status: ${c.status||'Not entered'}\nTechnician notes: ${c.notes||'None recorded'}`;
-    else r=`I recorded your question in the active repair context. Based on the information currently entered, verify the complaint first, separate verified facts from assumptions, and document the result of each test before selecting the next test.\n\nCurrent concern: ${c.concern||'not entered'}.`;
+    else r=`I recorded your question in the active repair context. Based on the information currently entered, verify the complaint first, separate verified facts from assumptions, and document the result of each test before selecting the next test.${c.section?`\n\nCurrent inspection section: ${c.section}.`:''}${c.measurements?`\nMeasurements available: ${c.measurements}.`:''}\n\nCurrent concern: ${c.concern||'not entered'}.`;
     $('smartOliverResponse').textContent=r;addEvent('Oliver consultation',q);return r;
   }
   const baseDiagnosticSteps=[]; // v10.8.6: numbered legacy sequence permanently removed.
@@ -5671,7 +5673,10 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   }
   function renderTimeline(){const i=identity(),events=readAll().filter(x=>x.key===i.key).sort((a,b)=>new Date(b.at)-new Date(a.at));$('smartTimelineList').innerHTML=events.length?events.map(e=>`<div class="smart-event"><strong>${e.type}</strong><div>${String(e.detail||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}</div><small>${new Date(e.at).toLocaleString()} • ${e.technician}</small></div>`).join(''):'<div class="status">No Oliver timeline events have been recorded for this active repair yet.</div>'}
   document.querySelectorAll('.smart-tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.smart-tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.smart-pane').forEach(x=>x.classList.toggle('active',x.dataset.smartPane===b.dataset.smartTab));if(b.dataset.smartTab==='timeline')renderTimeline();if(b.dataset.smartTab==='check')runCompleteness()}));
-  $('smartOliverLaunch').addEventListener('click',()=>{panel.classList.remove('hidden');refreshIdentity();renderTimeline()});$('smartOliverClose').addEventListener('click',()=>panel.classList.add('hidden'));
+  function openConsultation(payload={}){consultationContext=payload;returnPosition={screen:payload.screen||document.querySelector('.screen.active')?.id||'',scrollY:window.scrollY};panel.classList.remove('hidden');refreshIdentity();renderTimeline();$('smartOliverQuestion').placeholder=payload.section?`Ask Oliver about ${payload.section}…`:'Ask Oliver about this repair order…'}
+  function closeConsultation(){panel.classList.add('hidden');const saved=returnPosition;returnPosition=null;if(saved)requestAnimationFrame(()=>window.scrollTo(0,saved.scrollY));}
+  $('smartOliverLaunch').addEventListener('click',()=>openConsultation());$('smartOliverClose').addEventListener('click',closeConsultation);
+  window.NitrosSmartOliver=Object.freeze({openContextual:openConsultation,close:closeConsultation,getContext:()=>consultationContext});
   $('smartOliverAsk').addEventListener('click',()=>{const q=value('smartOliverQuestion');if(q)answer(q);else $('smartOliverResponse').textContent='Enter or dictate a repair question first.'});
   $('smartOliverSaveNote').addEventListener('click',()=>{const q=value('smartOliverQuestion');if(!q)return;$('internalTechnicianNotes')&&($('internalTechnicianNotes').value=[$('internalTechnicianNotes').value,`[${new Date().toLocaleString()}] ${q}`].filter(Boolean).join('\n'));addEvent('Repair note',q);$('smartOliverResponse').textContent='The note was timestamped and added to the active repair timeline and technician notes.'});
   $('smartOliverRead').addEventListener('click',()=>window.NitrosOliverSpeech?.speak($('smartOliverResponse').textContent));
@@ -5687,6 +5692,18 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
 })();
 </script>
 
+
+<script id="nitros-ask-oliver-toolbar">
+(()=>{'use strict';
+  const button=document.getElementById('quickAskOliver');
+  const text=id=>String(document.getElementById(id)?.value||'').trim();
+  function fieldLabel(el){return document.querySelector(`label[for="${el.id}"]`)?.textContent?.trim()||el.name||el.id||''}
+  function currentSection(screen){const focused=document.activeElement;if(focused&&screen.contains(focused)){const label=fieldLabel(focused);if(label)return label}return screen.querySelector('h2,h3,.eyebrow')?.textContent?.trim()||screen.querySelector('h1')?.textContent?.trim()||''}
+  function activeFields(screen){return [...screen.querySelectorAll('input,select,textarea')].map(el=>({label:fieldLabel(el),value:el.type==='checkbox'?(el.checked?'checked':''):String(el.value||'').trim()})).filter(item=>item.label&&item.value).slice(0,80)}
+  function context(){const screen=document.querySelector('.screen.active'),draft=window.NitrosRepairOrderCore?.collectDraft?.()||{},fields=draft.fields||{},vehicle=draft.selectedVehicle||{},read=(...ids)=>ids.map(id=>text(id)||String(fields[id]||'').trim()).find(Boolean)||'';const values=activeFields(screen||document.body),findings=values.map(item=>`${item.label}: ${item.value}`).join('; ');return {customer:read('customerName','appointmentCustomer','jobCustomer'),ro:read('roNumber','workOrderNumber','jobRo'),vehicle:[read('vehicleYear'),read('vehicleMake'),read('vehicleModel')].filter(Boolean).join(' ')||[vehicle.year,vehicle.make,vehicle.model].filter(Boolean).join(' '),vin:read('vinInput','ocrVinEdit')||vehicle.vin||'',mileage:read('vehicleMileage','mileage'),stage:read('repairStatus','workOrderStatus'),screen:screen?.querySelector('h1')?.textContent?.trim()||screen?.id||'Active repair order',section:currentSection(screen||document.body),findings,measurements:values.filter(item=>/measure|brake|tire|battery|fluid|depth|thickness|voltage|pressure/i.test(item.label)).map(item=>`${item.label}: ${item.value}`).join('; '),notes:read('internalTechnicianNotes','technicianFindings','inspectionFindings'),dtcs:read('dtcCodes','scanResults'),photos:[...document.querySelectorAll('input[type="file"]')].filter(input=>input.files?.length).map(input=>fieldLabel(input)||'Captured evidence')};}
+  button?.addEventListener('click',()=>window.NitrosSmartOliver?.openContextual?.(context()));
+})();
+</script>
 
 <button id="unifiedOliverLaunch" class="oliver-hub-launch" type="button" aria-label="Open Oliver Hub" title="Oliver">O</button>
 <div id="unifiedOliverHub" class="oliver-hub-shell hidden" role="dialog" aria-modal="true" aria-labelledby="unifiedOliverTitle">

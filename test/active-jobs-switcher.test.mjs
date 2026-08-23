@@ -6,7 +6,7 @@ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 
 test('persistent quick toolbar exposes Active Jobs without adding a floating overlay',()=>{
   assert.match(html,/id="quickActiveJobs"[^>]*>🗂️<br>Active Jobs/);
-  assert.match(html,/grid-template-columns:repeat\(6,1fr\)/);
+  assert.match(html,/grid-template-columns:repeat\(7,1fr\)/);
   assert.match(html,/id="activeJobsModal"/);
   assert.doesNotMatch(html,/floating-active-jobs/);
 });

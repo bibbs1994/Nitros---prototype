@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.51 guides each real vehicle-documentation photo control before additional Evidence and makes Show Me reliably scroll and highlight its assigned target.
+Version 10.13.52 adds Ask Oliver to the persistent active-RO toolbar, handing Oliver the current repair-order and inspection-screen context without starting Guided Walkthrough.
 
 ## Secure semantic analyzer
 
