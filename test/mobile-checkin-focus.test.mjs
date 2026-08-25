@@ -21,7 +21,7 @@ test('editing a form control hides only floating right-side controls and keeps t
 });
 
 test('License Plate uses an uppercase-capable alphanumeric text keyboard',()=>{
-  assert.match(html,/<input id="plate" data-license-plate type="text" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Plate number">/);
+  assert.match(html,/<input id="plate" data-license-plate type="text" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-controls="plateNumberRow" aria-expanded="false" placeholder="Plate number">/);
   assert.match(html,/plate:normalizeLicensePlateForSave\(\)/);
 });
 

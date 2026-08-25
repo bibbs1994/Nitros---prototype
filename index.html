@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
 <meta name="nitros-support-ticket-endpoint" content="http://192.168.4.24:8787/api/support-tickets">
-<title>Nitros Mobile Technician Portal v10.13.72 — Saved Job Resume Restore — Build 2026-08-25</title>
+<title>Nitros Mobile Technician Portal v10.13.73 — License Plate Number Row — Build 2026-08-25</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -48,6 +48,7 @@ p{color:var(--muted);line-height:1.55}
 label{display:block;font-size:14px;font-weight:700;margin:0 0 7px;color:#dce3ee}
 input,textarea,select{width:100%;background:#081321;color:var(--text);border:1px solid var(--line);border-radius:14px;padding:14px;outline:none}
 input:focus,textarea:focus,select:focus{border-color:#ff8a2b}
+.plate-number-row{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:5px;margin-top:8px;padding:7px;border:1px solid var(--line);border-radius:14px;background:#0a1726;box-shadow:0 8px 22px rgba(0,0,0,.24)}.plate-number-row[hidden]{display:none}.plate-number-row button{min-height:38px;padding:6px 0;border:1px solid #38506b;border-radius:9px;background:#14263b;color:#fff;font-weight:800;font-size:16px}.plate-number-row button:active{background:#ff8a2b;color:#07111f}@media(min-width:601px){.plate-number-row{display:none!important}}
 .field{margin-bottom:15px}
 .row{display:flex;gap:11px;align-items:center}.row>*{flex:1}
 .status{padding:13px 14px;border-radius:14px;background:#0c1929;border:1px solid var(--line);color:var(--muted);margin-top:13px}
@@ -530,7 +531,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.13.72 — Saved Job Resume Restore — Build 2026-08-25</div>
+  <div class="sub">Mobile Technician Portal v10.13.73 — License Plate Number Row — Build 2026-08-25</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -545,7 +546,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.13.72 — Saved Job Resume Restore · Build 2026-08-25. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.13.73 — License Plate Number Row · Build 2026-08-25. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -710,7 +711,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow nitros-build-identity">Version 10.13.72 — Saved Job Resume Restore · Build 2026-08-25</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow nitros-build-identity">Version 10.13.73 — License Plate Number Row · Build 2026-08-25</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -777,7 +778,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow nitros-build-identity">Version 10.13.72 — Saved Job Resume Restore · Build 2026-08-25</div>
+      <div class="eyebrow nitros-build-identity">Version 10.13.73 — License Plate Number Row · Build 2026-08-25</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1124,7 +1125,7 @@ canvas.graph-preview,canvas.ocr-preview{
       <div class="field"><label for="customerName">Customer name</label><input id="customerName" autocomplete="name" placeholder="Customer name"></div>
       <div class="field"><label for="phone">Phone number</label><input id="phone" inputmode="tel" autocomplete="tel" placeholder="Phone number"></div>
       <div class="field"><label for="email">Email</label><input id="email" inputmode="email" autocomplete="email" placeholder="Email address"></div>
-      <div class="field"><label for="plate">License plate</label><input id="plate" data-license-plate type="text" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Plate number"></div>
+      <div class="field"><label for="plate">License plate</label><input id="plate" data-license-plate type="text" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-controls="plateNumberRow" aria-expanded="false" placeholder="Plate number"><div id="plateNumberRow" class="plate-number-row" aria-label="License plate numbers" hidden><button type="button" data-plate-digit="0">0</button><button type="button" data-plate-digit="1">1</button><button type="button" data-plate-digit="2">2</button><button type="button" data-plate-digit="3">3</button><button type="button" data-plate-digit="4">4</button><button type="button" data-plate-digit="5">5</button><button type="button" data-plate-digit="6">6</button><button type="button" data-plate-digit="7">7</button><button type="button" data-plate-digit="8">8</button><button type="button" data-plate-digit="9">9</button></div></div>
       <div class="field"><label for="mileage">Current mileage</label><input id="mileage" inputmode="numeric" placeholder="Mileage"></div>
       <div class="field"><label for="arrivalMethod">Arrival method</label>
         <select id="arrivalMethod">
@@ -1699,13 +1700,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.72 • Saved Job Resume Restore • Build 2026-08-25</div>
+<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.73 • License Plate Number Row • Build 2026-08-25</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.13.72',
-  release:'Saved Job Resume Restore',
+  version:'10.13.73',
+  release:'License Plate Number Row',
   buildDate:'2026-08-25',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -1904,7 +1905,8 @@ window.NitrosGpsEvidence=(()=>{
 
   function normalizeLicensePlateInput(input,{trim=false}={}){if(!input)return"";const original=String(input.value??"");const normalized=(trim?original.trim():original).toUpperCase();if(normalized===original)return normalized;const start=input.selectionStart,end=input.selectionEnd;input.value=normalized;if(document.activeElement===input&&start!==null&&end!==null)input.setSelectionRange(Math.min(start,normalized.length),Math.min(end,normalized.length));return normalized;}
   function normalizeLicensePlateForSave(){return normalizeLicensePlateInput(document.querySelector("[data-license-plate]"),{trim:true});}
-  function configureLicensePlateInputs(root=document){root.querySelectorAll("[data-license-plate]").forEach(input=>{input.addEventListener("input",()=>normalizeLicensePlateInput(input));input.addEventListener("blur",()=>normalizeLicensePlateInput(input,{trim:true}));input.addEventListener("change",()=>normalizeLicensePlateInput(input,{trim:true}));});}
+  function insertLicensePlateDigit(input,digit){if(!input||!/^[0-9]$/.test(String(digit)))return;const start=input.selectionStart??input.value.length,end=input.selectionEnd??start;if(typeof input.setRangeText==="function")input.setRangeText(String(digit),start,end,"end");else{input.value=`${input.value.slice(0,start)}${digit}${input.value.slice(end)}`;input.setSelectionRange(start+1,start+1);}normalizeLicensePlateInput(input);input.dispatchEvent(new Event("input",{bubbles:true}));input.focus({preventScroll:true});}
+  function configureLicensePlateInputs(root=document){root.querySelectorAll("[data-license-plate]").forEach(input=>{const row=document.getElementById(input.getAttribute("aria-controls")),isPhone=()=>window.matchMedia("(max-width:600px)").matches,show=()=>{if(!row||!isPhone())return;row.hidden=false;input.setAttribute("aria-expanded","true");},hide=()=>{if(!row)return;row.hidden=true;input.setAttribute("aria-expanded","false");},keyboardOpen=()=>!window.visualViewport||window.visualViewport.height<window.innerHeight-120;input.addEventListener("input",()=>normalizeLicensePlateInput(input));input.addEventListener("focus",show);input.addEventListener("pointerdown",()=>setTimeout(show,0));input.addEventListener("blur",()=>{normalizeLicensePlateInput(input,{trim:true});hide();});input.addEventListener("change",()=>normalizeLicensePlateInput(input,{trim:true}));row?.addEventListener("pointerdown",event=>event.preventDefault());row?.addEventListener("click",event=>{const button=event.target.closest("[data-plate-digit]");if(button)insertLicensePlateDigit(input,button.dataset.plateDigit);});window.visualViewport?.addEventListener("resize",()=>{if(document.activeElement!==input||!keyboardOpen())hide();else show();});window.addEventListener("resize",()=>{if(!isPhone())hide();});});}
   configureLicensePlateInputs();
 
   function collectDraft(){
