@@ -1124,7 +1124,7 @@ canvas.graph-preview,canvas.ocr-preview{
       <div class="field"><label for="customerName">Customer name</label><input id="customerName" autocomplete="name" placeholder="Customer name"></div>
       <div class="field"><label for="phone">Phone number</label><input id="phone" inputmode="tel" autocomplete="tel" placeholder="Phone number"></div>
       <div class="field"><label for="email">Email</label><input id="email" inputmode="email" autocomplete="email" placeholder="Email address"></div>
-      <div class="field"><label for="plate">License plate</label><input id="plate" type="text" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Plate number"></div>
+      <div class="field"><label for="plate">License plate</label><input id="plate" data-license-plate type="text" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Plate number"></div>
       <div class="field"><label for="mileage">Current mileage</label><input id="mileage" inputmode="numeric" placeholder="Mileage"></div>
       <div class="field"><label for="arrivalMethod">Arrival method</label>
         <select id="arrivalMethod">
@@ -1902,7 +1902,13 @@ window.NitrosGpsEvidence=(()=>{
   let draftSaveTimer=null;
   let lastSavedRecordId=null;
 
+  function normalizeLicensePlateInput(input,{trim=false}={}){if(!input)return"";const original=String(input.value??"");const normalized=(trim?original.trim():original).toUpperCase();if(normalized===original)return normalized;const start=input.selectionStart,end=input.selectionEnd;input.value=normalized;if(document.activeElement===input&&start!==null&&end!==null)input.setSelectionRange(Math.min(start,normalized.length),Math.min(end,normalized.length));return normalized;}
+  function normalizeLicensePlateForSave(){return normalizeLicensePlateInput(document.querySelector("[data-license-plate]"),{trim:true});}
+  function configureLicensePlateInputs(root=document){root.querySelectorAll("[data-license-plate]").forEach(input=>{input.addEventListener("input",()=>normalizeLicensePlateInput(input));input.addEventListener("blur",()=>normalizeLicensePlateInput(input,{trim:true}));input.addEventListener("change",()=>normalizeLicensePlateInput(input,{trim:true}));});}
+  configureLicensePlateInputs();
+
   function collectDraft(){
+    normalizeLicensePlateForSave();
     const fields={};
     document.querySelectorAll("input[id], textarea[id], select[id]").forEach(el=>{
       if(el.type==="file" || el.type==="button" || el.type==="submit") return;
@@ -4454,7 +4460,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
         phone:document.getElementById("phone").value.trim(),
         email:document.getElementById("email").value.trim()
       },
-      plate:document.getElementById("plate").value.trim().toUpperCase(),
+      plate:normalizeLicensePlateForSave(),
       mileage:document.getElementById("mileage").value.trim(),
       arrivalMethod:document.getElementById("arrivalMethod").value,
       concern:document.getElementById("concern").value.trim(),
