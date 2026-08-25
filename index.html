@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
 <meta name="nitros-support-ticket-endpoint" content="http://192.168.4.24:8787/api/support-tickets">
-<title>Nitros Mobile Technician Portal v10.13.70 — Mobile Tools Menu — Build 2026-08-25</title>
+<title>Nitros Mobile Technician Portal v10.13.71 — Active RO Return Guard — Build 2026-08-25</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -530,7 +530,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.13.70 — Mobile Tools Menu — Build 2026-08-25</div>
+  <div class="sub">Mobile Technician Portal v10.13.71 — Active RO Return Guard — Build 2026-08-25</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -545,7 +545,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.13.70 — Mobile Tools Menu · Build 2026-08-25. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.13.71 — Active RO Return Guard · Build 2026-08-25. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -710,7 +710,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow nitros-build-identity">Version 10.13.70 — Mobile Tools Menu · Build 2026-08-25</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow nitros-build-identity">Version 10.13.71 — Active RO Return Guard · Build 2026-08-25</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -777,7 +777,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow nitros-build-identity">Version 10.13.70 — Mobile Tools Menu · Build 2026-08-25</div>
+      <div class="eyebrow nitros-build-identity">Version 10.13.71 — Active RO Return Guard · Build 2026-08-25</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1699,13 +1699,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.70 • Mobile Tools Menu • Build 2026-08-25</div>
+<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.71 • Active RO Return Guard • Build 2026-08-25</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.13.70',
-  release:'Mobile Tools Menu',
+  version:'10.13.71',
+  release:'Active RO Return Guard',
   buildDate:'2026-08-25',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -8730,6 +8730,100 @@ document.addEventListener("DOMContentLoaded",()=>{
  $('guidedWalkthroughLaunch').addEventListener('click',menu);$('guidedWalkthroughStart').addEventListener('click',()=>start(false));$('guidedWalkthroughResume').addEventListener('click',()=>start(false));$('guidedWalkthroughRestart').addEventListener('click',()=>{if(confirm('Restart the walkthrough? This only clears walkthrough progress; it will not change any repair order or vehicle data.'))start(true)});$('guidedWalkthroughExitMenu').addEventListener('click',()=>$('guidedWalkthroughMenu').hidden=true);$('guidedWalkthroughNext').addEventListener('click',()=>contextualMode?nextContextual():advance(1));$('guidedWalkthroughBack').addEventListener('click',()=>contextualMode?(logContextualAction('Back'),stop()):advance(-1));$('guidedWalkthroughSkip').addEventListener('click',()=>contextualMode?(logContextualAction('Skip'),nextContextual()):advance(1,true));$('guidedWalkthroughRepeat').addEventListener('click',()=>contextualMode?(logContextualAction('Repeat'),renderContextualStep(contextualStep)):help('repeat'));$('guidedWalkthroughShow').addEventListener('click',()=>contextualMode?(logContextualAction('Show Me'),executeContextualAction(contextualStep)):showHighlight);$('guidedWalkthroughWhy').addEventListener('click',()=>contextualMode?whyContextual():help('why'));$('guidedWalkthroughHelpButton').addEventListener('click',openSupportTicket);$('guidedWalkthroughExit').addEventListener('click',()=>{if(contextualMode)logContextualAction('Exit');stop()});$('guidedWalkthroughAsk').addEventListener('click',answerContextual);$('guidedWalkthroughQuestion').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();answerContextual()}});
  document.addEventListener('click',event=>{if(!state?.active)return;const el=target(current());if(el&&(event.target===el||el.contains(event.target))&&/^(BUTTON|A)$/.test(el.tagName))setTimeout(()=>advance(1),120);else if(event.target.closest('[data-screen],[data-go],.active-job-switch,#quickActiveJobs'))setTimeout(render,180)},true);document.addEventListener('change',event=>{const el=target(current());if(el&&event.target===el)setTimeout(()=>advance(1),120)},true);window.addEventListener('resize',()=>{if(state?.active)showHighlight()});window.addEventListener('pageshow',()=>{state=read();if(state?.active)render()});window.addEventListener('storage',event=>{if(event.key==='activeRepairOrderId'&&state?.active)render()});
  window.NitrosGuidedWalkthrough=Object.freeze({storageKey:STORAGE_KEY,steps,start:()=>start(false),resume:()=>start(false),restart:()=>start(true),openContextual,exit:stop,getState:()=>read(),getContextualFailure:()=>contextualFailure,showMe:showHighlight,why:()=>help('why')});
+})();
+</script>
+<style id="nitros-active-ro-return-guard-styles">
+#nitrosRoRecovery{position:fixed;inset:0;z-index:20080;display:grid;place-items:center;padding:18px;background:rgba(2,8,16,.9)}
+#nitrosRoRecovery[hidden]{display:none}
+.nitros-ro-recovery-card{width:min(440px,100%);border:1px solid #ff9d28;border-radius:18px;background:#0b1829;color:#fff;padding:20px;box-shadow:0 18px 54px rgba(0,0,0,.6)}
+.nitros-ro-recovery-card h2{margin:0 0 10px}.nitros-ro-recovery-card p{margin:0 0 16px}
+</style>
+<div id="nitrosRoRecovery" role="alertdialog" aria-modal="true" aria-labelledby="nitrosRoRecoveryTitle" hidden><section class="nitros-ro-recovery-card"><div class="eyebrow">Repair Order Recovery</div><h2 id="nitrosRoRecoveryTitle">Your active repair order is protected</h2><p id="nitrosRoRecoveryMessage">The repair-order screen could not be restored automatically. Your saved work remains available in Active Jobs.</p><button id="nitrosRoRecoveryJobs" class="btn primary" type="button">Return to Active Jobs</button></section></div>
+<script id="nitros-active-ro-return-guard">
+(()=>{'use strict';
+ const KEY='nitros_active_ro_return_context_v1',POINTER='activeRepairOrderId',$=id=>document.getElementById(id);
+ const roScreens=new Set(['checkin','vehicle','customer','inspection','technician','estimate','workorder','review']);
+ const toolControls=new Set(['quickEvidence','floatingEvidenceButton','quickSearch','quickNotesButton','quickVehicleButton','globalDevelopmentNoteButton','nitrosSupportInboxButton']);
+ let restoring=false,recoveryScheduled=false;
+ const currentScreen=()=>window.NitrosRepairOrderCore?.getScreen?.()||document.querySelector('.screen.active')?.id||'';
+ const context=()=>{try{return JSON.parse(sessionStorage.getItem(KEY)||'null')}catch(_){return null}};
+ const write=value=>{try{sessionStorage.setItem(KEY,JSON.stringify(value))}catch(_){}};
+ const clear=()=>{try{sessionStorage.removeItem(KEY)}catch(_){}};
+ const activeRo=()=>localStorage.getItem(POINTER)||window.NitrosActiveRepairPersistence?.getActiveId?.()||'';
+ const isRoScreen=screen=>roScreens.has(screen||currentScreen());
+ function begin(reason){
+   const id=activeRo(),screen=currentScreen();
+   if(!id||!isRoScreen(screen))return null;
+   const existing=context();
+   const saved={id,screen,reason,at:new Date().toISOString(),draft:window.NitrosRepairOrderCore?.collectDraft?.()||null};
+   if(!existing||existing.id!==id||existing.screen!==screen)write(saved);
+   Promise.resolve(window.NitrosActiveRepairPersistence?.persistNow?.()).catch(error=>console.warn('[Nitros RO return guard] pre-tool save failed',error));
+   return saved;
+ }
+ function releaseLocks(){
+   document.body.classList.remove('keyboard-active');
+   document.body.style.removeProperty('overflow');document.body.style.removeProperty('touch-action');
+   document.documentElement.style.removeProperty('overflow');document.documentElement.style.removeProperty('touch-action');
+   window.NitrosMobileTools?.close?.();
+ }
+ function closeSecondaryUi(){
+   ['smartEvidenceModal','activeJobsModal','globalSearchModal','voiceNoteModal','flashlightScreen','quickNotesOverlay','quickVehicleOverlay','globalDevelopmentNoteOverlay','nitrosSupportTicket','nitrosSupportInbox'].forEach(id=>{const el=$(id);if(!el)return;if(el.hasAttribute('hidden'))el.hidden=true;else el.classList.add('hidden')});
+ }
+ function activateFallback(screen){
+   const target=$(screen)||$('workorder')||$('home');
+   if(!target)return false;
+   document.querySelectorAll('.screen').forEach(item=>item.classList.toggle('active',item===target));
+   try{history.replaceState({nitrosScreen:target.id},'',location.href.split('#')[0]+`#${target.id}`)}catch(_){ }
+   window.scrollTo({top:0,behavior:'auto'});
+   return true;
+ }
+ function showRecovery(message){
+   const box=$('nitrosRoRecovery');if(!box)return;
+   $('nitrosRoRecoveryMessage').textContent=message;
+   box.hidden=false;
+ }
+ async function restore(reason='return'){
+   const saved=context();
+   if(!saved?.id||restoring)return false;
+   restoring=true;
+   try{
+     await Promise.resolve(window.NitrosActiveRepairPersistence?.persistNow?.());
+     let restored=false;
+     if(typeof window.NitrosActiveRepairPersistence?.restore==='function')restored=await window.NitrosActiveRepairPersistence.restore(saved.id);
+     if(!restored){
+       localStorage.setItem(POINTER,saved.id);
+       restored=activateFallback(saved.screen);
+     }
+     if(!restored)throw new Error('The saved repair-order screen is unavailable.');
+     const core=window.NitrosRepairOrderCore;
+     if(typeof core?.showScreen==='function')core.showScreen(saved.screen||'workorder',false);else activateFallback(saved.screen);
+     closeSecondaryUi();releaseLocks();window.scrollTo({top:0,behavior:'auto'});clear();
+     return true;
+   }catch(error){
+     console.error('[Nitros RO return guard] restore failed',error);
+     activateFallback('home');releaseLocks();showRecovery('The active repair order could not be reopened automatically. Your saved work has not been removed. Use Active Jobs to reopen it.');
+     return false;
+   }finally{restoring=false}
+ }
+ function recoverBlank(){
+   if(recoveryScheduled||restoring||!context()||document.querySelector('.screen.active'))return;
+   recoveryScheduled=true;setTimeout(()=>{recoveryScheduled=false;if(!document.querySelector('.screen.active'))void restore('blank-screen recovery')},50);
+ }
+ document.addEventListener('click',event=>{
+   const control=event.target.closest?.('button,[data-go]');if(!control)return;
+   const destination=control.getAttribute('data-go');
+   if(toolControls.has(control.id)||control.closest?.('#mobileToolsMenu'))begin(control.id||'Tools');
+   if(destination&&!isRoScreen(destination)&&destination!=='home')begin(`navigate:${destination}`);
+   const saved=context(),screen=currentScreen();
+   if(saved&&control.classList.contains('back')&&!isRoScreen(screen)){
+     event.preventDefault();event.stopImmediatePropagation();void restore('Back');
+   }
+   if(saved&&['closeSmartEvidence','closeGlobalSearch','closeVoiceNote','quickNotesClose','quickVehicleClose','globalDevelopmentNoteClose','nitrosSupportInboxClose'].includes(control.id))setTimeout(()=>{if(!isRoScreen(currentScreen()))void restore(`close:${control.id}`);else releaseLocks()},0);
+ },true);
+ new MutationObserver(recoverBlank).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+ window.addEventListener('pageshow',recoverBlank);window.addEventListener('popstate',()=>setTimeout(recoverBlank,0));
+ $('nitrosRoRecoveryJobs')?.addEventListener('click',()=>{ $('nitrosRoRecovery').hidden=true;clear();closeSecondaryUi();releaseLocks();if(typeof window.NitrosActiveRepairPersistence?.showActiveJobs==='function'){window.NitrosActiveRepairPersistence.showActiveJobs();return}activateFallback('home');$('quickActiveJobs')?.click(); });
+ window.NitrosActiveRoReturnGuard=Object.freeze({begin,restore,getContext:context,clear});
 })();
 </script>
 </body>
