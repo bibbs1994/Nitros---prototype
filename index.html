@@ -426,8 +426,11 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 :root{--nitros-visual-height:100dvh}
 html{scroll-behavior:auto!important}
 body.keyboard-active{overscroll-behavior-y:contain}
-input,textarea,select{scroll-margin-top:110px;scroll-margin-bottom:180px}
+input,textarea,select{scroll-margin-top:calc(110px + env(safe-area-inset-top));scroll-margin-bottom:180px}
 .screen{padding-bottom:max(130px,calc(110px + env(safe-area-inset-bottom)))}
+/* The check-in form can be scrolled beneath the translucent iPhone status area. */
+#customer{scroll-padding-top:calc(110px + env(safe-area-inset-top))}
+.keyboard-active .global-dev-note-fab,.keyboard-active .quick-notes-fab,.keyboard-active .quick-vehicle-fab,.keyboard-active .oliver-hub-launch,.keyboard-active .smart-oliver-launch,.keyboard-active .oliver-guide-launch{opacity:0;visibility:hidden;pointer-events:none}
 .btn.primary,.btn.secondary,.btn.ghost{touch-action:manipulation}
 .oliver-guide,.oliver-hub-panel{max-height:calc(var(--nitros-visual-height) - 18px);overflow:auto;padding-bottom:max(18px,env(safe-area-inset-bottom))}
 .oliver-guide-actions,.oliver-hub-actions,.wizard-actions,.form-actions{position:sticky;bottom:0;z-index:20;background:linear-gradient(180deg,rgba(7,16,27,0),#07101b 28%);padding-top:22px;padding-bottom:max(12px,env(safe-area-inset-bottom))}
@@ -1121,7 +1124,7 @@ canvas.graph-preview,canvas.ocr-preview{
       <div class="field"><label for="customerName">Customer name</label><input id="customerName" autocomplete="name" placeholder="Customer name"></div>
       <div class="field"><label for="phone">Phone number</label><input id="phone" inputmode="tel" autocomplete="tel" placeholder="Phone number"></div>
       <div class="field"><label for="email">Email</label><input id="email" inputmode="email" autocomplete="email" placeholder="Email address"></div>
-      <div class="field"><label for="plate">License plate</label><input id="plate" autocapitalize="characters" placeholder="Plate number"></div>
+      <div class="field"><label for="plate">License plate</label><input id="plate" type="text" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Plate number"></div>
       <div class="field"><label for="mileage">Current mileage</label><input id="mileage" inputmode="numeric" placeholder="Mileage"></div>
       <div class="field"><label for="arrivalMethod">Arrival method</label>
         <select id="arrivalMethod">
@@ -6800,12 +6803,36 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
   window.addEventListener('orientationchange',()=>setTimeout(updateViewport,150),{passive:true});
 
   let activeField=null;
+  const isEditable=el=>el?.matches?.('input,textarea,select');
+  const keepFieldVisible=field=>{
+    if(!field||field!==activeField)return;
+    const viewport=window.visualViewport;
+    const visibleBottom=(viewport?.height||window.innerHeight)-16;
+    const headerBottom=document.querySelector('header')?.getBoundingClientRect().bottom||0;
+    const visibleTop=headerBottom+12;
+    const rect=field.getBoundingClientRect();
+    const delta=rect.top<visibleTop?rect.top-visibleTop:rect.bottom>visibleBottom?rect.bottom-visibleBottom:0;
+    if(delta)window.scrollBy({top:delta,behavior:'auto'});
+  };
   document.addEventListener('focusin',e=>{
-    if(e.target.matches('input,textarea,select')){activeField=e.target;document.body.classList.add('keyboard-active');}
+    if(isEditable(e.target)){
+      activeField=e.target;
+      document.body.classList.add('keyboard-active');
+      requestAnimationFrame(()=>keepFieldVisible(activeField));
+      setTimeout(()=>keepFieldVisible(activeField),250);
+    }
   },true);
   document.addEventListener('focusout',e=>{
-    if(e.target===activeField){activeField=null;setTimeout(()=>document.body.classList.remove('keyboard-active'),120);}
+    if(e.target===activeField){
+      setTimeout(()=>{
+        const next=document.activeElement;
+        if(isEditable(next)){activeField=next;keepFieldVisible(next);return;}
+        activeField=null;
+        document.body.classList.remove('keyboard-active');
+      },120);
+    }
   },true);
+  window.visualViewport?.addEventListener('resize',()=>requestAnimationFrame(()=>keepFieldVisible(activeField)),{passive:true});
   // Suppress programmatic smooth scrolling while a technician is actively typing.
   const nativeScroll=Element.prototype.scrollIntoView;
   Element.prototype.scrollIntoView=function(options){
