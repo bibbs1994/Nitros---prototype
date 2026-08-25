@@ -42,7 +42,7 @@ test('all permanent common evidence inputs use per-photo GPS capture',()=>{
   for(const field of ['photoFrontLeft','photoFrontRight','photoRearLeft','photoRearRight','photoOdometer','photoVin','technicianPhoto','photoFinalOdometer'])assert.match(html,new RegExp(`PHOTO_FIELDS=[\\s\\S]+${field}`),`${field} is not in the common evidence model`);
   assert.match(html,/\["photoFrontLeft","photoFrontRight","photoRearLeft","photoRearRight","photoOdometer","photoVin","technicianPhoto","photoFinalOdometer"\][\s\S]+savePhotoEvidence\(id,file\)/);
   assert.match(html,/maximumAge:0/);
-  assert.match(html,/pendingCapturedAt=new Date\(\)\.toISOString\(\);\[originalBlob,pendingGps\]=await Promise\.all/);
+  assert.match(html,/pendingCapturedAt=new Date\(\)\.toISOString\(\);\[originalBlob,pendingGps\]=await withTimeout\(Promise\.all\(\[compress\(file\),window\.NitrosGpsEvidence\.capture\(\)\]\),"Evidence photo preparation"\)/);
 });
 
 test('every existing evidence-card view renders its record-bound GPS and diagnostics',()=>{
