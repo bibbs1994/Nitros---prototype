@@ -24,3 +24,11 @@ test('License Plate uses an uppercase-capable alphanumeric text keyboard',()=>{
   assert.match(html,/<input id="plate" type="text" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Plate number">/);
   assert.match(html,/plate:document\.getElementById\("plate"\)\.value\.trim\(\)\.toUpperCase\(\)/);
 });
+
+test('phone-sized utility controls use a compact Tools menu above the measured toolbar',()=>{
+  assert.match(html,/@media\(max-width:600px\)\{[\s\S]*?\.mobile-tools-toggle\{display:block/);
+  assert.match(html,/\.mobile-tools-menu\[hidden\]\{display:none\}/);
+  assert.match(html,/\.screen\{padding-bottom:max\(24px,calc\(var\(--nitros-toolbar-height\) \+ env\(safe-area-inset-bottom\) \+ 24px\)\)\}/);
+  assert.match(html,/window\.visualViewport\?\.addEventListener\('resize',syncLayout/);
+  assert.match(html,/window\.addEventListener\('orientationchange',\(\)=>setTimeout\(syncLayout,150\)/);
+});

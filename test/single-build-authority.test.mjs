@@ -5,8 +5,8 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.13.69 has one canonical build authority',()=>{
-  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.69',[\s\S]+release:'MSI Support Ticket Server Wiring',[\s\S]+buildDate:'2026-08-23'/);
+test('10.13.70 has one canonical build authority',()=>{
+  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.70',[\s\S]+release:'Mobile Tools Menu',[\s\S]+buildDate:'2026-08-25'/);
   assert.match(html,/const \{version:VERSION,buildDate:BUILD,release:RELEASE\}=window\.NitrosBuild/);
   assert.match(html,/Authoritative Diagnostic State — v\$\{VERSION\}/);
   assert.match(html,/build:window\.NitrosBuild\.version/);
@@ -26,8 +26,8 @@ test('runtime verification exposes service-worker support, control, URL, and sta
   for(const id of ['nitrosRuntimeAppBuild','nitrosRuntimeSwSupported','nitrosRuntimeSwControlled','nitrosRuntimeSwUrl','nitrosRuntimeSwState'])assert.match(html,new RegExp(`id="${id}"`));
 });
 
-test('service worker uses 10.13.69 version and preserves safe navigation caching',()=>{
-  assert.match(sw,/const VERSION = '10\.13\.69'/);
+test('service worker uses 10.13.70 version and preserves safe navigation caching',()=>{
+  assert.match(sw,/const VERSION = '10\.13\.70'/);
   assert.match(sw,/self\.skipWaiting\(\)/);
   assert.match(sw,/self\.clients\.claim\(\)/);
   assert.match(sw,/fetch\(request, \{ cache: 'no-store' \}\)/);
@@ -37,18 +37,21 @@ test('service worker uses 10.13.69 version and preserves safe navigation caching
   assert.doesNotMatch(sw,/caches\.clear|localStorage|indexedDB/i);
 });
 
-test('mobile quick toolbar clears the Vehicle control without reducing safe-area protection',()=>{
+test('mobile Tools menu clears the measured toolbar and safe area',()=>{
   assert.match(html,/:root\{--nitros-v1031-safe-bottom:max\(6px,env\(safe-area-inset-bottom\)\)\}/);
   assert.match(html,/\.quick-toolbar\{bottom:var\(--nitros-v1031-safe-bottom\)\}/);
-  assert.match(html,/\.quick-vehicle-fab\{position:fixed[\s\S]*?bottom:max\(88px,calc\(env\(safe-area-inset-bottom\) \+ 84px\)\)/);
+  assert.match(html,/@media\(max-width:600px\)\{[\s\S]*?--nitros-toolbar-height:0px/);
+  assert.match(html,/bottom:calc\(var\(--nitros-toolbar-height\) \+ env\(safe-area-inset-bottom\) \+ 12px\)/);
+  assert.match(html,/new ResizeObserver\(syncLayout\)\.observe\(toolbar\)/);
 });
 
-test('mobile utility controls retain the Notes, Support Tickets, Vehicle order above the toolbar',()=>{
-  assert.match(html,/\.quick-notes-fab\{position:fixed[\s\S]*?bottom:max\(190px,calc\(env\(safe-area-inset-bottom\) \+ 186px\)\)/);
-  assert.match(html,/#nitrosSupportInboxButton\{bottom:max\(139px,calc\(env\(safe-area-inset-bottom\) \+ 135px\)\)\}/);
-  assert.match(html,/id="quickNotesButton"/);
-  assert.match(html,/id="nitrosSupportInboxButton"/);
-  assert.match(html,/id="quickVehicleButton"/);
+test('mobile utility controls collapse into Tools without changing their button identities',()=>{
+  assert.match(html,/id="mobileToolsToggle"[\s\S]*?aria-controls="mobileToolsMenu"/);
+  assert.match(html,/const controls=\['globalDevelopmentNoteButton','quickNotesButton','nitrosSupportInboxButton','quickVehicleButton'\]/);
+  assert.match(html,/controls\.forEach\(control=>menu\.append\(control\)\)/);
+  assert.match(html,/scrim\.addEventListener\('click',close\)/);
+  assert.match(html,/menu\.addEventListener\('click',event=>\{if\(event\.target\.closest\('button'\)\)close\(\)\}\)/);
+  assert.match(html,/\.oliver-hub-launch\{left:max\(12px,env\(safe-area-inset-left\)\);right:auto/);
 });
 
 test('hard stop dispatcher blocks progression without converting control inputs to evidence',()=>{
