@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
 <meta name="nitros-support-ticket-endpoint" content="http://192.168.4.24:8787/api/support-tickets">
-<title>Nitros Mobile Technician Portal v10.13.75 — Visual Defect Detection Correction — Build 2026-08-26</title>
+<title>Nitros Mobile Technician Portal v10.13.76 — Visual Defect Severity Classification — Build 2026-08-26</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -414,7 +414,7 @@ video{width:100%;height:100%;min-height:240px;max-height:390px;object-fit:cover;
 .oliver-hub-shell{padding-top:max(8px,env(safe-area-inset-top));padding-right:max(8px,env(safe-area-inset-right));padding-bottom:max(8px,env(safe-area-inset-bottom));padding-left:max(8px,env(safe-area-inset-left))}
 .oliver-hub-card{display:flex;flex-direction:column;min-height:0;overflow:hidden}
 .oliver-hub-head{position:relative;z-index:2;flex:none}
-.oliver-hub-body{min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;flex:1;scroll-padding-top:1px}
+.oliver-hub-body{min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;flex:1;scroll-padding-top:16px}
 @media(max-width:520px){.oliver-hub-grid{grid-template-columns:1fr}.oliver-hub-choice{min-height:88px}.oliver-hub-shell{padding:8px}.oliver-hub-card{max-height:92vh}.oliver-hub-launch{width:54px;height:54px;bottom:76px;right:10px}}
 </style>
 <style id="v826cGuideMobileFix">
@@ -531,7 +531,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.13.75 — Visual Defect Detection Correction — Build 2026-08-26</div>
+  <div class="sub">Mobile Technician Portal v10.13.76 — Visual Defect Severity Classification — Build 2026-08-26</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -546,7 +546,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.13.75 — Visual Defect Detection Correction · Build 2026-08-26. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.13.76 — Visual Defect Severity Classification · Build 2026-08-26. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -711,7 +711,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow nitros-build-identity">Version 10.13.75 — Visual Defect Detection Correction · Build 2026-08-26</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow nitros-build-identity">Version 10.13.76 — Visual Defect Severity Classification · Build 2026-08-26</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -778,7 +778,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow nitros-build-identity">Version 10.13.75 — Visual Defect Detection Correction · Build 2026-08-26</div>
+      <div class="eyebrow nitros-build-identity">Version 10.13.76 — Visual Defect Severity Classification · Build 2026-08-26</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1700,13 +1700,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.75 • Visual Defect Detection Correction • Build 2026-08-26</div>
+<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.76 • Visual Defect Severity Classification • Build 2026-08-26</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.13.75',
-  release:'Visual Defect Detection Correction',
+  version:'10.13.76',
+  release:'Visual Defect Severity Classification',
   buildDate:'2026-08-26',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -8339,6 +8339,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   touch-action:manipulation;
 }
 #oliverImportPreview .phase2-result{width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow-wrap:anywhere;word-break:break-word}
+#oliverImportPreview .phase2-result{scroll-margin-top:16px}
 #oliverImportPreview .phase2-result table{display:table;width:100%!important;max-width:100%;table-layout:fixed;border-collapse:collapse}
 #oliverImportPreview .phase2-result th,#oliverImportPreview .phase2-result td{min-width:0;padding:3px;overflow-wrap:anywhere;word-break:break-word}
 #oliverImportPreview button,#oliverImportPreview pre,#oliverImportPreview details{max-width:100%;box-sizing:border-box;overflow-wrap:anywhere}
