@@ -103,7 +103,7 @@ const automotiveComponentSchema = {
 
 const visualConditionInspectionSchema = {
   type: 'object', additionalProperties: false,
-  required: ['status','conditionConfidence','observedCondition','possibleConcerns','noVisibleConcernMessage','unableToInspectReason','visibleEvidence','recommendedVerification'],
+  required: ['status','conditionConfidence','observedCondition','possibleConcerns','connectionAssessments','noVisibleConcernMessage','unableToInspectReason','visibleEvidence','recommendedVerification','safetyDrivabilityImpact'],
   properties: {
     status: { type: 'string', enum: ['OBSERVED_CONDITION','POSSIBLE_CONCERN_DETECTED','NO_VISIBLE_CONCERN_DETECTED','UNABLE_TO_INSPECT'] },
     conditionConfidence: { anyOf: [{ type: 'number', minimum: 0, maximum: 100 }, { type: 'string', pattern: '^\\s*(?:\\d+(?:\\.\\d+)?|\\.\\d+)\\s*%?\\s*$' }, { type: 'null' }] },
@@ -111,10 +111,14 @@ const visualConditionInspectionSchema = {
     possibleConcerns: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['location','appearance','physicalConfirmationRequired','recommendedVerification'], properties: {
       location: { type: 'string', maxLength: 240 }, appearance: { type: 'string', maxLength: 500 }, physicalConfirmationRequired: { type: 'boolean' }, recommendedVerification: { type: 'string', maxLength: 500 }
     } }, maxItems: 8 },
+    connectionAssessments: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['location','seatingStatus','visibleEvidence'], properties: {
+      location: { type: 'string', maxLength: 240 }, seatingStatus: { type: 'string', enum: ['SEPARATION_OR_GAP_VISIBLE','POSSIBLE_IMPROPER_SEATING','NO_GAP_OR_SEPARATION_VISIBLE','NOT_RELIABLY_VISIBLE'] }, visibleEvidence: { type: 'string', maxLength: 500 }
+    } }, maxItems: 12 },
     noVisibleConcernMessage: { type: 'string', maxLength: 240 },
     unableToInspectReason: { anyOf: [{ type: 'string', maxLength: 500 }, { type: 'null' }] },
     visibleEvidence: { type: 'array', items: { type: 'string', maxLength: 500 }, maxItems: 16 },
-    recommendedVerification: { type: 'array', items: { type: 'string', maxLength: 500 }, maxItems: 8 }
+    recommendedVerification: { type: 'array', items: { type: 'string', maxLength: 500 }, maxItems: 8 },
+    safetyDrivabilityImpact: { anyOf: [{ type: 'string', maxLength: 500 }, { type: 'null' }] }
   }
 };
 
@@ -278,11 +282,20 @@ function validateVisualConditionInspection(raw) {
     if (!location || !appearance || !verification || concern.physicalConfirmationRequired !== true) throw new Error(`Visual condition possible concern ${index + 1} lacks required physical verification.`);
     return { location, appearance, physicalConfirmationRequired: true, recommendedVerification: verification };
   }) : (() => { throw new Error('Analyzer field visualCondition.possibleConcerns is invalid.'); })();
+  const connectionAssessments = Array.isArray(raw.connectionAssessments) ? raw.connectionAssessments.slice(0, 12).map((assessment, index) => {
+    if (!assessment || typeof assessment !== 'object' || Array.isArray(assessment)) throw new Error(`Visual condition connection assessment ${index + 1} is invalid.`);
+    const location = String(assessment.location || '').trim().slice(0, 240);
+    const seatingStatus = String(assessment.seatingStatus || 'NOT_RELIABLY_VISIBLE');
+    const evidence = String(assessment.visibleEvidence || '').trim().slice(0, 500);
+    if (!location || !['SEPARATION_OR_GAP_VISIBLE','POSSIBLE_IMPROPER_SEATING','NO_GAP_OR_SEPARATION_VISIBLE','NOT_RELIABLY_VISIBLE'].includes(seatingStatus) || !evidence) throw new Error(`Visual condition connection assessment ${index + 1} lacks visible evidence.`);
+    return { location, seatingStatus, visibleEvidence: evidence };
+  }) : [];
   const unableToInspectReason = typeof raw.unableToInspectReason === 'string' ? raw.unableToInspectReason.trim().slice(0, 500) || null : null;
   if ((status === 'OBSERVED_CONDITION' || status === 'POSSIBLE_CONCERN_DETECTED') && !visibleEvidence.length) throw new Error('Visual condition findings require visible evidence.');
   if (status === 'POSSIBLE_CONCERN_DETECTED' && !possibleConcerns.length) throw new Error('Possible visual concern requires a physical verification step.');
   if (status === 'UNABLE_TO_INSPECT' && !unableToInspectReason) throw new Error('Unable-to-inspect status requires a reason.');
-  return { status, conditionConfidence: normalizeSemanticConfidence(raw.conditionConfidence), rawConditionConfidence: raw.conditionConfidence ?? null, normalizedConditionConfidence: normalizeSemanticConfidence(raw.conditionConfidence), observedCondition, possibleConcerns, noVisibleConcernMessage: status === 'NO_VISIBLE_CONCERN_DETECTED' ? NO_VISIBLE_DEFECT_MESSAGE : '', unableToInspectReason, visibleEvidence, recommendedVerification };
+  if (status === 'NO_VISIBLE_CONCERN_DETECTED' && (!connectionAssessments.length || connectionAssessments.some(assessment => assessment.seatingStatus !== 'NO_GAP_OR_SEPARATION_VISIBLE'))) throw new Error('No-visible-concern status requires every visible connection to be affirmatively assessed as seated.');
+  return { status, conditionConfidence: normalizeSemanticConfidence(raw.conditionConfidence), rawConditionConfidence: raw.conditionConfidence ?? null, normalizedConditionConfidence: normalizeSemanticConfidence(raw.conditionConfidence), observedCondition, possibleConcerns, connectionAssessments, noVisibleConcernMessage: status === 'NO_VISIBLE_CONCERN_DETECTED' ? NO_VISIBLE_DEFECT_MESSAGE : '', unableToInspectReason, visibleEvidence, recommendedVerification, safetyDrivabilityImpact: typeof raw.safetyDrivabilityImpact === 'string' ? raw.safetyDrivabilityImpact.trim().slice(0, 500) || null : null };
 }
 
 function validateWiringDiagram(raw) {
@@ -642,11 +655,13 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
   let visualConditionInspection = null;
   if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE' && componentIdentification?.status !== 'FAILED') {
     const conditionStartedAt = Date.now();
-    const conditionPrompt = `Perform a second, strictly visual condition inspection of this same current automotive image after component identification. Inspect only what is visible: loose or disconnected hoses, pipes, connectors, wiring, clamps, fasteners; cracks, splits, collapse, deterioration; oil, coolant, fuel, or other visible residue; corrosion, overheating, rubbing, chafing, impact damage; and components that appear misaligned or not fully seated.
+    const conditionPrompt = `Perform a separate, detailed visual defect inspection of this same current automotive image after component identification. Do not let successful component identification influence the condition result. Compare every visibly accessible interface against its expected normal assembled condition before deciding there is no concern.
 
-Return OBSERVED_CONDITION only for a directly visible condition. Return POSSIBLE_CONCERN_DETECTED only for a visually suspicious condition that cannot be confirmed; every possible concern must name its visible location, explain the appearance, explicitly require physical confirmation, and give a safe verification step. Return NO_VISIBLE_CONCERN_DETECTED when no defect is visibly supported. Return UNABLE_TO_INSPECT when lighting, angle, focus, or obstruction prevents a reliable assessment. Never invent components, evidence, leaks, loose parts, damage, a failed component, or a completed repair. Every finding must be anchored in visibleEvidence.
+First inspect every visible pipe or hose connection, coupler, joint, clamp, electrical connector, fastener, bracket, mount, sealing surface, alignment, seating edge, and gap/separation point. For each visible connection, return a connectionAssessment with its visible location, one seatingStatus, and exact pixel-supported visibleEvidence. Use SEPARATION_OR_GAP_VISIBLE when a pipe end, coupler, or mating surface is visibly separated; POSSIBLE_IMPROPER_SEATING when engagement, alignment, clamp retention, or seating is visually suspicious but cannot be confirmed; NO_GAP_OR_SEPARATION_VISIBLE only when the image clearly shows the interface fully assembled; otherwise use NOT_RELIABLY_VISIBLE. A visible gap, offset lip, pipe end outside a coupler, displaced clamp, missing retainer, or misaligned mating edge must never be treated as normal merely because the primary component is recognizable.
 
-Use exact terminology only where the pictured feature supports it. For a turbocharger, a visible silver intake-side scroll housing is the compressor housing, not the turbine housing. Refer to the turbine/exhaust side, actuator, oil/coolant lines, charge pipes, clamps, and connections only when each is visibly supported. Do not infer fluid type from a dark stain. Condition confidence must be independent from component-identification confidence. If no defect is visible, use this exact noVisibleConcernMessage: "${NO_VISIBLE_DEFECT_MESSAGE}".`;
+Then inspect only visible cracks, breaks, deformation, looseness, leaks/residue, missing parts, disconnected components, corrosion, overheating, rubbing, chafing, and impact damage. Return OBSERVED_CONDITION for directly visible facts. Return POSSIBLE_CONCERN_DETECTED for a suspicious connection or defect that needs hands-on confirmation; name its location, explain what appears abnormal, explicitly require physical confirmation, and give a safe verification step. Return UNABLE_TO_INSPECT when lighting, angle, focus, or obstruction prevents a reliable assessment, and say exactly which connection cannot be confirmed plus request a closer image from another angle. Return NO_VISIBLE_CONCERN_DETECTED only if every visible connectionAssessment is affirmatively NO_GAP_OR_SEPARATION_VISIBLE and no defect is visually supported. Never invent components, evidence, fluid type, leaks, loose parts, damage, failure, or a completed repair. Every finding must be anchored in visibleEvidence.
+
+Use exact terminology only where the pictured feature supports it. For a turbocharger, a visible silver intake-side scroll housing is the compressor housing, not the turbine housing. Refer to the turbine/exhaust side, actuator, oil/coolant lines, charge pipes, clamps, and connections only when each is visibly supported. For a suspected turbocharger or charge-air connection concern, recommend checking pipe seating, clamp position/tightness, coupler damage, retaining-clip engagement, oil residue or air-leak evidence, boost-leak symptoms, and relevant DTCs/scan data. Include safetyDrivabilityImpact only when applicable, with cautious language. Condition confidence must be independent from component-identification confidence. If no defect is visible, use this exact noVisibleConcernMessage: "${NO_VISIBLE_DEFECT_MESSAGE}".`;
     markDiagnostic(diagnostic, 'O_VISUAL_CONDITION_REQUEST_CONSTRUCTED', { visualConditionInspectionAttempted: true, visualConditionResponseReceived: false, visualConditionResultPresent: false });
     try {
       const conditionResponse = await fetchImpl('https://api.openai.com/v1/responses', {
@@ -662,11 +677,11 @@ Use exact terminology only where the pictured feature supports it. For a turboch
     } catch (error) {
       const timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError' || /timed out|timeout/i.test(String(error?.message || ''));
       const safeMessage = timedOut ? 'Visual condition inspection timeout.' : sanitizeDiagnosticText(error?.message) || 'Visual condition inspection failed.';
-      visualConditionInspection = { status: 'FAILED', conditionConfidence: null, rawConditionConfidence: null, normalizedConditionConfidence: null, observedCondition: [], possibleConcerns: [], noVisibleConcernMessage: '', unableToInspectReason: safeMessage, visibleEvidence: [], recommendedVerification: [], semanticRequestId: transactionId, imageHash };
+      visualConditionInspection = { status: 'FAILED', conditionConfidence: null, rawConditionConfidence: null, normalizedConditionConfidence: null, observedCondition: [], possibleConcerns: [], connectionAssessments: [], noVisibleConcernMessage: '', unableToInspectReason: safeMessage, visibleEvidence: [], recommendedVerification: [], safetyDrivabilityImpact: null, semanticRequestId: transactionId, imageHash };
       markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_RESULT_FAILED', { visualConditionInspectionAttempted: true, visualConditionResponseReceived: Boolean(diagnostic.visualConditionResponseReceived), visualConditionResponseParsed: false, visualConditionResultPresent: false, visualConditionStatus: 'FAILED', visualConditionConfidenceNormalized: false, visualConditionErrorCategory: error?.visualConditionErrorCategory || (timedOut ? 'OPENAI_TIMEOUT' : 'VISUAL_CONDITION_ANALYSIS_ERROR'), visualConditionErrorMessage: safeMessage, visualConditionHttpStatus: error?.visualConditionHttpStatus ?? diagnostic.visualConditionHttpStatus ?? null, visualConditionElapsedMs: Math.max(0, Date.now() - conditionStartedAt) });
     }
   } else if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
-    visualConditionInspection = { status: 'FAILED', conditionConfidence: null, rawConditionConfidence: null, normalizedConditionConfidence: null, observedCondition: [], possibleConcerns: [], noVisibleConcernMessage: '', unableToInspectReason: 'Visual condition inspection was skipped because component identification failed.', visibleEvidence: [], recommendedVerification: [], semanticRequestId: transactionId, imageHash };
+    visualConditionInspection = { status: 'FAILED', conditionConfidence: null, rawConditionConfidence: null, normalizedConditionConfidence: null, observedCondition: [], possibleConcerns: [], connectionAssessments: [], noVisibleConcernMessage: '', unableToInspectReason: 'Visual condition inspection was skipped because component identification failed.', visibleEvidence: [], recommendedVerification: [], safetyDrivabilityImpact: null, semanticRequestId: transactionId, imageHash };
     markDiagnostic(diagnostic, diagnostic.stage, { visualConditionInspectionAttempted: false, visualConditionInspectionSkipped: true });
   }
   let automotiveGraphAnalysis = null;
