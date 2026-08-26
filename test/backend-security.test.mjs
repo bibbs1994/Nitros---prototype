@@ -381,11 +381,12 @@ test('automotive category triggers one fresh component request with independent 
         assert.equal(request.input[0].content.filter(item => item.type === 'input_image').length, 1);
         const payload = calls === 1
           ? { category: 'AUTOMOTIVE_COMPONENT_OR_VEHICLE', confidence: 0.99, objects: ['alternator', 'belt'], evidence: ['vented metal housing and pulley are visible'], description: 'Automotive charging component.', automotiveEvidence: ['engine-mounted vented housing with belt-driven pulley'], graphEvidence: [], documentEvidence: [] }
-          : { status: 'IDENTIFIED', primaryComponent: 'Alternator', componentConfidence: 0.94, system: 'Charging system', secondaryComponents: ['serpentine belt', 'pulley'], supportingEvidence: ['vented aluminum housing', 'belt-driven pulley', 'electrical charging connection'], possibleAlternatives: [], uncertaintyReason: null, drivetrainDiscrimination: drivetrain() };
+          : calls === 2 ? { status: 'IDENTIFIED', primaryComponent: 'Alternator', componentConfidence: 0.94, system: 'Charging system', secondaryComponents: ['serpentine belt', 'pulley'], supportingEvidence: ['vented aluminum housing', 'belt-driven pulley', 'electrical charging connection'], possibleAlternatives: [], uncertaintyReason: null, drivetrainDiscrimination: drivetrain() }
+          : { status: 'NO_VISIBLE_CONCERN_DETECTED', conditionConfidence: 0.82, observedCondition: [], possibleConcerns: [], noVisibleConcernMessage: 'No visible defect can be confirmed from this image. Inspect the component physically before making a repair decision.', unableToInspectReason: null, visibleEvidence: ['Alternator housing and belt path are visible.'], recommendedVerification: ['Inspect the alternator and belt physically before making a repair decision.'] };
         return { ok: true, status: 200, async json() { return { output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(payload) }] }] }; } };
       }
     });
-    assert.equal(calls, 2);
+    assert.equal(calls, 3);
     assert.equal(result.semanticResult.normalizedConfidence, 99);
     assert.equal(result.semanticResult.componentIdentification.primaryComponent, 'Alternator');
     assert.equal(result.semanticResult.componentIdentification.rawComponentConfidence, 0.94);
@@ -395,6 +396,8 @@ test('automotive category triggers one fresh component request with independent 
     assert.notEqual(result.semanticResult.normalizedConfidence, result.semanticResult.componentIdentification.normalizedComponentConfidence);
     assert.equal(result.serverDiagnostic.componentIdentificationAttempted, true);
     assert.equal(result.serverDiagnostic.componentResultPresent, true);
+    assert.equal(result.semanticResult.visualConditionInspection.status, 'NO_VISIBLE_CONCERN_DETECTED');
+    assert.equal(result.semanticResult.visualConditionInspection.normalizedConditionConfidence, 82);
   } finally { console.info = originalInfo; }
 });
 

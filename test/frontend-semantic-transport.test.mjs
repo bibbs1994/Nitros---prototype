@@ -148,8 +148,8 @@ test('analysis payload is a single bounded metadata-free JPEG copy', () => {
   assert.match(analyzer, /run\.bytes=sourceBuffer\.slice\(0\)/);
   assert.match(analyzer, /payloadImageCount:1/);
   assert.equal((analyzer.match(/imageBase64\}/g)||[]).length, 1);
-  assert.equal((core.match(/type:\s*'input_image'/g)||[]).length, 6);
-  assert.equal((core.match(/image_url:/g)||[]).length, 6);
+  assert.equal((core.match(/type:\s*'input_image'/g)||[]).length, 7);
+  assert.equal((core.match(/image_url:/g)||[]).length, 7);
   assert.match(core, /requiredFields = \['transactionId', 'imageHash', 'mimeType', 'imageBase64'\]/);
 });
 

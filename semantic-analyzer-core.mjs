@@ -101,6 +101,23 @@ const automotiveComponentSchema = {
   }
 };
 
+const visualConditionInspectionSchema = {
+  type: 'object', additionalProperties: false,
+  required: ['status','conditionConfidence','observedCondition','possibleConcerns','noVisibleConcernMessage','unableToInspectReason','visibleEvidence','recommendedVerification'],
+  properties: {
+    status: { type: 'string', enum: ['OBSERVED_CONDITION','POSSIBLE_CONCERN_DETECTED','NO_VISIBLE_CONCERN_DETECTED','UNABLE_TO_INSPECT'] },
+    conditionConfidence: { anyOf: [{ type: 'number', minimum: 0, maximum: 100 }, { type: 'string', pattern: '^\\s*(?:\\d+(?:\\.\\d+)?|\\.\\d+)\\s*%?\\s*$' }, { type: 'null' }] },
+    observedCondition: { type: 'array', items: { type: 'string', maxLength: 500 }, maxItems: 12 },
+    possibleConcerns: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['location','appearance','physicalConfirmationRequired','recommendedVerification'], properties: {
+      location: { type: 'string', maxLength: 240 }, appearance: { type: 'string', maxLength: 500 }, physicalConfirmationRequired: { type: 'boolean' }, recommendedVerification: { type: 'string', maxLength: 500 }
+    } }, maxItems: 8 },
+    noVisibleConcernMessage: { type: 'string', maxLength: 240 },
+    unableToInspectReason: { anyOf: [{ type: 'string', maxLength: 500 }, { type: 'null' }] },
+    visibleEvidence: { type: 'array', items: { type: 'string', maxLength: 500 }, maxItems: 16 },
+    recommendedVerification: { type: 'array', items: { type: 'string', maxLength: 500 }, maxItems: 8 }
+  }
+};
+
 const wiringDiagramSchema = {
   type: 'object', additionalProperties: false,
   required: ['status','circuitComponent','confidence','structuralEvidence','detectedComponents','connectorsAndPins','circuitPaths','fuses','relays','splices','wireDetails','importantObservations','unreadableFields','safetyWarning','testPlan'],
@@ -243,6 +260,29 @@ function validateAutomotiveComponent(raw) {
   if (result.status === 'IDENTIFIED' && !result.supportingEvidence.length) throw new Error('Component identification has no visible supporting evidence.');
   if (result.status === 'UNCERTAIN' && !result.uncertaintyReason) throw new Error('Component uncertainty reason is missing.');
   return result;
+}
+
+export const NO_VISIBLE_DEFECT_MESSAGE = 'No visible defect can be confirmed from this image. Inspect the component physically before making a repair decision.';
+
+function validateVisualConditionInspection(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !['OBSERVED_CONDITION','POSSIBLE_CONCERN_DETECTED','NO_VISIBLE_CONCERN_DETECTED','UNABLE_TO_INSPECT'].includes(raw.status)) throw new Error('Visual condition inspection returned no valid structured result.');
+  const status = raw.status;
+  const visibleEvidence = cleanStringArray(raw.visibleEvidence, 'visualCondition.visibleEvidence').slice(0, 16);
+  const observedCondition = cleanStringArray(raw.observedCondition, 'visualCondition.observedCondition').slice(0, 12);
+  const recommendedVerification = cleanStringArray(raw.recommendedVerification, 'visualCondition.recommendedVerification').slice(0, 8);
+  const possibleConcerns = Array.isArray(raw.possibleConcerns) ? raw.possibleConcerns.slice(0, 8).map((concern, index) => {
+    if (!concern || typeof concern !== 'object' || Array.isArray(concern)) throw new Error(`Visual condition possible concern ${index + 1} is invalid.`);
+    const location = String(concern.location || '').trim().slice(0, 240);
+    const appearance = String(concern.appearance || '').trim().slice(0, 500);
+    const verification = String(concern.recommendedVerification || '').trim().slice(0, 500);
+    if (!location || !appearance || !verification || concern.physicalConfirmationRequired !== true) throw new Error(`Visual condition possible concern ${index + 1} lacks required physical verification.`);
+    return { location, appearance, physicalConfirmationRequired: true, recommendedVerification: verification };
+  }) : (() => { throw new Error('Analyzer field visualCondition.possibleConcerns is invalid.'); })();
+  const unableToInspectReason = typeof raw.unableToInspectReason === 'string' ? raw.unableToInspectReason.trim().slice(0, 500) || null : null;
+  if ((status === 'OBSERVED_CONDITION' || status === 'POSSIBLE_CONCERN_DETECTED') && !visibleEvidence.length) throw new Error('Visual condition findings require visible evidence.');
+  if (status === 'POSSIBLE_CONCERN_DETECTED' && !possibleConcerns.length) throw new Error('Possible visual concern requires a physical verification step.');
+  if (status === 'UNABLE_TO_INSPECT' && !unableToInspectReason) throw new Error('Unable-to-inspect status requires a reason.');
+  return { status, conditionConfidence: normalizeSemanticConfidence(raw.conditionConfidence), rawConditionConfidence: raw.conditionConfidence ?? null, normalizedConditionConfidence: normalizeSemanticConfidence(raw.conditionConfidence), observedCondition, possibleConcerns, noVisibleConcernMessage: status === 'NO_VISIBLE_CONCERN_DETECTED' ? NO_VISIBLE_DEFECT_MESSAGE : '', unableToInspectReason, visibleEvidence, recommendedVerification };
 }
 
 function validateWiringDiagram(raw) {
@@ -599,6 +639,36 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
   } else {
     markDiagnostic(diagnostic, 'K_SEMANTIC_OUTPUT_EXTRACTED', { componentIdentificationAttempted: false, componentIdentificationSkipped: true });
   }
+  let visualConditionInspection = null;
+  if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE' && componentIdentification?.status !== 'FAILED') {
+    const conditionStartedAt = Date.now();
+    const conditionPrompt = `Perform a second, strictly visual condition inspection of this same current automotive image after component identification. Inspect only what is visible: loose or disconnected hoses, pipes, connectors, wiring, clamps, fasteners; cracks, splits, collapse, deterioration; oil, coolant, fuel, or other visible residue; corrosion, overheating, rubbing, chafing, impact damage; and components that appear misaligned or not fully seated.
+
+Return OBSERVED_CONDITION only for a directly visible condition. Return POSSIBLE_CONCERN_DETECTED only for a visually suspicious condition that cannot be confirmed; every possible concern must name its visible location, explain the appearance, explicitly require physical confirmation, and give a safe verification step. Return NO_VISIBLE_CONCERN_DETECTED when no defect is visibly supported. Return UNABLE_TO_INSPECT when lighting, angle, focus, or obstruction prevents a reliable assessment. Never invent components, evidence, leaks, loose parts, damage, a failed component, or a completed repair. Every finding must be anchored in visibleEvidence.
+
+Use exact terminology only where the pictured feature supports it. For a turbocharger, a visible silver intake-side scroll housing is the compressor housing, not the turbine housing. Refer to the turbine/exhaust side, actuator, oil/coolant lines, charge pipes, clamps, and connections only when each is visibly supported. Do not infer fluid type from a dark stain. Condition confidence must be independent from component-identification confidence. If no defect is visible, use this exact noVisibleConcernMessage: "${NO_VISIBLE_DEFECT_MESSAGE}".`;
+    markDiagnostic(diagnostic, 'O_VISUAL_CONDITION_REQUEST_CONSTRUCTED', { visualConditionInspectionAttempted: true, visualConditionResponseReceived: false, visualConditionResultPresent: false });
+    try {
+      const conditionResponse = await fetchImpl('https://api.openai.com/v1/responses', {
+        method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 1200, input: [{ role: 'user', content: [{ type: 'input_text', text: conditionPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }], text: { format: { type: 'json_schema', name: 'nitros_visual_condition_inspection', strict: true, schema: visualConditionInspectionSchema } } }), signal: analysisSignal
+      });
+      const conditionBody = await conditionResponse.json().catch(() => null);
+      markDiagnostic(diagnostic, 'P_VISUAL_CONDITION_RESPONSE_RECEIVED', { visualConditionResponseReceived: true, visualConditionResponseOk: conditionResponse.ok, visualConditionHttpStatus: conditionResponse.status, visualConditionElapsedMs: Math.max(0, Date.now() - conditionStartedAt) });
+      if (!conditionResponse.ok) throw Object.assign(new Error(conditionBody?.error?.message || `Visual condition request failed with HTTP ${conditionResponse.status}.`), { visualConditionErrorCategory: classifyOpenAIError(conditionResponse.status, conditionBody), visualConditionHttpStatus: conditionResponse.status });
+      if (!conditionBody) throw new Error('Visual condition response was not valid JSON.');
+      visualConditionInspection = { ...validateVisualConditionInspection(JSON.parse(extractOutputText(conditionBody))), semanticRequestId: transactionId, imageHash };
+      markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_RESULT_EXTRACTED', { visualConditionResponseParsed: true, visualConditionResultPresent: true, visualConditionStatus: visualConditionInspection.status, visualConditionConfidenceNormalized: visualConditionInspection.normalizedConditionConfidence !== null, visualConditionErrorCategory: null, visualConditionErrorMessage: null });
+    } catch (error) {
+      const timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError' || /timed out|timeout/i.test(String(error?.message || ''));
+      const safeMessage = timedOut ? 'Visual condition inspection timeout.' : sanitizeDiagnosticText(error?.message) || 'Visual condition inspection failed.';
+      visualConditionInspection = { status: 'FAILED', conditionConfidence: null, rawConditionConfidence: null, normalizedConditionConfidence: null, observedCondition: [], possibleConcerns: [], noVisibleConcernMessage: '', unableToInspectReason: safeMessage, visibleEvidence: [], recommendedVerification: [], semanticRequestId: transactionId, imageHash };
+      markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_RESULT_FAILED', { visualConditionInspectionAttempted: true, visualConditionResponseReceived: Boolean(diagnostic.visualConditionResponseReceived), visualConditionResponseParsed: false, visualConditionResultPresent: false, visualConditionStatus: 'FAILED', visualConditionConfidenceNormalized: false, visualConditionErrorCategory: error?.visualConditionErrorCategory || (timedOut ? 'OPENAI_TIMEOUT' : 'VISUAL_CONDITION_ANALYSIS_ERROR'), visualConditionErrorMessage: safeMessage, visualConditionHttpStatus: error?.visualConditionHttpStatus ?? diagnostic.visualConditionHttpStatus ?? null, visualConditionElapsedMs: Math.max(0, Date.now() - conditionStartedAt) });
+    }
+  } else if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
+    visualConditionInspection = { status: 'FAILED', conditionConfidence: null, rawConditionConfidence: null, normalizedConditionConfidence: null, observedCondition: [], possibleConcerns: [], noVisibleConcernMessage: '', unableToInspectReason: 'Visual condition inspection was skipped because component identification failed.', visibleEvidence: [], recommendedVerification: [], semanticRequestId: transactionId, imageHash };
+    markDiagnostic(diagnostic, diagnostic.stage, { visualConditionInspectionAttempted: false, visualConditionInspectionSkipped: true });
+  }
   let automotiveGraphAnalysis = null;
   if (semanticResult.category === 'AUTOMOTIVE_GRAPH') {
     const graphStartedAt = Date.now();
@@ -671,6 +741,7 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
     }
   } else markDiagnostic(diagnostic, diagnostic.stage, { documentExtractionAttempted: false, documentExtractionSkipped: true });
   semanticResult.componentIdentification = componentIdentification;
+  semanticResult.visualConditionInspection = visualConditionInspection;
   semanticResult.automotiveGraphAnalysis = automotiveGraphAnalysis;
   semanticResult.wiringDiagramAnalysis = wiringDiagramAnalysis;
   semanticResult.documentRepairInformation = documentRepairInformation;
