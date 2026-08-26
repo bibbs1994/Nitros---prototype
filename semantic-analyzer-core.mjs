@@ -11,6 +11,9 @@ export const ALLOWED_CATEGORIES = Object.freeze([
 
 const MAX_IMAGE_BYTES = 2.5 * 1024 * 1024;
 export const OPENAI_TIMEOUT_MS = 45_000;
+const COMPONENT_TIMEOUT_MS = 30_000;
+const VISUAL_CONDITION_TIMEOUT_MS = 16_000;
+const VISUAL_CONDITION_RETRY_TIMEOUT_MS = 8_000;
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const MODEL = process.env.OPENAI_VISION_MODEL || 'gpt-4o';
 
@@ -640,7 +643,7 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
           input: [{ role: 'user', content: [{ type: 'input_text', text: componentPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }],
           text: { format: { type: 'json_schema', name: 'nitros_automotive_component', strict: true, schema: automotiveComponentSchema } }
         }),
-        signal: analysisSignal
+        signal: AbortSignal.timeout(Math.min(timeoutMs, COMPONENT_TIMEOUT_MS))
       });
       const componentBody = await componentResponse.json().catch(() => null);
       markDiagnostic(diagnostic, 'N_COMPONENT_RESPONSE_RECEIVED', { componentResponseReceived: true, componentResponseOk: componentResponse.ok, componentHttpStatus: componentResponse.status, componentElapsedMs: Math.max(0, Date.now() - componentStartedAt) });
@@ -659,7 +662,7 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
     markDiagnostic(diagnostic, 'K_SEMANTIC_OUTPUT_EXTRACTED', { componentIdentificationAttempted: false, componentIdentificationSkipped: true });
   }
   let visualConditionInspection = null;
-  if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE' && componentIdentification?.status !== 'FAILED') {
+  if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
     const conditionStartedAt = Date.now();
     const conditionPrompt = `Perform a separate, detailed visual defect inspection of this same current automotive image after component identification. Do not let successful component identification influence the condition result. Compare every visibly accessible interface against its expected normal assembled condition before deciding there is no concern.
 
@@ -672,23 +675,36 @@ Use exact terminology only where the pictured feature supports it. For a turboch
     try {
       const conditionResponse = await fetchImpl('https://api.openai.com/v1/responses', {
         method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 1200, input: [{ role: 'user', content: [{ type: 'input_text', text: conditionPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }], text: { format: { type: 'json_schema', name: 'nitros_visual_condition_inspection', strict: true, schema: visualConditionInspectionSchema } } }), signal: analysisSignal
+        body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 950, input: [{ role: 'user', content: [{ type: 'input_text', text: `${conditionPrompt}\nCompleted component-identification context: ${componentIdentification?.primaryComponent||'Automotive component identification was unavailable'}. Use this context only to orient the inspection; all condition claims still require visible pixels.` }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }], text: { format: { type: 'json_schema', name: 'nitros_visual_condition_inspection', strict: true, schema: visualConditionInspectionSchema } } }), signal: AbortSignal.timeout(Math.min(timeoutMs, VISUAL_CONDITION_TIMEOUT_MS))
       });
       const conditionBody = await conditionResponse.json().catch(() => null);
       markDiagnostic(diagnostic, 'P_VISUAL_CONDITION_RESPONSE_RECEIVED', { visualConditionResponseReceived: true, visualConditionResponseOk: conditionResponse.ok, visualConditionHttpStatus: conditionResponse.status, visualConditionElapsedMs: Math.max(0, Date.now() - conditionStartedAt) });
       if (!conditionResponse.ok) throw Object.assign(new Error(conditionBody?.error?.message || `Visual condition request failed with HTTP ${conditionResponse.status}.`), { visualConditionErrorCategory: classifyOpenAIError(conditionResponse.status, conditionBody), visualConditionHttpStatus: conditionResponse.status });
-      if (!conditionBody) throw new Error('Visual condition response was not valid JSON.');
-      visualConditionInspection = { ...validateVisualConditionInspection(JSON.parse(extractOutputText(conditionBody))), semanticRequestId: transactionId, imageHash };
+      if (!conditionBody) throw Object.assign(new Error('Visual condition response was not valid JSON.'), { visualConditionMalformedResponse: true });
+      let conditionParsed;
+      try { conditionParsed = JSON.parse(extractOutputText(conditionBody)); }
+      catch (error) { throw Object.assign(error, { visualConditionMalformedResponse: true }); }
+      try { visualConditionInspection = { ...validateVisualConditionInspection(conditionParsed), semanticRequestId: transactionId, imageHash }; }
+      catch (error) { throw Object.assign(error, { visualConditionMalformedResponse: true }); }
       markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_RESULT_EXTRACTED', { visualConditionResponseParsed: true, visualConditionResultPresent: true, visualConditionStatus: visualConditionInspection.status, visualConditionConfidenceNormalized: visualConditionInspection.normalizedConditionConfidence !== null, visualConditionErrorCategory: null, visualConditionErrorMessage: null });
     } catch (error) {
       const timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError' || /timed out|timeout/i.test(String(error?.message || ''));
+      markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_FIRST_ATTEMPT_FAILED', { visualConditionFirstRequestTimeout: timedOut, visualConditionMalformedResponse: Boolean(error?.visualConditionMalformedResponse), visualConditionRetryStarted: true, visualConditionErrorMessage: sanitizeDiagnosticText(error?.message) });
+      const retryPrompt = `Inspect only the visible physical connections in this same image. Prioritize gaps, separation, incomplete seating, clamp/retainer position, cracks, and disconnected fittings before residue. Return the same structured condition result. Do not invent defects. If a connection cannot be seen, use NOT_RELIABLY_VISIBLE and explain the limitation. Component context: ${componentIdentification?.primaryComponent||'unavailable'}.`;
+      try {
+        const retryResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 650, input: [{ role: 'user', content: [{ type: 'input_text', text: retryPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }], text: { format: { type: 'json_schema', name: 'nitros_visual_condition_retry', strict: true, schema: visualConditionInspectionSchema } } }), signal: AbortSignal.timeout(Math.min(timeoutMs, VISUAL_CONDITION_RETRY_TIMEOUT_MS)) });
+        const retryBody = await retryResponse.json().catch(() => null);
+        if (!retryResponse.ok) throw Object.assign(new Error(retryBody?.error?.message || `Visual condition retry failed with HTTP ${retryResponse.status}.`), { visualConditionHttpStatus: retryResponse.status });
+        if (!retryBody) throw Object.assign(new Error('Visual condition retry response was not valid JSON.'), { visualConditionMalformedResponse: true });
+        let retryParsed; try { retryParsed = JSON.parse(extractOutputText(retryBody)); } catch (retryError) { throw Object.assign(retryError, { visualConditionMalformedResponse: true }); }
+        visualConditionInspection = { ...validateVisualConditionInspection(retryParsed), semanticRequestId: transactionId, imageHash };
+        markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_RETRY_SUCCEEDED', { visualConditionRetrySuccess: true, visualConditionRetryFailure: false, visualConditionResultPresent: true, visualConditionStatus: visualConditionInspection.status, visualConditionConfidenceNormalized: visualConditionInspection.normalizedConditionConfidence !== null });
+      } catch (retryError) {
       const safeMessage = timedOut ? 'Visual condition inspection timeout.' : sanitizeDiagnosticText(error?.message) || 'Visual condition inspection failed.';
-      visualConditionInspection = { status: 'FAILED', conditionConfidence: null, rawConditionConfidence: null, normalizedConditionConfidence: null, observedCondition: [], possibleConcerns: [], connectionAssessments: [], noVisibleConcernMessage: '', unableToInspectReason: safeMessage, visibleEvidence: [], recommendedVerification: [], safetyDrivabilityImpact: null, semanticRequestId: transactionId, imageHash };
-      markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_RESULT_FAILED', { visualConditionInspectionAttempted: true, visualConditionResponseReceived: Boolean(diagnostic.visualConditionResponseReceived), visualConditionResponseParsed: false, visualConditionResultPresent: false, visualConditionStatus: 'FAILED', visualConditionConfidenceNormalized: false, visualConditionErrorCategory: error?.visualConditionErrorCategory || (timedOut ? 'OPENAI_TIMEOUT' : 'VISUAL_CONDITION_ANALYSIS_ERROR'), visualConditionErrorMessage: safeMessage, visualConditionHttpStatus: error?.visualConditionHttpStatus ?? diagnostic.visualConditionHttpStatus ?? null, visualConditionElapsedMs: Math.max(0, Date.now() - conditionStartedAt) });
+      visualConditionInspection = { status: 'UNABLE_TO_INSPECT', conditionConfidence: null, rawConditionConfidence: null, normalizedConditionConfidence: null, observedCondition: [], possibleConcerns: [], connectionAssessments: [], noVisibleConcernMessage: '', unableToInspectReason: `${safeMessage} A shorter condition-only retry also could not complete; no repair decision should be made from this image.`, visibleEvidence: componentIdentification.supportingEvidence?.slice(0, 3) || [], recommendedVerification: ['Obtain a closer, well-lit image of each connection and perform a physical inspection before repair authorization.'], safetyDrivabilityImpact: null, semanticRequestId: transactionId, imageHash };
+      markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_RETRY_FAILED', { visualConditionInspectionAttempted: true, visualConditionRetrySuccess: false, visualConditionRetryFailure: true, visualConditionResponseReceived: Boolean(diagnostic.visualConditionResponseReceived), visualConditionResponseParsed: false, visualConditionResultPresent: false, visualConditionStatus: 'UNABLE_TO_INSPECT', visualConditionConfidenceNormalized: false, visualConditionMalformedResponse: Boolean(retryError?.visualConditionMalformedResponse), visualConditionErrorCategory: error?.visualConditionErrorCategory || (timedOut ? 'OPENAI_TIMEOUT' : 'VISUAL_CONDITION_ANALYSIS_ERROR'), visualConditionErrorMessage: safeMessage, visualConditionHttpStatus: retryError?.visualConditionHttpStatus ?? error?.visualConditionHttpStatus ?? diagnostic.visualConditionHttpStatus ?? null, visualConditionElapsedMs: Math.max(0, Date.now() - conditionStartedAt) });
+      }
     }
-  } else if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
-    visualConditionInspection = { status: 'FAILED', conditionConfidence: null, rawConditionConfidence: null, normalizedConditionConfidence: null, observedCondition: [], possibleConcerns: [], connectionAssessments: [], noVisibleConcernMessage: '', unableToInspectReason: 'Visual condition inspection was skipped because component identification failed.', visibleEvidence: [], recommendedVerification: [], safetyDrivabilityImpact: null, semanticRequestId: transactionId, imageHash };
-    markDiagnostic(diagnostic, diagnostic.stage, { visualConditionInspectionAttempted: false, visualConditionInspectionSkipped: true });
   }
   let automotiveGraphAnalysis = null;
   if (semanticResult.category === 'AUTOMOTIVE_GRAPH') {
