@@ -38,6 +38,19 @@ test('visual condition inspection keeps turbocharger compressor terminology and 
   assert.equal(inspection.connectionAssessments[0].findingConfidence,86);
 });
 
+test('connection gap is prioritized ahead of residue and a separate seated lower clamp',async()=>{
+  const result=await inspect({status:'OBSERVED_CONDITION',conditionConfidence:84,observedCondition:['The upper turbo charge-air connection appears partially separated.','Dark residue is visible near the upper connection.'],possibleConcerns:[],connectionAssessments:[
+    {location:'Lower charge-air clamp',seatingStatus:'NO_GAP_OR_SEPARATION_VISIBLE',visibleEvidence:'The visible lower clamp is positioned over the coupler sealing area.'},
+    {location:'Upper turbo charge-air connection',seatingStatus:'POSSIBLE_IMPROPER_SEATING',findingType:'POSSIBLE_CONCERN',severity:'MODERATE',findingConfidence:81,visibleEvidence:'The upper pipe-to-coupler interface shows uneven insertion depth and a visible gap at the mating edge.',recommendedVerification:'Check whether the connection is fully inserted, inspect the entire circumference for a gap, verify clamp or retaining-clip position, perform a gentle movement/pull check, inspect the seal or O-ring when accessible, then smoke-test or pressure-test for leakage.',safetyDrivabilityImpact:'Possible boost-air leak may affect performance.'},
+    {location:'Upper turbo charge-air connection',seatingStatus:'POSSIBLE_IMPROPER_SEATING',findingType:'RESIDUE_OR_STAINING',severity:'LOW',findingConfidence:67,visibleEvidence:'Dark residue is visible adjacent to the upper connection.',recommendedVerification:'Clean the area and check for fresh residue after the seating inspection.',safetyDrivabilityImpact:null}
+  ],noVisibleConcernMessage:'',unableToInspectReason:null,visibleEvidence:['Upper pipe-to-coupler gap and uneven insertion depth are visible.','Dark residue is visible adjacent to the upper connection.'],recommendedVerification:['Physically inspect the connections before repair authorization.'],safetyDrivabilityImpact:'Possible boost-air leak may affect performance.'});
+  const findings=result.semanticResult.visualConditionInspection.connectionAssessments;
+  assert.equal(findings[0].location,'Upper turbo charge-air connection');
+  assert.equal(findings[0].severity,'MODERATE');
+  assert.equal(findings.at(-1).location,'Lower charge-air clamp');
+  assert.match(findings[0].recommendedVerification,/entire circumference|movement\/pull|smoke-test|pressure-test/i);
+});
+
 test('visual condition inspection supports visible residue, no-defect, and obstructed-image outcomes',async()=>{
   const residue=await inspect({status:'POSSIBLE_CONCERN_DETECTED',conditionConfidence:74,observedCondition:['Dark wet-looking residue is visible below the hose connection.'],possibleConcerns:[{location:'Below the visible hose connection',appearance:'Residue may indicate seepage, but the image does not confirm the source or a disconnected pipe.',physicalConfirmationRequired:true,recommendedVerification:'Clean the area and inspect for fresh seepage.'}],connectionAssessments:[{location:'Visible hose connection',seatingStatus:'NOT_RELIABLY_VISIBLE',visibleEvidence:'The joint is partly obscured.'}],noVisibleConcernMessage:'',unableToInspectReason:null,visibleEvidence:['Dark wet-looking residue is visible below the connection.'],recommendedVerification:['Clean the area and physically determine the fluid source before repair.'],safetyDrivabilityImpact:null});
   assert.equal(residue.semanticResult.visualConditionInspection.status,'POSSIBLE_CONCERN_DETECTED');
