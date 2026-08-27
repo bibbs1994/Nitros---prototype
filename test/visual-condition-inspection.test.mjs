@@ -16,6 +16,9 @@ async function inspect(condition){
     findingType:item.findingType||(item.seatingStatus==='SEPARATION_OR_GAP_VISIBLE'?'CLEAR_DEFECT':item.seatingStatus==='NOT_RELIABLY_VISIBLE'?'SEATING_NOT_RELIABLY_VISIBLE':item.seatingStatus==='NO_GAP_OR_SEPARATION_VISIBLE'?'NO_DEFECT_VISIBLE':'POSSIBLE_CONCERN'),
     severity:item.severity||(item.seatingStatus==='SEPARATION_OR_GAP_VISIBLE'?'HIGH':item.seatingStatus==='NOT_RELIABLY_VISIBLE'?'UNDETERMINED':item.seatingStatus==='NO_GAP_OR_SEPARATION_VISIBLE'?'LOW':'MODERATE'),
     findingConfidence:item.findingConfidence??72,
+    matingComponentVisible:item.matingComponentVisible??true,
+    directDamageVisible:item.directDamageVisible??false,
+    missingContext:item.missingContext??(item.seatingStatus==='NOT_RELIABLY_VISIBLE'?'The mating component or connection context is not visible.':null),
     recommendedVerification:item.recommendedVerification||'Physically inspect this connection before repair authorization.',
     safetyDrivabilityImpact:item.safetyDrivabilityImpact??null
   }))};
@@ -53,7 +56,7 @@ test('connection gap is prioritized ahead of residue and a separate seated lower
 
 test('visual condition timeout retries once with the completed component context',async()=>{
   const body={transactionId:'condition-retry',imageHash:createHash('sha256').update(bytes).digest('hex'),mimeType:'image/png',imageBase64:bytes.toString('base64')};
-  const noDefect={status:'NO_VISIBLE_CONCERN_DETECTED',conditionConfidence:83,observedCondition:[],possibleConcerns:[],connectionAssessments:[{location:'Visible compressor outlet connection',seatingStatus:'NO_GAP_OR_SEPARATION_VISIBLE',findingType:'NO_DEFECT_VISIBLE',severity:'LOW',findingConfidence:83,visibleEvidence:'The visible pipe lip is seated at the coupler edge.',recommendedVerification:'Physically inspect the connection before repair authorization.',safetyDrivabilityImpact:null}],noVisibleConcernMessage:NO_VISIBLE_DEFECT_MESSAGE,unableToInspectReason:null,visibleEvidence:['The visible pipe lip is seated at the coupler edge.'],recommendedVerification:['Physically inspect the connection before repair authorization.'],safetyDrivabilityImpact:null};
+  const noDefect={status:'NO_VISIBLE_CONCERN_DETECTED',conditionConfidence:83,observedCondition:[],possibleConcerns:[],connectionAssessments:[{location:'Visible compressor outlet connection',seatingStatus:'NO_GAP_OR_SEPARATION_VISIBLE',findingType:'NO_DEFECT_VISIBLE',severity:'LOW',findingConfidence:83,visibleEvidence:'The visible pipe lip is seated at the coupler edge.',matingComponentVisible:true,directDamageVisible:false,missingContext:null,recommendedVerification:'Physically inspect the connection before repair authorization.',safetyDrivabilityImpact:null}],noVisibleConcernMessage:NO_VISIBLE_DEFECT_MESSAGE,unableToInspectReason:null,visibleEvidence:['The visible pipe lip is seated at the coupler edge.'],recommendedVerification:['Physically inspect the connection before repair authorization.'],safetyDrivabilityImpact:null};
   let calls=0;const originalInfo=console.info;console.info=()=>{};
   try { const result=await analyzeSemanticImage(body,{apiKey:'test-key',fetchImpl:async(_url,options)=>{calls+=1;if(calls===3)throw Object.assign(new Error('Visual condition request timed out.'),{name:'TimeoutError'});const request=JSON.parse(options.body);if(calls===4)assert.match(request.input[0].content[0].text,/Inspect only the visible physical connections/i);return response(calls===1?classifier:calls===2?component:noDefect);}});assert.equal(calls,4);assert.equal(result.semanticResult.visualConditionInspection.status,'NO_VISIBLE_CONCERN_DETECTED');assert.equal(result.serverDiagnostic.visualConditionFirstRequestTimeout,true);assert.equal(result.serverDiagnostic.visualConditionRetryStarted,true);assert.equal(result.serverDiagnostic.visualConditionRetrySuccess,true);assert.equal(result.serverDiagnostic.visualConditionRetryFailure,false); } finally { console.info=originalInfo; }
 });
@@ -82,17 +85,17 @@ test('visual condition inspection rejects unsupported possible findings and rend
   assert.equal(duplicates.semanticResult.visualConditionInspection.observedCondition.length,1);
   const analyzer=readFileSync(new URL('../image-analysis-ad.js',import.meta.url),'utf8');
   assert.match(analyzer,/<h3>VISUAL CONDITION INSPECTION<\/h3>/);
-  assert.match(analyzer,/Confirmation by physical inspection is required/);
+  assert.match(analyzer,/condition-finding-cards/);
   assert.match(analyzer,/condition-field/);
-  assert.match(analyzer,/Visible observations/);
-  assert.match(analyzer,/What cannot be confirmed/);
+  assert.match(analyzer,/Findings/);
+  assert.match(analyzer,/Missing context/);
   assert.match(analyzer,/Recommended technician verification/);
   assert.ok(analyzer.indexOf('VISUAL CONDITION INSPECTION')>analyzer.indexOf('SPECIFIC COMPONENT IDENTIFICATION'));
 });
 
 test('starter wiring, repair context, loose connector, turbo separation, obscuration, and ambiguity remain evidence-calibrated',async()=>{
   const starterWiring={...component,status:'IDENTIFIED',primaryComponent:'Starter motor',componentConfidence:94,system:'Starting system',secondaryComponents:['positive battery cable','small electrical connector'],supportingEvidence:['A heavy-gauge positive cable and a smaller electrical connector are visible near the bellhousing.'],possibleAlternatives:[],uncertaintyReason:null};
-  const starterRemoved={status:'POSSIBLE_CONCERN_DETECTED',conditionConfidence:42,observedCondition:['A heavy-gauge positive cable and smaller electrical connector are visible near the bellhousing.'],possibleConcerns:[{location:'Bellhousing-area wiring',appearance:'The wiring may normally connect to the starter/starter solenoid, but the connected component is not visible and may be removed, outside the frame, or obscured.',physicalConfirmationRequired:true,recommendedVerification:'Confirm the active repair state and trace both wires to their intended destination before reconnecting.'}],connectionAssessments:[{location:'Bellhousing-area wiring',seatingStatus:'NOT_RELIABLY_VISIBLE',findingType:'SEATING_NOT_RELIABLY_VISIBLE',severity:'UNDETERMINED',findingConfidence:42,visibleEvidence:'The cable ends are visible, but no mating starter housing or terminal is visible.',recommendedVerification:'Confirm the active repair state and trace both wires to their intended destination before reconnecting.',safetyDrivabilityImpact:null}],noVisibleConcernMessage:'',unableToInspectReason:null,visibleEvidence:['Heavy-gauge cable and smaller electrical connector are visible.'],recommendedVerification:['Confirm whether the starter is removed, outside the frame, or obscured; do not energize or reconnect based on this image alone.'],safetyDrivabilityImpact:null};
+  const starterRemoved={status:'UNVERIFIED_CONDITION',conditionConfidence:42,observedCondition:['A heavy-gauge positive cable and smaller electrical connector are visible near the bellhousing.'],possibleConcerns:[],connectionAssessments:[{location:'Bellhousing-area wiring',seatingStatus:'COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE',findingType:'UNVERIFIED_CONDITION',severity:'UNDETERMINED',findingConfidence:42,visibleEvidence:'The cable ends are visible, but no mating starter housing or terminal is visible.',matingComponentVisible:false,directDamageVisible:false,missingContext:'The starter or corresponding component may be removed or outside the image.',recommendedVerification:'Is the corresponding component currently removed or outside the image?',safetyDrivabilityImpact:null}],noVisibleConcernMessage:'',unableToInspectReason:null,visibleEvidence:['Heavy-gauge cable and smaller electrical connector are visible.'],recommendedVerification:['Is the corresponding component currently removed or outside the image?'],safetyDrivabilityImpact:null};
   const body={transactionId:'starter-removed-test',imageHash:createHash('sha256').update(bytes).digest('hex'),mimeType:'image/png',imageBase64:bytes.toString('base64')};
   let call=0;const originalInfo=console.info;console.info=()=>{};
   try {
@@ -103,8 +106,11 @@ test('starter wiring, repair context, loose connector, turbo separation, obscura
     assert.ok(identified.componentConfidence<=45);
     assert.match(identified.likelyConnectionsOrDestinations.join(' '),/may normally connect/i);
     assert.doesNotMatch(inspection.observedCondition.join(' '),/starter assembly is visible/i);
-    assert.match(inspection.possibleConcerns[0].appearance,/may be removed, outside the frame, or obscured/i);
-    assert.equal(inspection.connectionAssessments[0].findingType,'SEATING_NOT_RELIABLY_VISIBLE');
+    assert.equal(inspection.status,'UNVERIFIED_CONDITION');
+    assert.equal(inspection.connectionAssessments[0].findingType,'UNVERIFIED_CONDITION');
+    assert.equal(inspection.connectionAssessments[0].severity,'UNDETERMINED');
+    assert.equal(inspection.connectionAssessments[0].safetyDrivabilityImpact,null);
+    assert.match(inspection.connectionAssessments[0].recommendedVerification,/Is the corresponding component currently removed or outside the image\?/);
   } finally { console.info=originalInfo; }
   const analyzer=readFileSync(new URL('../semantic-analyzer-core.mjs',import.meta.url),'utf8');
   for(const scenario of ['If a starter is installed and its housing','Do not automatically classify disconnected wiring as a defect when active repair or disassembly is plausible','loose connectors, broken parts, missing fasteners, separated intake/turbo pipes','removed, outside the frame, or obscured']) assert.match(analyzer,new RegExp(scenario.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'));

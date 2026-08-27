@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.79 adds evidence-calibrated automotive visual inspection: visible wiring is distinguished from the component it may normally connect to, and Oliver keeps direct observations, possible concerns, and technician verification separate.
+Version 10.13.80 adds connection-context verification: disconnected wiring and lines remain unverified unless their mating component or direct damage is visibly supported.
 
 ## Local test server
 
