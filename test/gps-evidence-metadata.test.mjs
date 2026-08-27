@@ -30,7 +30,7 @@ test('AQ GPS diagnostics remain present in the VI deployment',()=>{
   assert.match(html,/id="nitrosGpsDiagnostic"/);
   assert.match(html,/nitros-single-build-and-service-worker-authority/);
   assert.match(html,/Evidence-Calibrated Visual Inspection/);
-  assert.match(sw,/const VERSION = '10\.13\.75'/);
+  assert.match(sw,/const VERSION = '10\.13\.79'/);
 });
 
 test('check-in and RO serialization propagates each saved photo GPS snapshot',()=>{
