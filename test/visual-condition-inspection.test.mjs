@@ -20,17 +20,34 @@ test('visual consistency repair corrects unassessable concerns and confidence co
   const noAssessable=normalizeVisualConditionConsistency({status:'POSSIBLE_CONCERN_DETECTED',conditionConfidence:88,possibleConcerns:[],connectionAssessments:[],visibleEvidence:[]});
   assert.equal(noAssessable.normalized.status,'UNABLE_TO_INSPECT');
   assert.match(noAssessable.corrections[0],/no specific visible condition or assessable connection/i);
-  const capped=normalizeVisualConditionConsistency({status:'POSSIBLE_CONCERN_DETECTED',conditionConfidence:91,visibleEvidence:['Uneven connector seating is visible.'],possibleConcerns:[{location:'Connector',appearance:'Uneven seating is visible.',physicalConfirmationRequired:true,recommendedVerification:'Inspect connector seating.'}],connectionAssessments:[{findingType:'POSSIBLE_CONCERN',findingConfidence:46,seatingStatus:'POSSIBLE_IMPROPER_SEATING'}]});
+  const capped=normalizeVisualConditionConsistency({status:'POSSIBLE_CONCERN_DETECTED',conditionConfidence:91,visibleEvidence:['Uneven connector seating is visible.'],possibleConcerns:[{location:'Connector',appearance:'Uneven seating is visible.',physicalConfirmationRequired:true,recommendedVerification:'Inspect connector seating.'}],connectionAssessments:[{location:'Center-right beside the visible connector',findingType:'POSSIBLE_CONCERN',findingConfidence:46,seatingStatus:'POSSIBLE_IMPROPER_SEATING'}]});
   assert.equal(capped.normalized.conditionConfidence,46);
   assert.match(capped.corrections[0],/capped from 91% to 46%/);
   for(const findingType of ['CLEAR_DEFECT','NO_DEFECT_VISIBLE']){
-    const confirmed=normalizeVisualConditionConsistency({status:findingType==='CLEAR_DEFECT'?'OBSERVED_CONDITION':'NO_VISIBLE_CONCERN_DETECTED',conditionConfidence:82,visibleEvidence:['Direct visible evidence.'],possibleConcerns:[],connectionAssessments:[{findingType,findingConfidence:82,seatingStatus:findingType==='CLEAR_DEFECT'?'SEPARATION_OR_GAP_VISIBLE':'NO_GAP_OR_SEPARATION_VISIBLE'}]});
+    const confirmed=normalizeVisualConditionConsistency({status:findingType==='CLEAR_DEFECT'?'OBSERVED_CONDITION':'NO_VISIBLE_CONCERN_DETECTED',conditionConfidence:82,visibleEvidence:['Direct visible evidence.'],possibleConcerns:[],connectionAssessments:[{location:'Upper-left area of image',findingType,findingConfidence:82,seatingStatus:findingType==='CLEAR_DEFECT'?'SEPARATION_OR_GAP_VISIBLE':'NO_GAP_OR_SEPARATION_VISIBLE'}]});
     assert.equal(confirmed.normalized.status,findingType==='CLEAR_DEFECT'?'OBSERVED_CONDITION':'NO_VISIBLE_CONCERN_DETECTED');
     assert.equal(confirmed.corrections.length,0);
   }
   const analyzer=readFileSync(new URL('../image-analysis-ad.js',import.meta.url),'utf8');
+  assert.match(analyzer,/Component-identification confidence/);
+  assert.match(analyzer,/Overall visual-inspection confidence/);
+  assert.match(analyzer,/Finding confidence/);
+  assert.match(analyzer,/Image\/category routing confidence/);
   assert.match(analyzer,/Likely connection or destination \(not confirmed\)<\/strong>\$\{list\(component\.likelyConnectionsOrDestinations\)\}<\/div><div class="condition-field"><strong>Secondary visible components/);
   assert.match(analyzer,/'<p class="condition-empty">None<\/p>'/);
+});
+
+test('visual consistency repair preserves precise image-relative locations and rejects vague or unsupported vehicle-side claims',()=>{
+  const normalized=normalizeVisualConditionConsistency({status:'UNVERIFIED_CONDITION',conditionConfidence:42,visibleEvidence:['Connector and cable are visible.'],possibleConcerns:[],connectionAssessments:[
+    {location:'center, near visible harness',findingType:'UNVERIFIED_CONDITION',findingConfidence:42,seatingStatus:'COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE'},
+    {location:'driver side beside the cable',findingType:'UNVERIFIED_CONDITION',findingConfidence:42,seatingStatus:'COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE'},
+    {location:'center-right beside the large cable',findingType:'UNVERIFIED_CONDITION',findingConfidence:42,seatingStatus:'COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE'}
+  ]});
+  assert.equal(normalized.normalized.connectionAssessments[0].location,'Image-relative location cannot be determined reliably.');
+  assert.equal(normalized.normalized.connectionAssessments[1].location,'Image-relative location cannot be determined reliably.');
+  assert.equal(normalized.normalized.connectionAssessments[2].location,'center-right beside the large cable');
+  assert.equal(normalized.corrections.length,2);
+  assert.match(normalized.corrections[0],/location normalized/i);
 });
 
 async function inspect(condition){

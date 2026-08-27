@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.83 adds runtime-measured Finish Wizard and mobile repair-order clearance above the fixed safe-area toolbar, including automatic target scrolling for required items.
+Version 10.13.84 labels routing, component, overall-inspection, and individual-finding confidence separately while requiring image-relative finding locations and retaining Finish Wizard safe-area clearance.
 
 ## Local test server
 
