@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.84 labels routing, component, overall-inspection, and individual-finding confidence separately while requiring image-relative finding locations and retaining Finish Wizard safe-area clearance.
+Version 10.13.85 preserves directly visible primary defects while omitting unsupported secondary visual findings and keeping uncertain drivetrain identity consistent.
 
 ## Local test server
 

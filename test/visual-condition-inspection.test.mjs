@@ -20,11 +20,11 @@ test('visual consistency repair corrects unassessable concerns and confidence co
   const noAssessable=normalizeVisualConditionConsistency({status:'POSSIBLE_CONCERN_DETECTED',conditionConfidence:88,possibleConcerns:[],connectionAssessments:[],visibleEvidence:[]});
   assert.equal(noAssessable.normalized.status,'UNABLE_TO_INSPECT');
   assert.match(noAssessable.corrections[0],/no specific visible condition or assessable connection/i);
-  const capped=normalizeVisualConditionConsistency({status:'POSSIBLE_CONCERN_DETECTED',conditionConfidence:91,visibleEvidence:['Uneven connector seating is visible.'],possibleConcerns:[{location:'Connector',appearance:'Uneven seating is visible.',physicalConfirmationRequired:true,recommendedVerification:'Inspect connector seating.'}],connectionAssessments:[{location:'Center-right beside the visible connector',findingType:'POSSIBLE_CONCERN',findingConfidence:46,seatingStatus:'POSSIBLE_IMPROPER_SEATING'}]});
+  const capped=normalizeVisualConditionConsistency({status:'POSSIBLE_CONCERN_DETECTED',conditionConfidence:91,visibleEvidence:['Uneven connector seating is visible.'],possibleConcerns:[{location:'Connector',appearance:'Uneven seating is visible.',physicalConfirmationRequired:true,recommendedVerification:'Inspect connector seating.'}],connectionAssessments:[{location:'Center-right beside the visible connector',findingType:'POSSIBLE_CONCERN',findingConfidence:46,seatingStatus:'POSSIBLE_IMPROPER_SEATING',visibleEvidence:'Uneven connector seating is visible.'}]});
   assert.equal(capped.normalized.conditionConfidence,46);
   assert.match(capped.corrections[0],/capped from 91% to 46%/);
   for(const findingType of ['CLEAR_DEFECT','NO_DEFECT_VISIBLE']){
-    const confirmed=normalizeVisualConditionConsistency({status:findingType==='CLEAR_DEFECT'?'OBSERVED_CONDITION':'NO_VISIBLE_CONCERN_DETECTED',conditionConfidence:82,visibleEvidence:['Direct visible evidence.'],possibleConcerns:[],connectionAssessments:[{location:'Upper-left area of image',findingType,findingConfidence:82,seatingStatus:findingType==='CLEAR_DEFECT'?'SEPARATION_OR_GAP_VISIBLE':'NO_GAP_OR_SEPARATION_VISIBLE'}]});
+    const confirmed=normalizeVisualConditionConsistency({status:findingType==='CLEAR_DEFECT'?'OBSERVED_CONDITION':'NO_VISIBLE_CONCERN_DETECTED',conditionConfidence:82,visibleEvidence:[findingType==='CLEAR_DEFECT'?'A visible separation gap is present.':'The visible interface is fully seated.'],possibleConcerns:[],connectionAssessments:[{location:'Upper-left area of image',findingType,findingConfidence:82,seatingStatus:findingType==='CLEAR_DEFECT'?'SEPARATION_OR_GAP_VISIBLE':'NO_GAP_OR_SEPARATION_VISIBLE',visibleEvidence:findingType==='CLEAR_DEFECT'?'A visible separation gap is present.':'The visible interface is fully seated.'}]});
     assert.equal(confirmed.normalized.status,findingType==='CLEAR_DEFECT'?'OBSERVED_CONDITION':'NO_VISIBLE_CONCERN_DETECTED');
     assert.equal(confirmed.corrections.length,0);
   }
@@ -48,6 +48,18 @@ test('visual consistency repair preserves precise image-relative locations and r
   assert.equal(normalized.normalized.connectionAssessments[2].location,'center-right beside the large cable');
   assert.equal(normalized.corrections.length,2);
   assert.match(normalized.corrections[0],/location normalized/i);
+});
+
+test('one directly visible disconnected connector is retained while ordinary visible hoses and cables create no secondary defect',()=>{
+  const normalized=normalizeVisualConditionConsistency({status:'OBSERVED_CONDITION',conditionConfidence:89,visibleEvidence:['A gray connector has a visible separation gap and exposed terminals.'],possibleConcerns:[{location:'Lower-left hose',appearance:'A hose is visible at an unfamiliar angle.',physicalConfirmationRequired:true,recommendedVerification:'Inspect the hose.'}],connectionAssessments:[
+    {location:'Center-right gray electrical connector',seatingStatus:'SEPARATION_OR_GAP_VISIBLE',findingType:'CLEAR_DEFECT',severity:'HIGH',findingConfidence:91,visibleEvidence:'A physical separation gap and exposed metal terminals are visible at the gray connector.',recommendedVerification:'Inspect the connector body, terminals, lock, and mating half before reconnecting.'},
+    {location:'Lower-left hose and cable',seatingStatus:'POSSIBLE_IMPROPER_SEATING',findingType:'POSSIBLE_CONCERN',severity:'MODERATE',findingConfidence:82,visibleEvidence:'A hose and cable are visible along the normal-looking route.',recommendedVerification:'Inspect routing.'}
+  ]});
+  assert.equal(normalized.normalized.connectionAssessments.length,1);
+  assert.equal(normalized.normalized.connectionAssessments[0].findingType,'CLEAR_DEFECT');
+  assert.equal(normalized.normalized.possibleConcerns.length,0);
+  assert.equal(normalized.normalized.status,'OBSERVED_CONDITION');
+  assert.match(normalized.corrections.join(' '),/secondary visual finding.*omitted/i);
 });
 
 async function inspect(condition){
@@ -154,4 +166,21 @@ test('starter wiring, repair context, loose connector, turbo separation, obscura
   } finally { console.info=originalInfo; }
   const analyzer=readFileSync(new URL('../semantic-analyzer-core.mjs',import.meta.url),'utf8');
   for(const scenario of ['If a starter is installed and its housing','Do not automatically classify disconnected wiring as a defect when active repair or disassembly is plausible','loose connectors, broken parts, missing fasteners, separated intake/turbo pipes','removed, outside the frame, or obscured']) assert.match(analyzer,new RegExp(scenario.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'));
+});
+
+test('uncertain drivetrain identity remains one cautious label while a separate connector defect keeps its own confidence',async()=>{
+  const uncertainDrivetrain={status:'UNCERTAIN',primaryComponent:'Transmission housing',componentConfidence:82,system:'Drivetrain',secondaryComponents:['gray electrical connector'],supportingEvidence:['A cast housing and gray connector are visible, but no defining transmission features are visible.'],possibleAlternatives:['Engine block'],likelyConnectionsOrDestinations:[],uncertaintyReason:'Exact assembly cannot be confirmed.',drivetrainDiscrimination:{...drivetrain,applicable:true,candidateType:'TRANSMISSION',evidence:['Cast housing is visible'],distinguishingFeaturesComplete:false}};
+  const clearConnector={status:'OBSERVED_CONDITION',conditionConfidence:91,observedCondition:['A disconnected gray electrical connector is visible.'],possibleConcerns:[],connectionAssessments:[{location:'Center-right beside the large cable',seatingStatus:'SEPARATION_OR_GAP_VISIBLE',findingType:'CLEAR_DEFECT',severity:'HIGH',findingConfidence:94,visibleEvidence:'A physical separation gap and exposed metal terminals are visible at the gray connector.',matingComponentVisible:true,directDamageVisible:true,missingContext:null,recommendedVerification:'Inspect the connector body, terminals, locking tab, and mating half before reconnecting.',safetyDrivabilityImpact:'Possible impact is not established until the circuit and intended connection are verified.'}],noVisibleConcernMessage:'',unableToInspectReason:null,visibleEvidence:['The gray connector has a visible separation gap and exposed terminals.'],recommendedVerification:['Physically inspect the connector before repair authorization.'],safetyDrivabilityImpact:null};
+  const body={transactionId:'identity-and-defect-test',imageHash:createHash('sha256').update(bytes).digest('hex'),mimeType:'image/png',imageBase64:bytes.toString('base64')};
+  let call=0;const originalInfo=console.info;console.info=()=>{};
+  try {
+    const result=await analyzeSemanticImage(body,{apiKey:'test-key',fetchImpl:async()=>response([classifier,uncertainDrivetrain,clearConnector][call++])});
+    const identified=result.semanticResult.componentIdentification, finding=result.semanticResult.visualConditionInspection.connectionAssessments[0];
+    assert.equal(identified.primaryComponent,'Drivetrain housing — exact assembly not confirmed');
+    assert.ok(identified.componentConfidence<=45);
+    assert.equal(finding.findingType,'CLEAR_DEFECT');
+    assert.equal(finding.findingConfidence,94);
+    assert.ok(finding.findingConfidence>identified.componentConfidence);
+    assert.doesNotMatch(identified.primaryComponent,/engine block|transmission housing/i);
+  } finally { console.info=originalInfo; }
 });
