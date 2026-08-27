@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.85 preserves directly visible primary defects while omitting unsupported secondary visual findings and keeping uncertain drivetrain identity consistent.
+Version 10.13.86 preserves visible disconnected-lead evidence as an inspected, unverified condition when its likely component context is outside the image.
 
 ## Local test server
 

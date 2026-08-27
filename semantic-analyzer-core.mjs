@@ -318,6 +318,7 @@ function validateAutomotiveComponent(raw) {
 }
 
 export const NO_VISIBLE_DEFECT_MESSAGE = 'No visible defect can be confirmed from this image. Inspect the component physically before making a repair decision.';
+const STARTER_CONTEXT_VERIFICATION = 'Widen the image to include the starter mounting location and verify whether the starter is installed before classifying the loose connections as a defect.';
 
 const IMAGE_RELATIVE_LOCATION_UNDETERMINED = 'Image-relative location cannot be determined reliably.';
 function normalizeImageRelativeLocation(rawLocation) {
@@ -359,12 +360,20 @@ export function normalizeVisualConditionConsistency(raw) {
     corrections.push('Inspection status changed to OBSERVED_CONDITION because a retained finding has direct visible clear-defect evidence.');
   }
   const hasAssessableConnection = assessments.some(item => !['NOT_RELIABLY_VISIBLE','COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE'].includes(item?.seatingStatus));
+  const hasMeaningfulUnverifiedEvidence = assessments.some(item => item?.findingType === 'UNVERIFIED_CONDITION' && item?.seatingStatus === 'COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE' && String(item?.visibleEvidence || '').trim());
   const hasSpecificVisibleConcern = normalized.possibleConcerns.some(item => item?.location && item?.appearance && item?.recommendedVerification && item?.physicalConfirmationRequired === true && Array.isArray(normalized.visibleEvidence) && normalized.visibleEvidence.length > 0);
   if (normalized.status === 'POSSIBLE_CONCERN_DETECTED' && !hasAssessableConnection && !hasSpecificVisibleConcern) {
-    normalized.status = 'UNABLE_TO_INSPECT';
-    normalized.unableToInspectReason = 'No connection or defect can be reliably assessed from the visible image evidence.';
-    normalized.possibleConcerns = [];
-    corrections.push('POSSIBLE_CONCERN_DETECTED changed to UNABLE_TO_INSPECT because no specific visible condition or assessable connection was returned.');
+    if (hasMeaningfulUnverifiedEvidence) {
+      normalized.status = 'UNVERIFIED_CONDITION';
+      normalized.unableToInspectReason = null;
+      normalized.possibleConcerns = [];
+      corrections.push('POSSIBLE_CONCERN_DETECTED changed to UNVERIFIED_CONDITION because visible connection evidence exists but the mating component or installation context is not visible.');
+    } else {
+      normalized.status = 'UNABLE_TO_INSPECT';
+      normalized.unableToInspectReason = 'No connection or defect can be reliably assessed from the visible image evidence.';
+      normalized.possibleConcerns = [];
+      corrections.push('POSSIBLE_CONCERN_DETECTED changed to UNABLE_TO_INSPECT because no specific visible condition or assessable connection was returned.');
+    }
   }
   if (normalized.status === 'POSSIBLE_CONCERN_DETECTED') {
     const evidenceConfidence = assessments.filter(item => ['POSSIBLE_CONCERN','CLEAR_DEFECT','RESIDUE_OR_STAINING'].includes(item?.findingType)).map(item => normalizeSemanticConfidence(item.findingConfidence)).filter(Number.isFinite);
@@ -378,6 +387,37 @@ export function normalizeVisualConditionConsistency(raw) {
     }
   }
   return { normalized, corrections };
+}
+
+function retainVisibleConnectionContext(rawCondition, componentIdentification) {
+  const condition = { ...rawCondition, connectionAssessments: Array.isArray(rawCondition?.connectionAssessments) ? rawCondition.connectionAssessments : [] };
+  if (condition.connectionAssessments.length || !['POSSIBLE_CONCERN_DETECTED','UNABLE_TO_INSPECT'].includes(condition.status)) return condition;
+  const supportingEvidence = Array.isArray(componentIdentification?.supportingEvidence) ? componentIdentification.supportingEvidence : [];
+  const likelyDestinations = Array.isArray(componentIdentification?.likelyConnectionsOrDestinations) ? componentIdentification.likelyConnectionsOrDestinations : [];
+  const evidence = supportingEvidence.filter(item => /\b(?:cable|wire|connector|terminal|lead)\b/i.test(String(item)));
+  const likelyStarterContext = /\bstarter(?:\s*(?:motor|solenoid|exciter))?\b/i.test([...likelyDestinations, ...evidence].join(' '));
+  if (!evidence.length || !likelyStarterContext) return condition;
+  const visibleEvidence = evidence.join(' ');
+  return {
+    ...condition,
+    status: 'UNVERIFIED_CONDITION',
+    observedCondition: [...new Set([...(Array.isArray(condition.observedCondition) ? condition.observedCondition : []), visibleEvidence, 'Visible wiring position is consistent with likely starter connections, but the destination is not confirmed.'])],
+    connectionAssessments: [{
+      location: IMAGE_RELATIVE_LOCATION_UNDETERMINED,
+      seatingStatus: 'COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE',
+      findingType: 'UNVERIFIED_CONDITION',
+      severity: 'UNDETERMINED',
+      findingConfidence: 45,
+      visibleEvidence,
+      matingComponentVisible: false,
+      directDamageVisible: false,
+      missingContext: 'The corresponding component is not visible in the photographed area and may be removed or outside the frame.',
+      recommendedVerification: STARTER_CONTEXT_VERIFICATION,
+      safetyDrivabilityImpact: null
+    }],
+    unableToInspectReason: null,
+    recommendedVerification: [...new Set([...(Array.isArray(condition.recommendedVerification) ? condition.recommendedVerification : []), STARTER_CONTEXT_VERIFICATION])]
+  };
 }
 
 function validateVisualConditionInspection(raw) {
@@ -782,7 +822,7 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
 
 Keep directly observed facts, likely interpretation, and technician verification separate. Visible wiring is not proof that its normal destination is visible, installed, damaged, or disconnected in error. A heavy-gauge positive cable near the transmission/bellhousing may be a starter power cable, and a smaller connector may be a starter-solenoid exciter wire, but do not call either a starter or solenoid. If expected wiring is visible but its normal component is not, report the wiring actually visible; describe the destination only as likely; state that the connected component cannot be confirmed and may be removed, outside the frame, or obscured; and recommend technician verification. Do not automatically classify disconnected wiring as a defect when active repair or disassembly is plausible. Continue detecting visibly loose connectors, broken parts, missing fasteners, separated intake/turbo pipes, damaged wiring, leaks, and improper installation, but only when each is supported by visible evidence. Never invent hidden parts, connections, damage, or installation conditions. Reduce confidence whenever defining evidence is missing.
 
-First inspect every visible pipe or hose connection, coupler, joint, clamp, electrical connector, fastener, bracket, mount, sealing surface, alignment, seating edge, and gap/separation point independently—before analyzing residue, dirt, oil, coolant, corrosion, or staining. For each visible connection, return one non-duplicated connectionAssessment with its exact image-relative location, one seatingStatus, findingType, severity, independent findingConfidence, exact pixel-supported visibleEvidence, matingComponentVisible, directDamageVisible, missingContext, concise physical verification, and cautious safety/drivability impact. Prefer technician-friendly locations such as “lower-left area of image,” “center-right beside the large cable,” or “upper-center behind the harness” only when visible pixels support them. Never use driver side, passenger side, vehicle front, or vehicle rear unless supplied context or image evidence establishes it. If image-relative location is not reliable, return exactly “Image-relative location cannot be determined reliably.” Before calling a disconnected connector, hose, cable, line, sensor, or fitting defective, determine whether its intended mating component is visible. If it is missing, removed, outside the image, or cannot be identified and no direct damage is visible, use COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE, UNVERIFIED_CONDITION, UNDETERMINED severity, no safety/drivability impact, and explain the missing context. Ask exactly: “Is the corresponding component currently removed or outside the image?” Do not use CLEAR_DEFECT, HIGH severity, or a hypothetical safety/drivability consequence in that situation. A hanging connector near an empty mounting location is not proof of failure. CLEAR_DEFECT requires both mating halves visibly separated, a loose/backed-out installed connector, broken/disengaged lock, damaged terminals/wiring/retention hardware, visible leakage/arcing/overheating, or visibly incorrect routing/installation. Treat upper and lower turbo/charge-air connections as separate interfaces: a properly seated lower clamp must never cancel, reduce, or replace an abnormal upper connection. Use SEPARATION_OR_GAP_VISIBLE with CLEAR_DEFECT when a pipe end, coupler, or mating surface is visibly separated; classify it HIGH only when the directly visible defect supports that severity, MODERATE when impact remains uncertain, or CRITICAL only for immediate visible safety risk or likely severe damage. Use POSSIBLE_IMPROPER_SEATING with POSSIBLE_CONCERN for limited evidence and state: “Possible disconnected, partially separated, or improperly seated connection.” Use RESIDUE_OR_STAINING only for residue/discoloration without claiming a disconnected pipe; severity is normally LOW or MODERATE. If residue and an abnormal connection are both visible, list the connection finding first and residue only as supporting evidence. Use NOT_RELIABLY_VISIBLE with SEATING_NOT_RELIABLY_VISIBLE and UNDETERMINED severity when seating is obscured. Use NO_GAP_OR_SEPARATION_VISIBLE with NO_DEFECT_VISIBLE only when the image clearly shows the interface fully assembled. A visible gap, uneven insertion depth, exposed sealing surface/connector neck, offset lip, pipe end outside a coupler, displaced clamp, missing retainer, abnormal angle, or misaligned mating edge must never be treated as normal or downgraded to residue merely because the primary component is recognizable.
+First inspect every visible pipe or hose connection, coupler, joint, clamp, electrical connector, fastener, bracket, mount, sealing surface, alignment, seating edge, and gap/separation point independently—before analyzing residue, dirt, oil, coolant, corrosion, or staining. For each visible connection, return one non-duplicated connectionAssessment with its exact image-relative location, one seatingStatus, findingType, severity, independent findingConfidence, exact pixel-supported visibleEvidence, matingComponentVisible, directDamageVisible, missingContext, concise physical verification, and cautious safety/drivability impact. Prefer technician-friendly locations such as “lower-left area of image,” “center-right beside the large cable,” or “upper-center behind the harness” only when visible pixels support them. Never use driver side, passenger side, vehicle front, or vehicle rear unless supplied context or image evidence establishes it. If image-relative location is not reliable, return exactly “Image-relative location cannot be determined reliably.” Before calling a disconnected connector, hose, cable, line, sensor, or fitting defective, determine whether its intended mating component is visible. If it is missing, removed, outside the image, or cannot be identified and no direct damage is visible, use COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE, UNVERIFIED_CONDITION, UNDETERMINED severity, no safety/drivability impact, and explain the missing context. Preserve this as meaningful inspected evidence rather than returning UNABLE_TO_INSPECT: describe the visible leads/connectors and say whether their position is consistent with a likely destination, but do not claim the component is missing. For starter-context wiring, use this exact verification: “${STARTER_CONTEXT_VERIFICATION}” Do not use CLEAR_DEFECT, HIGH severity, or a hypothetical safety/drivability consequence in that situation. A hanging connector near an empty mounting location is not proof of failure. CLEAR_DEFECT requires both mating halves visibly separated, a loose/backed-out installed connector, broken/disengaged lock, damaged terminals/wiring/retention hardware, visible leakage/arcing/overheating, or visibly incorrect routing/installation. Treat upper and lower turbo/charge-air connections as separate interfaces: a properly seated lower clamp must never cancel, reduce, or replace an abnormal upper connection. Use SEPARATION_OR_GAP_VISIBLE with CLEAR_DEFECT when a pipe end, coupler, or mating surface is visibly separated; classify it HIGH only when the directly visible defect supports that severity, MODERATE when impact remains uncertain, or CRITICAL only for immediate visible safety risk or likely severe damage. Use POSSIBLE_IMPROPER_SEATING with POSSIBLE_CONCERN for limited evidence and state: “Possible disconnected, partially separated, or improperly seated connection.” Use RESIDUE_OR_STAINING only for residue/discoloration without claiming a disconnected pipe; severity is normally LOW or MODERATE. If residue and an abnormal connection are both visible, list the connection finding first and residue only as supporting evidence. Use NOT_RELIABLY_VISIBLE with SEATING_NOT_RELIABLY_VISIBLE and UNDETERMINED severity when seating is obscured. Use NO_GAP_OR_SEPARATION_VISIBLE with NO_DEFECT_VISIBLE only when the image clearly shows the interface fully assembled. A visible gap, uneven insertion depth, exposed sealing surface/connector neck, offset lip, pipe end outside a coupler, displaced clamp, missing retainer, abnormal angle, or misaligned mating edge must never be treated as normal or downgraded to residue merely because the primary component is recognizable.
 
 Then inspect only visible cracks, breaks, deformation, looseness, leaks/residue, missing parts, disconnected components, corrosion, overheating, rubbing, chafing, and impact damage. Return OBSERVED_CONDITION for directly visible defects and require every visible separation to remain a clear observed defect. Return POSSIBLE_CONCERN_DETECTED only for a suspicious connection or residue finding that needs hands-on confirmation; name its location, explain what appears abnormal, explicitly require physical confirmation, and give a safe verification step. A secondary finding is allowed only when it has distinct direct physical evidence of its own. A hose, cable, wire, connector, clamp, or line merely being visible is not loose, disconnected, improperly seated, damaged, or defective. Do not infer a secondary defect from routing, angle, shadows, partial visibility, unfamiliar appearance, or uncertainty; omit it or state that no additional defect is visually confirmed. Return UNABLE_TO_INSPECT when lighting, angle, focus, or obstruction prevents a reliable assessment, and say exactly which connection cannot be confirmed plus request a closer image from another angle. Return NO_VISIBLE_CONCERN_DETECTED only if every visible connectionAssessment is affirmatively NO_GAP_OR_SEPARATION_VISIBLE and no defect is visually supported. Consolidate duplicate observations: do not repeat the same residue or connection concern in multiple findings. Never invent components, evidence, fluid type, leaks, loose parts, damage, failure, or a completed repair. Every finding must be anchored in visibleEvidence.
 
@@ -800,7 +840,7 @@ Use exact terminology only where the pictured feature supports it. Keep one sele
       let conditionParsed;
       try { conditionParsed = JSON.parse(extractOutputText(conditionBody)); }
       catch (error) { throw Object.assign(error, { visualConditionMalformedResponse: true }); }
-      try { const consistency = normalizeVisualConditionConsistency(conditionParsed); visualConditionInspection = { ...validateVisualConditionInspection({ ...consistency.normalized, consistencyCorrections: consistency.corrections }), semanticRequestId: transactionId, imageHash }; if (consistency.corrections.length) markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_CONSISTENCY_REPAIRED', { visualConditionConsistencyCorrections: consistency.corrections }); }
+      try { const consistency = normalizeVisualConditionConsistency(retainVisibleConnectionContext(conditionParsed, componentIdentification)); visualConditionInspection = { ...validateVisualConditionInspection({ ...consistency.normalized, consistencyCorrections: consistency.corrections }), semanticRequestId: transactionId, imageHash }; if (consistency.corrections.length) markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_CONSISTENCY_REPAIRED', { visualConditionConsistencyCorrections: consistency.corrections }); }
       catch (error) { throw Object.assign(error, { visualConditionMalformedResponse: true }); }
       markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_RESULT_EXTRACTED', { visualConditionResponseParsed: true, visualConditionResultPresent: true, visualConditionStatus: visualConditionInspection.status, visualConditionConfidenceNormalized: visualConditionInspection.normalizedConditionConfidence !== null, visualConditionErrorCategory: null, visualConditionErrorMessage: null });
     } catch (error) {
@@ -813,7 +853,7 @@ Use exact terminology only where the pictured feature supports it. Keep one sele
         if (!retryResponse.ok) throw Object.assign(new Error(retryBody?.error?.message || `Visual condition retry failed with HTTP ${retryResponse.status}.`), { visualConditionHttpStatus: retryResponse.status });
         if (!retryBody) throw Object.assign(new Error('Visual condition retry response was not valid JSON.'), { visualConditionMalformedResponse: true });
         let retryParsed; try { retryParsed = JSON.parse(extractOutputText(retryBody)); } catch (retryError) { throw Object.assign(retryError, { visualConditionMalformedResponse: true }); }
-        const consistency = normalizeVisualConditionConsistency(retryParsed); visualConditionInspection = { ...validateVisualConditionInspection({ ...consistency.normalized, consistencyCorrections: consistency.corrections }), semanticRequestId: transactionId, imageHash }; if (consistency.corrections.length) markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_CONSISTENCY_REPAIRED', { visualConditionConsistencyCorrections: consistency.corrections });
+        const consistency = normalizeVisualConditionConsistency(retainVisibleConnectionContext(retryParsed, componentIdentification)); visualConditionInspection = { ...validateVisualConditionInspection({ ...consistency.normalized, consistencyCorrections: consistency.corrections }), semanticRequestId: transactionId, imageHash }; if (consistency.corrections.length) markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_CONSISTENCY_REPAIRED', { visualConditionConsistencyCorrections: consistency.corrections });
         markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_RETRY_SUCCEEDED', { visualConditionRetrySuccess: true, visualConditionRetryFailure: false, visualConditionResultPresent: true, visualConditionStatus: visualConditionInspection.status, visualConditionConfidenceNormalized: visualConditionInspection.normalizedConditionConfidence !== null });
       } catch (retryError) {
       const safeMessage = timedOut ? 'Visual condition inspection timeout.' : sanitizeDiagnosticText(error?.message) || 'Visual condition inspection failed.';

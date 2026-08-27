@@ -184,3 +184,36 @@ test('uncertain drivetrain identity remains one cautious label while a separate 
     assert.doesNotMatch(identified.primaryComponent,/engine block|transmission housing/i);
   } finally { console.info=originalInfo; }
 });
+
+test('context-aware wiring findings preserve visible leads without converting them into unsupported defects',()=>{
+  const starterRemoved=normalizeVisualConditionConsistency({status:'POSSIBLE_CONCERN_DETECTED',conditionConfidence:58,visibleEvidence:['A heavy-gauge positive cable terminal and a smaller exciter connector are visible.'],possibleConcerns:[],connectionAssessments:[{location:'Center-right wiring area',seatingStatus:'COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE',findingType:'UNVERIFIED_CONDITION',severity:'UNDETERMINED',findingConfidence:58,visibleEvidence:'A heavy-gauge positive cable terminal and a smaller exciter connector are visible without their mating component.',missingContext:'The starter is not visible in the photographed area and may be removed or outside the frame.',recommendedVerification:'Widen the image to include the starter mounting location and verify whether the starter is installed before classifying the loose connections as a defect.'}]});
+  assert.equal(starterRemoved.normalized.status,'UNVERIFIED_CONDITION');
+  assert.equal(starterRemoved.normalized.connectionAssessments.length,1);
+
+  const starterInstalledLeadsDisconnected=normalizeVisualConditionConsistency({status:'OBSERVED_CONDITION',conditionConfidence:92,visibleEvidence:['Both installed starter terminals are visibly exposed and their leads are separated.'],possibleConcerns:[],connectionAssessments:[{location:'Lower-center starter terminals',seatingStatus:'SEPARATION_OR_GAP_VISIBLE',findingType:'CLEAR_DEFECT',severity:'HIGH',findingConfidence:94,visibleEvidence:'Both mating starter terminals are visible with exposed terminal ends and a physical separation gap.',recommendedVerification:'Inspect terminal damage and reconnect using the specified retention hardware.'}]});
+  assert.equal(starterInstalledLeadsDisconnected.normalized.connectionAssessments[0].findingType,'CLEAR_DEFECT');
+
+  const starterInstalledConnected=normalizeVisualConditionConsistency({status:'NO_VISIBLE_CONCERN_DETECTED',conditionConfidence:84,visibleEvidence:['Both visible starter leads are seated on their terminals.'],possibleConcerns:[],connectionAssessments:[{location:'Lower-center starter terminals',seatingStatus:'NO_GAP_OR_SEPARATION_VISIBLE',findingType:'NO_DEFECT_VISIBLE',severity:'LOW',findingConfidence:84,visibleEvidence:'Both visible leads are fully seated on the installed starter terminals.',recommendedVerification:'Confirm terminal tightness during normal physical inspection.'}]});
+  assert.equal(starterInstalledConnected.normalized.status,'NO_VISIBLE_CONCERN_DETECTED');
+
+  const unusedOutsideFrame=normalizeVisualConditionConsistency({status:'POSSIBLE_CONCERN_DETECTED',conditionConfidence:39,visibleEvidence:['A small unused connector is visible.'],possibleConcerns:[],connectionAssessments:[{location:'Upper-center connector',seatingStatus:'COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE',findingType:'UNVERIFIED_CONDITION',severity:'UNDETERMINED',findingConfidence:39,visibleEvidence:'A small connector is visible, but its destination is outside the image.',missingContext:'The destination is outside the photographed area.',recommendedVerification:'Widen the image and identify the connector destination.'}]});
+  assert.equal(unusedOutsideFrame.normalized.status,'UNVERIFIED_CONDITION');
+
+  const ambiguousNoDestination=normalizeVisualConditionConsistency({status:'POSSIBLE_CONCERN_DETECTED',conditionConfidence:30,visibleEvidence:['Several wires are visible.'],possibleConcerns:[],connectionAssessments:[]});
+  assert.equal(ambiguousNoDestination.normalized.status,'UNABLE_TO_INSPECT');
+});
+
+test('component starter-connection context is carried into an unverified inspection when the condition response omits it',async()=>{
+  const starterContext={status:'UNCERTAIN',primaryComponent:'Starter motor',componentConfidence:61,system:'Starting system',secondaryComponents:['positive battery cable','starter exciter connector'],supportingEvidence:['A heavy-gauge positive cable terminal and a smaller exciter connector are visible in the lower-center area.'],possibleAlternatives:[],likelyConnectionsOrDestinations:['The visible leads may normally connect to the starter solenoid, but the destination is not confirmed.'],uncertaintyReason:'No starter housing is visible.',drivetrainDiscrimination:drivetrain};
+  const emptyCondition={status:'POSSIBLE_CONCERN_DETECTED',conditionConfidence:55,observedCondition:[],possibleConcerns:[],connectionAssessments:[],noVisibleConcernMessage:'',unableToInspectReason:null,visibleEvidence:['Visible wiring is present.'],recommendedVerification:[],safetyDrivabilityImpact:null};
+  const body={transactionId:'starter-context-carry-forward',imageHash:createHash('sha256').update(bytes).digest('hex'),mimeType:'image/png',imageBase64:bytes.toString('base64')};
+  let call=0;const originalInfo=console.info;console.info=()=>{};
+  try {
+    const result=await analyzeSemanticImage(body,{apiKey:'test-key',fetchImpl:async()=>response([classifier,starterContext,emptyCondition][call++])});
+    const inspection=result.semanticResult.visualConditionInspection;
+    assert.equal(inspection.status,'UNVERIFIED_CONDITION');
+    assert.equal(inspection.connectionAssessments.length,1);
+    assert.match(inspection.connectionAssessments[0].visibleEvidence,/heavy-gauge positive cable terminal/i);
+    assert.match(inspection.connectionAssessments[0].recommendedVerification,/Widen the image to include the starter mounting location/i);
+  } finally { console.info=originalInfo; }
+});
