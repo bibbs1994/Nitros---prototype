@@ -91,6 +91,7 @@ function statusHarness(input){
     function ensureGuidedState(){throw new Error('guided testing must not run during status intake')}
     function handleGuidedFinding(){throw new Error('guided finding must not run during status intake')}
     function parseVehicle(){throw new Error('vehicle parsing must not run for a status answer')}
+    function applyDtcKnowledgeResolution(){}
     function codes(){return []}
     function concern(){throw new Error('concern parsing must not run for a status answer')}
     function advanceIntake(){state.intakeStep=state.status?'complaint':'status';state.stage=state.intakeStep}
@@ -122,5 +123,5 @@ test('VO leaves genuinely ambiguous status answers at the status question',()=>{
 test('V4 preserves authoritative persistence and one service-worker authority',()=>{
   assert.match(html,/const STATE_KEY='nitros_diagnostic_case_v10120'/);
   assert.equal((html.match(/navigator\.serviceWorker\.register\(/g)||[]).length,1);
-  assert.match(html,/version:'10\.13\.11'/);
+  assert.match(html,/version:'10\.13\.75'/);
 });

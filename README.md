@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.69 wires local-first mobile support tickets, including the available technician profile, to the MSI private-LAN support server.
+Version 10.13.75 adds evidence-calibrated automotive visual inspection: visible wiring is distinguished from the component it may normally connect to, and Oliver keeps direct observations, possible concerns, and technician verification separate.
 
 ## Local test server
 

@@ -20,6 +20,7 @@ function intakeHarness(initial){
     function testDefinition(){return {prompt:'Test the cam sensor power/reference and give me the measured voltage.'}}
     function handleGuidedFinding(){throw new Error('guided testing started before intake completion')}
     function parseVehicle(){return null} function codes(){return []} function concern(){return ''}
+    function applyDtcKnowledgeResolution(){}
     ${intakeSource}
     return {state,rendered,process};
   `)(initial);
@@ -53,8 +54,9 @@ test('V1 voice transcripts use the same authoritative intake transition as typed
   typed.process('None runs perfectly');
   const voiceTranscript={transcript:'None runs perfectly'};
   voice.process(voiceTranscript.transcript);
+  delete typed.state.activeCasePrompt?.rebuiltAt;delete voice.state.activeCasePrompt?.rebuiltAt;
   assert.deepEqual(voice.state,typed.state);
-  typed.process('none');voice.process({transcript:'none'}.transcript);
+  typed.process('none');voice.process({transcript:'none'}.transcript);delete typed.state.activeCasePrompt?.rebuiltAt;delete voice.state.activeCasePrompt?.rebuiltAt;
   assert.deepEqual(voice.state,typed.state);
 });
 

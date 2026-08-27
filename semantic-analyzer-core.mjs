@@ -82,6 +82,7 @@ const automotiveComponentSchema = {
     secondaryComponents: { type: 'array', items: { type: 'string' }, maxItems: 12 },
     supportingEvidence: { type: 'array', items: { type: 'string' }, maxItems: 16 },
     possibleAlternatives: { type: 'array', items: { type: 'string' }, maxItems: 8 },
+    likelyConnectionsOrDestinations: { type: 'array', items: { type: 'string' }, maxItems: 8 },
     uncertaintyReason: { anyOf: [{ type: 'string', maxLength: 500 }, { type: 'null' }] },
     drivetrainDiscrimination: {
       type: 'object', additionalProperties: false,
@@ -238,6 +239,7 @@ function validateAutomotiveComponent(raw) {
   if (namedDrivetrainType && drivetrain.candidateType !== namedDrivetrainType) throw new Error('Primary drivetrain identification conflicts with the discrimination result.');
   if (drivetrain.applicable && !drivetrainEvidence.length) throw new Error('Drivetrain discrimination has no spatial evidence.');
   if (drivetrain.applicable && !drivetrain.distinguishingFeaturesComplete && normalizedConfidence !== null) normalizedConfidence = Math.min(84, normalizedConfidence);
+  const likelyConnectionsOrDestinations = Array.isArray(raw.likelyConnectionsOrDestinations) ? cleanStringArray(raw.likelyConnectionsOrDestinations, 'likelyConnectionsOrDestinations').slice(0, 8) : [];
   const result = {
     status: raw.status,
     primaryComponent,
@@ -248,6 +250,7 @@ function validateAutomotiveComponent(raw) {
     secondaryComponents: cleanStringArray(raw.secondaryComponents, 'secondaryComponents').slice(0, 12),
     supportingEvidence: cleanStringArray(raw.supportingEvidence, 'supportingEvidence').slice(0, 16),
     possibleAlternatives: cleanStringArray(raw.possibleAlternatives, 'possibleAlternatives').slice(0, 8),
+    likelyConnectionsOrDestinations,
     uncertaintyReason: typeof raw.uncertaintyReason === 'string' ? raw.uncertaintyReason.trim().slice(0, 500) || null : null,
     drivetrainDiscrimination: {
       applicable: Boolean(drivetrain.applicable),
@@ -264,6 +267,21 @@ function validateAutomotiveComponent(raw) {
       competingCandidate: typeof drivetrain.competingCandidate === 'string' ? drivetrain.competingCandidate.trim().slice(0, 120) || null : null
     }
   };
+  // A wire or connector can suggest where a component normally connects, but it is not
+  // the component housing. Keep that inference separate and prevent a confident starter
+  // identification when the returned evidence only describes its wiring.
+  if (/\bstarter(?:\s+(?:motor|assembly|solenoid))?\b/i.test(result.primaryComponent)) {
+    const definingStarterFeature = /\b(?:starter\s+(?:housing|body|motor|case)|motor\s+housing|solenoid\s+(?:housing|body)|pinion|starter\s+mount(?:ing)?|bellhousing\s+mount(?:ing)?)\b/i;
+    const evidenceText = result.supportingEvidence.join(' ');
+    if (!definingStarterFeature.test(evidenceText)) {
+      result.status = 'UNCERTAIN';
+      result.primaryComponent = 'Starter assembly cannot be confirmed from this image';
+      result.componentConfidence = result.normalizedComponentConfidence = result.normalizedComponentConfidence === null ? null : Math.min(45, result.normalizedComponentConfidence);
+      result.possibleAlternatives = [...new Set([...result.possibleAlternatives, 'Disconnected starter power or exciter wiring; starter assembly may be removed, outside the frame, or obscured'])].slice(0, 8);
+      result.likelyConnectionsOrDestinations = [...new Set([...result.likelyConnectionsOrDestinations, 'Visible heavy-gauge cable and smaller connector may normally connect to a starter/starter solenoid, but the destination is not confirmed'])].slice(0, 8);
+      result.uncertaintyReason = 'The image evidence identifies wiring only; no starter housing or defining mounting/solenoid features are visibly supported.';
+    }
+  }
   if (result.status === 'IDENTIFIED' && !result.supportingEvidence.length) throw new Error('Component identification has no visible supporting evidence.');
   if (result.status === 'UNCERTAIN' && !result.uncertaintyReason) throw new Error('Component uncertainty reason is missing.');
   return result;
@@ -626,6 +644,8 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
     const componentStartedAt = Date.now();
     const componentPrompt = `Identify the primary automotive component visible in this current image using only visible pixels. Do not use filenames, metadata, OCR text alone, prior images, prior cases, cached results, or the category confidence. Return the most specific component supported by visible evidence, its automotive system, secondary visible components, and pixel-supported evidence. Component confidence must be independent from category confidence. If the exact component is not visually defensible, use status UNCERTAIN, list visually supported alternatives, explain what view or evidence is missing, and never force or invent a component.
 
+Keep “visible component identification” separate from “likely connection or destination.” A cable, wire, terminal, or electrical connector is visible wiring, not the housing it may normally connect to. Never call a starter, starter solenoid, or other component visible unless its physical housing or defining features are actually visible. If a starter is installed and its housing, solenoid body, mounting, or other defining features are clearly visible, identify it from those features. In particular, a heavy-gauge positive battery cable near the transmission/bellhousing may be a disconnected starter power cable, and a smaller connector may be a starter-solenoid exciter wire; neither is itself a starter or solenoid. When only those wires are visible, identify the wires, state their likely purpose only as an unconfirmed interpretation, and say the component may be removed, outside the frame, or obscured. Reduce confidence whenever defining visual evidence is missing.
+
 Before finalizing Transfer Case, Differential, Transmission, or Transaxle, complete drivetrainDiscrimination from visible geometry, mounting position, connected shafts, surrounding components, and drivetrain layout—not housing shape alone. Explicitly determine: connection to engine; connection directly behind transmission; driveshaft inputs and outputs; whether multiple longitudinal outputs exist; whether lateral axle/CV outputs or axle tubes lead toward wheels; centerline versus axle position; and whether the visible role is primary gearbox, front/rear torque distribution, final drive, or an integrated gearbox/final drive.
 
 TRANSFER CASE evidence includes a separate gearbox directly attached to or behind the transmission near the vehicle centerline, rear and possibly front driveline outputs, irregular gearbox housing, and absence of lateral axle tubes. Exhaust, heat shields, crossmembers, perimeter bolts, or a nearby driveshaft alone are not sufficient. DIFFERENTIAL evidence includes an axle/final-drive position, lateral axle shafts/CV outputs or axle tubes toward both wheels, and a driveshaft terminating at a pinion/input; perimeter bolts, under-vehicle location, or a nearby driveshaft alone are insufficient. TRANSMISSION evidence includes a large gearbox connected to the engine, bellhousing/main case, pan, cooler lines, connectors, shift mechanism, or transmission crossmember; a transfer case can be secondary behind it. TRANSAXLE evidence includes an integrated transmission/final-drive assembly with lateral CV axles in a transverse/FWD-style layout.
@@ -665,6 +685,8 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
   if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
     const conditionStartedAt = Date.now();
     const conditionPrompt = `Perform a separate, detailed visual defect inspection of this same current automotive image after component identification. Do not let successful component identification influence the condition result. Compare every visibly accessible interface against its expected normal assembled condition before deciding there is no concern.
+
+Keep directly observed facts, likely interpretation, and technician verification separate. Visible wiring is not proof that its normal destination is visible, installed, damaged, or disconnected in error. A heavy-gauge positive cable near the transmission/bellhousing may be a starter power cable, and a smaller connector may be a starter-solenoid exciter wire, but do not call either a starter or solenoid. If expected wiring is visible but its normal component is not, report the wiring actually visible; describe the destination only as likely; state that the connected component cannot be confirmed and may be removed, outside the frame, or obscured; and recommend technician verification. Do not automatically classify disconnected wiring as a defect when active repair or disassembly is plausible. Continue detecting visibly loose connectors, broken parts, missing fasteners, separated intake/turbo pipes, damaged wiring, leaks, and improper installation, but only when each is supported by visible evidence. Never invent hidden parts, connections, damage, or installation conditions. Reduce confidence whenever defining evidence is missing.
 
 First inspect every visible pipe or hose connection, coupler, joint, clamp, electrical connector, fastener, bracket, mount, sealing surface, alignment, seating edge, and gap/separation point independently—before analyzing residue, dirt, oil, coolant, corrosion, or staining. For each visible connection, return one non-duplicated connectionAssessment with its exact visible location, one seatingStatus, findingType, severity, independent findingConfidence, exact pixel-supported visibleEvidence, concise physical verification, and cautious safety/drivability impact. Treat upper and lower turbo/charge-air connections as separate interfaces: a properly seated lower clamp must never cancel, reduce, or replace an abnormal upper connection. Use SEPARATION_OR_GAP_VISIBLE with CLEAR_DEFECT when a pipe end, coupler, or mating surface is visibly separated; classify it HIGH when likely to affect operation/drivability, MODERATE when the visible defect needs confirmation but impact is uncertain, or CRITICAL only for immediate safety or likely severe damage. Use POSSIBLE_IMPROPER_SEATING with POSSIBLE_CONCERN for limited evidence and state: “Possible disconnected, partially separated, or improperly seated connection.” Use RESIDUE_OR_STAINING only for residue/discoloration without claiming a disconnected pipe; severity is normally LOW or MODERATE. If residue and an abnormal connection are both visible, list the connection finding first and residue only as supporting evidence. Use NOT_RELIABLY_VISIBLE with SEATING_NOT_RELIABLY_VISIBLE and UNDETERMINED severity when seating is obscured. Use NO_GAP_OR_SEPARATION_VISIBLE with NO_DEFECT_VISIBLE only when the image clearly shows the interface fully assembled. A visible gap, uneven insertion depth, exposed sealing surface/connector neck, offset lip, pipe end outside a coupler, displaced clamp, missing retainer, abnormal angle, or misaligned mating edge must never be treated as normal or downgraded to residue merely because the primary component is recognizable.
 
