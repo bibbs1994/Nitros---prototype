@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.81 validates every OpenAI strict-output schema recursively before use, while preserving connection-context verification for visual inspection.
+Version 10.13.82 adds post-response visual consistency repair, evidence-confidence capping, and separate component-result fields while retaining strict-output schema validation.
 
 ## Local test server
 

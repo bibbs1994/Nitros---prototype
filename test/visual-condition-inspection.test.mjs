@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { analyzeSemanticImage, NO_VISIBLE_DEFECT_MESSAGE, STRICT_OUTPUT_SCHEMAS, assertStrictOutputSchema } from '../semantic-analyzer-core.mjs';
+import { analyzeSemanticImage, NO_VISIBLE_DEFECT_MESSAGE, STRICT_OUTPUT_SCHEMAS, assertStrictOutputSchema, normalizeVisualConditionConsistency } from '../semantic-analyzer-core.mjs';
 
 const bytes = Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a,0]);
 const response = payload => ({ok:true,status:200,async json(){return {output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(payload)}]}]}}});
@@ -14,6 +14,23 @@ test('every OpenAI strict-output schema requires every declared object property'
   for(const schema of Object.values(STRICT_OUTPUT_SCHEMAS)) assert.doesNotThrow(()=>assertStrictOutputSchema(schema));
   assert.throws(()=>assertStrictOutputSchema({type:'object',additionalProperties:false,required:['present'],properties:{present:{type:'string'},missing:{type:'string'}}}),/missing: missing/);
   assert.ok(STRICT_OUTPUT_SCHEMAS.automotiveComponentSchema.required.includes('likelyConnectionsOrDestinations'));
+});
+
+test('visual consistency repair corrects unassessable concerns and confidence contradictions without weakening confirmed findings',()=>{
+  const noAssessable=normalizeVisualConditionConsistency({status:'POSSIBLE_CONCERN_DETECTED',conditionConfidence:88,possibleConcerns:[],connectionAssessments:[],visibleEvidence:[]});
+  assert.equal(noAssessable.normalized.status,'UNABLE_TO_INSPECT');
+  assert.match(noAssessable.corrections[0],/no specific visible condition or assessable connection/i);
+  const capped=normalizeVisualConditionConsistency({status:'POSSIBLE_CONCERN_DETECTED',conditionConfidence:91,visibleEvidence:['Uneven connector seating is visible.'],possibleConcerns:[{location:'Connector',appearance:'Uneven seating is visible.',physicalConfirmationRequired:true,recommendedVerification:'Inspect connector seating.'}],connectionAssessments:[{findingType:'POSSIBLE_CONCERN',findingConfidence:46,seatingStatus:'POSSIBLE_IMPROPER_SEATING'}]});
+  assert.equal(capped.normalized.conditionConfidence,46);
+  assert.match(capped.corrections[0],/capped from 91% to 46%/);
+  for(const findingType of ['CLEAR_DEFECT','NO_DEFECT_VISIBLE']){
+    const confirmed=normalizeVisualConditionConsistency({status:findingType==='CLEAR_DEFECT'?'OBSERVED_CONDITION':'NO_VISIBLE_CONCERN_DETECTED',conditionConfidence:82,visibleEvidence:['Direct visible evidence.'],possibleConcerns:[],connectionAssessments:[{findingType,findingConfidence:82,seatingStatus:findingType==='CLEAR_DEFECT'?'SEPARATION_OR_GAP_VISIBLE':'NO_GAP_OR_SEPARATION_VISIBLE'}]});
+    assert.equal(confirmed.normalized.status,findingType==='CLEAR_DEFECT'?'OBSERVED_CONDITION':'NO_VISIBLE_CONCERN_DETECTED');
+    assert.equal(confirmed.corrections.length,0);
+  }
+  const analyzer=readFileSync(new URL('../image-analysis-ad.js',import.meta.url),'utf8');
+  assert.match(analyzer,/Likely connection or destination \(not confirmed\)<\/strong>\$\{list\(component\.likelyConnectionsOrDestinations\)\}<\/div><div class="condition-field"><strong>Secondary visible components/);
+  assert.match(analyzer,/'<p class="condition-empty">None<\/p>'/);
 });
 
 async function inspect(condition){
@@ -82,7 +99,7 @@ test('visual condition inspection supports visible residue, no-defect, and obstr
 test('visual condition inspection rejects unsupported possible findings and renders after identification',async()=>{
   const unsupported=await inspect({status:'POSSIBLE_CONCERN_DETECTED',conditionConfidence:71,observedCondition:[],possibleConcerns:[{location:'Unknown area',appearance:'A hose is disconnected.',physicalConfirmationRequired:false,recommendedVerification:''}],connectionAssessments:[],noVisibleConcernMessage:'',unableToInspectReason:null,visibleEvidence:[],recommendedVerification:[],safetyDrivabilityImpact:null});
   assert.equal(unsupported.semanticResult.visualConditionInspection.status,'UNABLE_TO_INSPECT');
-  assert.match(unsupported.semanticResult.visualConditionInspection.unableToInspectReason,/lacks required physical verification|invalid/i);
+  assert.match(unsupported.semanticResult.visualConditionInspection.unableToInspectReason,/lacks required physical verification|invalid|no connection or defect can be reliably assessed/i);
   const unassessedNoDefect=await inspect({status:'NO_VISIBLE_CONCERN_DETECTED',conditionConfidence:90,observedCondition:[],possibleConcerns:[],connectionAssessments:[{location:'Charge-air connection',seatingStatus:'NOT_RELIABLY_VISIBLE',visibleEvidence:'The connection is partly hidden.'}],noVisibleConcernMessage:NO_VISIBLE_DEFECT_MESSAGE,unableToInspectReason:null,visibleEvidence:['A portion of the connection is visible.'],recommendedVerification:['Obtain a closer image from another angle.'],safetyDrivabilityImpact:null});
   assert.equal(unassessedNoDefect.semanticResult.visualConditionInspection.status,'UNABLE_TO_INSPECT');
   assert.match(unassessedNoDefect.semanticResult.visualConditionInspection.unableToInspectReason,/affirmatively assessed as seated/i);

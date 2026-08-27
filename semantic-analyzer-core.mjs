@@ -301,12 +301,44 @@ function validateAutomotiveComponent(raw) {
       result.uncertaintyReason = 'The image evidence identifies wiring only; no starter housing or defining mounting/solenoid features are visibly supported.';
     }
   }
+  if (/\btransmission\b/i.test(result.primaryComponent) && !/\b(?:transmission|gearbox|bellhousing|transmission pan|cooler lines?|shift mechanism)\b/i.test(result.supportingEvidence.join(' '))) {
+    result.status = 'UNCERTAIN';
+    result.primaryComponent = 'Transmission cannot be confirmed from this image';
+    result.componentConfidence = result.normalizedComponentConfidence = result.normalizedComponentConfidence === null ? null : Math.min(45, result.normalizedComponentConfidence);
+    result.uncertaintyReason = 'No defining transmission housing, bellhousing, pan, cooler-line, or shift-mechanism evidence is visibly supported.';
+  }
   if (result.status === 'IDENTIFIED' && !result.supportingEvidence.length) throw new Error('Component identification has no visible supporting evidence.');
   if (result.status === 'UNCERTAIN' && !result.uncertaintyReason) throw new Error('Component uncertainty reason is missing.');
   return result;
 }
 
 export const NO_VISIBLE_DEFECT_MESSAGE = 'No visible defect can be confirmed from this image. Inspect the component physically before making a repair decision.';
+
+export function normalizeVisualConditionConsistency(raw) {
+  const normalized = { ...raw, connectionAssessments: Array.isArray(raw?.connectionAssessments) ? raw.connectionAssessments.map(item => ({ ...item })) : [], possibleConcerns: Array.isArray(raw?.possibleConcerns) ? raw.possibleConcerns.map(item => ({ ...item })) : [] };
+  const corrections = [];
+  const assessments = normalized.connectionAssessments;
+  const hasAssessableConnection = assessments.some(item => !['NOT_RELIABLY_VISIBLE','COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE'].includes(item?.seatingStatus));
+  const hasSpecificVisibleConcern = normalized.possibleConcerns.some(item => item?.location && item?.appearance && item?.recommendedVerification && item?.physicalConfirmationRequired === true && Array.isArray(normalized.visibleEvidence) && normalized.visibleEvidence.length > 0);
+  if (normalized.status === 'POSSIBLE_CONCERN_DETECTED' && !hasAssessableConnection && !hasSpecificVisibleConcern) {
+    normalized.status = 'UNABLE_TO_INSPECT';
+    normalized.unableToInspectReason = 'No connection or defect can be reliably assessed from the visible image evidence.';
+    normalized.possibleConcerns = [];
+    corrections.push('POSSIBLE_CONCERN_DETECTED changed to UNABLE_TO_INSPECT because no specific visible condition or assessable connection was returned.');
+  }
+  if (normalized.status === 'POSSIBLE_CONCERN_DETECTED') {
+    const evidenceConfidence = assessments.filter(item => ['POSSIBLE_CONCERN','CLEAR_DEFECT','RESIDUE_OR_STAINING'].includes(item?.findingType)).map(item => normalizeSemanticConfidence(item.findingConfidence)).filter(Number.isFinite);
+    const reportedConfidence = normalizeSemanticConfidence(normalized.conditionConfidence);
+    if (reportedConfidence !== null && evidenceConfidence.length) {
+      const maximumEvidenceConfidence = Math.max(...evidenceConfidence);
+      if (reportedConfidence > maximumEvidenceConfidence) {
+        normalized.conditionConfidence = maximumEvidenceConfidence;
+        corrections.push(`Condition confidence capped from ${reportedConfidence}% to ${maximumEvidenceConfidence}% because it exceeded supporting visible-finding confidence.`);
+      }
+    }
+  }
+  return { normalized, corrections };
+}
 
 function validateVisualConditionInspection(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !['OBSERVED_CONDITION','POSSIBLE_CONCERN_DETECTED','UNVERIFIED_CONDITION','NO_VISIBLE_CONCERN_DETECTED','UNABLE_TO_INSPECT'].includes(raw.status)) throw new Error('Visual condition inspection returned no valid structured result.');
@@ -344,7 +376,7 @@ function validateVisualConditionInspection(raw) {
   if (status === 'UNABLE_TO_INSPECT' && !unableToInspectReason) throw new Error('Unable-to-inspect status requires a reason.');
   if (status === 'NO_VISIBLE_CONCERN_DETECTED' && (!uniqueConnectionAssessments.length || uniqueConnectionAssessments.some(assessment => assessment.seatingStatus !== 'NO_GAP_OR_SEPARATION_VISIBLE' || assessment.findingType !== 'NO_DEFECT_VISIBLE'))) throw new Error('No-visible-concern status requires every visible connection to be affirmatively assessed as seated.');
   if (uniqueConnectionAssessments.some(assessment => assessment.seatingStatus === 'SEPARATION_OR_GAP_VISIBLE') && status !== 'OBSERVED_CONDITION') throw new Error('Visible connection separation cannot be downgraded below an observed condition.');
-  return { status, conditionConfidence: normalizeSemanticConfidence(raw.conditionConfidence), rawConditionConfidence: raw.conditionConfidence ?? null, normalizedConditionConfidence: normalizeSemanticConfidence(raw.conditionConfidence), observedCondition, possibleConcerns, connectionAssessments: uniqueConnectionAssessments, noVisibleConcernMessage: status === 'NO_VISIBLE_CONCERN_DETECTED' ? NO_VISIBLE_DEFECT_MESSAGE : '', unableToInspectReason, visibleEvidence, recommendedVerification, safetyDrivabilityImpact: typeof raw.safetyDrivabilityImpact === 'string' ? raw.safetyDrivabilityImpact.trim().slice(0, 500) || null : null };
+  return { status, conditionConfidence: normalizeSemanticConfidence(raw.conditionConfidence), rawConditionConfidence: raw.rawConditionConfidence ?? raw.conditionConfidence ?? null, normalizedConditionConfidence: normalizeSemanticConfidence(raw.conditionConfidence), observedCondition, possibleConcerns, connectionAssessments: uniqueConnectionAssessments, noVisibleConcernMessage: status === 'NO_VISIBLE_CONCERN_DETECTED' ? NO_VISIBLE_DEFECT_MESSAGE : '', unableToInspectReason, visibleEvidence, recommendedVerification, safetyDrivabilityImpact: typeof raw.safetyDrivabilityImpact === 'string' ? raw.safetyDrivabilityImpact.trim().slice(0, 500) || null : null, consistencyCorrections: Array.isArray(raw.consistencyCorrections) ? raw.consistencyCorrections.slice(0, 8) : [] };
 }
 
 function validateWiringDiagram(raw) {
@@ -728,7 +760,7 @@ Use exact terminology only where the pictured feature supports it. For a turboch
       let conditionParsed;
       try { conditionParsed = JSON.parse(extractOutputText(conditionBody)); }
       catch (error) { throw Object.assign(error, { visualConditionMalformedResponse: true }); }
-      try { visualConditionInspection = { ...validateVisualConditionInspection(conditionParsed), semanticRequestId: transactionId, imageHash }; }
+      try { const consistency = normalizeVisualConditionConsistency(conditionParsed); visualConditionInspection = { ...validateVisualConditionInspection({ ...consistency.normalized, consistencyCorrections: consistency.corrections }), semanticRequestId: transactionId, imageHash }; if (consistency.corrections.length) markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_CONSISTENCY_REPAIRED', { visualConditionConsistencyCorrections: consistency.corrections }); }
       catch (error) { throw Object.assign(error, { visualConditionMalformedResponse: true }); }
       markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_RESULT_EXTRACTED', { visualConditionResponseParsed: true, visualConditionResultPresent: true, visualConditionStatus: visualConditionInspection.status, visualConditionConfidenceNormalized: visualConditionInspection.normalizedConditionConfidence !== null, visualConditionErrorCategory: null, visualConditionErrorMessage: null });
     } catch (error) {
@@ -741,7 +773,7 @@ Use exact terminology only where the pictured feature supports it. For a turboch
         if (!retryResponse.ok) throw Object.assign(new Error(retryBody?.error?.message || `Visual condition retry failed with HTTP ${retryResponse.status}.`), { visualConditionHttpStatus: retryResponse.status });
         if (!retryBody) throw Object.assign(new Error('Visual condition retry response was not valid JSON.'), { visualConditionMalformedResponse: true });
         let retryParsed; try { retryParsed = JSON.parse(extractOutputText(retryBody)); } catch (retryError) { throw Object.assign(retryError, { visualConditionMalformedResponse: true }); }
-        visualConditionInspection = { ...validateVisualConditionInspection(retryParsed), semanticRequestId: transactionId, imageHash };
+        const consistency = normalizeVisualConditionConsistency(retryParsed); visualConditionInspection = { ...validateVisualConditionInspection({ ...consistency.normalized, consistencyCorrections: consistency.corrections }), semanticRequestId: transactionId, imageHash }; if (consistency.corrections.length) markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_CONSISTENCY_REPAIRED', { visualConditionConsistencyCorrections: consistency.corrections });
         markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_RETRY_SUCCEEDED', { visualConditionRetrySuccess: true, visualConditionRetryFailure: false, visualConditionResultPresent: true, visualConditionStatus: visualConditionInspection.status, visualConditionConfidenceNormalized: visualConditionInspection.normalizedConditionConfidence !== null });
       } catch (retryError) {
       const safeMessage = timedOut ? 'Visual condition inspection timeout.' : sanitizeDiagnosticText(error?.message) || 'Visual condition inspection failed.';
