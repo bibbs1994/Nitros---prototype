@@ -5,8 +5,8 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.13.82 has one canonical build authority',()=>{
-  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.82',[\s\S]+release:'Visual Result Consistency',[\s\S]+buildDate:'2026-08-27'/);
+test('10.13.83 has one canonical build authority',()=>{
+  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.83',[\s\S]+release:'Finish Wizard Safe-Area Clearance',[\s\S]+buildDate:'2026-08-27'/);
   assert.match(html,/const \{version:VERSION,buildDate:BUILD,release:RELEASE\}=window\.NitrosBuild/);
   assert.match(html,/Authoritative Diagnostic State — v\$\{VERSION\}/);
   assert.match(html,/build:window\.NitrosBuild\.version/);
@@ -26,8 +26,8 @@ test('runtime verification exposes service-worker support, control, URL, and sta
   for(const id of ['nitrosRuntimeAppBuild','nitrosRuntimeSwSupported','nitrosRuntimeSwControlled','nitrosRuntimeSwUrl','nitrosRuntimeSwState'])assert.match(html,new RegExp(`id="${id}"`));
 });
 
-test('service worker uses 10.13.82 version and preserves safe navigation caching',()=>{
-  assert.match(sw,/const VERSION = '10\.13\.82'/);
+test('service worker uses 10.13.83 version and preserves safe navigation caching',()=>{
+  assert.match(sw,/const VERSION = '10\.13\.83'/);
   assert.match(sw,/self\.skipWaiting\(\)/);
   assert.match(sw,/self\.clients\.claim\(\)/);
   assert.match(sw,/fetch\(request, \{ cache: 'no-store' \}\)/);
@@ -38,9 +38,9 @@ test('service worker uses 10.13.82 version and preserves safe navigation caching
 });
 
 test('mobile Tools menu clears the measured toolbar and safe area',()=>{
-  assert.match(html,/:root\{--nitros-v1031-safe-bottom:max\(6px,env\(safe-area-inset-bottom\)\)\}/);
+  assert.match(html,/:root\{--nitros-v1031-safe-bottom:max\(6px,env\(safe-area-inset-bottom\)\);--nitros-toolbar-height:0px/);
   assert.match(html,/\.quick-toolbar\{bottom:var\(--nitros-v1031-safe-bottom\)\}/);
-  assert.match(html,/@media\(max-width:600px\)\{[\s\S]*?--nitros-toolbar-height:0px/);
+  assert.match(html,/\.screen\{padding-bottom:max\(24px,var\(--nitros-ro-bottom-clearance\)\);scroll-padding-bottom:var\(--nitros-ro-bottom-clearance\)\}/);
   assert.match(html,/bottom:calc\(var\(--nitros-toolbar-height\) \+ env\(safe-area-inset-bottom\) \+ 12px\)/);
   assert.match(html,/new ResizeObserver\(syncLayout\)\.observe\(toolbar\)/);
 });

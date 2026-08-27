@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.82 adds post-response visual consistency repair, evidence-confidence capping, and separate component-result fields while retaining strict-output schema validation.
+Version 10.13.83 adds runtime-measured Finish Wizard and mobile repair-order clearance above the fixed safe-area toolbar, including automatic target scrolling for required items.
 
 ## Local test server
 

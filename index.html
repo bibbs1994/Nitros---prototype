@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
 <meta name="nitros-support-ticket-endpoint" content="http://192.168.4.24:8787/api/support-tickets">
-<title>Nitros Mobile Technician Portal v10.13.82 — Visual Result Consistency — Build 2026-08-27</title>
+<title>Nitros Mobile Technician Portal v10.13.83 — Finish Wizard Safe-Area Clearance — Build 2026-08-27</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -531,7 +531,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.13.82 — Visual Result Consistency — Build 2026-08-27</div>
+  <div class="sub">Mobile Technician Portal v10.13.83 — Finish Wizard Safe-Area Clearance — Build 2026-08-27</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -546,7 +546,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.13.82 — Visual Result Consistency · Build 2026-08-27. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.13.83 — Finish Wizard Safe-Area Clearance · Build 2026-08-27. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -711,7 +711,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <section id="dashboard" class="screen">
   <button class="back" data-go="home">← Back</button>
   <div class="card">
-    <div class="eyebrow nitros-build-identity">Version 10.13.82 — Visual Result Consistency · Build 2026-08-27</div><h1>Technician Dashboard & Active Jobs</h1>
+    <div class="eyebrow nitros-build-identity">Version 10.13.83 — Finish Wizard Safe-Area Clearance · Build 2026-08-27</div><h1>Technician Dashboard & Active Jobs</h1>
     <p>One-screen view of today’s schedule, vehicles in the shop, priority alerts, parts status, repair progress, and the active repair.</p>
     <div class="command-hero">
       <div class="eyebrow">Oliver Daily Briefing</div>
@@ -778,7 +778,7 @@ canvas.graph-preview,canvas.ocr-preview{
     </div>
 
     <div class="workboard-shell">
-      <div class="eyebrow nitros-build-identity">Version 10.13.82 — Visual Result Consistency · Build 2026-08-27</div>
+      <div class="eyebrow nitros-build-identity">Version 10.13.83 — Finish Wizard Safe-Area Clearance · Build 2026-08-27</div>
       <h3>Live Repair Order Workboard</h3>
       <p>Move every active vehicle through diagnosis, approval, parts, repair, verification, and delivery. Every change is timestamped on this device.</p>
       <div class="workboard-toolbar">
@@ -1700,13 +1700,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.82 • Visual Result Consistency • Build 2026-08-27</div>
+<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.83 • Finish Wizard Safe-Area Clearance • Build 2026-08-27</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.13.82',
-  release:'Visual Result Consistency',
+  version:'10.13.83',
+  release:'Finish Wizard Safe-Area Clearance',
   buildDate:'2026-08-27',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -2208,6 +2208,24 @@ window.NitrosGpsEvidence=(()=>{
     document.querySelectorAll(".validation-target").forEach(el=>el.classList.remove("validation-target"));
   }
 
+  function scrollValidationTargetAboveFixedControls(target){
+    if(!target) return;
+    target.scrollIntoView({behavior:"smooth",block:"center",inline:"nearest"});
+    requestAnimationFrame(()=>{
+      const isVisible=element=>!!element&&!element.classList.contains("hidden")&&getComputedStyle(element).display!=="none";
+      const blockers=[document.getElementById("quickToolbar"),document.getElementById("validationNavigator")]
+        .filter(isVisible)
+        .map(element=>element.getBoundingClientRect())
+        .filter(rect=>rect.height>0&&rect.top<window.innerHeight);
+      if(!blockers.length) return;
+      const clearAbove=Math.min(...blockers.map(rect=>rect.top))-16;
+      const targetRect=target.getBoundingClientRect();
+      if(targetRect.bottom>clearAbove){
+        window.scrollBy({top:targetRect.bottom-clearAbove,behavior:"smooth"});
+      }
+    });
+  }
+
   function openValidationItem(item){
     if(!item) returnToValidationCenter();
     validationModeActive=true;
@@ -2220,7 +2238,8 @@ window.NitrosGpsEvidence=(()=>{
       clearValidationHighlight();
       const target=document.getElementById(item.target);
       target?.classList.add("validation-target");
-      target?.scrollIntoView({behavior:"smooth",block:"center"});
+      window.NitrosMobileTools?.syncLayout?.();
+      scrollValidationTargetAboveFixedControls(target);
       if(target && !["file","canvas"].includes(target.type||target.tagName.toLowerCase())) target.focus({preventScroll:true});
     },120));
   }
@@ -7297,13 +7316,13 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
 
 <!-- v10.8.6 diagnostic close-button safe-area and touch stabilization -->
 <style id="v1031StabilizationStyles">
-  :root{--nitros-v1031-safe-bottom:max(6px,env(safe-area-inset-bottom))}
+  :root{--nitros-v1031-safe-bottom:max(6px,env(safe-area-inset-bottom));--nitros-toolbar-height:0px;--nitros-validation-nav-height:0px;--nitros-bottom-toolbar-clearance:calc(var(--nitros-toolbar-height) + env(safe-area-inset-bottom));--nitros-ro-bottom-clearance:calc(var(--nitros-bottom-toolbar-clearance) + var(--nitros-validation-nav-height) + 28px)}
   header{scroll-margin-top:env(safe-area-inset-top)}
   .quick-toolbar{bottom:var(--nitros-v1031-safe-bottom)}
   .floating-evidence-btn{bottom:calc(78px + env(safe-area-inset-bottom))}
   .oliver-hub-launch{bottom:calc(82px + env(safe-area-inset-bottom))}
   .smart-oliver-launch{bottom:calc(86px + env(safe-area-inset-bottom))}
-  .validation-nav{bottom:var(--nitros-v1031-safe-bottom)}
+  .validation-nav{bottom:calc(var(--nitros-bottom-toolbar-clearance) + 12px)}
 </style>
 <script id="v1031CompletionAssignmentStabilization">
 (()=>{
@@ -8603,8 +8622,11 @@ document.addEventListener("DOMContentLoaded",()=>{
 .mobile-tools-toggle,.mobile-tools-scrim{display:none}
 @media(min-width:601px){.mobile-tools-menu[hidden]{display:contents!important}}
 @media(max-width:600px){
-  :root{--nitros-toolbar-height:0px}
-  .screen{padding-bottom:max(24px,calc(var(--nitros-toolbar-height) + env(safe-area-inset-bottom) + 24px))}
+  .screen{padding-bottom:max(24px,var(--nitros-ro-bottom-clearance));scroll-padding-bottom:var(--nitros-ro-bottom-clearance)}
+  .app{padding-bottom:var(--nitros-bottom-toolbar-clearance)}
+  .validation-center{scroll-margin-bottom:var(--nitros-ro-bottom-clearance)}
+  .productivity-modal,.quick-notes-overlay,.quick-vehicle-overlay,.nitros-support-ticket,.nitros-support-inbox{padding-bottom:max(12px,var(--nitros-bottom-toolbar-clearance));scroll-padding-bottom:var(--nitros-bottom-toolbar-clearance)}
+  .productivity-modal-card,.quick-notes-panel,.quick-vehicle-panel,.nitros-support-ticket-card,.nitros-support-inbox-card{margin-bottom:var(--nitros-bottom-toolbar-clearance)}
   .mobile-tools-shell{display:block}
   .mobile-tools-scrim{position:fixed;inset:0;z-index:79;background:transparent}
   .mobile-tools-scrim[hidden]{display:none}
@@ -8624,7 +8646,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 </div>
 <script id="nitros-mobile-tools-menu">
 (()=>{'use strict';
- const $=id=>document.getElementById(id),shell=$('mobileToolsShell'),toggle=$('mobileToolsToggle'),menu=$('mobileToolsMenu'),scrim=$('mobileToolsScrim'),toolbar=$('quickToolbar'),oliver=$('unifiedOliverLaunch');
+ const $=id=>document.getElementById(id),shell=$('mobileToolsShell'),toggle=$('mobileToolsToggle'),menu=$('mobileToolsMenu'),scrim=$('mobileToolsScrim'),toolbar=$('quickToolbar'),validationNavigator=$('validationNavigator'),oliver=$('unifiedOliverLaunch');
  const controls=['globalDevelopmentNoteButton','quickNotesButton','nitrosSupportInboxButton','quickVehicleButton'].map($).filter(Boolean);
  if(!shell||!toggle||!menu||!scrim||!toolbar)return;
  controls.forEach(control=>menu.append(control));
@@ -8643,8 +8665,10 @@ document.addEventListener("DOMContentLoaded",()=>{
  const close=()=>{menu.hidden=true;scrim.hidden=true;toggle.setAttribute('aria-expanded','false')};
  const open=()=>{if(!isPhone())return;menu.hidden=false;scrim.hidden=false;toggle.setAttribute('aria-expanded','true');syncLayout()};
  const syncLayout=()=>{
-   const toolbarBox=toolbar.getBoundingClientRect();
-   document.documentElement.style.setProperty('--nitros-toolbar-height',`${Math.ceil(toolbarBox.height)}px`);
+   const visible=element=>!!element&&!element.classList.contains('hidden')&&getComputedStyle(element).display!=='none';
+   const toolbarBox=toolbar.getBoundingClientRect(),navigatorBox=validationNavigator?.getBoundingClientRect();
+   document.documentElement.style.setProperty('--nitros-toolbar-height',`${visible(toolbar)?Math.ceil(toolbarBox.height):0}px`);
+   document.documentElement.style.setProperty('--nitros-validation-nav-height',`${visible(validationNavigator)&&navigatorBox?Math.ceil(navigatorBox.height):0}px`);
    positionOliver();
  };
  toggle.addEventListener('click',()=>menu.hidden?open():close());
@@ -8655,6 +8679,10 @@ document.addEventListener("DOMContentLoaded",()=>{
  window.addEventListener('orientationchange',()=>setTimeout(syncLayout,150),{passive:true});
  window.visualViewport?.addEventListener('resize',syncLayout,{passive:true});
  new ResizeObserver(syncLayout).observe(toolbar);
+ if(validationNavigator){
+   new ResizeObserver(syncLayout).observe(validationNavigator);
+   new MutationObserver(syncLayout).observe(validationNavigator,{attributes:true,attributeFilter:['class']});
+ }
  syncLayout();
  window.NitrosMobileTools=Object.freeze({open,close,syncLayout});
 })();
