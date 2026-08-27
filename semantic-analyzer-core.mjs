@@ -73,7 +73,7 @@ const targetedPidRecoverySchema = {
 const automotiveComponentSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['status', 'primaryComponent', 'componentConfidence', 'system', 'secondaryComponents', 'supportingEvidence', 'possibleAlternatives', 'uncertaintyReason', 'drivetrainDiscrimination'],
+  required: ['status', 'primaryComponent', 'componentConfidence', 'system', 'secondaryComponents', 'supportingEvidence', 'possibleAlternatives', 'likelyConnectionsOrDestinations', 'uncertaintyReason', 'drivetrainDiscrimination'],
   properties: {
     status: { type: 'string', enum: ['IDENTIFIED', 'UNCERTAIN'] },
     primaryComponent: { type: 'string', maxLength: 160 },
@@ -173,6 +173,25 @@ const documentRepairInformationSchema = {
     missingRequiredFields: { type: 'array', items: { type: 'string', enum: ['DTC applicability','component or circuit','test location','test method','criterion','requested technician result'] }, maxItems: 6 }
   }
 };
+
+export function assertStrictOutputSchema(schema, path = '$') {
+  if (!schema || typeof schema !== 'object') return;
+  if (schema.type === 'object' || schema.properties) {
+    if (schema.additionalProperties !== false) throw new Error(`${path} must set additionalProperties to false.`);
+    const propertyKeys = Object.keys(schema.properties || {}), required = schema.required;
+    if (!Array.isArray(required)) throw new Error(`${path}.required must be an array containing every property key.`);
+    const requiredKeys = new Set(required);
+    const missing = propertyKeys.filter(key => !requiredKeys.has(key));
+    const extra = required.filter(key => !propertyKeys.includes(key));
+    if (missing.length || extra.length) throw new Error(`${path}.required must exactly match properties; missing: ${missing.join(', ') || 'none'}; extra: ${extra.join(', ') || 'none'}.`);
+    Object.entries(schema.properties || {}).forEach(([key, value]) => assertStrictOutputSchema(value, `${path}.properties.${key}`));
+  }
+  if (schema.items) assertStrictOutputSchema(schema.items, `${path}.items`);
+  if (Array.isArray(schema.anyOf)) schema.anyOf.forEach((value, index) => assertStrictOutputSchema(value, `${path}.anyOf[${index}]`));
+}
+
+export const STRICT_OUTPUT_SCHEMAS = Object.freeze({ semanticSchema, automotiveGraphSchema, targetedPidRecoverySchema, automotiveComponentSchema, visualConditionInspectionSchema, wiringDiagramSchema, documentRepairInformationSchema });
+Object.entries(STRICT_OUTPUT_SCHEMAS).forEach(([name, schema]) => assertStrictOutputSchema(schema, name));
 
 export function normalizeSemanticConfidence(rawConfidence) {
   if (rawConfidence === null || rawConfidence === undefined) return null;
@@ -678,7 +697,7 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
     } catch (error) {
       const timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError' || /timed out|timeout/i.test(String(error?.message || ''));
       const safeMessage = timedOut ? 'Specific component identification timeout.' : sanitizeDiagnosticText(error?.message) || 'Specific component identification failed.';
-      componentIdentification = { status: 'FAILED', primaryComponent: 'Specific component identification failed', componentConfidence: null, rawComponentConfidence: null, normalizedComponentConfidence: null, system: null, secondaryComponents: [], supportingEvidence: [], possibleAlternatives: [], uncertaintyReason: safeMessage, semanticRequestId: transactionId, imageHash };
+      componentIdentification = { status: 'FAILED', primaryComponent: 'Technical component-analysis failure', componentConfidence: null, rawComponentConfidence: null, normalizedComponentConfidence: null, system: null, secondaryComponents: [], supportingEvidence: [], possibleAlternatives: [], uncertaintyReason: safeMessage, semanticRequestId: transactionId, imageHash };
       markDiagnostic(diagnostic, 'O_COMPONENT_RESULT_FAILED', { componentIdentificationAttempted: true, componentResponseReceived: Boolean(diagnostic.componentResponseReceived), componentResponseParsed: false, componentResultPresent: false, componentConfidenceNormalized: false, componentErrorCategory: error?.componentErrorCategory || (timedOut ? 'OPENAI_TIMEOUT' : 'COMPONENT_ANALYSIS_ERROR'), componentErrorMessage: safeMessage, componentHttpStatus: error?.componentHttpStatus ?? diagnostic.componentHttpStatus ?? null, componentElapsedMs: Math.max(0, Date.now() - componentStartedAt) });
     }
   } else {

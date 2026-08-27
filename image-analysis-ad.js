@@ -718,7 +718,7 @@
       const diagramFailed=routed.category==='AUTOMOTIVE_WIRING_DIAGRAM'&&routed.wiringDiagramAnalysis?.status==='FAILED';
       await stage(run,20,componentFailed||diagramFailed?'FAIL':'PASS');
       updateDeveloper(run,{disposition:componentFailed?'COMPONENT IDENTIFICATION FAILED':diagramFailed?'WIRING DIAGRAM ANALYSIS FAILED':'ACCEPTED',verification:'PASS'});
-      const status=$('oliverImportStatus');if(status)status.textContent=componentFailed?'Automotive category confirmed — specific component identification failed':diagramFailed?'Wiring diagram confirmed — circuit analysis failed':`Complete — ${CATEGORY_LABELS[routed.category]||routed.category}`;
+      const status=$('oliverImportStatus');if(status)status.textContent=componentFailed?'Automotive category confirmed — technical component-analysis failure; no component conclusion was produced':diagramFailed?'Wiring diagram confirmed — circuit analysis failed':`Complete — ${CATEGORY_LABELS[routed.category]||routed.category}`;
     }catch(error){
       if(error?.name==='AbortError'){lastStaleRejected=true;lastStaleMessage='STALE RESULT REJECTED — RESULT NOT DISPLAYED';updateDeveloper(activeRun,{disposition:lastStaleMessage});return}
       if(!isActive(run))return;

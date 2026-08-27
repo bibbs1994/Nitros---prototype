@@ -2,13 +2,19 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { analyzeSemanticImage, NO_VISIBLE_DEFECT_MESSAGE } from '../semantic-analyzer-core.mjs';
+import { analyzeSemanticImage, NO_VISIBLE_DEFECT_MESSAGE, STRICT_OUTPUT_SCHEMAS, assertStrictOutputSchema } from '../semantic-analyzer-core.mjs';
 
 const bytes = Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a,0]);
 const response = payload => ({ok:true,status:200,async json(){return {output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(payload)}]}]}}});
 const drivetrain = {applicable:false,candidateType:'OTHER',engineConnection:'UNKNOWN',transmissionConnection:'UNKNOWN',longitudinalShafts:'UNKNOWN',lateralAxleOutputs:'UNKNOWN',axleTubes:'UNKNOWN',location:'UNKNOWN',powerFlowRole:'UNKNOWN',distinguishingFeaturesComplete:false,evidence:[],competingCandidate:null};
 const component = {status:'IDENTIFIED',primaryComponent:'Turbocharger compressor housing',componentConfidence:91,system:'Forced induction',secondaryComponents:['charge-air connection'],supportingEvidence:['silver compressor housing and charge-air connection are visible'],possibleAlternatives:[],uncertaintyReason:null,drivetrainDiscrimination:drivetrain};
 const classifier = {category:'AUTOMOTIVE_COMPONENT_OR_VEHICLE',confidence:96,objects:['turbocharger'],evidence:['silver compressor housing is visible'],description:'Turbocharger intake-side view.',automotiveEvidence:['silver compressor housing and a charge-air connection are visible'],graphEvidence:[],documentEvidence:[]};
+
+test('every OpenAI strict-output schema requires every declared object property',()=>{
+  for(const schema of Object.values(STRICT_OUTPUT_SCHEMAS)) assert.doesNotThrow(()=>assertStrictOutputSchema(schema));
+  assert.throws(()=>assertStrictOutputSchema({type:'object',additionalProperties:false,required:['present'],properties:{present:{type:'string'},missing:{type:'string'}}}),/missing: missing/);
+  assert.ok(STRICT_OUTPUT_SCHEMAS.automotiveComponentSchema.required.includes('likelyConnectionsOrDestinations'));
+});
 
 async function inspect(condition){
   condition={...condition,connectionAssessments:(condition.connectionAssessments||[]).map(item=>({

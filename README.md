@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.80 adds connection-context verification: disconnected wiring and lines remain unverified unless their mating component or direct damage is visibly supported.
+Version 10.13.81 validates every OpenAI strict-output schema recursively before use, while preserving connection-context verification for visual inspection.
 
 ## Local test server
 
