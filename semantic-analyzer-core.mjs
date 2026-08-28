@@ -728,15 +728,18 @@ export function normalizeVehicleAnalysisContext(raw) {
     fuelType: text(raw.fuelType, 60),
     drivetrain: text(raw.drivetrain, 100),
     configuration: text(raw.configuration, 180),
-    vin: /^[A-HJ-NPR-Z0-9]{17}$/.test(text(raw.vin, 17).toUpperCase()) ? text(raw.vin, 17).toUpperCase() : ''
+    vin: /^[A-HJ-NPR-Z0-9]{17}$/.test(text(raw.vin, 17).toUpperCase()) ? text(raw.vin, 17).toUpperCase() : '',
+    activeCaseId: text(raw.activeCaseId, 128),
+    repairOrderId: text(raw.repairOrderId, 128),
+    source: text(raw.source, 80)
   };
-  return Object.values(context).some(Boolean) ? context : null;
+  return context.year && context.make && context.model ? context : null;
 }
 
 function vehicleContextPrompt(context) {
   if (!context) return 'No active repair-order vehicle context was supplied.';
   const known = [context.year, context.make, context.model, context.engine, context.fuelType, context.drivetrain, context.configuration].filter(Boolean).join(' · ');
-  return `Active repair-order vehicle context (non-visual reference only): ${known || 'limited vehicle details'}${context.vin ? ' · VIN is available for configuration reference' : ''}. This context may orient a likely identification or expected connection, but it is never proof that a part, connection, defect, installation state, or vehicle-side location is visible. Image pixels override it whenever they conflict.`;
+  return `Active repair-order vehicle context (non-visual reference only): ${known || 'limited vehicle details'}${context.vin ? ' · VIN is available for configuration reference' : ''}. Source: ${context.source || 'active case snapshot'}. This context may orient a likely identification or expected connection, but it is never proof that a part, connection, defect, installation state, or vehicle-side location is visible. Image pixels override it whenever they conflict.`;
 }
 
 export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_API_KEY, fetchImpl = fetch, diagnostic = {}, timeoutMs = OPENAI_TIMEOUT_MS } = {}) {
@@ -751,7 +754,7 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   const mimeType = typeof body?.mimeType === 'string' ? body.mimeType.toLowerCase() : '';
   const imageBase64 = typeof body?.imageBase64 === 'string' ? body.imageBase64 : '';
   const vehicleContext = normalizeVehicleAnalysisContext(body?.vehicleContext);
-  markDiagnostic(diagnostic, 'C_REQUEST_BODY_PARSED', { requestId: transactionId || 'invalid', requestBodyParsed: true, imagePayloadFound: Boolean(imageBase64), imageMimeType: mimeType || 'unknown' });
+  markDiagnostic(diagnostic, 'C_REQUEST_BODY_PARSED', { requestId: transactionId || 'invalid', requestBodyParsed: true, imagePayloadFound: Boolean(imageBase64), imageMimeType: mimeType || 'unknown', vehicleContextValidation: vehicleContext ? 'PASS' : body?.vehicleContext ? 'BLOCKED' : 'SKIPPED' });
   if (!/^[A-Za-z0-9._:-]{1,128}$/.test(transactionId) || !/^[a-f0-9]{64}$/.test(imageHash)) throw diagnosticFailure(diagnostic, 'Transaction identity is invalid.', 400, 'C_REQUEST_BODY_PARSED', 'MALFORMED_REQUEST');
   if (!IMAGE_TYPES.has(mimeType)) throw diagnosticFailure(diagnostic, 'Unsupported image type.', 415, 'D_IMAGE_PAYLOAD_FOUND', 'UNSUPPORTED_IMAGE_TYPE');
   if (!imageBase64 || imageBase64.length % 4 !== 0 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(imageBase64)) {
@@ -770,7 +773,7 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   };
   if (!signatures[mimeType]) throw diagnosticFailure(diagnostic, 'Image content does not match its declared type.', 415, 'E_IMAGE_PAYLOAD_VALID', 'INVALID_IMAGE_PAYLOAD');
   if (createHash('sha256').update(bytes).digest('hex') !== imageHash) throw diagnosticFailure(diagnostic, 'Server image hash verification failed.', 409, 'E_IMAGE_PAYLOAD_VALID', 'IMAGE_HASH_MISMATCH');
-  markDiagnostic(diagnostic, 'E_IMAGE_PAYLOAD_VALID', { imagePayloadValid: true, vehicleContextProvided: Boolean(vehicleContext), vehicleContextFields: vehicleContext ? Object.entries(vehicleContext).filter(([, value]) => Boolean(value)).map(([key]) => key) : [] });
+  markDiagnostic(diagnostic, 'E_IMAGE_PAYLOAD_VALID', { imagePayloadValid: true, vehicleContextProvided: Boolean(vehicleContext), vehicleContextFields: vehicleContext ? Object.entries(vehicleContext).filter(([, value]) => Boolean(value)).map(([key]) => key) : [], vehicleContextMismatchBlocked: Boolean(body?.vehicleContext && !vehicleContext) });
 
   if (!apiKey) throw diagnosticFailure(diagnostic, 'Semantic analyzer is not configured on the server.', 503, 'F_OPENAI_CONFIGURATION', 'CONFIGURATION', { openaiCredentialConfigured: false });
   markDiagnostic(diagnostic, 'F_OPENAI_CONFIGURATION', { openaiCredentialConfigured: true });
@@ -1015,6 +1018,7 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
   semanticResult.wiringDiagramAnalysis = wiringDiagramAnalysis;
   semanticResult.documentRepairInformation = documentRepairInformation;
   semanticResult.vehicleContextApplied = vehicleContext ? { available: true, summary: [vehicleContext.year, vehicleContext.make, vehicleContext.model, vehicleContext.engine, vehicleContext.fuelType, vehicleContext.drivetrain, vehicleContext.configuration].filter(Boolean).join(' · ') || 'Vehicle configuration reference available' } : { available: false, summary: '' };
+  semanticResult.vehicleContextBinding = vehicleContext ? { year: vehicleContext.year, make: vehicleContext.make, model: vehicleContext.model, activeCaseId: vehicleContext.activeCaseId || '', repairOrderId: vehicleContext.repairOrderId || '', source: vehicleContext.source || 'active case snapshot' } : null;
   return {
     transactionId,
     imageHash,
