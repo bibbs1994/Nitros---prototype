@@ -5,9 +5,9 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.13.99 build and service worker advance together',()=>{
-  assert.match(html,/version:'10\.13\.99'/);
-  assert.match(sw,/const VERSION = '10\.13\.99'/);
+test('10.13.100 build and service worker advance together',()=>{
+  assert.match(html,/version:'10\.13\.100'/);
+  assert.match(sw,/const VERSION = '10\.13\.100'/);
 });
 
 test('emissions certification is explicit, evidence-based, and defaults safely',()=>{

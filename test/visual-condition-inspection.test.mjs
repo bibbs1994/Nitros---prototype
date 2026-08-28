@@ -269,3 +269,20 @@ test('vehicle context integrity requires a complete active vehicle identity and 
   assert.match(analyzer,/stale vehicle-aware result was blocked/i);
   assert.match(analyzer,/Possible item relationship observed; exact connection and destination cannot be confirmed/i);
 });
+
+test('Honda disconnected-terminal regression retains the visible separation ahead of normal component descriptions',async()=>{
+  const result=await inspect({status:'OBSERVED_CONDITION',conditionConfidence:96,observedCondition:['Positive battery terminal appears physically disconnected from the battery post.'],possibleConcerns:[],connectionAssessments:[{location:'Upper-left battery area',seatingStatus:'SEPARATION_OR_GAP_VISIBLE',findingType:'CLEAR_DEFECT',severity:'HIGH',findingConfidence:96,visibleEvidence:'The positive terminal clamp is visibly displaced from the battery post with a clear air gap between the mating surfaces.',matingComponentVisible:true,directDamageVisible:false,missingContext:null,recommendedVerification:'Inspect the post and clamp for damage or corrosion, then reconnect and verify clamp retention before further no-crank diagnosis.',safetyDrivabilityImpact:'A disconnected positive battery terminal can directly prevent cranking or starting.'}],noVisibleConcernMessage:'',unableToInspectReason:null,visibleEvidence:['The positive terminal clamp is visibly displaced from the battery post.'],recommendedVerification:['Verify the battery connection before deeper diagnosis.'],safetyDrivabilityImpact:'A disconnected positive battery terminal can directly prevent cranking or starting.'});
+  const inspection=result.semanticResult.visualConditionInspection;
+  assert.equal(inspection.status,'OBSERVED_CONDITION');
+  assert.match(inspection.observedCondition[0],/positive battery terminal appears physically disconnected/i);
+  assert.equal(inspection.connectionAssessments[0].seatingStatus,'SEPARATION_OR_GAP_VISIBLE');
+  assert.equal(inspection.connectionAssessments[0].findingType,'CLEAR_DEFECT');
+  assert.doesNotMatch(JSON.stringify(inspection),/terminals appear secure/i);
+});
+
+test('10.13.100 visual sweep requires affirmative mating evidence and keeps obscured areas uncertain',()=>{
+  const analyzer=readFileSync(new URL('../semantic-analyzer-core.mjs',import.meta.url),'utf8');
+  for(const rule of ['OBVIOUS VISUAL DEFECT SWEEP','SEE → LOCATE → IDENTIFY → VERIFY PHYSICAL STATE → DETECT ABNORMALITY → APPLY VEHICLE CONTEXT → REASON → DIAGNOSE','not evidence that it is connected, secure, intact, or installed','Unable to verify from this image']) assert.match(analyzer,new RegExp(rule.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  const obscured=normalizeVisualConditionConsistency({status:'POSSIBLE_CONCERN_DETECTED',conditionConfidence:33,visibleEvidence:['A terminal is partly obscured.'],possibleConcerns:[],connectionAssessments:[{location:'Battery area',seatingStatus:'NOT_RELIABLY_VISIBLE',findingType:'SEATING_NOT_RELIABLY_VISIBLE',severity:'UNDETERMINED',findingConfidence:33,visibleEvidence:'The terminal-to-post mating area is obscured.',recommendedVerification:'Obtain a closer image showing the terminal and battery post.'}]});
+  assert.equal(obscured.normalized.status,'UNABLE_TO_INSPECT');
+});
