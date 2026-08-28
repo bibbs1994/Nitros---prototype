@@ -1099,6 +1099,12 @@ canvas.graph-preview,canvas.ocr-preview{
         <div class="field"><label for="engineCylindersEdit">Cylinders</label><input id="engineCylindersEdit" inputmode="numeric" placeholder="4"></div>
         <div class="field"><label for="fuelTypeEdit">Fuel type</label><input id="fuelTypeEdit" placeholder="Gasoline, hybrid, etc."></div>
       </div>
+      <div class="grid two" style="margin-top:12px">
+        <div class="field"><label for="emissionsCertification">Emissions Certification</label><select id="emissionsCertification"><option>Federal</option><option>California / CARB</option><option>50-State</option><option selected>Unknown / Needs Verification</option></select></div>
+        <div class="field"><label for="certificationSource">Certification Source</label><select id="certificationSource"><option>Underhood VECI / Emissions Label</option><option>VIN / Manufacturer Build Data</option><option>RPO / Build Data</option><option>OEM Vehicle Data</option><option>Technician Verified</option><option>Other</option><option selected>Not Yet Verified</option></select></div>
+      </div>
+      <div class="field hidden" id="certificationSourceOtherField"><label for="certificationSourceOtherNote">Other certification source note</label><input id="certificationSourceOtherNote" maxlength="180" placeholder="Short technician source note"></div>
+      <div class="capture-note" style="margin-top:8px">Record the verified emissions classification separately from the evidence used to establish it. VIN data alone never assigns a certification.</div>
       <button id="applyVehicleCorrections" class="btn secondary" type="button">Apply Vehicle Corrections</button>
       <div id="vehicleCorrectionStatus" class="status">Decoded values can be corrected before continuing.</div>
     </div>
@@ -1705,8 +1711,8 @@ canvas.graph-preview,canvas.ocr-preview{
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.13.96',
-  release:'Vehicle-Specific Expected-Component Topology & Missing-Assembly Ranking',
+  version:'10.13.98',
+  release:'Vehicle Emissions Certification Persistence',
   buildDate:'2026-08-28',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -1882,6 +1888,17 @@ window.NitrosGpsEvidence=(()=>{
     "DEMO3": {vin:"1C4AJWAG0HL000003",year:"2017",make:"Jeep",model:"Wrangler",engine:"3.6L",source:"Prototype demo record"},
     "DEMO4": {vin:"1FTNX21P84E000004",year:"2004",make:"Ford",model:"F-250",engine:"6.0L Diesel",source:"Prototype demo record"}
   };
+  const EMISSIONS_CERTIFICATIONS=["Federal","California / CARB","50-State","Unknown / Needs Verification"];
+  const CERTIFICATION_SOURCES=["Underhood VECI / Emissions Label","VIN / Manufacturer Build Data","RPO / Build Data","OEM Vehicle Data","Technician Verified","Other","Not Yet Verified"];
+  function allowedEmissionsCertification(value){return EMISSIONS_CERTIFICATIONS.includes(value)?value:"Unknown / Needs Verification";}
+  function allowedCertificationSource(value){return CERTIFICATION_SOURCES.includes(value)?value:"Not Yet Verified";}
+  function updateCertificationSourceNoteVisibility(){const source=document.getElementById("certificationSource")?.value;document.getElementById("certificationSourceOtherField")?.classList.toggle("hidden",source!=="Other");}
+  function syncVehicleEmissionsFromForm(){
+    if(!selectedVehicle)return;
+    selectedVehicle.emissionsCertification=allowedEmissionsCertification(document.getElementById("emissionsCertification")?.value);
+    selectedVehicle.certificationSource=allowedCertificationSource(document.getElementById("certificationSource")?.value);
+    selectedVehicle.certificationSourceOtherNote=selectedVehicle.certificationSource==="Other"?(document.getElementById("certificationSourceOtherNote")?.value.trim()||""):"";
+  }
 
   function updateEnvironment(){
     const secure = window.isSecureContext;
@@ -2056,7 +2073,9 @@ window.NitrosGpsEvidence=(()=>{
       laborRate:"130",
       authorizationStatus:"Pending",
       authorizationMethod:"Not Yet Authorized",
-      repairStatus:"Not Started"
+      repairStatus:"Not Started",
+      emissionsCertification:"Unknown / Needs Verification",
+      certificationSource:"Not Yet Verified"
     };
     Object.entries(defaults).forEach(([id,value])=>{const el=document.getElementById(id);if(el) el.value=value;});
 
@@ -2360,7 +2379,7 @@ window.NitrosGpsEvidence=(()=>{
     lastDecodeDebug={version:"10.8.6",rawInput:code,cleanedVin:"",vinLength:0,formatValid:false,checkDigitValid:false,endpoint:"",httpStatus:"Not requested",elapsedMs:0,error:"",warningCodes:[],returnedFields:[],missingFields:[],rawResponse:null};
     updateDecoderDebug();
     if(vehicles[code]){
-      selectedVehicle=vehicles[code];
+      selectedVehicle={...vehicles[code]};
       vinInput.value=selectedVehicle.vin;
       renderVehicle();
       identifyStatus.className="status ok";
@@ -2469,6 +2488,9 @@ window.NitrosGpsEvidence=(()=>{
   }
 
   function renderVehicle(){
+    selectedVehicle.emissionsCertification=allowedEmissionsCertification(selectedVehicle.emissionsCertification||document.getElementById("emissionsCertification")?.value);
+    selectedVehicle.certificationSource=allowedCertificationSource(selectedVehicle.certificationSource||document.getElementById("certificationSource")?.value);
+    if(selectedVehicle.certificationSource!=="Other") selectedVehicle.certificationSourceOtherNote="";
     document.getElementById("vehicleTitle").textContent =
       selectedVehicle.year==="Pending decode" ? "VIN captured" :
       `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}`;
@@ -2486,14 +2508,20 @@ window.NitrosGpsEvidence=(()=>{
       ["VIN engine designator",selectedVehicle.vinEngineDesignator||"Not returned"],
       ["Cylinders",selectedVehicle.engineCylinders||"Not returned"],
       ["Fuel type",selectedVehicle.fuelType||"Not returned"],
+      ["Emissions Certification",selectedVehicle.emissionsCertification],
+      ["Certification Source",selectedVehicle.certificationSource],
+      ...(selectedVehicle.certificationSource==="Other"&&selectedVehicle.certificationSourceOtherNote?[["Other source note",selectedVehicle.certificationSourceOtherNote]]:[]),
       ["Body",selectedVehicle.body||"Not returned"],
       ["Drive type",selectedVehicle.driveType||"Not returned"],
       ["Assembly plant",selectedVehicle.plant||"Not returned"],
       ["Source",selectedVehicle.source]
     ];
     document.getElementById("vehicleDetails").innerHTML=details.map(([k,v])=>`<div>${k}</div><div>${escapeHtml(v)}</div>`).join("");
-    const editMap={vehicleTrimEdit:"trim",vehicleSeriesEdit:"series",engineSizeEdit:"engineSize",engineModelEdit:"engineModel",engineFamilyEdit:"engineFamily",vinEngineDesignatorEdit:"vinEngineDesignator",engineCylindersEdit:"engineCylinders",fuelTypeEdit:"fuelType"};
+    const editMap={vehicleTrimEdit:"trim",vehicleSeriesEdit:"series",engineSizeEdit:"engineSize",engineModelEdit:"engineModel",engineFamilyEdit:"engineFamily",vinEngineDesignatorEdit:"vinEngineDesignator",engineCylindersEdit:"engineCylinders",fuelTypeEdit:"fuelType",emissionsCertification:"emissionsCertification",certificationSource:"certificationSource",certificationSourceOtherNote:"certificationSourceOtherNote"};
     Object.entries(editMap).forEach(([id,key])=>{const el=document.getElementById(id);if(el) el.value=(selectedVehicle[key]&&selectedVehicle[key]!=="Not returned")?selectedVehicle[key]:"";});
+    document.getElementById("emissionsCertification").value=selectedVehicle.emissionsCertification;
+    document.getElementById("certificationSource").value=selectedVehicle.certificationSource;
+    updateCertificationSourceNoteVisibility();
     renderVehicleHistory();
     updateDecoderDebug();
   }
@@ -4239,11 +4267,15 @@ window.NitrosGpsEvidence=(()=>{
     if(!selectedVehicle) return;
     const map={vehicleTrimEdit:"trim",vehicleSeriesEdit:"series",engineSizeEdit:"engineSize",engineModelEdit:"engineModel",engineFamilyEdit:"engineFamily",vinEngineDesignatorEdit:"vinEngineDesignator",engineCylindersEdit:"engineCylinders",fuelTypeEdit:"fuelType"};
     Object.entries(map).forEach(([id,key])=>{const value=document.getElementById(id)?.value.trim();selectedVehicle[key]=value||"Not returned";});
+    syncVehicleEmissionsFromForm();
     selectedVehicle.engine=[selectedVehicle.engineSize,selectedVehicle.engineModel,selectedVehicle.fuelType].filter(v=>v&&v!=="Not returned").join(" • ")||"Not returned";
     renderVehicle();
     const status=document.getElementById("vehicleCorrectionStatus");if(status){status.className="status ok";status.textContent="Vehicle and engine identification corrections applied.";}
     scheduleDraftSave();
   });
+  document.getElementById("certificationSource")?.addEventListener("change",()=>{updateCertificationSourceNoteVisibility();syncVehicleEmissionsFromForm();scheduleDraftSave();});
+  document.getElementById("emissionsCertification")?.addEventListener("change",()=>{syncVehicleEmissionsFromForm();scheduleDraftSave();});
+  document.getElementById("certificationSourceOtherNote")?.addEventListener("input",()=>{syncVehicleEmissionsFromForm();scheduleDraftSave();});
   document.getElementById("vinPhoto").addEventListener("change",async(e)=>{
     const file=e.target.files&&e.target.files[0];
     if(!file) return;
@@ -5827,7 +5859,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   function fieldLabel(el){return document.querySelector(`label[for="${el.id}"]`)?.textContent?.trim()||el.name||el.id||''}
   function currentSection(screen){const focused=document.activeElement;if(focused&&screen.contains(focused)){const label=fieldLabel(focused);if(label)return label}return screen.querySelector('h2,h3,.eyebrow')?.textContent?.trim()||screen.querySelector('h1')?.textContent?.trim()||''}
   function activeFields(screen){return [...screen.querySelectorAll('input,select,textarea')].map(el=>({label:fieldLabel(el),value:el.type==='checkbox'?(el.checked?'checked':''):String(el.value||'').trim()})).filter(item=>item.label&&item.value).slice(0,80)}
-  function context(){const screen=document.querySelector('.screen.active'),draft=window.NitrosRepairOrderCore?.collectDraft?.()||{},fields=draft.fields||{},vehicle=draft.selectedVehicle||{},read=(...ids)=>ids.map(id=>text(id)||String(fields[id]||'').trim()).find(Boolean)||'',year=read('vehicleYear')||String(vehicle.year||'').trim(),make=read('vehicleMake')||String(vehicle.make||'').trim(),model=read('vehicleModel')||String(vehicle.model||'').trim(),engine=read('vehicleEngine','engine')||String(vehicle.engine||'').trim(),fuelType=read('vehicleFuelType','fuelType')||String(vehicle.fuelType||vehicle.fuel||'').trim(),drivetrain=read('vehicleDrivetrain','transmission','drivetrain')||String(vehicle.drivetrain||vehicle.transmission||'').trim();const values=activeFields(screen||document.body),findings=values.map(item=>`${item.label}: ${item.value}`).join('; '),field=lastFieldContext?.screenId===screen?.id?lastFieldContext:null;return {customer:read('customerName','appointmentCustomer','jobCustomer'),ro:read('roNumber','workOrderNumber','jobRo'),year,make,model,engine,fuelType,drivetrain,vehicle:[year,make,model].filter(Boolean).join(' ')||[vehicle.year,vehicle.make,vehicle.model].filter(Boolean).join(' '),vin:read('vinInput','ocrVinEdit')||vehicle.vin||'',mileage:read('vehicleMileage','mileage'),stage:read('repairStatus','workOrderStatus'),screenId:screen?.id||'',screen:screen?.querySelector('h1')?.textContent?.trim()||screen?.id||'Active repair order',section:field?.label||currentSection(screen||document.body),fieldId:field?.id||'',fieldLabel:field?.label||'',fieldScreenId:field?.screenId||'',findings,measurements:values.filter(item=>/measure|brake|tire|battery|fluid|depth|thickness|voltage|pressure/i.test(item.label)).map(item=>`${item.label}: ${item.value}`).join('; '),notes:read('internalTechnicianNotes','technicianFindings','inspectionFindings'),dtcs:read('dtcCodes','scanResults'),photos:[...document.querySelectorAll('input[type="file"]')].filter(input=>input.files?.length).map(input=>fieldLabel(input)||'Captured evidence')};}
+  function context(){const screen=document.querySelector('.screen.active'),draft=window.NitrosRepairOrderCore?.collectDraft?.()||{},fields=draft.fields||{},vehicle=draft.selectedVehicle||{},read=(...ids)=>ids.map(id=>text(id)||String(fields[id]||'').trim()).find(Boolean)||'',year=read('vehicleYear')||String(vehicle.year||'').trim(),make=read('vehicleMake')||String(vehicle.make||'').trim(),model=read('vehicleModel')||String(vehicle.model||'').trim(),engine=read('vehicleEngine','engine')||String(vehicle.engine||'').trim(),fuelType=read('vehicleFuelType','fuelType')||String(vehicle.fuelType||vehicle.fuel||'').trim(),drivetrain=read('vehicleDrivetrain','transmission','drivetrain')||String(vehicle.drivetrain||vehicle.transmission||'').trim(),emissionsCertification=read('emissionsCertification')||String(vehicle.emissionsCertification||'Unknown / Needs Verification').trim(),certificationSource=read('certificationSource')||String(vehicle.certificationSource||'Not Yet Verified').trim();const values=activeFields(screen||document.body),findings=values.map(item=>`${item.label}: ${item.value}`).join('; '),field=lastFieldContext?.screenId===screen?.id?lastFieldContext:null;return {customer:read('customerName','appointmentCustomer','jobCustomer'),ro:read('roNumber','workOrderNumber','jobRo'),year,make,model,engine,fuelType,drivetrain,emissionsCertification,certificationSource,vehicle:[year,make,model].filter(Boolean).join(' ')||[vehicle.year,vehicle.make,vehicle.model].filter(Boolean).join(' '),vin:read('vinInput','ocrVinEdit')||vehicle.vin||'',mileage:read('vehicleMileage','mileage'),stage:read('repairStatus','workOrderStatus'),screenId:screen?.id||'',screen:screen?.querySelector('h1')?.textContent?.trim()||screen?.id||'Active repair order',section:field?.label||currentSection(screen||document.body),fieldId:field?.id||'',fieldLabel:field?.label||'',fieldScreenId:field?.screenId||'',findings,measurements:values.filter(item=>/measure|brake|tire|battery|fluid|depth|thickness|voltage|pressure/i.test(item.label)).map(item=>`${item.label}: ${item.value}`).join('; '),notes:read('internalTechnicianNotes','technicianFindings','inspectionFindings'),dtcs:read('dtcCodes','scanResults'),photos:[...document.querySelectorAll('input[type="file"]')].filter(input=>input.files?.length).map(input=>fieldLabel(input)||'Captured evidence')};}
   document.addEventListener('focusin',event=>{const screen=document.querySelector('.screen.active'),el=event.target;if(screen&&el?.id&&screen.contains(el))lastFieldContext={id:el.id,label:fieldLabel(el),screenId:screen.id};});
   window.NitrosAskOliverContext=Object.freeze({get:context});
   button?.addEventListener('click',()=>window.NitrosGuidedWalkthrough?.openContextual?.(context()));
