@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.90 adds vehicle-aware visual defect analysis: active repair-order context may orient a likely identity, while image pixels remain required proof for any component or defect finding.
+Version 10.13.91 adds vehicle-context location and component-relationship reasoning while keeping image pixels as the required proof for any component or defect finding.
 
 ## Local test server
 

@@ -126,6 +126,24 @@ const visualConditionInspectionSchema = {
   }
 };
 
+const vehicleAreaRelationshipSchema = {
+  type: 'object', additionalProperties: false,
+  required: ['status','vehicleAreaLocation','locationConfidence','locationEvidence','vehicleContextSupport','primaryVisibleAssembly','observedItems','whatPreventsConfirmation','recommendedNextPhotoVerification'],
+  properties: {
+    status: { type: 'string', enum: ['READY','INSUFFICIENT_CONTEXT'] },
+    vehicleAreaLocation: { type: 'string', maxLength: 240 },
+    locationConfidence: { anyOf: [{ type: 'number', minimum: 0, maximum: 100 }, { type: 'string', pattern: '^\\s*(?:\\d+(?:\\.\\d+)?|\\.\\d+)\\s*%?\\s*$' }, { type: 'null' }] },
+    locationEvidence: { type: 'array', items: { type: 'string', maxLength: 500 }, maxItems: 12 },
+    vehicleContextSupport: { type: 'array', items: { type: 'string', maxLength: 500 }, maxItems: 8 },
+    primaryVisibleAssembly: { type: 'string', maxLength: 240 },
+    observedItems: { type: 'array', maxItems: 8, items: { type: 'object', additionalProperties: false, required: ['observedItem','itemLocationInImage','nearestIdentifiableAssembly','likelyRelationshipOrDestination','relationshipConfidence','visibleEvidence','vehicleContextEvidence','whatCannotBeConfirmed','recommendedNextPhotoVerification'], properties: {
+      observedItem: { type: 'string', maxLength: 240 }, itemLocationInImage: { type: 'string', maxLength: 240 }, nearestIdentifiableAssembly: { type: 'string', maxLength: 240 }, likelyRelationshipOrDestination: { type: 'string', maxLength: 500 }, relationshipConfidence: { anyOf: [{ type: 'number', minimum: 0, maximum: 100 }, { type: 'string', pattern: '^\\s*(?:\\d+(?:\\.\\d+)?|\\.\\d+)\\s*%?\\s*$' }, { type: 'null' }] }, visibleEvidence: { type: 'string', maxLength: 500 }, vehicleContextEvidence: { type: 'string', maxLength: 500 }, whatCannotBeConfirmed: { type: 'string', maxLength: 500 }, recommendedNextPhotoVerification: { type: 'string', maxLength: 500 }
+    } } },
+    whatPreventsConfirmation: { type: 'string', maxLength: 500 },
+    recommendedNextPhotoVerification: { type: 'string', maxLength: 500 }
+  }
+};
+
 const wiringDiagramSchema = {
   type: 'object', additionalProperties: false,
   required: ['status','circuitComponent','confidence','structuralEvidence','detectedComponents','connectorsAndPins','circuitPaths','fuses','relays','splices','wireDetails','importantObservations','unreadableFields','safetyWarning','testPlan'],
@@ -190,7 +208,7 @@ export function assertStrictOutputSchema(schema, path = '$') {
   if (Array.isArray(schema.anyOf)) schema.anyOf.forEach((value, index) => assertStrictOutputSchema(value, `${path}.anyOf[${index}]`));
 }
 
-export const STRICT_OUTPUT_SCHEMAS = Object.freeze({ semanticSchema, automotiveGraphSchema, targetedPidRecoverySchema, automotiveComponentSchema, visualConditionInspectionSchema, wiringDiagramSchema, documentRepairInformationSchema });
+export const STRICT_OUTPUT_SCHEMAS = Object.freeze({ semanticSchema, automotiveGraphSchema, targetedPidRecoverySchema, automotiveComponentSchema, visualConditionInspectionSchema, vehicleAreaRelationshipSchema, wiringDiagramSchema, documentRepairInformationSchema });
 Object.entries(STRICT_OUTPUT_SCHEMAS).forEach(([name, schema]) => assertStrictOutputSchema(schema, name));
 
 export function normalizeSemanticConfidence(rawConfidence) {
@@ -314,6 +332,20 @@ function validateAutomotiveComponent(raw) {
   }
   if (result.status === 'IDENTIFIED' && !result.supportingEvidence.length) throw new Error('Component identification has no visible supporting evidence.');
   if (result.status === 'UNCERTAIN' && !result.uncertaintyReason) throw new Error('Component uncertainty reason is missing.');
+  return result;
+}
+
+function validateVehicleAreaRelationship(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !['READY','INSUFFICIENT_CONTEXT'].includes(raw.status)) throw new Error('Vehicle-area relationship analysis returned no valid structured result.');
+  const itemText = (value, limit) => typeof value === 'string' ? value.trim().slice(0, limit) : '';
+  const observedItems = Array.isArray(raw.observedItems) ? raw.observedItems.slice(0, 8).map((item, index) => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) throw new Error(`Vehicle-area observed item ${index + 1} is invalid.`);
+    const observedItem=itemText(item.observedItem,240),itemLocationInImage=itemText(item.itemLocationInImage,240),nearestIdentifiableAssembly=itemText(item.nearestIdentifiableAssembly,240),likelyRelationshipOrDestination=itemText(item.likelyRelationshipOrDestination,500),visibleEvidence=itemText(item.visibleEvidence,500),vehicleContextEvidence=itemText(item.vehicleContextEvidence,500),whatCannotBeConfirmed=itemText(item.whatCannotBeConfirmed,500),recommendedNextPhotoVerification=itemText(item.recommendedNextPhotoVerification,500),relationshipConfidence=normalizeSemanticConfidence(item.relationshipConfidence);
+    if (![observedItem,itemLocationInImage,nearestIdentifiableAssembly,likelyRelationshipOrDestination,visibleEvidence,whatCannotBeConfirmed,recommendedNextPhotoVerification].every(Boolean)) throw new Error(`Vehicle-area observed item ${index + 1} lacks evidence or verification guidance.`);
+    return { observedItem,itemLocationInImage,nearestIdentifiableAssembly,likelyRelationshipOrDestination,relationshipConfidence,visibleEvidence,vehicleContextEvidence,whatCannotBeConfirmed,recommendedNextPhotoVerification };
+  }) : (() => { throw new Error('Vehicle-area observed items are invalid.'); })();
+  const result={status:raw.status,vehicleAreaLocation:itemText(raw.vehicleAreaLocation,240)||'Location uncertain',locationConfidence:normalizeSemanticConfidence(raw.locationConfidence),locationEvidence:cleanStringArray(raw.locationEvidence,'vehicleArea.locationEvidence').slice(0,12),vehicleContextSupport:cleanStringArray(raw.vehicleContextSupport,'vehicleArea.vehicleContextSupport').slice(0,8),primaryVisibleAssembly:itemText(raw.primaryVisibleAssembly,240)||'Broad assembly cannot be confirmed',observedItems,whatPreventsConfirmation:itemText(raw.whatPreventsConfirmation,500),recommendedNextPhotoVerification:itemText(raw.recommendedNextPhotoVerification,500)};
+  if (result.status==='READY' && (!result.locationEvidence.length || !result.whatPreventsConfirmation || !result.recommendedNextPhotoVerification)) throw new Error('Vehicle-area relationship analysis lacks calibrated location evidence or photo guidance.');
   return result;
 }
 
@@ -693,6 +725,8 @@ export function normalizeVehicleAnalysisContext(raw) {
     make: text(raw.make, 80),
     model: text(raw.model, 100),
     engine: text(raw.engine, 100),
+    fuelType: text(raw.fuelType, 60),
+    drivetrain: text(raw.drivetrain, 100),
     configuration: text(raw.configuration, 180),
     vin: /^[A-HJ-NPR-Z0-9]{17}$/.test(text(raw.vin, 17).toUpperCase()) ? text(raw.vin, 17).toUpperCase() : ''
   };
@@ -701,7 +735,7 @@ export function normalizeVehicleAnalysisContext(raw) {
 
 function vehicleContextPrompt(context) {
   if (!context) return 'No active repair-order vehicle context was supplied.';
-  const known = [context.year, context.make, context.model, context.engine, context.configuration].filter(Boolean).join(' · ');
+  const known = [context.year, context.make, context.model, context.engine, context.fuelType, context.drivetrain, context.configuration].filter(Boolean).join(' · ');
   return `Active repair-order vehicle context (non-visual reference only): ${known || 'limited vehicle details'}${context.vin ? ' · VIN is available for configuration reference' : ''}. This context may orient a likely identification or expected connection, but it is never proof that a part, connection, defect, installation state, or vehicle-side location is visible. Image pixels override it whenever they conflict.`;
 }
 
@@ -838,6 +872,24 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
   } else {
     markDiagnostic(diagnostic, 'K_SEMANTIC_OUTPUT_EXTRACTED', { componentIdentificationAttempted: false, componentIdentificationSkipped: true });
   }
+  let vehicleAreaRelationshipAnalysis = null;
+  if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE' && vehicleContext) {
+    const relationshipStartedAt = Date.now();
+    const relationshipPrompt = `Determine the visible vehicle-area location and component relationships in this current automotive photo. ${vehicleContextPrompt(vehicleContext)} This is a distinct location-reasoning stage after classification and component identification, before defect conclusions. Use visual geometry, casting shape, mounting position, nearby hoses/wiring/connectors, and surrounding visible components first; use vehicle architecture only to narrow plausible locations and relationships. Never let vehicle context override contradictory pixels.
+
+Return a technician-friendly broad vehicleAreaLocation only when supported (for example upper engine, front of engine, rear/firewall side, transmission side, bellhousing area, engine/transmission junction, cylinder-head area, intake side, exhaust side, accessory-drive area, battery/starting/charging area, underbody, suspension/wheel area, or Location uncertain). Do not invent driver/passenger/front/rear vehicle orientation. If an exact component cannot be established, report the supported broader assembly rather than guessing. For every observed connector, hose, pipe, harness, bracket, fastener, opening, or separated item, identify the image-relative location, nearest identifiable assembly, likely relationship/destination, independent relationship confidence, exact visible evidence, any non-visual vehicle-context support, what cannot be confirmed, and one concrete better-photo instruction. A known vehicle never proves a connector's exact destination. When a mating component is outside the image, say it may service a component in that area but its exact destination cannot be confirmed. Preserve direct observations separately from inference; do not claim a defect, removed component, or installation state from context alone. Make photo guidance specific, such as a wider image 12–18 inches farther back or a second angle showing harness routing and mounting points.`;
+    markDiagnostic(diagnostic, 'P_VEHICLE_AREA_RELATIONSHIP_REQUEST_CONSTRUCTED', { vehicleAreaRelationshipAttempted: true, vehicleAreaRelationshipResponseReceived: false, vehicleAreaRelationshipResultPresent: false });
+    try {
+      const relationshipResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 900, input: [{ role: 'user', content: [{ type: 'input_text', text: `${relationshipPrompt}\nCompleted component-identification context: ${componentIdentification?.primaryComponent||'Automotive component identification was unavailable'}. Use it only as a non-authoritative visual-analysis reference.` }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }], text: { format: { type: 'json_schema', name: 'nitros_vehicle_area_relationship', strict: true, schema: vehicleAreaRelationshipSchema } } }), signal: AbortSignal.timeout(Math.min(timeoutMs, COMPONENT_TIMEOUT_MS)) });
+      const relationshipBody = await relationshipResponse.json().catch(() => null);
+      markDiagnostic(diagnostic, 'Q_VEHICLE_AREA_RELATIONSHIP_RESPONSE_RECEIVED', { vehicleAreaRelationshipResponseReceived: true, vehicleAreaRelationshipResponseOk: relationshipResponse.ok, vehicleAreaRelationshipHttpStatus: relationshipResponse.status, vehicleAreaRelationshipElapsedMs: Math.max(0, Date.now() - relationshipStartedAt) });
+      if (!relationshipResponse.ok) throw new Error(relationshipBody?.error?.message || `Vehicle-area relationship request failed with HTTP ${relationshipResponse.status}.`);
+      vehicleAreaRelationshipAnalysis = { ...validateVehicleAreaRelationship(JSON.parse(extractOutputText(relationshipBody))), semanticRequestId: transactionId, imageHash };
+      markDiagnostic(diagnostic, 'R_VEHICLE_AREA_RELATIONSHIP_RESULT_EXTRACTED', { vehicleAreaRelationshipResultPresent: true, vehicleAreaRelationshipStatus: vehicleAreaRelationshipAnalysis.status, vehicleAreaRelationshipConfidenceNormalized: vehicleAreaRelationshipAnalysis.locationConfidence !== null });
+    } catch (error) {
+      markDiagnostic(diagnostic, 'R_VEHICLE_AREA_RELATIONSHIP_FAILED', { vehicleAreaRelationshipResultPresent: false, vehicleAreaRelationshipErrorMessage: sanitizeDiagnosticText(error?.message), vehicleAreaRelationshipElapsedMs: Math.max(0, Date.now() - relationshipStartedAt) });
+    }
+  } else markDiagnostic(diagnostic, diagnostic.stage, { vehicleAreaRelationshipAttempted: false, vehicleAreaRelationshipSkipped: true, vehicleAreaRelationshipSkipReason: vehicleContext ? 'NON_AUTOMOTIVE_CATEGORY' : 'NO_ACTIVE_VEHICLE_CONTEXT' });
   let visualConditionInspection = null;
   if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
     const conditionStartedAt = Date.now();
@@ -958,10 +1010,11 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
   } else markDiagnostic(diagnostic, diagnostic.stage, { documentExtractionAttempted: false, documentExtractionSkipped: true });
   semanticResult.componentIdentification = componentIdentification;
   semanticResult.visualConditionInspection = visualConditionInspection;
+  semanticResult.vehicleAreaRelationshipAnalysis = vehicleAreaRelationshipAnalysis;
   semanticResult.automotiveGraphAnalysis = automotiveGraphAnalysis;
   semanticResult.wiringDiagramAnalysis = wiringDiagramAnalysis;
   semanticResult.documentRepairInformation = documentRepairInformation;
-  semanticResult.vehicleContextApplied = vehicleContext ? { available: true, summary: [vehicleContext.year, vehicleContext.make, vehicleContext.model, vehicleContext.engine, vehicleContext.configuration].filter(Boolean).join(' · ') || 'Vehicle configuration reference available' } : { available: false, summary: '' };
+  semanticResult.vehicleContextApplied = vehicleContext ? { available: true, summary: [vehicleContext.year, vehicleContext.make, vehicleContext.model, vehicleContext.engine, vehicleContext.fuelType, vehicleContext.drivetrain, vehicleContext.configuration].filter(Boolean).join(' · ') || 'Vehicle configuration reference available' } : { available: false, summary: '' };
   return {
     transactionId,
     imageHash,
