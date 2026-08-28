@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.88 restores one-tap, persisted amber-to-green completion for open support tickets in the local support dashboard.
+Version 10.13.89 protects evidence-first visual findings: retain directly visible defects, omit unsupported secondary defects, and keep uncertain component identity separate from finding confidence.
 
 ## Local test server
 

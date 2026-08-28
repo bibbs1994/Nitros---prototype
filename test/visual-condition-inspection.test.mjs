@@ -62,6 +62,20 @@ test('one directly visible disconnected connector is retained while ordinary vis
   assert.match(normalized.corrections.join(' '),/secondary visual finding.*omitted/i);
 });
 
+test('a primary disconnected connector survives while route-only secondary candidates are all omitted',()=>{
+  const result=normalizeVisualConditionConsistency({status:'OBSERVED_CONDITION',conditionConfidence:94,visibleEvidence:['A gray connector has exposed terminals and a visible separation gap.'],possibleConcerns:[],connectionAssessments:[
+    {location:'Center-right gray connector',seatingStatus:'SEPARATION_OR_GAP_VISIBLE',findingType:'CLEAR_DEFECT',severity:'HIGH',findingConfidence:94,visibleEvidence:'Exposed metal terminals and a physical separation gap are visible.',matingComponentVisible:true,directDamageVisible:true,recommendedVerification:'Inspect the terminals and mating half before reconnecting.'},
+    {location:'Lower-left hose',seatingStatus:'POSSIBLE_IMPROPER_SEATING',findingType:'POSSIBLE_CONCERN',severity:'MODERATE',findingConfidence:79,visibleEvidence:'The hose is visible along its normal route.',recommendedVerification:'Inspect hose routing.'},
+    {location:'Upper-center cable',seatingStatus:'POSSIBLE_IMPROPER_SEATING',findingType:'POSSIBLE_CONCERN',severity:'MODERATE',findingConfidence:78,visibleEvidence:'A cable is visible at an unfamiliar angle.',recommendedVerification:'Inspect cable routing.'},
+    {location:'Lower-right clamp',seatingStatus:'POSSIBLE_IMPROPER_SEATING',findingType:'POSSIBLE_CONCERN',severity:'MODERATE',findingConfidence:76,visibleEvidence:'The clamp is only partly visible.',recommendedVerification:'Inspect clamp seating.'}
+  ]});
+  assert.equal(result.normalized.status,'OBSERVED_CONDITION');
+  assert.equal(result.normalized.connectionAssessments.length,1);
+  assert.equal(result.normalized.connectionAssessments[0].findingType,'CLEAR_DEFECT');
+  assert.equal(result.normalized.connectionAssessments[0].findingConfidence,94);
+  assert.match(result.corrections.join(' '),/3 secondary visual findings omitted/i);
+});
+
 async function inspect(condition){
   condition={...condition,connectionAssessments:(condition.connectionAssessments||[]).map(item=>({
     ...item,
