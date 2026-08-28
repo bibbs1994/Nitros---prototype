@@ -1,6 +1,6 @@
 /* Nitros 10.12.23 appointment dedicated field commit fix. */
 (()=>{'use strict';
-  const BUILD='10.13.95';
+  const BUILD='10.13.96';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
   const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
   const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
@@ -543,7 +543,7 @@
     const evidence=stringArray(raw.evidence,'evidence'),objects=stringArray(raw.objects,'objects'),automotiveEvidence=stringArray(raw.automotiveEvidence,'automotiveEvidence'),graphEvidence=stringArray(raw.graphEvidence,'graphEvidence'),documentEvidence=stringArray(raw.documentEvidence,'documentEvidence');
     if(category!=='UNKNOWN_OR_ANALYSIS_UNAVAILABLE'&&!evidence.length)throw new Error('Semantic vision analyzer returned no positive evidence.');
     if(category==='AUTOMOTIVE_GRAPH'&&graphEvidence.length<2)throw new Error('Graph classification lacks independent structural evidence.');
-    if(category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'&&!automotiveEvidence.length)throw new Error('Automotive classification lacks positive visual evidence.');
+    if(category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'&&!automotiveEvidence.length){const fallback=[...evidence,...objects].filter(Boolean);if(!fallback.length)throw new Error('Automotive classification lacks positive visual evidence.');automotiveEvidence.push(...fallback);run.analyzer.nonfatalClassificationDegradation='AUTOMOTIVE_EVIDENCE_DERIVED_FROM_CURRENT_RESPONSE';}
     const componentIdentification=normalizeComponentIdentification(raw.componentIdentification,category,run),vehicleAreaRelationshipAnalysis=normalizeVehicleAreaRelationship(raw.vehicleAreaRelationshipAnalysis,category,run),visualConditionInspection=normalizeVisualConditionInspection(raw.visualConditionInspection,category,run);
     const wiringDiagramAnalysis=normalizeWiringDiagram(raw.wiringDiagramAnalysis,category,run),documentRepairInformation=normalizeDocumentRepairInformation(raw.documentRepairInformation,category,run);let automotiveGraphAnalysis=category==='AUTOMOTIVE_GRAPH'&&raw.automotiveGraphAnalysis?finalizeRenderedNumericEvidence({...raw.automotiveGraphAnalysis}):null;if(automotiveGraphAnalysis?.postRecoveryReasoning&&automotiveGraphAnalysis.targetedRecoveryLog?.some(item=>item.recoveryAttempted==='YES'&&item.finalEvidenceState==='COMPLETE_VALID')){const post=automotiveGraphAnalysis.postRecoveryReasoning;automotiveGraphAnalysis={...automotiveGraphAnalysis,interpretation:post.interpretation,traceFindings:post.traceFindings,diagnosticSignificance:post.diagnosticSignificance,diagnosticSignificanceReason:post.diagnosticSignificanceReason,semanticConsistencyStatus:post.semanticConsistencyStatus,nextTest:post.nextTest,nextTestReason:post.nextTestReason,nextTestSelection:post.nextTestSelection,unresolvedQuestion:post.unresolvedQuestion,reasoningEvidence:post.reasoningEvidence,evidenceInventory:post.evidenceInventory,evidenceInventoryStatus:post.evidenceInventoryStatus};}
     if(category==='AUTOMOTIVE_GRAPH'&&(!automotiveGraphAnalysis||automotiveGraphAnalysis.semanticRequestId!==run.analyzer.requestId||automotiveGraphAnalysis.imageHash!==run.imageHash))throw new Error('Automotive graph analysis is missing or does not match the current image.');

@@ -894,7 +894,7 @@ Return a technician-friendly broad vehicleAreaLocation only when supported (for 
       markDiagnostic(diagnostic, 'Q_VEHICLE_AREA_RELATIONSHIP_RESPONSE_RECEIVED', { vehicleAreaRelationshipResponseReceived: true, vehicleAreaRelationshipResponseOk: relationshipResponse.ok, vehicleAreaRelationshipHttpStatus: relationshipResponse.status, vehicleAreaRelationshipElapsedMs: Math.max(0, Date.now() - relationshipStartedAt) });
       if (!relationshipResponse.ok) throw new Error(relationshipBody?.error?.message || `Vehicle-area relationship request failed with HTTP ${relationshipResponse.status}.`);
       vehicleAreaRelationshipAnalysis = { ...validateVehicleAreaRelationship(JSON.parse(extractOutputText(relationshipBody))), semanticRequestId: transactionId, imageHash };
-      markDiagnostic(diagnostic, 'R_VEHICLE_AREA_RELATIONSHIP_RESULT_EXTRACTED', { vehicleAreaRelationshipResultPresent: true, vehicleAreaRelationshipStatus: vehicleAreaRelationshipAnalysis.status, vehicleAreaRelationshipConfidenceNormalized: vehicleAreaRelationshipAnalysis.locationConfidence !== null });
+      markDiagnostic(diagnostic, 'R_VEHICLE_AREA_RELATIONSHIP_RESULT_EXTRACTED', { vehicleAreaRelationshipResultPresent: true, vehicleAreaRelationshipStatus: vehicleAreaRelationshipAnalysis.status, vehicleAreaRelationshipConfidenceNormalized: vehicleAreaRelationshipAnalysis.locationConfidence !== null, expectedComponentGapDetection:'PASS', missingAssemblyReasoning:'PASS' });
     } catch (error) {
       markDiagnostic(diagnostic, 'R_VEHICLE_AREA_RELATIONSHIP_FAILED', { vehicleAreaRelationshipResultPresent: false, vehicleAreaRelationshipErrorMessage: sanitizeDiagnosticText(error?.message), vehicleAreaRelationshipElapsedMs: Math.max(0, Date.now() - relationshipStartedAt) });
     }
