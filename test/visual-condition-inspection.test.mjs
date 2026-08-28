@@ -252,7 +252,7 @@ test('active RO vehicle context orients a likely starter connection without over
     assert.equal(result.semanticResult.vehicleContextApplied.available,true);
     assert.match(result.semanticResult.vehicleContextApplied.summary,/Honda · CR-V/i);
     assert.doesNotMatch(JSON.stringify(result.semanticResult),/EcoSport|Ford/i);
-    assert.deepEqual(result.semanticResult.vehicleContextBinding,{year:'2009',make:'Honda',model:'CR-V',activeCaseId:'CASE-HONDA-2009',repairOrderId:'RO-2009-CRV',source:'ACTIVE_REPAIR_ORDER'});
+    assert.deepEqual(result.semanticResult.vehicleContextBinding,{year:'2009',make:'Honda',model:'CR-V',engine:'2.4L',vin:'',activeCaseId:'CASE-HONDA-2009',repairOrderId:'RO-2009-CRV',vehicleId:'',contextVersion:'',source:'ACTIVE_REPAIR_ORDER'});
     assert.equal(result.semanticResult.vehicleAreaRelationshipAnalysis.status,'READY');
     assert.match(result.semanticResult.vehicleAreaRelationshipAnalysis.vehicleAreaLocation,/engine\/transmission junction/i);
     assert.equal(result.semanticResult.vehicleAreaRelationshipAnalysis.observedItems[0].relationshipConfidence,58);
@@ -262,7 +262,7 @@ test('active RO vehicle context orients a likely starter connection without over
 
 test('vehicle context integrity requires a complete active vehicle identity and retains its case binding',()=>{
   assert.equal(normalizeVehicleAnalysisContext({year:'2009',make:'Honda'}),null);
-  assert.deepEqual(normalizeVehicleAnalysisContext({year:'2009',make:'Honda',model:'CR-V',activeCaseId:'CASE-1',repairOrderId:'RO-1',source:'ACTIVE_REPAIR_ORDER'}),{year:'2009',make:'Honda',model:'CR-V',engine:'',fuelType:'',drivetrain:'',configuration:'',vin:'',activeCaseId:'CASE-1',repairOrderId:'RO-1',source:'ACTIVE_REPAIR_ORDER'});
+  assert.deepEqual(normalizeVehicleAnalysisContext({year:'2009',make:'Honda',model:'CR-V',activeCaseId:'CASE-1',repairOrderId:'RO-1',source:'ACTIVE_REPAIR_ORDER'}),{year:'2009',make:'Honda',model:'CR-V',engine:'',fuelType:'',drivetrain:'',configuration:'',vin:'',activeCaseId:'CASE-1',repairOrderId:'RO-1',vehicleId:'',contextVersion:'',source:'ACTIVE_REPAIR_ORDER'});
   const analyzer=readFileSync(new URL('../image-analysis-ad.js',import.meta.url),'utf8');
   assert.match(analyzer,/Validating active vehicle context…/);
   assert.match(analyzer,/Vehicle context mismatch…/);

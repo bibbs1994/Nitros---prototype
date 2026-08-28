@@ -1,6 +1,6 @@
 /* Nitros 10.12.23 appointment dedicated field commit fix. */
 (()=>{'use strict';
-  const BUILD='10.12.23';
+  const BUILD='10.13.93';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
   const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
   const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
@@ -136,6 +136,22 @@
     renderStages(run);
   }
 
+  function finalizeAcceptedAnalysisStages(run,result){
+    const server=run.analyzer.serverDiagnostic||{},set=(index,status)=>{if(run.stages[index])run.stages[index].status=status};
+    const automotive=result.category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE',relationship=result.vehicleAreaRelationshipAnalysis;
+    if(automotive&&run.analyzer.vehicleContextSnapshot){
+      const complete=relationship&&relationship.semanticRequestId===run.analyzer.requestId&&relationship.imageHash===run.imageHash&&relationship.status!=='FAILED';
+      set(21,complete?'PASS':'FAIL');set(22,complete?'PASS':'FAIL');set(23,complete?'PASS':'FAIL');
+      const contextPass=sameVehicleContext(run.analyzer.vehicleContextSnapshot,result.vehicleContextBinding)&&sameVehicleContext(run.analyzer.vehicleContextSnapshot,activeVehicleAnalysisContext());
+      set(24,contextPass?'PASS':'FAIL');set(25,contextPass?'SKIPPED':'FAIL');
+      Object.assign(run.analyzer,{vehicleContextValidation:contextPass?'PASS':'BLOCKED',vehicleContextMismatchBlocked:!contextPass});
+    }else{
+      set(21,server.vehicleAreaRelationshipAttempted?'FAIL':'SKIPPED');set(22,server.vehicleAreaRelationshipAttempted?'FAIL':'SKIPPED');set(23,server.vehicleAreaRelationshipAttempted?'FAIL':'SKIPPED');
+      set(24,run.analyzer.vehicleContextSnapshot?'FAIL':'SKIPPED');set(25,run.analyzer.vehicleContextSnapshot?'FAIL':'SKIPPED');
+    }
+    renderStages(run);
+  }
+
   function abortError(){const error=new DOMException('Analysis run superseded','AbortError');return error}
   function isActive(run){return activeRun===run&&!run.controller.signal.aborted}
 
@@ -188,10 +204,11 @@
   function semanticEndpoint(){return document.querySelector('meta[name="nitros-semantic-endpoint"]')?.content?.trim()||'/api/semantic-image-analysis'}
   function activeVehicleAnalysisContext(){
     const context=window.NitrosAskOliverContext?.get?.()||{},clean=(value,max)=>String(value||'').trim().replace(/\s+/g,' ').slice(0,max),year=clean(context.year,4),vin=clean(context.vin,17).toUpperCase();
-    const activeCaseId=clean(localStorage.getItem('activeRepairOrderId')||context.activeCaseId||context.caseId,128),repairOrderId=clean(context.ro||context.repairOrderId,128),vehicle={year:/^\d{4}$/.test(year)?year:'',make:clean(context.make,80),model:clean(context.model,100),engine:clean(context.engine,100),fuelType:clean(context.fuelType||context.fuel,60),drivetrain:clean(context.drivetrain||context.transmission,100),configuration:clean(context.configuration||context.vehicleConfiguration,180),vin:/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)?vin:'',activeCaseId,repairOrderId,source:activeCaseId?'ACTIVE_REPAIR_ORDER':'ACTIVE_PORTAL_CASE'};
+    const activeCaseId=clean(localStorage.getItem('activeRepairOrderId')||context.activeCaseId||context.caseId,128),repairOrderId=clean(context.ro||context.repairOrderId,128),vehicle={year:/^\d{4}$/.test(year)?year:'',make:clean(context.make,80),model:clean(context.model,100),engine:clean(context.engine,100),fuelType:clean(context.fuelType||context.fuel,60),drivetrain:clean(context.drivetrain||context.transmission,100),configuration:clean(context.configuration||context.vehicleConfiguration,180),vin:/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)?vin:'',activeCaseId,repairOrderId,vehicleId:clean(context.vehicleId||context.id||context.vin||`${year}:${context.make||''}:${context.model||''}`,160),contextVersion:clean(context.contextVersion||context.updatedAt||`${activeCaseId}:${repairOrderId}:${year}:${context.make||''}:${context.model||''}:${context.vin||''}`,240),source:activeCaseId?'ACTIVE_REPAIR_ORDER':'ACTIVE_PORTAL_CASE'};
     return vehicle.year&&vehicle.make&&vehicle.model?vehicle:null;
   }
-  function sameVehicleContext(left,right){return ['year','make','model','activeCaseId','repairOrderId'].every(field=>String(left?.[field]||'').trim().toLowerCase()===String(right?.[field]||'').trim().toLowerCase())}
+  function createAnalysisVehicleSnapshot(){const context=activeVehicleAnalysisContext();return context?Object.freeze({...context}):null}
+  function sameVehicleContext(left,right){return ['year','make','model','engine','vin','activeCaseId','repairOrderId','vehicleId','contextVersion'].every(field=>String(left?.[field]||'').trim().toLowerCase()===String(right?.[field]||'').trim().toLowerCase())}
 
   function elapsed(start){return Math.max(0,Math.round(performance.now()-start))}
   function sanitizeDiagnosticText(value,limit=2000){
@@ -362,7 +379,7 @@
 
   window.NitrosVisionAnalyzer={
     endpoint:semanticEndpoint(),
-    async analyzeCurrentImage({bytes,mimeType,runId,imageHash,signal,diagnostic,onDiagnostic,analysisAttempt=1}){
+    async analyzeCurrentImage({bytes,mimeType,runId,imageHash,vehicleContextSnapshot,signal,diagnostic,onDiagnostic,analysisAttempt=1}){
       const attemptStarted=performance.now(),mark=changes=>{Object.assign(diagnostic,changes);onDiagnostic?.()};
       const endpoint=semanticEndpoint();mark({stage:'ENDPOINT_CONFIGURATION',endpoint:safeEndpoint(endpoint),endpointConfigured:Boolean(endpoint)});
       if(!endpoint){mark({outcome:'FAILED',errorCategory:'CONFIGURATION_ERROR',errorName:'ConfigurationError',errorMessage:'Semantic endpoint is not configured.',missingEndpoint:true,likelyLayer:'Endpoint configuration',totalMs:elapsed(attemptStarted),completedAt:new Date().toISOString()});throw diagnosticError('Semantic endpoint is not configured.','CONFIGURATION_ERROR')}
@@ -374,7 +391,7 @@
       try{
         if(!(bytes instanceof ArrayBuffer)||!bytes.byteLength)throw diagnosticError('Image request body is empty or unsupported.','PAYLOAD_ERROR',{unsupportedRequestBody:true});
         imageBase64=bytesToBase64(bytes);
-        const vehicleContext=activeVehicleAnalysisContext();
+        const vehicleContext=vehicleContextSnapshot||null;
         mark({vehicleContextSnapshot:vehicleContext,vehicleContextValidation:vehicleContext?'PASS':'SKIPPED',vehicleContextMismatchBlocked:false});
         requestBody=JSON.stringify({transactionId:runId,imageHash,mimeType,imageBase64,...(vehicleContext?{vehicleContext}:{})});
         const requestBodyBytes=new TextEncoder().encode(requestBody).byteLength;
@@ -529,7 +546,7 @@
     if(category==='AUTOMOTIVE_GRAPH'&&(!automotiveGraphAnalysis||automotiveGraphAnalysis.semanticRequestId!==run.analyzer.requestId||automotiveGraphAnalysis.imageHash!==run.imageHash))throw new Error('Automotive graph analysis is missing or does not match the current image.');
     if(automotiveGraphAnalysis)automotiveGraphAnalysis={...automotiveGraphAnalysis,freshResultVerification:'PASS',freshResultProvenance:Object.freeze({status:'PASS',runId:run.runId,semanticRequestId:run.analyzer.requestId,imageHash:run.imageHash,transactionMatch:'PASS',imageHashMatch:'PASS',activeRunMatch:'PASS'})};
     const vehicleContextApplied=raw.vehicleContextApplied&&typeof raw.vehicleContextApplied==='object'?{available:raw.vehicleContextApplied.available===true,summary:String(raw.vehicleContextApplied.summary||'').trim()}:null,vehicleContextBinding=raw.vehicleContextBinding&&typeof raw.vehicleContextBinding==='object'?raw.vehicleContextBinding:null,requestedVehicleContext=run.analyzer.vehicleContextSnapshot||null;
-    if(requestedVehicleContext&&(!vehicleContextBinding||!sameVehicleContext(requestedVehicleContext,vehicleContextBinding)||!sameVehicleContext(requestedVehicleContext,activeVehicleAnalysisContext())))throw new Error('Vehicle context mismatch — stale vehicle-aware result was blocked. Re-run analysis for the active repair order.');
+    if(requestedVehicleContext&&(!vehicleContextBinding||!sameVehicleContext(requestedVehicleContext,vehicleContextBinding)||!sameVehicleContext(requestedVehicleContext,activeVehicleAnalysisContext()))){run.analyzer.vehicleContextValidation='BLOCKED';run.analyzer.vehicleContextMismatchBlocked=true;throw new Error('Vehicle context mismatch — stale vehicle-aware result was blocked. Re-run analysis for the active repair order.');}
     return {runId:run.runId,semanticRequestId:raw.transactionId,imageHash:raw.imageHash,category,confidence,rawConfidence:raw.rawConfidence??null,normalizedConfidence:confidence,componentIdentification,vehicleAreaRelationshipAnalysis,visualConditionInspection,automotiveGraphAnalysis,wiringDiagramAnalysis,documentRepairInformation,objects,evidence,description:String(raw.description||'').trim(),automotiveEvidence,graphEvidence,documentEvidence,vehicleContextApplied,vehicleContextBinding,source:String(raw.source||'NitrosVisionAnalyzer semantic result'),transportStatus:raw.transportStatus??null,routingData:raw.routingData??null};
   }
 
@@ -548,7 +565,7 @@
     let raw,lastError;
     for(let analysisAttempt=1;analysisAttempt<=2;analysisAttempt+=1){
       try{run.analyzer.analysisAttempt=analysisAttempt;if(analysisAttempt===2){run.analyzer.retryStatus='RUNNING';run.analyzer.responseShapeNormalized=false;run.analyzer.semanticPayloadLocated=false;run.analyzer.semanticPayloadParsed=false;run.analyzer.canonicalNormalizationSuccessful=false;run.analyzer.semanticObjectCount=0;syncSemanticStages(run);updateDeveloper(run,{disposition:'SEMANTIC RETRY RUNNING'})}
-        raw=await analyzer.analyzeCurrentImage({bytes:requestBytes,blob:new Blob([requestBytes],{type:run.mime}),mimeType:run.analysisMime,runId:run.analyzer.requestId,imageHash:run.imageHash,signal:run.controller.signal,diagnostic:run.analyzer,onDiagnostic:()=>{syncSemanticStages(run);updateDeveloper(run,{disposition:'ANALYZING'})},cache:'no-store',analysisAttempt});
+        raw=await analyzer.analyzeCurrentImage({bytes:requestBytes,blob:new Blob([requestBytes],{type:run.mime}),mimeType:run.analysisMime,runId:run.analyzer.requestId,imageHash:run.imageHash,vehicleContextSnapshot:run.analyzer.vehicleContextSnapshot,signal:run.controller.signal,diagnostic:run.analyzer,onDiagnostic:()=>{syncSemanticStages(run);updateDeveloper(run,{disposition:'ANALYZING'})},cache:'no-store',analysisAttempt});
         if(analysisAttempt===2)run.analyzer.retryStatus='PASS';break;
       }catch(error){lastError=error;const retryable=Boolean(error?.retryable)&&['empty_model_response','malformed_semantic_response','unsupported_response_shape'].includes(error?.diagnosticCategory);if(analysisAttempt===1&&retryable)continue;if(analysisAttempt===2)run.analyzer.retryStatus='FAIL';throw error}
     }
@@ -591,6 +608,7 @@
     if(result?.runId!==activeRun?.runId)failed.push('Analysis Run ID');
     if(result?.semanticRequestId&&result.semanticRequestId!==activeRun?.analyzer?.requestId)failed.push('Semantic Request ID');
     if(result?.imageHash!==activeRun?.imageHash)failed.push('Image SHA-256');
+    if(run?.analyzer?.vehicleContextSnapshot&&!sameVehicleContext(run.analyzer.vehicleContextSnapshot,activeVehicleAnalysisContext()))failed.push('Vehicle Context Snapshot');
     if(!failed.length)return false;
     if(run?.analyzer)run.analyzer.staleRejected=true;
     lastStaleRejected=true;
@@ -685,6 +703,7 @@
   async function analyzeSelectedImage(file){
     abortAndDestroy('NEW_IMAGE',{clearPreview:true});
     const mime=file.type||'application/octet-stream',analyzer=createSemanticDiagnostic(mime);
+    const vehicleContextSnapshot=createAnalysisVehicleSnapshot();
     Object.assign(analyzer,{configured:Boolean(window.NitrosVisionAnalyzer?.analyzeCurrentImage),staleRejected:false,resultReceived:false,responseValidated:false,transportStatus:null,requestStarted:'',requestCompleted:''});
     const run={runId:createId('AD'),fileName:file.name||'Imported diagnostic image',fileSize:Number(file.size)||0,controller:new AbortController(),bytes:null,analysisBytes:null,imageHash:'',mime,analysisMime:'image/jpeg',started:new Date().toISOString(),completed:'',result:null,dimensions:null,analysisDimensions:null,analysisError:'',analyzer,stages:[
       {label:'Preparing image…',status:'PENDING'},
@@ -714,6 +733,7 @@
       {label:'Validating active vehicle context…',status:'PENDING'},
       {label:'Vehicle context mismatch…',status:'PENDING'}
     ]};
+    Object.assign(analyzer,{vehicleContextSnapshot,vehicleContextValidation:vehicleContextSnapshot?'PENDING':'SKIPPED',vehicleContextMismatchBlocked:false});
     activeRun=run;
     updateDeveloper(run,{disposition:'ANALYZING'});
     activePreviewUrl=URL.createObjectURL(file);
@@ -745,6 +765,7 @@
       if(rejectStale(run,routed))return;
       await stage(run,19,'PASS');
       run.result=routed;run.completed=new Date().toISOString();run.analyzer.outcome='SUCCEEDED';run.analyzer.stage='COMPLETE';run.analyzer.requestCompleted=run.analyzer.completedAt||run.completed;
+      finalizeAcceptedAnalysisStages(run,routed);
       window.__nitrosCurrentImageAnalysis={runId:run.runId,imageHash:run.imageHash,result:routed};
       window.NitrosDeveloperMode=window.NitrosDeveloperMode||{};window.NitrosDeveloperMode.imageClassification=routed;
       publishImport({kind:'image-analysis',fileName:run.fileName,fileSize:run.fileSize,importedAt:run.completed,imageHash:run.imageHash,analysis:routed});
@@ -845,7 +866,7 @@
     updateDeveloper(null,{resetReason:'APP_START'});
   }
 
-  function start(){document.title='Nitros Mobile Technician Portal v10.12.23 — Oliver Appointment Dedicated Field Commit Fix — Build 2026-08-12';buildImportUi()}
+  function start(){document.title=`Nitros Mobile Technician Portal v${BUILD} — Vehicle Context Isolation & Analysis Completion Integrity — Build 2026-08-28`;buildImportUi()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
   window.addEventListener('pageshow',()=>setTimeout(start,40));
   new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))buildImportUi()}).observe(document.documentElement,{childList:true,subtree:true});

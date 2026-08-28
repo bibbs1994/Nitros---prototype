@@ -731,6 +731,8 @@ export function normalizeVehicleAnalysisContext(raw) {
     vin: /^[A-HJ-NPR-Z0-9]{17}$/.test(text(raw.vin, 17).toUpperCase()) ? text(raw.vin, 17).toUpperCase() : '',
     activeCaseId: text(raw.activeCaseId, 128),
     repairOrderId: text(raw.repairOrderId, 128),
+    vehicleId: text(raw.vehicleId, 160),
+    contextVersion: text(raw.contextVersion, 240),
     source: text(raw.source, 80)
   };
   return context.year && context.make && context.model ? context : null;
@@ -1018,7 +1020,7 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
   semanticResult.wiringDiagramAnalysis = wiringDiagramAnalysis;
   semanticResult.documentRepairInformation = documentRepairInformation;
   semanticResult.vehicleContextApplied = vehicleContext ? { available: true, summary: [vehicleContext.year, vehicleContext.make, vehicleContext.model, vehicleContext.engine, vehicleContext.fuelType, vehicleContext.drivetrain, vehicleContext.configuration].filter(Boolean).join(' · ') || 'Vehicle configuration reference available' } : { available: false, summary: '' };
-  semanticResult.vehicleContextBinding = vehicleContext ? { year: vehicleContext.year, make: vehicleContext.make, model: vehicleContext.model, activeCaseId: vehicleContext.activeCaseId || '', repairOrderId: vehicleContext.repairOrderId || '', source: vehicleContext.source || 'active case snapshot' } : null;
+  semanticResult.vehicleContextBinding = vehicleContext ? { year: vehicleContext.year, make: vehicleContext.make, model: vehicleContext.model, engine: vehicleContext.engine || '', vin: vehicleContext.vin || '', activeCaseId: vehicleContext.activeCaseId || '', repairOrderId: vehicleContext.repairOrderId || '', vehicleId: vehicleContext.vehicleId || '', contextVersion: vehicleContext.contextVersion || '', source: vehicleContext.source || 'active case snapshot' } : null;
   return {
     transactionId,
     imageHash,
