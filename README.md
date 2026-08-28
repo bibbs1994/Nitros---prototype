@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.89 protects evidence-first visual findings: retain directly visible defects, omit unsupported secondary defects, and keep uncertain component identity separate from finding confidence.
+Version 10.13.90 adds vehicle-aware visual defect analysis: active repair-order context may orient a likely identity, while image pixels remain required proof for any component or defect finding.
 
 ## Local test server
 

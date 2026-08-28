@@ -38,16 +38,17 @@ test('10.12.28 canonical normalizer rejects malformed and incomplete semantic co
 
 test('10.12.28 keeps the proven analyzer and production endpoint', () => {
   assert.match(analyzer, /const BUILD='10\.12\.23'/);
-  assert.match(html, /10\.13\.89/);
+  assert.match(html, /10\.13\.90/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.13\.89'/);
+  assert.match(serviceWorker, /const VERSION = '10\.13\.90'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
 test('semantic request preserves the production payload and classification gates', () => {
   assert.match(analyzer, /method:'POST'/);
-  assert.match(analyzer, /JSON\.stringify\(\{transactionId:runId,imageHash,mimeType,imageBase64\}\)/);
+  assert.match(analyzer, /activeVehicleAnalysisContext\(\)/);
+  assert.match(analyzer, /JSON\.stringify\(\{transactionId:runId,imageHash,mimeType,imageBase64,\.\.\.\(vehicleContext\?\{vehicleContext\}:\{\}\)\}\)/);
   assert.match(analyzer, /'Content-Type':'application\/json'/);
   assert.doesNotMatch(analyzer, /Authorization\s*:/);
   assert.match(analyzer, /category==='AUTOMOTIVE_GRAPH'&&graphEvidence\.length<2/);
@@ -139,7 +140,7 @@ test('10.12.28 preserves supported semantic response shapes and one transient un
   for(const field of ['rawResponseType','semanticPayloadLocated','semanticPayloadParsed','canonicalNormalizationSuccessful','semanticObjectCount'])assert.ok(analyzer.includes(field),`missing normalization diagnostic ${field}`);
 });
 
-test('analysis payload is a single bounded metadata-free JPEG copy', () => {
+test('analysis payload is a single bounded JPEG copy with optional active-RO context', () => {
   assert.match(analyzer, /ANALYSIS_STAGES=Object\.freeze\(\[\{longDimension:1536,quality:\.78\},\{longDimension:1280,quality:\.72\},\{longDimension:1024,quality:\.68\}\]\)/);
   assert.match(analyzer, /imageOrientation:'from-image'/);
   assert.match(analyzer, /canvas\.toBlob\([^;]+,'image\/jpeg',quality\)/);
@@ -147,7 +148,7 @@ test('analysis payload is a single bounded metadata-free JPEG copy', () => {
   assert.match(analyzer, /run\.analysisBytes\.slice\(0\)/);
   assert.match(analyzer, /run\.bytes=sourceBuffer\.slice\(0\)/);
   assert.match(analyzer, /payloadImageCount:1/);
-  assert.equal((analyzer.match(/imageBase64\}/g)||[]).length, 1);
+  assert.match(analyzer,/vehicleContext\?\{vehicleContext\}:\{\}/);
   assert.equal((core.match(/type:\s*'input_image'/g)||[]).length, 8);
   assert.equal((core.match(/image_url:/g)||[]).length, 8);
   assert.match(core, /requiredFields = \['transactionId', 'imageHash', 'mimeType', 'imageBase64'\]/);
@@ -308,7 +309,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.13\.89'/);
+  assert.match(html, /version:'10\.13\.90'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {

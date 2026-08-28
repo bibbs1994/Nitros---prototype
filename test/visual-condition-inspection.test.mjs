@@ -231,3 +231,23 @@ test('component starter-connection context is carried into an unverified inspect
     assert.match(inspection.connectionAssessments[0].recommendedVerification,/Widen the image to include the starter mounting location/i);
   } finally { console.info=originalInfo; }
 });
+
+test('active RO vehicle context orients a likely starter connection without overriding the visible evidence gate',async()=>{
+  const contextAwareComponent={status:'UNCERTAIN',primaryComponent:'Starter connection area — exact component not confirmed',componentConfidence:38,system:'Starting system',secondaryComponents:['heavy-gauge positive cable terminal','smaller electrical connector'],supportingEvidence:['A heavy-gauge cable terminal and smaller connector are visible near a drivetrain housing.'],possibleAlternatives:['starter motor connection'],likelyConnectionsOrDestinations:['The visible leads are consistent with starter-solenoid connections for this vehicle configuration, but the destination is not visually confirmed.'],uncertaintyReason:'The starter housing and its mating terminals are not visible in this frame.',drivetrainDiscrimination:drivetrain};
+  const contextAwareCondition={status:'UNVERIFIED_CONDITION',conditionConfidence:58,observedCondition:['A heavy-gauge cable terminal and smaller electrical connector are visibly unattached in the photographed area.'],possibleConcerns:[],connectionAssessments:[{location:'Lower-center beside the large cable',seatingStatus:'COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE',findingType:'UNVERIFIED_CONDITION',severity:'UNDETERMINED',findingConfidence:58,visibleEvidence:'The cable terminal and connector are visible, but their mating component and terminals are outside the visible frame.',matingComponentVisible:false,directDamageVisible:false,missingContext:'The corresponding component is not visible; active repair, removal, or out-of-frame routing cannot be distinguished from this image.',recommendedVerification:'Widen the image to include the starter mounting location and verify whether the starter is installed before classifying the loose connections as a defect.',safetyDrivabilityImpact:null}],noVisibleConcernMessage:'',unableToInspectReason:null,visibleEvidence:['The visible wiring ends are not attached to a component shown in the image.'],recommendedVerification:['Widen the image to include the starter mounting location and verify whether the starter is installed before classifying the loose connections as a defect.'],safetyDrivabilityImpact:null};
+  const body={transactionId:'crv-context-test',imageHash:createHash('sha256').update(bytes).digest('hex'),mimeType:'image/png',imageBase64:bytes.toString('base64'),vehicleContext:{year:'2009',make:'Honda',model:'CR-V',engine:'2.4L',configuration:'Active repair order',vin:'5J6RE4H77AL000001'}};
+  const prompts=[];let call=0;const originalInfo=console.info;console.info=()=>{};
+  try {
+    const result=await analyzeSemanticImage(body,{apiKey:'test-key',fetchImpl:async(_url,options)=>{prompts.push(JSON.parse(options.body).input[0].content[0].text);return response([classifier,contextAwareComponent,contextAwareCondition][call++]);}});
+    const componentResult=result.semanticResult.componentIdentification, finding=result.semanticResult.visualConditionInspection.connectionAssessments[0];
+    assert.match(prompts[1],/2009 · Honda · CR-V · 2\.4L/i);
+    assert.match(prompts[2],/vehicle context.*never proof/i);
+    assert.equal(componentResult.status,'UNCERTAIN');
+    assert.match(componentResult.primaryComponent,/cannot be confirmed/i);
+    assert.equal(finding.findingType,'UNVERIFIED_CONDITION');
+    assert.notEqual(finding.findingType,'CLEAR_DEFECT');
+    assert.equal(finding.safetyDrivabilityImpact,null);
+    assert.equal(result.semanticResult.vehicleContextApplied.available,true);
+    assert.match(result.semanticResult.vehicleContextApplied.summary,/Honda · CR-V/i);
+  } finally { console.info=originalInfo; }
+});

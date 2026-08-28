@@ -684,16 +684,39 @@ function classifyOpenAIError(status, body) {
   return 'OPENAI_API_ERROR';
 }
 
+export function normalizeVehicleAnalysisContext(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const text = (value, max) => typeof value === 'string' ? value.trim().replace(/\s+/g, ' ').slice(0, max) : '';
+  const year = text(raw.year, 4);
+  const context = {
+    year: /^\d{4}$/.test(year) ? year : '',
+    make: text(raw.make, 80),
+    model: text(raw.model, 100),
+    engine: text(raw.engine, 100),
+    configuration: text(raw.configuration, 180),
+    vin: /^[A-HJ-NPR-Z0-9]{17}$/.test(text(raw.vin, 17).toUpperCase()) ? text(raw.vin, 17).toUpperCase() : ''
+  };
+  return Object.values(context).some(Boolean) ? context : null;
+}
+
+function vehicleContextPrompt(context) {
+  if (!context) return 'No active repair-order vehicle context was supplied.';
+  const known = [context.year, context.make, context.model, context.engine, context.configuration].filter(Boolean).join(' · ');
+  return `Active repair-order vehicle context (non-visual reference only): ${known || 'limited vehicle details'}${context.vin ? ' · VIN is available for configuration reference' : ''}. This context may orient a likely identification or expected connection, but it is never proof that a part, connection, defect, installation state, or vehicle-side location is visible. Image pixels override it whenever they conflict.`;
+}
+
 export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_API_KEY, fetchImpl = fetch, diagnostic = {}, timeoutMs = OPENAI_TIMEOUT_MS } = {}) {
   const fields = body && typeof body === 'object' && !Array.isArray(body) ? Object.keys(body) : [];
   const requiredFields = ['transactionId', 'imageHash', 'mimeType', 'imageBase64'];
-  if (fields.length !== requiredFields.length || requiredFields.some(field => !fields.includes(field))) {
+  const allowedFields = new Set([...requiredFields, 'vehicleContext']);
+  if (requiredFields.some(field => !fields.includes(field)) || fields.some(field => !allowedFields.has(field))) {
     throw diagnosticFailure(diagnostic, 'Request fields are invalid.', 400, 'C_REQUEST_BODY_PARSED', 'MALFORMED_REQUEST');
   }
   const transactionId = typeof body?.transactionId === 'string' ? body.transactionId : '';
   const imageHash = typeof body?.imageHash === 'string' ? body.imageHash.toLowerCase() : '';
   const mimeType = typeof body?.mimeType === 'string' ? body.mimeType.toLowerCase() : '';
   const imageBase64 = typeof body?.imageBase64 === 'string' ? body.imageBase64 : '';
+  const vehicleContext = normalizeVehicleAnalysisContext(body?.vehicleContext);
   markDiagnostic(diagnostic, 'C_REQUEST_BODY_PARSED', { requestId: transactionId || 'invalid', requestBodyParsed: true, imagePayloadFound: Boolean(imageBase64), imageMimeType: mimeType || 'unknown' });
   if (!/^[A-Za-z0-9._:-]{1,128}$/.test(transactionId) || !/^[a-f0-9]{64}$/.test(imageHash)) throw diagnosticFailure(diagnostic, 'Transaction identity is invalid.', 400, 'C_REQUEST_BODY_PARSED', 'MALFORMED_REQUEST');
   if (!IMAGE_TYPES.has(mimeType)) throw diagnosticFailure(diagnostic, 'Unsupported image type.', 415, 'D_IMAGE_PAYLOAD_FOUND', 'UNSUPPORTED_IMAGE_TYPE');
@@ -713,7 +736,7 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   };
   if (!signatures[mimeType]) throw diagnosticFailure(diagnostic, 'Image content does not match its declared type.', 415, 'E_IMAGE_PAYLOAD_VALID', 'INVALID_IMAGE_PAYLOAD');
   if (createHash('sha256').update(bytes).digest('hex') !== imageHash) throw diagnosticFailure(diagnostic, 'Server image hash verification failed.', 409, 'E_IMAGE_PAYLOAD_VALID', 'IMAGE_HASH_MISMATCH');
-  markDiagnostic(diagnostic, 'E_IMAGE_PAYLOAD_VALID', { imagePayloadValid: true });
+  markDiagnostic(diagnostic, 'E_IMAGE_PAYLOAD_VALID', { imagePayloadValid: true, vehicleContextProvided: Boolean(vehicleContext), vehicleContextFields: vehicleContext ? Object.entries(vehicleContext).filter(([, value]) => Boolean(value)).map(([key]) => key) : [] });
 
   if (!apiKey) throw diagnosticFailure(diagnostic, 'Semantic analyzer is not configured on the server.', 503, 'F_OPENAI_CONFIGURATION', 'CONFIGURATION', { openaiCredentialConfigured: false });
   markDiagnostic(diagnostic, 'F_OPENAI_CONFIGURATION', { openaiCredentialConfigured: true });
@@ -776,7 +799,7 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   let componentIdentification = null;
   if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
     const componentStartedAt = Date.now();
-    const componentPrompt = `Identify the primary automotive component visible in this current image using only visible pixels. Do not use filenames, metadata, OCR text alone, prior images, prior cases, cached results, or the category confidence. Return the most specific component supported by visible evidence, its automotive system, secondary visible components, and pixel-supported evidence. Component confidence must be independent from category confidence. If the exact component is not visually defensible, use status UNCERTAIN, list visually supported alternatives, explain what view or evidence is missing, and never force or invent a component.
+    const componentPrompt = `Identify the primary automotive component visible in this current image using only visible pixels. Do not use filenames, metadata, OCR text alone, prior images, prior cases, cached results, or the category confidence. ${vehicleContextPrompt(vehicleContext)} Return the most specific component supported by visible evidence, its automotive system, secondary visible components, and pixel-supported evidence. Component confidence must be independent from category confidence. If vehicle context makes an identity plausible but its defining physical features are not visible, keep status UNCERTAIN and state that it is a likely identification from vehicle context, not a confirmed visual identification. If the exact component is not visually defensible, use status UNCERTAIN, list visually supported alternatives, explain what view or evidence is missing, and never force or invent a component.
 
 Keep “visible component identification” separate from “likely connection or destination.” A cable, wire, terminal, or electrical connector is visible wiring, not the housing it may normally connect to. Never call a starter, starter solenoid, or other component visible unless its physical housing or defining features are actually visible. If a starter is installed and its housing, solenoid body, mounting, or other defining features are clearly visible, identify it from those features. In particular, a heavy-gauge positive battery cable near the transmission/bellhousing may be a disconnected starter power cable, and a smaller connector may be a starter-solenoid exciter wire; neither is itself a starter or solenoid. When only those wires are visible, identify the wires, state their likely purpose only as an unconfirmed interpretation, and say the component may be removed, outside the frame, or obscured. Reduce confidence whenever defining visual evidence is missing.
 
@@ -818,7 +841,7 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
   let visualConditionInspection = null;
   if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
     const conditionStartedAt = Date.now();
-    const conditionPrompt = `Perform a separate, detailed visual defect inspection of this same current automotive image after component identification. Do not let successful component identification influence the condition result. Compare every visibly accessible interface against its expected normal assembled condition before deciding there is no concern.
+    const conditionPrompt = `Perform a separate, detailed visual defect inspection of this same current automotive image after component identification. Do not let successful component identification influence the condition result. ${vehicleContextPrompt(vehicleContext)} Do not let vehicle context override contradictory image evidence or turn an expected connection into a defect. Compare every visibly accessible interface against its expected normal assembled condition before deciding there is no concern.
 
 Keep directly observed facts, likely interpretation, and technician verification separate. Visible wiring is not proof that its normal destination is visible, installed, damaged, or disconnected in error. A heavy-gauge positive cable near the transmission/bellhousing may be a starter power cable, and a smaller connector may be a starter-solenoid exciter wire, but do not call either a starter or solenoid. If expected wiring is visible but its normal component is not, report the wiring actually visible; describe the destination only as likely; state that the connected component cannot be confirmed and may be removed, outside the frame, or obscured; and recommend technician verification. Do not automatically classify disconnected wiring as a defect when active repair or disassembly is plausible. Continue detecting visibly loose connectors, broken parts, missing fasteners, separated intake/turbo pipes, damaged wiring, leaks, and improper installation, but only when each is supported by visible evidence. Never invent hidden parts, connections, damage, or installation conditions. Reduce confidence whenever defining evidence is missing.
 
@@ -938,6 +961,7 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
   semanticResult.automotiveGraphAnalysis = automotiveGraphAnalysis;
   semanticResult.wiringDiagramAnalysis = wiringDiagramAnalysis;
   semanticResult.documentRepairInformation = documentRepairInformation;
+  semanticResult.vehicleContextApplied = vehicleContext ? { available: true, summary: [vehicleContext.year, vehicleContext.make, vehicleContext.model, vehicleContext.engine, vehicleContext.configuration].filter(Boolean).join(' · ') || 'Vehicle configuration reference available' } : { available: false, summary: '' };
   return {
     transactionId,
     imageHash,
