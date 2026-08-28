@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.86 preserves visible disconnected-lead evidence as an inspected, unverified condition when its likely component context is outside the image.
+Version 10.13.87 restores intentional, persisted support-ticket status actions in the local support dashboard.
 
 ## Local test server
 
