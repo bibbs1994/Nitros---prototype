@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.87 restores intentional, persisted support-ticket status actions in the local support dashboard.
+Version 10.13.88 restores one-tap, persisted amber-to-green completion for open support tickets in the local support dashboard.
 
 ## Local test server
 
