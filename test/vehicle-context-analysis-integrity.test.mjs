@@ -33,3 +33,10 @@ test('accepted automotive relationship stages complete with deterministic PASS o
   assert.match(client,/finalizeAcceptedAnalysisStages\(run,routed\)/);
   assert.match(client,/set\(24,contextPass\?'PASS':'FAIL'\);set\(25,contextPass\?'SKIPPED':'FAIL'\)/);
 });
+
+test('two-layer lock uses diagnostic active-case authority and aborts before dispatch on a vehicle switch',()=>{
+  assert.match(client,/diagnosticVehicle=diagnostic\.vehicle&&diagnostic\.vehicle\.year&&diagnostic\.vehicle\.make&&diagnostic\.vehicle\.model/);
+  assert.match(client,/VEHICLE_CONTEXT_MISMATCH: active vehicle changed before request dispatch/);
+  assert.match(client,/nitrosActiveVehicleContext/);
+  assert.match(client,/nitrosAnalysisVehicleSnapshot/);
+});

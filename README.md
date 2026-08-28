@@ -1,6 +1,6 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.93 snapshots vehicle-aware visual reasoning at analysis start, blocks stale context, and keeps image pixels as the required proof for any component or defect finding.
+Version 10.13.94 isolates the authoritative active vehicle from stale case state, locks each analysis to an immutable snapshot, and keeps image pixels as the required proof for any component or defect finding.
 
 ## Local test server
 

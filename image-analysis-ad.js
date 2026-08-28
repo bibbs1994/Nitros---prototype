@@ -1,6 +1,6 @@
 /* Nitros 10.12.23 appointment dedicated field commit fix. */
 (()=>{'use strict';
-  const BUILD='10.13.93';
+  const BUILD='10.13.94';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
   const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
   const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
@@ -203,7 +203,7 @@
 
   function semanticEndpoint(){return document.querySelector('meta[name="nitros-semantic-endpoint"]')?.content?.trim()||'/api/semantic-image-analysis'}
   function activeVehicleAnalysisContext(){
-    const context=window.NitrosAskOliverContext?.get?.()||{},clean=(value,max)=>String(value||'').trim().replace(/\s+/g,' ').slice(0,max),year=clean(context.year,4),vin=clean(context.vin,17).toUpperCase();
+    const uiContext=window.NitrosAskOliverContext?.get?.()||{},diagnostic=window.NitrosDiagnosticV10120?.getState?.()||{},diagnosticVehicle=diagnostic.vehicle&&diagnostic.vehicle.year&&diagnostic.vehicle.make&&diagnostic.vehicle.model?diagnostic.vehicle:null,context=diagnosticVehicle?{...uiContext,...diagnosticVehicle,activeCaseId:diagnostic.id||uiContext.activeCaseId||uiContext.caseId,repairOrderId:diagnostic.repairOrderId||uiContext.ro||uiContext.repairOrderId,vin:diagnostic.vin||uiContext.vin,contextVersion:diagnostic.id?`${diagnostic.id}:${diagnosticVehicle.year}:${diagnosticVehicle.make}:${diagnosticVehicle.model}:${diagnosticVehicle.engine||''}`:uiContext.contextVersion}:uiContext,clean=(value,max)=>String(value||'').trim().replace(/\s+/g,' ').slice(0,max),year=clean(context.year,4),vin=clean(context.vin,17).toUpperCase();
     const activeCaseId=clean(localStorage.getItem('activeRepairOrderId')||context.activeCaseId||context.caseId,128),repairOrderId=clean(context.ro||context.repairOrderId,128),vehicle={year:/^\d{4}$/.test(year)?year:'',make:clean(context.make,80),model:clean(context.model,100),engine:clean(context.engine,100),fuelType:clean(context.fuelType||context.fuel,60),drivetrain:clean(context.drivetrain||context.transmission,100),configuration:clean(context.configuration||context.vehicleConfiguration,180),vin:/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)?vin:'',activeCaseId,repairOrderId,vehicleId:clean(context.vehicleId||context.id||context.vin||`${year}:${context.make||''}:${context.model||''}`,160),contextVersion:clean(context.contextVersion||context.updatedAt||`${activeCaseId}:${repairOrderId}:${year}:${context.make||''}:${context.model||''}:${context.vin||''}`,240),source:activeCaseId?'ACTIVE_REPAIR_ORDER':'ACTIVE_PORTAL_CASE'};
     return vehicle.year&&vehicle.make&&vehicle.model?vehicle:null;
   }
@@ -392,6 +392,7 @@
         if(!(bytes instanceof ArrayBuffer)||!bytes.byteLength)throw diagnosticError('Image request body is empty or unsupported.','PAYLOAD_ERROR',{unsupportedRequestBody:true});
         imageBase64=bytesToBase64(bytes);
         const vehicleContext=vehicleContextSnapshot||null;
+        if(vehicleContext&&!sameVehicleContext(vehicleContext,activeVehicleAnalysisContext()))throw diagnosticError('VEHICLE_CONTEXT_MISMATCH: active vehicle changed before request dispatch.','VEHICLE_CONTEXT_MISMATCH',{retryable:false});
         mark({vehicleContextSnapshot:vehicleContext,vehicleContextValidation:vehicleContext?'PASS':'SKIPPED',vehicleContextMismatchBlocked:false});
         requestBody=JSON.stringify({transactionId:runId,imageHash,mimeType,imageBase64,...(vehicleContext?{vehicleContext}:{})});
         const requestBodyBytes=new TextEncoder().encode(requestBody).byteLength;
@@ -793,7 +794,7 @@
   function updateDeveloper(run,extra={}){
     const result=run?.result;
     const values={
-      nitrosCaseId:caseId,nitrosAnalysisSessionId:sessionId,nitrosCaptureRequestId:run?.runId||'None',nitrosAnalysisId:run?.runId||'None',
+      nitrosCaseId:caseId,nitrosAnalysisSessionId:sessionId,nitrosCaptureRequestId:run?.runId||'None',nitrosAnalysisId:run?.runId||'None',nitrosActiveVehicleContext:JSON.stringify(activeVehicleAnalysisContext()||null),nitrosAnalysisVehicleSnapshot:JSON.stringify(run?.analyzer?.vehicleContextSnapshot||null),nitrosVehicleContextMatch:run?.analyzer?.vehicleContextValidation||'SKIPPED',
       nitrosCurrentImageSha:run?.imageHash?`${run.imageHash.slice(0,16)}…`:'None',nitrosAnalyzerSource:result?.source||'CURRENT IMAGE BYTES',nitrosResultId:result?.runId||'None',
       nitrosAnalysisStarted:run?.started||'None',nitrosAnalysisCompleted:run?.completed||'None',nitrosResultDisposition:extra.disposition||'NONE',nitrosResetReason:extra.resetReason||'—',
       nitrosActiveClassifier:'NitrosSemanticImageAnalysis / PID temporal-claim evidence gate / 10.12.23',nitrosStaleResultLog:lastStaleMessage,
