@@ -5,9 +5,9 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.13.112 build and service worker advance together',()=>{
-  assert.match(html,/version:'10\.13\.112'/);
-  assert.match(sw,/const VERSION = '10\.13\.112'/);
+test('10.13.113 build and service worker advance together',()=>{
+  assert.match(html,/version:'10\.13\.113'/);
+  assert.match(sw,/const VERSION = '10\.13\.113'/);
 });
 
 test('VECI field capture supports capture, preview, and retake without bypassing RO evidence',()=>{

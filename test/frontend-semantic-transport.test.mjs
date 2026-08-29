@@ -36,12 +36,12 @@ test('10.12.28 canonical normalizer rejects malformed and incomplete semantic co
   const normalize=semanticNormalizer();assert.equal(normalize({semanticResult:'```json\n{bad json}\n```'}),null);assert.equal(normalize({semanticResult:{category:'AUTOMOTIVE_GRAPH'}}),null);
 });
 
-test('10.13.112 keeps the proven analyzer and production endpoint', () => {
-  assert.match(analyzer, /const BUILD='10\.13\.112'/);
-  assert.match(html, /10\.13\.112/);
+test('10.13.113 keeps the proven analyzer and production endpoint', () => {
+  assert.match(analyzer, /const BUILD='10\.13\.113'/);
+  assert.match(html, /10\.13\.113/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.13\.112'/);
+  assert.match(serviceWorker, /const VERSION = '10\.13\.113'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -72,6 +72,13 @@ test('automotive graphs route into Oliver with context-safe structured findings'
   assert.match(analyzer, /Possible vehicle-context mismatch/);
   assert.match(analyzer, /Retain these graph findings in the current diagnostic conversation/);
   for(const field of ['nitrosTemporalRoutingDecision','nitrosTemporalInterpretationPermissions','nitrosTemporalClaimValidation','nitrosTemporalClaimConflictDetected'])assert.ok(analyzer.includes(field),`missing temporal enforcement diagnostic ${field}`);
+});
+
+test('technician pointer evidence is preserved as the primary visual-analysis target', () => {
+  assert.match(analyzer,/TECHNICIAN-INDICATED TARGET — PRIMARY INSPECTION AREA/);
+  assert.match(analyzer,/pointerEvidence=\(result\.evidence\|\|\[\]\)\.find/);
+  assert.match(analyzer,/No definite defect can be confirmed at the technician-indicated location from this image/);
+  assert.match(analyzer,/Analyze this target and its immediate connections before secondary nearby components/);
 });
 
 test('10.12.42 final shared triplet gate validates and renders one frozen canonical object',()=>{
@@ -312,7 +319,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.13\.112'/);
+  assert.match(html, /version:'10\.13\.113'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
