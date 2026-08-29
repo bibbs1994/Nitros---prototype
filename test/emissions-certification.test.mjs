@@ -5,9 +5,9 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.13.105 build and service worker advance together',()=>{
-  assert.match(html,/version:'10\.13\.105'/);
-  assert.match(sw,/const VERSION = '10\.13\.105'/);
+test('10.13.106 build and service worker advance together',()=>{
+  assert.match(html,/version:'10\.13\.106'/);
+  assert.match(sw,/const VERSION = '10\.13\.106'/);
 });
 
 test('VECI field capture supports capture, preview, and retake without bypassing RO evidence',()=>{
@@ -30,7 +30,8 @@ test('emissions certification is explicit, evidence-based, and defaults safely',
   assert.match(html,/id="certificationSource"[\s\S]*?Underhood VECI \/ Emissions Label[\s\S]*?VIN \/ Manufacturer Build Data[\s\S]*?RPO \/ Build Data[\s\S]*?OEM Vehicle Data[\s\S]*?Technician Verified[\s\S]*?Other[\s\S]*?Not Yet Verified/);
   assert.match(html,/certificationSourceOtherNote/);
   assert.match(html,/allowedEmissionsCertification\(value\)\{return EMISSIONS_CERTIFICATIONS\.includes\(value\)\?value:"Unknown \/ Needs Verification";/);
-  assert.doesNotMatch(html,/VIN[^\n]{0,160}(?:California \/ CARB|50-State|Federal)[^\n]{0,160}(?:assum|classif)/i);
+  const decoderClassifier=html.match(/function classifyDecoderEmissions\(result\)\{([\s\S]*?)\n  \}/)?.[1]||'';
+  assert.doesNotMatch(decoderClassifier,/Plant(?:City|State|Country)|ModelYear|DisplacementL|GPS/i);
 });
 
 test('emissions values are isolated in the active vehicle draft and reset for a new RO',()=>{
@@ -40,4 +41,13 @@ test('emissions values are isolated in the active vehicle draft and reset for a 
   assert.match(html,/emissionsCertification:"Unknown \/ Needs Verification",\s*certificationSource:"Not Yet Verified"/);
   assert.match(html,/vehicleInformation:draft\.selectedVehicle/);
   assert.match(html,/draft,saveReason:reason/);
+});
+
+test('VIN decoder uses only explicit emissions/certification fields and never replaces verified VECI data',()=>{
+  assert.match(html,/function classifyDecoderEmissions\(result\)/);
+  assert.match(html,/\(emission\|certif\|carb\)/i);
+  assert.match(html,/function hasVerifiedVeci\(vehicle\)/);
+  assert.match(html,/preservedEmissions\|\|\{emissionsCertification:decoderEmissions\.classification/);
+  assert.match(html,/VIN\/build data inconclusive — Check underhood emissions label/);
+  assert.match(html,/decoderEmissions=classifyDecoderEmissions\(result\)[\s\S]*?await Promise\.resolve\(window\.NitrosActiveRepairPersistence\?\.persistNow\?\.\(\)\)/);
 });

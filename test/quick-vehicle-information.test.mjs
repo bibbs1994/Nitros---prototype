@@ -21,6 +21,8 @@ test('vehicle information uses active RO and existing draft fields',()=>{
   assert.match(script,/selected\.certificationSource\|\|fields\.certificationSource/);
   assert.match(script,/selected\.emissionsEvidencePhotoReference/);
   assert.match(script,/selected\.emissionsVerifiedAt/);
+  assert.match(script,/emissionsVerificationStatus==='Preliminary'/);
+  assert.match(script,/Physical Label Verification Recommended/);
   assert.match(script,/Unknown — Needs Verification/);
   assert.match(script,/Verified from \$\{emissionsSource\}\$\{emissionsEvidenceReference/);
 });
