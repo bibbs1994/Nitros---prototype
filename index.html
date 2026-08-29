@@ -1104,6 +1104,7 @@ canvas.graph-preview,canvas.ocr-preview{
         <div class="field"><label for="certificationSource">Certification Source</label><select id="certificationSource"><option>Underhood VECI / Emissions Label</option><option>VIN / Manufacturer Build Data</option><option>RPO / Build Data</option><option>OEM Vehicle Data</option><option>Technician Verified</option><option>Other</option><option selected>Not Yet Verified</option></select></div>
       </div>
       <div class="field hidden" id="certificationSourceOtherField"><label for="certificationSourceOtherNote">Other certification source note</label><input id="certificationSourceOtherNote" maxlength="180" placeholder="Short technician source note"></div>
+      <div class="field"><label for="veciVisibleWording">VECI label wording (optional transcription)</label><textarea id="veciVisibleWording" rows="3" placeholder="Transcribe only readable certification wording from the underhood label."></textarea><button id="verifyVeciWording" class="btn secondary small" type="button" style="margin-top:8px">Verify VECI Wording</button></div>
       <div class="capture-note" style="margin-top:8px">Record the verified emissions classification separately from the evidence used to establish it. VIN data alone never assigns a certification.</div>
       <button id="applyVehicleCorrections" class="btn secondary" type="button">Apply Vehicle Corrections</button>
       <div id="vehicleCorrectionStatus" class="status">Decoded values can be corrected before continuing.</div>
@@ -1900,6 +1901,7 @@ window.NitrosGpsEvidence=(()=>{
     selectedVehicle.certificationSource=allowedCertificationSource(document.getElementById("certificationSource")?.value);
     selectedVehicle.certificationSourceOtherNote=selectedVehicle.certificationSource==="Other"?(document.getElementById("certificationSourceOtherNote")?.value.trim()||""):"";
   }
+  function classifyVeciWording(wording){const text=String(wording||"").toLowerCase().replace(/\s+/g," ").trim(),california=/\b(california|carb|california air resources board)\b/.test(text),epa=/\b(u\.?s\.?\s*epa|epa regulations?|federal emissions?)\b/.test(text),explicitBoth=/(50[ -]?state|all states|federal and california|epa and california).{0,80}(certif|compli)|(certif|compli).{0,80}(50[ -]?state|all states|federal and california|epa and california)/.test(text);if(!text)return {classification:"Unknown / Needs Verification",status:"Needs Verification",description:"No readable VECI certification wording was supplied."};if(explicitBoth)return {classification:"50-State",status:"Verified",description:"Readable VECI wording explicitly supports both Federal and California certification."};if(california&&/(certif|compli|regulations?)/.test(text)&&!epa)return {classification:"California / CARB",status:"Verified",description:"Readable VECI wording explicitly supports California/CARB certification."};if(epa&&!california)return {classification:"Federal",status:"Verified",description:"Readable VECI wording supports Federal/EPA certification and does not establish California certification."};return {classification:"Unknown / Needs Verification",status:"Needs Verification",description:"The photographed text does not reliably establish Federal, California/CARB, or 50-State certification."};}
 
   function updateEnvironment(){
     const secure = window.isSecureContext;
@@ -2511,6 +2513,9 @@ window.NitrosGpsEvidence=(()=>{
       ["Fuel type",selectedVehicle.fuelType||"Not returned"],
       ["Emissions Certification",selectedVehicle.emissionsCertification],
       ["Certification Source",selectedVehicle.certificationSource],
+      ["Verification Status",selectedVehicle.emissionsVerificationStatus||"Needs Verification"],
+      ...(selectedVehicle.emissionsEvidenceDescription?[["Evidence",selectedVehicle.emissionsEvidenceDescription]]:[]),
+      ...(selectedVehicle.emissionsVerifiedAt?[["Last verified",new Date(selectedVehicle.emissionsVerifiedAt).toLocaleString()]]:[]),
       ...(selectedVehicle.certificationSource==="Other"&&selectedVehicle.certificationSourceOtherNote?[["Other source note",selectedVehicle.certificationSourceOtherNote]]:[]),
       ["Body",selectedVehicle.body||"Not returned"],
       ["Drive type",selectedVehicle.driveType||"Not returned"],
@@ -4277,6 +4282,7 @@ window.NitrosGpsEvidence=(()=>{
   document.getElementById("certificationSource")?.addEventListener("change",()=>{updateCertificationSourceNoteVisibility();syncVehicleEmissionsFromForm();scheduleDraftSave();});
   document.getElementById("emissionsCertification")?.addEventListener("change",()=>{syncVehicleEmissionsFromForm();scheduleDraftSave();});
   document.getElementById("certificationSourceOtherNote")?.addEventListener("input",()=>{syncVehicleEmissionsFromForm();scheduleDraftSave();});
+  document.getElementById("verifyVeciWording")?.addEventListener("click",()=>{if(!selectedVehicle)return;const outcome=classifyVeciWording(document.getElementById("veciVisibleWording")?.value),hasVeci=Boolean(activePhotoEvidence.photoVeci);selectedVehicle.emissionsCertification=outcome.classification;selectedVehicle.emissionsVerificationStatus=hasVeci?outcome.status:"Needs Verification";selectedVehicle.emissionsEvidenceDescription=hasVeci?outcome.description:"No VECI photograph is attached to this vehicle record.";selectedVehicle.emissionsEvidencePhotoReference=hasVeci?activePhotoEvidence.photoVeci.evidenceId||"photoVeci":"";selectedVehicle.emissionsVerifiedAt=hasVeci&&outcome.status==="Verified"?new Date().toISOString():"";document.getElementById("emissionsCertification").value=selectedVehicle.emissionsCertification;document.getElementById("certificationSource").value=hasVeci?"Underhood VECI / Emissions Label":"Not Yet Verified";renderVehicle();scheduleDraftSave();});
   document.getElementById("vinPhoto").addEventListener("change",async(e)=>{
     const file=e.target.files&&e.target.files[0];
     if(!file) return;

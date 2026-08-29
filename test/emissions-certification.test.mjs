@@ -5,9 +5,15 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.13.100 build and service worker advance together',()=>{
-  assert.match(html,/version:'10\.13\.100'/);
-  assert.match(sw,/const VERSION = '10\.13\.100'/);
+test('10.13.101 build and service worker advance together',()=>{
+  assert.match(html,/version:'10\.13\.101'/);
+  assert.match(sw,/const VERSION = '10\.13\.101'/);
+});
+
+test('VECI capture and evidence-gated verification remain vehicle scoped',()=>{
+  for(const value of ['photoVeci','Underhood emissions / VECI label','verifyVeciWording','classifyVeciWording','emissionsVerificationStatus','emissionsEvidencePhotoReference','Unknown / Needs Verification'])assert.match(html,new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  assert.match(html,/explicitBoth/);
+  assert.match(html,/hasVeci\?outcome\.status:"Needs Verification"/);
 });
 
 test('emissions certification is explicit, evidence-based, and defaults safely',()=>{
