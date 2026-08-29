@@ -1,6 +1,6 @@
 /* Nitros 10.12.23 appointment dedicated field commit fix. */
 (()=>{'use strict';
-  const BUILD='10.13.111';
+  const BUILD='10.13.112';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
   const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
   const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
@@ -651,6 +651,18 @@
     const host=document.createElement('div');host.id='adAnalysisResult';host.className='phase2-result';
     const routingConfidence=result.confidence===null?'Not provided':`${result.confidence}%`;
     const freshVerification=result.category==='UNKNOWN_OR_ANALYSIS_UNAVAILABLE'?'FAIL':result.category==='AUTOMOTIVE_GRAPH'?(result.routeResult?.freshResultVerification||'FAIL'):'PASS';
+    // Defect-first is intentionally rendered before component naming: a recognizable part never
+    // downgrades a visible separation, damage, residue, or safety concern.
+    const defectFirst=result.visualConditionInspection;
+    if(defectFirst){
+      const priority={CLEAR_DEFECT:0,POSSIBLE_CONCERN:1,UNVERIFIED_CONDITION:2,RESIDUE_OR_STAINING:3,SEATING_NOT_RELIABLY_VISIBLE:4,NO_DEFECT_VISIBLE:5};
+      const findings=(defectFirst.connectionAssessments||[]).slice().sort((a,b)=>(priority[a.findingType]??9)-(priority[b.findingType]??9));
+      const confirmed=findings.filter(item=>item.findingType==='CLEAR_DEFECT'),possible=findings.filter(item=>item.findingType==='POSSIBLE_CONCERN'||item.findingType==='RESIDUE_OR_STAINING'),unverified=findings.filter(item=>['UNVERIFIED_CONDITION','SEATING_NOT_RELIABLY_VISIBLE'].includes(item.findingType));
+      const list=items=>items.length?`<ul>${items.map(item=>`<li><strong>${escapeHtml(item.location)}</strong> — ${escapeHtml(item.visibleEvidence)}${item.recommendedVerification?` Verify: ${escapeHtml(item.recommendedVerification)}`:''}</li>`).join('')}</ul>`:'<p class="condition-empty">None</p>';
+      const section=document.createElement('section');section.className='visual-condition-inspection defect-first-summary';
+      section.innerHTML=`<h3>DEFECT-FIRST VISUAL ANALYSIS</h3><div class="condition-field"><strong>VISIBLE DEFECTS</strong>${list(confirmed)}</div><div class="condition-field"><strong>POSSIBLE CONCERNS — PHYSICAL VERIFICATION REQUIRED</strong>${list(possible)}</div><div class="condition-field"><strong>CANNOT BE VISUALLY VERIFIED</strong>${list(unverified)}${defectFirst.unableToInspectReason?`<span>${escapeHtml(defectFirst.unableToInspectReason)}</span>`:''}</div>${defectFirst.status==='NO_VISIBLE_CONCERN_DETECTED'?`<div class="condition-field"><strong>RESULT</strong><span>No obvious visible defect detected in the areas that can be reliably inspected from this image.</span></div>`:''}${defectFirst.safetyDrivabilityImpact?`<div class="condition-field"><strong>SAFETY-CRITICAL OBSERVATION</strong><span>${escapeHtml(defectFirst.safetyDrivabilityImpact)}</span></div>`:''}<div class="condition-field"><strong>RECOMMENDED PHYSICAL CHECK</strong>${list((defectFirst.recommendedVerification||[]).map(item=>({location:'Technician check',visibleEvidence:item,recommendedVerification:''})))}</div>`;
+      host.appendChild(section);
+    }
     const component=result.componentIdentification;
     if(component){
       const componentConfidence=component.componentConfidence===null?'Not provided':`${component.componentConfidence}%`,list=items=>items?.length?`<ul>${items.map(item=>`<li>${escapeHtml(item)}</li>`).join('')}</ul>`:'<p class="condition-empty">None</p>';
