@@ -26,5 +26,6 @@ test('vehicle information uses active RO and existing draft fields',()=>{
 test('vehicle and notes controls use separate compact safe-area positions',()=>{
   assert.match(html,/\.quick-vehicle-fab\{position:fixed[\s\S]*?safe-area-inset-bottom/);
   assert.match(html,/\.quick-notes-fab\{position:fixed[\s\S]*?safe-area-inset-bottom/);
+  assert.match(html,/\.quick-vehicle-overlay\{[\s\S]*?padding-top:max\(12px,env\(safe-area-inset-top\)\)/);
   assert.match(html,/\.quick-vehicle-fab\[hidden\]\{display:none\}/);
 });
