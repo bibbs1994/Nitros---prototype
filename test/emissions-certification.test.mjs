@@ -5,9 +5,15 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.13.101 build and service worker advance together',()=>{
-  assert.match(html,/version:'10\.13\.101'/);
-  assert.match(sw,/const VERSION = '10\.13\.101'/);
+test('10.13.102 build and service worker advance together',()=>{
+  assert.match(html,/version:'10\.13\.102'/);
+  assert.match(sw,/const VERSION = '10\.13\.102'/);
+});
+
+test('VECI field capture supports capture, preview, and retake without bypassing RO evidence',()=>{
+  for(const id of ['captureVeciLabel','retakeVeciLabel','photoVeciPreview','photoVeci'])assert.match(html,new RegExp(`id="${id}"`));
+  assert.match(html,/captureVeciLabel.*photoVeci/);
+  assert.match(html,/retakeVeciLabel.*input\.click/);
 });
 
 test('VECI capture and evidence-gated verification remain vehicle scoped',()=>{
