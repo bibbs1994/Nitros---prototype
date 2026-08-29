@@ -5,9 +5,9 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
-test('10.13.106 build and service worker advance together',()=>{
-  assert.match(html,/version:'10\.13\.106'/);
-  assert.match(sw,/const VERSION = '10\.13\.106'/);
+test('10.13.107 build and service worker advance together',()=>{
+  assert.match(html,/version:'10\.13\.107'/);
+  assert.match(sw,/const VERSION = '10\.13\.107'/);
 });
 
 test('VECI field capture supports capture, preview, and retake without bypassing RO evidence',()=>{
@@ -20,8 +20,8 @@ test('VECI capture and evidence-gated verification remain vehicle scoped',()=>{
   for(const value of ['photoVeci','Underhood emissions / VECI label','verifyVeciWording','classifyVeciWording','emissionsVerificationStatus','emissionsEvidencePhotoReference','Unknown / Needs Verification'])assert.match(html,new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
   assert.match(html,/explicitBoth/);
   assert.match(html,/verified=hasVeci&&outcome\.status==="Verified"/);
-  assert.match(html,/certificationSource"\)\.value=verified\?"Underhood VECI \/ Emissions Label":"Not Yet Verified"/);
-  assert.match(html,/emissionsEvidenceCapturedAt=hasVeci\?activePhotoEvidence\.photoVeci\.capturedAt/);
+  assert.match(html,/certificationSource:verified\?"Underhood VECI \/ Emissions Label":"Not Yet Verified"/);
+  assert.match(html,/evidenceCapturedAt:hasVeci\?evidence\.capturedAt/);
   assert.match(html,/await Promise\.resolve\(window\.NitrosActiveRepairPersistence\?\.persistNow\?\.\(\)\)/);
 });
 
@@ -35,8 +35,8 @@ test('emissions certification is explicit, evidence-based, and defaults safely',
 });
 
 test('emissions values are isolated in the active vehicle draft and reset for a new RO',()=>{
-  assert.match(html,/selectedVehicle\.emissionsCertification=allowedEmissionsCertification/);
-  assert.match(html,/selectedVehicle\.certificationSource=allowedCertificationSource/);
+  assert.match(html,/selectedVehicle\.emissionsRecord=record/);
+  assert.match(html,/selectedVehicle\.emissionsCertification=record\.certification/);
   assert.match(html,/selectedVehicle=\{\.\.\.vehicles\[code\]\};/);
   assert.match(html,/emissionsCertification:"Unknown \/ Needs Verification",\s*certificationSource:"Not Yet Verified"/);
   assert.match(html,/vehicleInformation:draft\.selectedVehicle/);
@@ -50,4 +50,12 @@ test('VIN decoder uses only explicit emissions/certification fields and never re
   assert.match(html,/preservedEmissions\|\|\{emissionsCertification:decoderEmissions\.classification/);
   assert.match(html,/VIN\/build data inconclusive — Check underhood emissions label/);
   assert.match(html,/decoderEmissions=classifyDecoderEmissions\(result\)[\s\S]*?await Promise\.resolve\(window\.NitrosActiveRepairPersistence\?\.persistNow\?\.\(\)\)/);
+});
+
+test('accepted VECI evidence writes one canonical vehicle emissions record before active RO persistence',()=>{
+  assert.match(html,/function writeVehicleEmissions\(next=\{\},reason="vehicle update"\)/);
+  assert.match(html,/selectedVehicle\.emissionsRecord=record/);
+  assert.match(html,/"accepted VECI evidence"/);
+  assert.match(html,/verificationSource:verified\?"Underhood emissions label":"Not Yet Verified"/);
+  assert.match(html,/\[Nitros Emissions\] active RO persisted/);
 });
