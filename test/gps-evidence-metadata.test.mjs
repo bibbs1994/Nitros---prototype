@@ -29,8 +29,8 @@ test('GPS persists in the shared photo store and record copies',()=>{
 test('AQ GPS diagnostics remain present in the VI deployment',()=>{
   assert.match(html,/id="nitrosGpsDiagnostic"/);
   assert.match(html,/nitros-single-build-and-service-worker-authority/);
-  assert.match(html,/Two-Layer Vehicle Context Isolation & Vehicle-Specific Visual Reasoning/);
-  assert.match(sw,/const VERSION = '10\.13\.94'/);
+  assert.match(html,/Emissions Evidence Handoff Repair/);
+  assert.match(sw,/const VERSION = '10\.13\.108'/);
 });
 
 test('check-in and RO serialization propagates each saved photo GPS snapshot',()=>{
@@ -40,7 +40,7 @@ test('check-in and RO serialization propagates each saved photo GPS snapshot',()
 
 test('all permanent common evidence inputs use per-photo GPS capture',()=>{
   for(const field of ['photoFrontLeft','photoFrontRight','photoRearLeft','photoRearRight','photoOdometer','photoVin','technicianPhoto','photoFinalOdometer'])assert.match(html,new RegExp(`PHOTO_FIELDS=[\\s\\S]+${field}`),`${field} is not in the common evidence model`);
-  assert.match(html,/\["photoFrontLeft","photoFrontRight","photoRearLeft","photoRearRight","photoOdometer","photoVin","technicianPhoto","photoFinalOdometer"\][\s\S]+savePhotoEvidence\(id,file\)/);
+  assert.match(html,/\["photoFrontLeft","photoFrontRight","photoRearLeft","photoRearRight","photoOdometer","photoVin","photoVeci","technicianPhoto","photoFinalOdometer"\][\s\S]+savePhotoEvidence\(id,file\)/);
   assert.match(html,/maximumAge:0/);
   assert.match(html,/pendingCapturedAt=new Date\(\)\.toISOString\(\);\[originalBlob,pendingGps\]=await withTimeout\(Promise\.all\(\[compress\(file\),window\.NitrosGpsEvidence\.capture\(\)\]\),"Evidence photo preparation"\)/);
 });

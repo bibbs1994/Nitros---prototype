@@ -1,6 +1,6 @@
 /* Nitros 10.12.23 appointment dedicated field commit fix. */
 (()=>{'use strict';
-  const BUILD='10.13.96';
+  const BUILD='10.13.108';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
   const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
   const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
