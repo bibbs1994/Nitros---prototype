@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
 <meta name="nitros-support-ticket-endpoint" content="http://192.168.4.24:8787/api/support-tickets">
-<title>Nitros Mobile Technician Portal v10.13.110 — Check-In Navigation Repair — Build 2026-08-29</title>
+<title>Nitros Mobile Technician Portal v10.13.111 — Authentication Entry-Chain Rebuild — Build 2026-08-29</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -531,7 +531,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.13.110 — Check-In Navigation Repair — Build 2026-08-29</div>
+  <div class="sub">Mobile Technician Portal v10.13.111 — Authentication Entry-Chain Rebuild — Build 2026-08-29</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -546,7 +546,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.13.110 — Check-In Navigation Repair · Build 2026-08-29. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.13.111 — Authentication Entry-Chain Rebuild · Build 2026-08-29. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -1708,13 +1708,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.110 • Check-In Navigation Repair • Build 2026-08-29</div>
+<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.111 • Authentication Entry-Chain Rebuild • Build 2026-08-29</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.13.110',
-  release:'Check-In Navigation Repair',
+  version:'10.13.111',
+  release:'Authentication Entry-Chain Rebuild',
   buildDate:'2026-08-29',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -1908,18 +1908,7 @@ window.NitrosGpsEvidence=(()=>{
   function hasVerifiedVeci(vehicle){return vehicle?.emissionsVerificationStatus==="Verified"&&vehicle?.certificationSource==="Underhood VECI / Emissions Label";}
 
   function updateEnvironment(){
-    const secure = window.isSecureContext;
-    const hasMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-    if(secure && hasMedia){
-      envText.textContent = "Secure camera environment detected";
-      envDot.className = "dot ok";
-    }else if(!secure){
-      envText.textContent = "Not HTTPS — camera may be blocked";
-      envDot.className = "dot bad";
-    }else{
-      envText.textContent = "Camera API unavailable in this preview";
-      envDot.className = "dot bad";
-    }
+    try{const secure=window.isSecureContext,hasMedia=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);if(secure&&hasMedia){envText.textContent="Secure camera environment detected";envDot.className="dot ok";}else if(!secure){envText.textContent="Not HTTPS — camera may be blocked";envDot.className="dot bad";}else{envText.textContent="Camera API unavailable in this preview";envDot.className="dot bad";}}catch(error){console.error("[NITROS AUTH] browser environment detection failed",error);envText.textContent="Browser environment check unavailable — sign-in remains available";envDot.className="dot bad";}
   }
 
   const DRAFT_KEY="nitros_prototype_v073_active_draft";
@@ -4678,6 +4667,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   refreshDraftPanel();
   loadActivePhotoEvidence();
   updateEnvironment();
+  setTimeout(()=>{if(/checking browser environment/i.test(envText?.textContent||"")){console.error("[NITROS AUTH] browser environment detection timeout");envText.textContent="Browser environment check timed out — sign-in remains available";envDot.className="dot bad";}},1500);
   refreshConnectionSaveStatus();
   window.addEventListener("online",refreshConnectionSaveStatus);
   window.addEventListener("offline",refreshConnectionSaveStatus);
@@ -4717,6 +4707,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   function portalRead(key,fallback){try{return JSON.parse(localStorage.getItem(key)||"null")??fallback}catch(e){return fallback}}
   function portalWrite(key,value){localStorage.setItem(key,JSON.stringify(value))}
   function portalProfile(){return portalRead(PORTAL_PROFILE_KEY,null)}
+  function portalRoute(id){const core=window.NitrosRepairOrderCore;if(core?.showScreen){core.showScreen(id,false);return;}portalShowScreen(id);}
   function portalShowScreen(id){
     document.querySelectorAll(".screen").forEach(screen=>screen.classList.toggle("active",screen.id===id));
     window.scrollTo({top:0,behavior:"auto"});
@@ -4750,24 +4741,31 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     portalShowScreen("checkin");
     const st=document.getElementById("identifyStatus"); if(st){st.className="status ok";st.textContent=`Assigned job opened: ${job.vehicle||"vehicle pending VIN scan"}. Scan or enter the VIN to continue.`}
   }
+  let signInBusy=false;
   document.getElementById("portalSignIn")?.addEventListener("click",()=>{
+    if(signInBusy)return;signInBusy=true;
     const name=document.getElementById("portalTechName").value.trim(), pin=document.getElementById("portalPin").value.trim(), status=document.getElementById("portalLoginStatus");
-    if(!name){status.className="status warn";status.textContent="Enter the technician name before signing in.";return}
-    if(pin && !/^\d{4}$/.test(pin)){status.className="status warn";status.textContent="Use a 4-digit PIN or leave it blank for this field test.";return}
+    console.info("[NITROS AUTH] sign-in started");
+    if(!name){status.className="status warn";status.textContent="Enter the technician name before signing in.";signInBusy=false;return}
+    if(pin && !/^\d{4}$/.test(pin)){status.className="status warn";status.textContent="Use a 4-digit PIN or leave it blank for this field test.";signInBusy=false;return}
     try{
+      console.info("[NITROS AUTH] credentials validated",{technician:name,pinProvided:Boolean(pin)});
       const profile={name,pinSet:Boolean(pin),signedInAt:new Date().toISOString()};
       portalWrite(PORTAL_PROFILE_KEY,profile);
-      console.info("SIGN_IN_SUCCESS",{technician:name,pinSet:profile.pinSet});
+      console.info("SIGN_IN_SUCCESS",{technician:name,pinSet:profile.pinSet});console.info("[NITROS AUTH] session saved",{technician:name});
       applyPortalProfile(profile);
       console.info("TECH_SESSION_READY",{technician:profile.name,signedInAt:profile.signedInAt});
       status.className="status ok";
       status.textContent=`Signed in as ${name}.`;
-      portalShowScreen("home");
+      console.info("[NITROS AUTH] portal navigation started",{route:"home"});
+      portalRoute("home");
+      if(!document.getElementById("home")?.classList.contains("active"))throw new Error("home portal route did not mount");
+      console.info("[NITROS AUTH] portal mounted",{route:"home"});
     }catch(error){
-      console.error("Portal sign-in failed:",error);
+      console.error("[NITROS AUTH] sign-in failure",error);
       status.className="status bad";
-      status.textContent="Sign-in could not be saved on this browser. Close and reopen the file, then try again.";
-    }
+      status.textContent=`Sign-in failed: ${String(error?.message||error)}. Your saved work is safe; try again.`;
+    }finally{signInBusy=false;}
   });
   document.getElementById("portalSignOut")?.addEventListener("click",()=>{localStorage.removeItem(PORTAL_PROFILE_KEY);applyPortalProfile(null);portalShowScreen("login")});
   document.getElementById("addAssignedJob")?.addEventListener("click",()=>{
@@ -4783,7 +4781,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   document.querySelectorAll('[data-go="jobs"]').forEach(b=>b.addEventListener("click",renderAssignedJobs));
   window.addEventListener("DOMContentLoaded",()=>{
     const profile=portalProfile(); applyPortalProfile(profile); renderAssignedJobs();
-    if(profile?.name){console.info("TECH_SESSION_READY",{technician:profile.name,signedInAt:profile.signedInAt,restored:true});portalShowScreen("home");}else portalShowScreen("login");
+    if(profile?.name){console.info("TECH_SESSION_READY",{technician:profile.name,signedInAt:profile.signedInAt,restored:true});portalRoute("home");}else portalRoute("login");
   });
 
 
@@ -4826,7 +4824,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     function annotatedBlob(){return new Promise(resolve=>{const c=document.createElement("canvas"),img=preview;c.width=img.naturalWidth;c.height=img.naturalHeight;const x=c.getContext("2d");x.drawImage(img,0,0,c.width,c.height);x.drawImage(canvas,0,0,c.width,c.height);c.toBlob(b=>resolve(b),"image/jpeg",.86)})}
     async function renderTimeline(){const box=document.getElementById("activeEvidenceTimeline"),all=await list(activeRecord()),byEvidence=new Map();all.forEach(item=>{const key=item.evidenceId||String(item.fieldId||"").replace(/_(original|annotated)$/i,"");const prior=byEvidence.get(key);if(!prior||/_annotated$/i.test(item.fieldId||""))byEvidence.set(key,item)});const items=[...byEvidence.values()].sort((a,b)=>String(a.capturedAt).localeCompare(String(b.capturedAt)));box.innerHTML=items.length?items.map(i=>`<div class="evidence-timeline-item ${i.severity==="Vehicle Unsafe to Operate"?"severity-unsafe":i.severity==="Safety Concern"?"severity-safety":""}" data-evidence-id="${escapeText(i.evidenceId||i.fieldId||i.key)}"><strong>${escapeText(i.title||i.label)}</strong><small>${escapeText(new Date(i.capturedAt).toLocaleString())} • ${escapeText(i.category||"Other")} • ${escapeText(i.severity||"Information Only")}<br>${escapeText(i.notes||"No notes")}${i.repairLine?`<br>Repair line: ${escapeText(i.repairLine)}`:""}<br>${window.NitrosGpsEvidence.html(i.gps,escapeText)}</small></div>`).join(""):'<div class="status">No additional evidence has been recorded yet.</div>';box.querySelectorAll(".evidence-timeline-item").forEach((card,index)=>card.addEventListener("click",()=>window.NitrosGpsEvidence.diagnoseEvidence(items[index])))}
     function escapeText(v){return String(v??"").replace(/[&<>\"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-    document.getElementById("saveSmartEvidence")?.addEventListener("click",async()=>{const status=document.getElementById("smartEvidenceSaveStatus"),saveButton=document.getElementById("saveSmartEvidence"),title=document.getElementById("evidenceTitle").value.trim(),notes=document.getElementById("evidenceNotes").value.trim(),originScreen=currentScreen();if(saveBusy)return;if(!originalBlob){status.className="status warn";status.textContent="Take or select an evidence photo before saving.";return}if(!title){status.className="status warn";status.textContent="Enter a short evidence title before saving.";return}saveBusy=true;saveButton.disabled=true;let recordId=activeRecord(),id=pendingEvidenceId||`additionalEvidence_${Date.now()}`;try{status.className="status";status.textContent="Saving evidence safely with this repair order…";recordId=await withTimeout(snapshotActiveRo(),"Repair-order snapshot");pendingEvidenceId=id;const evidenceType=`${document.getElementById("evidenceCategory").value} ${title}`,isVeci=/\b(under\s*hood\s*emissions?|veci|emissions?\s*label|vehicle\s*emission\s*control\s*information)\b/i.test(evidenceType),transaction=isVeci?window.NitrosRepairOrderCore?.beginEvidenceSaveTransaction?.({roId:recordId,evidenceId:id,evidenceType}):null;if(isVeci&&!transaction?.ok)throw new Error(`EMISSIONS_HANDOFF_FAILED: ${transaction?.reason||"missing save context"}`);const capturedAt=new Date().toISOString(),meta={recordId,evidenceId:id,capturedAt,title,category:document.getElementById("evidenceCategory").value,severity:document.getElementById("evidenceSeverity").value,repairLine:document.getElementById("evidenceRepairLine").value.trim(),notes,sourceScreen:originScreen,...identity(),...(transaction?.context||{})},ann=await withTimeout(annotatedBlob(),"Evidence annotation");const response=await withTimeout(putMany([{...meta,key:`${recordId}:${id}_original`,fieldId:`${id}_original`,label:`${title} — Original`,blob:originalBlob,mimeType:originalBlob.type||"image/jpeg",evidenceType:"additional-original"},{...meta,key:`${recordId}:${id}_annotated`,fieldId:`${id}_annotated`,label:`${title} — Annotated`,blob:ann,mimeType:"image/jpeg",evidenceType:"additional-annotated"}]),"Evidence storage");if(!response||response.status!=="local-indexeddb")throw new Error("Invalid evidence storage response");const handoff=isVeci?await window.NitrosRepairOrderCore?.commitVeciEvidenceTransaction?.({context:transaction.context,analysisResult:{text:[notes,document.getElementById("veciVisibleWording")?.value||""].join(" ")}):null;if(handoff?.reason==="context-mismatch"||handoff?.reason?.startsWith("missing"))throw new Error(`EMISSIONS_HANDOFF_FAILED: ${handoff.reason}`);await withTimeout(window.NitrosActiveRepairPersistence?.persistNow?.()||Promise.resolve(),"Repair-order evidence snapshot");status.className="status ok";status.textContent=handoff?.applied?`Evidence saved. Emissions certification updated to ${handoff.outcome.classification}.`:"Evidence saved and added to the repair-order timeline.";evidenceWorkflowActive=false;updateButton();logEvidenceSave("save",recordId,id,null,response.status);pendingEvidenceId=null;["evidenceTitle","evidenceRepairLine","evidenceNotes"].forEach(id=>document.getElementById(id).value="");input.value="";originalBlob=null;document.getElementById("annotationSection").classList.add("hidden");ctx?.clearRect(0,0,canvas.width,canvas.height);await renderTimeline()}catch(error){logEvidenceSave("save",recordId,id,error);await Promise.resolve(window.NitrosActiveRepairPersistence?.persistNow?.()).catch(()=>{});preserveRoScreen(originScreen);status.className="status bad";status.textContent="Evidence could not be saved. Your repair order is safe. Please try again."}finally{saveBusy=false;saveButton.disabled=false;}});
+    document.getElementById("saveSmartEvidence")?.addEventListener("click",async()=>{const status=document.getElementById("smartEvidenceSaveStatus"),saveButton=document.getElementById("saveSmartEvidence"),title=document.getElementById("evidenceTitle").value.trim(),notes=document.getElementById("evidenceNotes").value.trim(),originScreen=currentScreen();if(saveBusy)return;if(!originalBlob){status.className="status warn";status.textContent="Take or select an evidence photo before saving.";return}if(!title){status.className="status warn";status.textContent="Enter a short evidence title before saving.";return}saveBusy=true;saveButton.disabled=true;let recordId=activeRecord(),id=pendingEvidenceId||`additionalEvidence_${Date.now()}`;try{status.className="status";status.textContent="Saving evidence safely with this repair order…";recordId=await withTimeout(snapshotActiveRo(),"Repair-order snapshot");pendingEvidenceId=id;const evidenceType=`${document.getElementById("evidenceCategory").value} ${title}`,isVeci=/\b(under\s*hood\s*emissions?|veci|emissions?\s*label|vehicle\s*emission\s*control\s*information)\b/i.test(evidenceType),transaction=isVeci?window.NitrosRepairOrderCore?.beginEvidenceSaveTransaction?.({roId:recordId,evidenceId:id,evidenceType}):null;if(isVeci&&!transaction?.ok)throw new Error(`EMISSIONS_HANDOFF_FAILED: ${transaction?.reason||"missing save context"}`);const capturedAt=new Date().toISOString(),meta={recordId,evidenceId:id,capturedAt,title,category:document.getElementById("evidenceCategory").value,severity:document.getElementById("evidenceSeverity").value,repairLine:document.getElementById("evidenceRepairLine").value.trim(),notes,sourceScreen:originScreen,...identity(),...(transaction?.context||{})},ann=await withTimeout(annotatedBlob(),"Evidence annotation");const response=await withTimeout(putMany([{...meta,key:`${recordId}:${id}_original`,fieldId:`${id}_original`,label:`${title} — Original`,blob:originalBlob,mimeType:originalBlob.type||"image/jpeg",evidenceType:"additional-original"},{...meta,key:`${recordId}:${id}_annotated`,fieldId:`${id}_annotated`,label:`${title} — Annotated`,blob:ann,mimeType:"image/jpeg",evidenceType:"additional-annotated"}]),"Evidence storage");if(!response||response.status!=="local-indexeddb")throw new Error("Invalid evidence storage response");const handoff=isVeci?await window.NitrosRepairOrderCore?.commitVeciEvidenceTransaction?.({context:transaction.context,analysisResult:{text:[notes,document.getElementById("veciVisibleWording")?.value||""].join(" ")}}):null;if(handoff?.reason==="context-mismatch"||handoff?.reason?.startsWith("missing"))throw new Error(`EMISSIONS_HANDOFF_FAILED: ${handoff.reason}`);await withTimeout(window.NitrosActiveRepairPersistence?.persistNow?.()||Promise.resolve(),"Repair-order evidence snapshot");status.className="status ok";status.textContent=handoff?.applied?`Evidence saved. Emissions certification updated to ${handoff.outcome.classification}.`:"Evidence saved and added to the repair-order timeline.";evidenceWorkflowActive=false;updateButton();logEvidenceSave("save",recordId,id,null,response.status);pendingEvidenceId=null;["evidenceTitle","evidenceRepairLine","evidenceNotes"].forEach(id=>document.getElementById(id).value="");input.value="";originalBlob=null;document.getElementById("annotationSection").classList.add("hidden");ctx?.clearRect(0,0,canvas.width,canvas.height);await renderTimeline()}catch(error){logEvidenceSave("save",recordId,id,error);await Promise.resolve(window.NitrosActiveRepairPersistence?.persistNow?.()).catch(()=>{});preserveRoScreen(originScreen);status.className="status bad";status.textContent="Evidence could not be saved. Your repair order is safe. Please try again."}finally{saveBusy=false;saveButton.disabled=false;}});
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;document.getElementById("dictateEvidenceNotes")?.addEventListener("click",()=>{if(!SR){alert("Voice dictation is not available in this browser.");return}rec=new SR();rec.lang="en-US";rec.interimResults=false;rec.onresult=e=>{const t=e.results[0][0].transcript,n=document.getElementById("evidenceNotes");n.value=(n.value?`${n.value} `:"")+t};rec.start()});
   })();
 
