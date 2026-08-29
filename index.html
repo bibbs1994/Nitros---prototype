@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="nitros-semantic-endpoint" content="https://nitros-prototype.vercel.app/api/semantic-image-analysis">
 <meta name="nitros-support-ticket-endpoint" content="http://192.168.4.24:8787/api/support-tickets">
-<title>Nitros Mobile Technician Portal v10.13.109 — Authoritative VECI Evidence Transaction — Build 2026-08-29</title>
+<title>Nitros Mobile Technician Portal v10.13.110 — Check-In Navigation Repair — Build 2026-08-29</title>
 
 <!-- CDN fallback scanner for browsers that do not expose BarcodeDetector.
      This library requires an internet connection when the page loads. -->
@@ -531,7 +531,7 @@ canvas.graph-preview,canvas.ocr-preview{
 <div class="app">
 <header>
   <div class="brand">Nitros</div>
-  <div class="sub">Mobile Technician Portal v10.13.109 — Authoritative VECI Evidence Transaction — Build 2026-08-29</div>
+  <div class="sub">Mobile Technician Portal v10.13.110 — Check-In Navigation Repair — Build 2026-08-29</div>
   <div id="techHeader" class="env hidden"><span class="dot ok"></span><span id="techHeaderText">Technician signed out</span></div>
   <div class="env"><span id="envDot" class="dot"></span><span id="envText">Checking browser environment…</span></div>
   <div id="saveIndicator" class="save-indicator saved" role="status" aria-live="polite"><span class="save-dot"></span><span id="saveIndicatorText">Saved on this device</span></div>
@@ -546,7 +546,7 @@ canvas.graph-preview,canvas.ocr-preview{
     <div class="field"><label for="portalTechName">Technician name</label><input id="portalTechName" autocomplete="name" placeholder="Enter technician name"></div>
     <div class="field"><label for="portalPin">4-digit PIN</label><input id="portalPin" inputmode="numeric" maxlength="4" type="password" placeholder="Optional during field testing"></div>
     <button id="portalSignIn" class="btn primary" type="button">Sign In</button>
-    <div id="portalLoginStatus" class="status">Version 10.13.109 — Authoritative VECI Evidence Transaction · Build 2026-08-29. Existing diagnostic evidence and verification features remain available.</div>
+    <div id="portalLoginStatus" class="status">Version 10.13.110 — Check-In Navigation Repair · Build 2026-08-29. Existing diagnostic evidence and verification features remain available.</div>
   </div>
   <div class="card">
     <span class="badge">Recovery protected</span>
@@ -592,7 +592,7 @@ canvas.graph-preview,canvas.ocr-preview{
       <button class="btn primary" data-go="schedule">Appointments & Morning Briefing</button>
       <button class="btn primary" data-go="dashboard">Technician Dashboard</button>
       <button class="btn primary" data-go="jobs">Assigned Jobs</button>
-      <button id="newRepairOrder" class="btn secondary" data-go="checkin">New Walk-In / Check-In</button>
+      <button id="newRepairOrder" class="btn secondary" type="button">New Walk-In / Check-In</button>
       <button class="btn secondary" data-go="history">Customer History</button>
       <button class="btn secondary" data-go="assistant">AI Repair Assistant</button>
       <button id="guidedWalkthroughLaunch" class="btn secondary" type="button">Guided Walkthrough</button>
@@ -1708,13 +1708,13 @@ canvas.graph-preview,canvas.ocr-preview{
   </div>
 </div>
 
-<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.109 • Authoritative VECI Evidence Transaction • Build 2026-08-29</div>
+<div class="footer-note nitros-build-identity">Nitros Mobile Technician Portal v10.13.110 • Check-In Navigation Repair • Build 2026-08-29</div>
 </div>
 
 <script>
 window.NitrosBuild=Object.freeze({
-  version:'10.13.109',
-  release:'Authoritative VECI Evidence Transaction',
+  version:'10.13.110',
+  release:'Check-In Navigation Repair',
   buildDate:'2026-08-29',
   apply(){const label=`Version ${this.version} — ${this.release}`,title=`Nitros Mobile Technician Portal v${this.version} — ${this.release}`;document.title=title;const sub=document.querySelector('header .sub');if(sub)sub.textContent=`Mobile Technician Portal v${this.version} — ${this.release}`;const login=document.getElementById('portalLoginStatus');if(login&&!/recovery mode/i.test(login.textContent||''))login.textContent=`${label}. Enter technician name and an optional 4-digit PIN.`;document.querySelectorAll('.nitros-build-identity').forEach(el=>el.innerHTML=`<strong>${label}</strong> · Build ${this.buildDate}`);const hub=document.getElementById('unifiedOliverTitle');if(hub)hub.innerHTML=`Oliver Hub <span style="display:block;font-size:12px;color:#ffb45f;margin-top:4px">${label} · Build ${this.buildDate}</span>`;const diag=document.querySelector('#diagWorkspace .diag-status');if(diag)diag.textContent=`v${this.version}`;const smart=document.querySelector('#smartOliverHead strong + div');if(smart)smart.textContent=`v${this.version} • ${this.release}`;const guide=document.querySelector('.oliver-guide-sub');if(guide)guide.textContent=label;}
 });
@@ -4757,7 +4757,9 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     try{
       const profile={name,pinSet:Boolean(pin),signedInAt:new Date().toISOString()};
       portalWrite(PORTAL_PROFILE_KEY,profile);
+      console.info("SIGN_IN_SUCCESS",{technician:name,pinSet:profile.pinSet});
       applyPortalProfile(profile);
+      console.info("TECH_SESSION_READY",{technician:profile.name,signedInAt:profile.signedInAt});
       status.className="status ok";
       status.textContent=`Signed in as ${name}.`;
       portalShowScreen("home");
@@ -4781,7 +4783,7 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
   document.querySelectorAll('[data-go="jobs"]').forEach(b=>b.addEventListener("click",renderAssignedJobs));
   window.addEventListener("DOMContentLoaded",()=>{
     const profile=portalProfile(); applyPortalProfile(profile); renderAssignedJobs();
-    if(profile?.name) portalShowScreen("home"); else portalShowScreen("login");
+    if(profile?.name){console.info("TECH_SESSION_READY",{technician:profile.name,signedInAt:profile.signedInAt,restored:true});portalShowScreen("home");}else portalShowScreen("login");
   });
 
 
@@ -8323,7 +8325,7 @@ document.addEventListener("DOMContentLoaded",()=>{
  async function showActiveJobs(){if(activeJobsOpening)return;activeJobsOpening=true;try{await persist('open active jobs switcher',true);await renderActiveJobs();$('activeJobsModal')?.classList.remove('hidden')}catch(error){warn(error)}finally{activeJobsOpening=false}}
  async function exitCurrentRepairOrder(){await persist('exit repair order to active jobs',true);['smartEvidenceModal','oliverGuidePanel','oliverDiagnosticMode'].forEach(id=>$(id)?.classList.add('hidden'));core.showScreen('home');await renderActiveJobs();$('activeJobsModal')?.classList.remove('hidden')}
  function updateExitRoControl(){const control=$('exitRoControl');control?.classList.toggle('visible',roScreens.has(core?.getScreen?.())&&Boolean(activeId))}
- document.addEventListener('click',event=>{const newButton=event.target.closest('#newRepairOrder');if(newButton){event.preventDefault();event.stopImmediatePropagation();startNewRepairOrder();return}if(event.target.closest('#discardDraft')){event.preventDefault();event.stopImmediatePropagation();if(activeId)confirmDiscard().then(ok=>ok&&abandon('Explicit Discard Repair Order'))}},true);
+ document.addEventListener('click',event=>{const newButton=event.target.closest('#newRepairOrder');if(newButton){event.preventDefault();event.stopImmediatePropagation();const profile=(()=>{try{return JSON.parse(localStorage.getItem('nitros_portal_v8_profile')||'null')}catch(_){return null}})();console.info('CHECK_IN_CLICK',{authenticated:Boolean(profile?.name),activeId:activeId||null});if(!profile?.name){console.error('CHECK_IN_NAVIGATION_FAILURE',{reason:'missing authenticated technician session'});const login=$('portalLoginStatus');if(login){login.className='status bad';login.textContent='Your technician session is unavailable. Sign in again to start Check-In.'}core.showScreen('login');return}console.info('CHECK_IN_NAVIGATION_START',{technician:profile.name,activeId:activeId||null});startNewRepairOrder().then(()=>{const route=core.getScreen?.();if(route!=='checkin')throw new Error(`expected checkin route, received ${route||'none'}`);console.info('CHECK_IN_NAVIGATION_SUCCESS',{technician:profile.name,activeId:activeId||null,route});}).catch(error=>{console.error('CHECK_IN_NAVIGATION_FAILURE',{reason:String(error?.message||error),technician:profile.name});const status=$('identifyStatus');if(status){status.className='status bad';status.textContent='Check-In could not open. Your saved work is safe. Please try again.'}core.showScreen('home');});return}if(event.target.closest('#discardDraft')){event.preventDefault();event.stopImmediatePropagation();if(activeId)confirmDiscard().then(ok=>ok&&abandon('Explicit Discard Repair Order'))}},true);
  document.addEventListener('click',event=>{if(!event.target.closest('#quickActiveJobs'))return;event.preventDefault();event.stopImmediatePropagation();showActiveJobs()},true);
  $('closeActiveJobs')?.addEventListener('click',()=>$('activeJobsModal')?.classList.add('hidden'));$('activeJobsNewRo')?.addEventListener('click',async()=>{$('activeJobsModal')?.classList.add('hidden');await startNewRepairOrder()});
  ['exitRoControl','exitRoEvidence','exitRoGuide','exitRoDiagnostic'].forEach(id=>$(id)?.addEventListener('click',exitCurrentRepairOrder));
