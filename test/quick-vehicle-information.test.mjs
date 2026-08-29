@@ -15,8 +15,12 @@ test('vehicle information uses active RO and existing draft fields',()=>{
   const script=html.match(/<script id="nitros-quick-vehicle-information">([\s\S]*?)<\/script>/)?.[1]||'';
   assert.match(script,/activeRepairOrderId/);
   assert.match(script,/NitrosRepairOrderCore\?\.collectDraft/);
-  for(const field of ['Year','Make','Model','Engine','VIN','License plate','Mileage','Repair Order','Customer'])assert.match(script,new RegExp(`['"]${field}['"]`));
+  for(const field of ['Year','Make','Model','Engine','VIN','EMISSIONS CERTIFICATION','Verification source','License plate','Mileage','Repair Order','Customer'])assert.match(script,new RegExp(`['"]${field}['"]`));
   assert.match(script,/if\(!activeRepairId&&!repairOrder\)return null/);
+  assert.match(script,/selected\.emissionsCertification\|\|fields\.emissionsCertification/);
+  assert.match(script,/selected\.certificationSource\|\|fields\.certificationSource/);
+  assert.match(script,/Unknown — Needs Verification/);
+  assert.match(script,/Verified from \$\{emissionsSource\}/);
 });
 
 test('vehicle and notes controls use separate compact safe-area positions',()=>{
