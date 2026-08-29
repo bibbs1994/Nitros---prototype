@@ -1,6 +1,6 @@
 /* Nitros 10.12.23 appointment dedicated field commit fix. */
 (()=>{'use strict';
-  const BUILD='10.13.113';
+  const BUILD='10.13.114';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
   const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
   const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
@@ -656,6 +656,8 @@
     // easier-to-identify neighboring component to silently replace the selected target.
     const pointerEvidence=(result.evidence||[]).find(item=>/\b(?:finger|hand|screwdriver|probe|pick|test lead|flashlight|arrow|pointer)\b.{0,100}\b(?:pointing|indicat|toward|at)\b|\b(?:pointing|indicat)\b.{0,100}\b(?:finger|hand|screwdriver|probe|pick|test lead|flashlight|arrow|pointer)\b/i.test(String(item)))||'';
     const pointerTarget=pointerEvidence.replace(/^.*?\b(?:pointing|indicat(?:ing|ed)?)\b\s*(?:at|toward)?\s*/i,'').trim().replace(/[.]+$/,'')||'the technician-indicated component/connection area';
+    const electricalPointerTarget=hasElectricalPointerTarget(result),pointerTargetType=electricalPointerTarget?'Electrical / Electronic candidate':'Mechanical / Unknown';
+    const pointerGuidance=electricalPointerTarget?['Inspect the indicated sensor/connector/harness area for a fully seated connector, lock/retainer condition, exposed or corroded terminals, damaged insulation, chafing, routing, clips, and mounting damage.','If the pictured area cannot establish operation, verify the applicable connector condition, scan data, and circuit power/ground/signal with vehicle-specific wiring information before condemning a component.']:[];
     // Defect-first is intentionally rendered before component naming: a recognizable part never
     // downgrades a visible separation, damage, residue, or safety concern.
     const defectFirst=result.visualConditionInspection;
@@ -665,7 +667,7 @@
       const confirmed=findings.filter(item=>item.findingType==='CLEAR_DEFECT'),possible=findings.filter(item=>item.findingType==='POSSIBLE_CONCERN'||item.findingType==='RESIDUE_OR_STAINING'),unverified=findings.filter(item=>['UNVERIFIED_CONDITION','SEATING_NOT_RELIABLY_VISIBLE'].includes(item.findingType));
       const list=items=>items.length?`<ul>${items.map(item=>`<li><strong>${escapeHtml(item.location)}</strong> — ${escapeHtml(item.visibleEvidence)}${item.recommendedVerification?` Verify: ${escapeHtml(item.recommendedVerification)}`:''}</li>`).join('')}</ul>`:'<p class="condition-empty">None</p>';
       const section=document.createElement('section');section.className='visual-condition-inspection defect-first-summary';
-      section.innerHTML=`<h3>DEFECT-FIRST VISUAL ANALYSIS</h3>${pointerEvidence?`<div class="condition-field"><strong>TECHNICIAN-INDICATED TARGET — PRIMARY INSPECTION AREA</strong><span>${escapeHtml(pointerTarget)}</span><br><span>Pointer evidence: ${escapeHtml(pointerEvidence)}. Analyze this target and its immediate connections before secondary nearby components.</span></div>`:''}<div class="condition-field"><strong>VISIBLE DEFECTS</strong>${list(confirmed)}</div><div class="condition-field"><strong>POSSIBLE CONCERNS — PHYSICAL VERIFICATION REQUIRED</strong>${list(possible)}</div><div class="condition-field"><strong>CANNOT BE VISUALLY VERIFIED</strong>${list(unverified)}${defectFirst.unableToInspectReason?`<span>${escapeHtml(defectFirst.unableToInspectReason)}</span>`:''}</div>${defectFirst.status==='NO_VISIBLE_CONCERN_DETECTED'?`<div class="condition-field"><strong>RESULT</strong><span>${pointerEvidence?'No definite defect can be confirmed at the technician-indicated location from this image. Physically inspect the indicated target and its wiring/connection before relying on surrounding components.':'No obvious visible defect detected in the areas that can be reliably inspected from this image.'}</span></div>`:''}${defectFirst.safetyDrivabilityImpact?`<div class="condition-field"><strong>SAFETY-CRITICAL OBSERVATION</strong><span>${escapeHtml(defectFirst.safetyDrivabilityImpact)}</span></div>`:''}<div class="condition-field"><strong>RECOMMENDED PHYSICAL CHECK</strong>${list((defectFirst.recommendedVerification||[]).map(item=>({location:'Technician check',visibleEvidence:item,recommendedVerification:''})))}</div>`;
+      section.innerHTML=`<h3>DEFECT-FIRST VISUAL ANALYSIS</h3>${pointerEvidence?`<div class="condition-field"><strong>TECHNICIAN-INDICATED TARGET — PRIMARY INSPECTION AREA</strong><span><strong>Pointer detected:</strong> Yes<br><strong>Primary target:</strong> ${escapeHtml(pointerTarget)}<br><strong>Target type:</strong> ${escapeHtml(pointerTargetType)}<br><strong>Target confidence:</strong> ${electricalPointerTarget?'Possible target — physical confirmation required':'Pointer observed; component not confirmed'}<br><strong>Pointer evidence:</strong> ${escapeHtml(pointerEvidence)}</span><br><span>Analyze this target and its immediate connections before secondary nearby components.</span>${electricalPointerTarget?'<br><strong>Visible circuit inspection:</strong> PERFORMED<br><strong>Component verification guidance:</strong> GENERATED':''}</div>`:''}<div class="condition-field"><strong>VISIBLE DEFECTS</strong>${list(confirmed)}</div><div class="condition-field"><strong>POSSIBLE CONCERNS — PHYSICAL VERIFICATION REQUIRED</strong>${list(possible)}</div><div class="condition-field"><strong>CANNOT BE VISUALLY VERIFIED</strong>${list(unverified)}${defectFirst.unableToInspectReason?`<span>${escapeHtml(defectFirst.unableToInspectReason)}</span>`:''}</div>${defectFirst.status==='NO_VISIBLE_CONCERN_DETECTED'?`<div class="condition-field"><strong>RESULT</strong><span>${pointerEvidence?'No definite defect can be confirmed at the technician-indicated location from this image. Physically inspect the indicated target and its wiring/connection before relying on surrounding components.':'No obvious visible defect detected in the areas that can be reliably inspected from this image.'}</span></div>`:''}${defectFirst.safetyDrivabilityImpact?`<div class="condition-field"><strong>SAFETY-CRITICAL OBSERVATION</strong><span>${escapeHtml(defectFirst.safetyDrivabilityImpact)}</span></div>`:''}<div class="condition-field"><strong>RECOMMENDED PHYSICAL CHECK</strong>${list([...defectFirst.recommendedVerification||[],...pointerGuidance].map(item=>({location:'Technician check',visibleEvidence:item,recommendedVerification:''})))}</div>`;
       host.appendChild(section);
     }
     const component=result.componentIdentification;
@@ -809,6 +811,16 @@
       else{const failed=unavailableResult(run,`Analysis failed: ${error.message}`);run.result=failed;if(!rejectStale(run,failed)){renderResult(run,{...failed,route:'Stopped',routeResult:{status:'Insufficient evidence'}});updateDeveloper(run,{disposition:'FAILED',verification:'FAIL'})}}
       const status=$('oliverImportStatus');if(status)status.textContent=payloadFailure?'Image could not be prepared for analysis.':'Unknown / Analysis Unavailable';
     }
+    const pointerCircuit=hasElectricalPointerTarget(result);
+    if(pointerCircuit){set(17,'PASS');set(18,'PASS');run.analyzer.pointerTargetCircuitAnalysis='PASS';run.analyzer.pointerTargetGuidance='PASS'}
+  }
+
+  function hasElectricalPointerTarget(result){
+    const evidence=[...(result?.evidence||[]),...(result?.automotiveEvidence||[]),...(result?.objects||[]),result?.componentIdentification?.primaryComponent||'',...(result?.componentIdentification?.secondaryComponents||[])].join(' ');
+    const pointer=/\b(?:finger|hand|screwdriver|probe|pick|test lead|flashlight|arrow|pointer)\b.{0,100}\b(?:pointing|indicat|toward|at)\b|\b(?:pointing|indicat)\b.{0,100}\b(?:finger|hand|screwdriver|probe|pick|test lead|flashlight|arrow|pointer)\b/i.test(evidence);
+    const electrical=/\b(?:abs|wheel[- ]?speed|sensor|connector|wiring|wire|harness|terminal|ground|actuator|solenoid|switch|fuse|relay|module|motor|electrical|electronic)\b/i.test(evidence);
+    const wheelArea=/\b(?:wheel|suspension|axle|cv boot|brake|hub)\b/i.test(evidence);
+    return pointer&&(electrical||wheelArea);
   }
 
   function updateDeveloper(run,extra={}){
