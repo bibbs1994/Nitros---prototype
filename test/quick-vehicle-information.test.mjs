@@ -19,8 +19,10 @@ test('vehicle information uses active RO and existing draft fields',()=>{
   assert.match(script,/if\(!activeRepairId&&!repairOrder\)return null/);
   assert.match(script,/selected\.emissionsCertification\|\|fields\.emissionsCertification/);
   assert.match(script,/selected\.certificationSource\|\|fields\.certificationSource/);
+  assert.match(script,/selected\.emissionsEvidencePhotoReference/);
+  assert.match(script,/selected\.emissionsVerifiedAt/);
   assert.match(script,/Unknown — Needs Verification/);
-  assert.match(script,/Verified from \$\{emissionsSource\}/);
+  assert.match(script,/Verified from \$\{emissionsSource\}\$\{emissionsEvidenceReference/);
 });
 
 test('vehicle and notes controls use separate compact safe-area positions',()=>{
