@@ -22,6 +22,7 @@ const contracts = {
   nitros_candidate_regions: { candidates: [{ candidate_id: 'OBJ-101', candidate_class: 'electrical_connector', candidate_description: 'Visible connector body', confidence: 92, inspection_priority: 1, region_basis: 'Visible connector-body bounds.', region }] },
   nitros_localized_inspection: localizedRaw,
   nitros_automotive_component: { status: 'IDENTIFIED', primaryComponent: 'Electrical connector', componentConfidence: 80, system: 'Electrical', secondaryComponents: [], supportingEvidence: ['A connector body and harness are visible.'], possibleAlternatives: [], likelyConnectionsOrDestinations: [], uncertaintyReason: null, drivetrainDiscrimination: drivetrain() },
+  nitros_vehicle_area_relationship: { status: 'READY', vehicleAreaLocation: 'Electrical component close-up', locationConfidence: 82, locationEvidence: ['An electrical connector and its receiving interface are visible.'], vehicleContextSupport: [], primaryVisibleAssembly: 'Electrical connector relationship', observedItems: [{ observedItem: 'Electrical connector and receiving receptacle', itemLocationInImage: 'Center of image', nearestIdentifiableAssembly: 'Electrical component close-up', likelyRelationshipOrDestination: 'The connector and receptacle form a visible mating relationship.', relationshipConfidence: 82, visibleEvidence: 'Both sides of the mating interface are visible in the current image.', vehicleContextEvidence: '', whatCannotBeConfirmed: 'Exact component ownership cannot be established from this close-up.', recommendedNextPhotoVerification: 'Take a wider image showing harness routing and the component body.' }], expectedComponentCheck: { expectedMajorComponents: [], visiblyAccountedFor: [], possibleMissingOrRemovedComponent: 'No visually supported missing component detected.', supportingVisualEvidence: [], vehicleContextSupport: [], confidence: null, whatPreventsConfirmation: 'No active vehicle context was supplied for topology comparison.', recommendedTechnicianVerification: 'Use the current image only for the visible connection relationship.' }, whatPreventsConfirmation: 'Exact component ownership cannot be established from this close-up.', recommendedNextPhotoVerification: 'Take a wider image showing harness routing and the component body.' },
   nitros_visual_condition_inspection: { status: 'NO_VISIBLE_CONCERN_DETECTED', conditionConfidence: 88, observedCondition: [], possibleConcerns: [], connectionAssessments: [{ location: 'Center of image connector interface', seatingStatus: 'NO_GAP_OR_SEPARATION_VISIBLE', findingType: 'NO_DEFECT_VISIBLE', severity: 'LOW', findingConfidence: 88, visibleEvidence: 'The complete connector-to-receptacle mating edge is visibly seated with no gap and the retention relationship is visible.', matingComponentVisible: true, directDamageVisible: false, missingContext: null, recommendedVerification: 'Physically confirm connector latch retention before repair authorization.', safetyDrivabilityImpact: null }], noVisibleConcernMessage: 'No visible defect can be confirmed from this image. Inspect the component physically before making a repair decision.', unableToInspectReason: null, visibleEvidence: ['The connector mating interface is visibly continuous.'], recommendedVerification: ['Physically confirm connector latch retention before repair authorization.'], safetyDrivabilityImpact: null }
 };
 
@@ -73,7 +74,7 @@ test('localized vision F–I carries real crop bytes through the complete produc
   const body = await productionBody();
   const { fetchImpl, requests } = makeContractRouter();
   const result = await analyzeSemanticImage(body, { apiKey: 'test-only-placeholder', fetchImpl, enableVisualObservation: true });
-  assert.deepEqual(requests.map(({ stage }) => stage), ['nitros_image_semantics', 'nitros_raw_visual_observation', 'nitros_candidate_regions', 'nitros_localized_inspection', 'nitros_automotive_component', 'nitros_visual_condition_inspection']);
+  assert.deepEqual(requests.map(({ stage }) => stage), ['nitros_image_semantics', 'nitros_raw_visual_observation', 'nitros_candidate_regions', 'nitros_localized_inspection', 'nitros_automotive_component', 'nitros_vehicle_area_relationship', 'nitros_visual_condition_inspection']);
   const localizedRequest = requests.find(({ stage }) => stage === 'nitros_localized_inspection').request;
   const images = inputImages(localizedRequest);
   assert.equal(images.length, 3, 'production Pass-2 carries detail, context, and original images');
@@ -93,6 +94,11 @@ test('localized vision F–I carries real crop bytes through the complete produc
   assert.equal(inspection.connectionState, 'DISCONNECTED');
   const global = result.semanticResult.visualObservation.objects.find((item) => item.id === 'OBJ-101');
   assert.equal(global.connectionState, 'CONNECTED_CONFIRMED', 'I precondition: global raw analysis is connected');
+  assert.equal(result.semanticResult.vehicleAreaRelationshipAnalysis.status, 'READY', 'zero-context automotive routing executes vehicle-area and relationship analysis');
+  assert.equal(result.semanticResult.vehicleContextApplied.available, false, 'zero-context run reports vehicle context unavailable without suppressing visual analysis');
+  assert.equal(result.serverDiagnostic.vehicleAreaRelationshipAttempted, true, 'execution telemetry records the actual zero-context relationship call');
+  assert.equal(result.serverDiagnostic.vehicleContextValidation, 'NOT_AVAILABLE', 'execution telemetry reports unavailable context instead of skipped');
+  assert.equal(result.serverDiagnostic.localizedVisualVerification, true, 'execution telemetry records localized verification');
   const fused = result.semanticResult.visualConditionInspection.localizedVisualEvidence[0];
   assert.equal(fused.connectionState, 'DISCONNECTED_VERIFIED', 'I: localized disconnected evidence reaches final fusion');
   assert.equal(fused.localizedDefectState, 'CONFIRMED_VISIBLE_DEFECT');
@@ -113,5 +119,10 @@ test('localized vision J safely falls back through the complete production orche
 
 test('actual localized Pass-2 production prompt rejects proximity as connection', async () => {
   const core = await readFile(new URL('../semantic-analyzer-core.mjs', import.meta.url), 'utf8');
+  const endpoint = await readFile(new URL('../api/semantic-image-analysis.mjs', import.meta.url), 'utf8');
+  const client = await readFile(new URL('../image-analysis-ad.js', import.meta.url), 'utf8');
   for (const requirement of ['PROXIMITY IS NOT CONNECTION', 'connector/socket', 'battery terminal/post', 'hose/port', 'return UNCERTAIN', 'absence of a detected defect is not proof']) assert.ok(core.includes(requirement));
+  assert.match(core, /AUTOMOTIVE_COMPONENT_OR_VEHICLE' && \(enableVisualObservation \|\| vehicleContext\)/, 'eligible production automotive images execute relationship analysis without requiring vehicle context');
+  for (const requirement of ['vehicleAreaRelationshipAttempted', 'localizedVisualVerification', 'vehicleContextMismatchStatus']) assert.ok(endpoint.includes(requirement), `production telemetry exposes ${requirement}`);
+  for (const requirement of ["'NOT AVAILABLE'", "'NOT DETERMINED'", 'SKIPPED — ${reason}']) assert.ok(client.includes(requirement), `Hub trace exposes ${requirement}`);
 });

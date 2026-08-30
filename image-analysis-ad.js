@@ -1,6 +1,6 @@
 /* Nitros 10.12.23 appointment dedicated field commit fix. */
 (()=>{'use strict';
-  const BUILD='10.13.123';
+  const BUILD='10.13.124';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
   const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
   const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
@@ -130,24 +130,31 @@
     else if(server.wiringDiagramAnalysisSkipped){set(16,'SKIPPED');set(17,'SKIPPED');set(18,'SKIPPED')}
     if(server.vehicleAreaRelationshipAttempted){set(21,server.vehicleAreaRelationshipResultPresent?'PASS':'FAIL');set(22,server.vehicleAreaRelationshipResultPresent?'PASS':'FAIL');set(23,server.vehicleAreaRelationshipResultPresent?'PASS':'FAIL')}
     else if(server.vehicleAreaRelationshipSkipped){set(21,'SKIPPED');set(22,'SKIPPED');set(23,'SKIPPED')}
-    if(server.vehicleContextValidation==='PASS'){set(24,'PASS');set(25,'SKIPPED')}
+    if(server.vehicleContextValidation==='PASS'){set(24,'PASS');set(25,server.vehicleContextMismatchStatus||'NOT DETERMINED')}
     else if(server.vehicleContextValidation==='BLOCKED'){set(24,'FAIL');set(25,'BLOCKED')}
-    else {set(24,'SKIPPED');set(25,'SKIPPED')}
+    else if(server.vehicleContextValidation==='NOT_AVAILABLE'){set(24,'NOT AVAILABLE');set(25,'NOT DETERMINED')}
+    else {set(24,'SKIPPED — awaiting automotive result');set(25,'SKIPPED — awaiting vehicle-context evaluation')}
     renderStages(run);
   }
 
   function finalizeAcceptedAnalysisStages(run,result){
     const server=run.analyzer.serverDiagnostic||{},set=(index,status)=>{if(run.stages[index])run.stages[index].status=status};
     const automotive=result.category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE',relationship=result.vehicleAreaRelationshipAnalysis;
-    if(automotive&&run.analyzer.vehicleContextSnapshot){
+    if(automotive){
       const complete=relationship&&relationship.semanticRequestId===run.analyzer.requestId&&relationship.imageHash===run.imageHash&&relationship.status!=='FAILED';
       set(21,complete?'PASS':'FAIL');set(22,complete?'PASS':'FAIL');set(23,complete?'PASS':'FAIL');
-      const contextPass=sameVehicleContext(run.analyzer.vehicleContextSnapshot,result.vehicleContextBinding)&&sameVehicleContext(run.analyzer.vehicleContextSnapshot,activeVehicleAnalysisContext());
-      set(24,contextPass?'PASS':'FAIL');set(25,contextPass?'SKIPPED':'FAIL');
-      Object.assign(run.analyzer,{vehicleContextValidation:contextPass?'PASS':'BLOCKED',vehicleContextMismatchBlocked:!contextPass});
+      if(run.analyzer.vehicleContextSnapshot){
+        const contextPass=sameVehicleContext(run.analyzer.vehicleContextSnapshot,result.vehicleContextBinding)&&sameVehicleContext(run.analyzer.vehicleContextSnapshot,activeVehicleAnalysisContext());
+        set(24,contextPass?'PASS':'FAIL');set(25,contextPass?'NOT DETERMINED':'FAIL');
+        Object.assign(run.analyzer,{vehicleContextValidation:contextPass?'PASS':'BLOCKED',vehicleContextMismatchBlocked:!contextPass});
+      }else{
+        set(24,'NOT AVAILABLE');set(25,'NOT DETERMINED');
+        Object.assign(run.analyzer,{vehicleContextValidation:'NOT_AVAILABLE',vehicleContextMismatchBlocked:false});
+      }
     }else{
-      set(21,server.vehicleAreaRelationshipAttempted?'FAIL':'SKIPPED');set(22,server.vehicleAreaRelationshipAttempted?'FAIL':'SKIPPED');set(23,server.vehicleAreaRelationshipAttempted?'FAIL':'SKIPPED');
-      set(24,run.analyzer.vehicleContextSnapshot?'FAIL':'SKIPPED');set(25,run.analyzer.vehicleContextSnapshot?'FAIL':'SKIPPED');
+      const reason=server.vehicleAreaRelationshipSkipReason||'non-automotive category';
+      set(21,server.vehicleAreaRelationshipAttempted?'FAIL':`SKIPPED — ${reason}`);set(22,server.vehicleAreaRelationshipAttempted?'FAIL':`SKIPPED — ${reason}`);set(23,server.vehicleAreaRelationshipAttempted?'FAIL':`SKIPPED — ${reason}`);
+      set(24,run.analyzer.vehicleContextSnapshot?'FAIL':'NOT AVAILABLE');set(25,run.analyzer.vehicleContextSnapshot?'FAIL':'NOT DETERMINED');
     }
     const electricalPipeline=result.routingData?.electricalCircuitAnalysis||null;
     if(electricalPipeline?.wiringAnalysisExecuted&&electricalPipeline?.visibleCircuitAnalysisExecuted&&electricalPipeline?.testGuidanceGenerated){set(16,'PASS');set(17,'PASS');set(18,'PASS');Object.assign(run.analyzer,{electricalCircuitPipeline:'PASS',electricalDiagramStatus:electricalPipeline.diagramStatus,electricalVisibleCircuitStatus:electricalPipeline.visibleCircuitStatus})}
@@ -396,7 +403,7 @@
         imageBase64=bytesToBase64(bytes);
         const vehicleContext=vehicleContextSnapshot||null;
         if(vehicleContext&&!sameVehicleContext(vehicleContext,activeVehicleAnalysisContext()))throw diagnosticError('VEHICLE_CONTEXT_MISMATCH: active vehicle changed before request dispatch.','VEHICLE_CONTEXT_MISMATCH',{retryable:false});
-        mark({vehicleContextSnapshot:vehicleContext,vehicleContextValidation:vehicleContext?'PASS':'SKIPPED',vehicleContextMismatchBlocked:false});
+        mark({vehicleContextSnapshot:vehicleContext,vehicleContextValidation:vehicleContext?'PASS':'NOT_AVAILABLE',vehicleContextMismatchBlocked:false});
         requestBody=JSON.stringify({transactionId:runId,imageHash,mimeType,imageBase64,...(vehicleContext?{vehicleContext}:{})});
         const requestBodyBytes=new TextEncoder().encode(requestBody).byteLength;
         if(requestBodyBytes>MAX_SEMANTIC_REQUEST_BYTES)throw diagnosticError('Image could not be prepared for analysis.','PAYLOAD_ERROR',{unsupportedRequestBody:true});
@@ -761,7 +768,7 @@
       {label:'Validating active vehicle context…',status:'PENDING'},
       {label:'Vehicle context mismatch…',status:'PENDING'}
     ]};
-    Object.assign(analyzer,{vehicleContextSnapshot,vehicleContextValidation:vehicleContextSnapshot?'PENDING':'SKIPPED',vehicleContextMismatchBlocked:false});
+    Object.assign(analyzer,{vehicleContextSnapshot,vehicleContextValidation:vehicleContextSnapshot?'PENDING':'NOT_AVAILABLE',vehicleContextMismatchBlocked:false});
     activeRun=run;
     updateDeveloper(run,{disposition:'ANALYZING'});
     activePreviewUrl=URL.createObjectURL(file);

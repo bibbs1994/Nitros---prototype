@@ -832,7 +832,7 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   const mimeType = typeof body?.mimeType === 'string' ? body.mimeType.toLowerCase() : '';
   const imageBase64 = typeof body?.imageBase64 === 'string' ? body.imageBase64 : '';
   const vehicleContext = normalizeVehicleAnalysisContext(body?.vehicleContext);
-  markDiagnostic(diagnostic, 'C_REQUEST_BODY_PARSED', { requestId: transactionId || 'invalid', requestBodyParsed: true, imagePayloadFound: Boolean(imageBase64), imageMimeType: mimeType || 'unknown', vehicleContextValidation: vehicleContext ? 'PASS' : body?.vehicleContext ? 'BLOCKED' : 'SKIPPED' });
+  markDiagnostic(diagnostic, 'C_REQUEST_BODY_PARSED', { requestId: transactionId || 'invalid', requestBodyParsed: true, imagePayloadFound: Boolean(imageBase64), imageMimeType: mimeType || 'unknown', vehicleContextValidation: vehicleContext ? 'PASS' : body?.vehicleContext ? 'BLOCKED' : 'NOT_AVAILABLE', vehicleContextMismatchStatus: vehicleContext ? 'NOT_DETERMINED' : 'NOT_AVAILABLE' });
   if (!/^[A-Za-z0-9._:-]{1,128}$/.test(transactionId) || !/^[a-f0-9]{64}$/.test(imageHash)) throw diagnosticFailure(diagnostic, 'Transaction identity is invalid.', 400, 'C_REQUEST_BODY_PARSED', 'MALFORMED_REQUEST');
   if (!IMAGE_TYPES.has(mimeType)) throw diagnosticFailure(diagnostic, 'Unsupported image type.', 415, 'D_IMAGE_PAYLOAD_FOUND', 'UNSUPPORTED_IMAGE_TYPE');
   if (!imageBase64 || imageBase64.length % 4 !== 0 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(imageBase64)) {
@@ -1004,7 +1004,7 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
     markDiagnostic(diagnostic, 'K_SEMANTIC_OUTPUT_EXTRACTED', { componentIdentificationAttempted: false, componentIdentificationSkipped: true });
   }
   let vehicleAreaRelationshipAnalysis = null;
-  if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE' && vehicleContext) {
+  if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE' && (enableVisualObservation || vehicleContext)) {
     const relationshipStartedAt = Date.now();
     const relationshipPrompt = `Determine the visible vehicle-area location and component relationships in this current automotive photo. ${vehicleContextPrompt(vehicleContext)} Then perform an independent EXPECTED COMPONENT / ABSENCE ANALYSIS for this same visible area. Build topologyInventory for every expected major component with expected location and presence status. Rank up to three missingAssemblyCandidates; a candidate needs at least two independent evidence classes, including vehicle-specific expected location plus visible mounting geometry, cable/connector, hose/line, bracket, or vacant-space evidence. Vehicle context alone is never enough. Do not let visual-condition uncertainty cancel topology reasoning. When the area is engine/transmission junction or bellhousing, consider the current vehicle's starter mounting relationship as an expected candidate but never assert it without the evidence gate. If the gate is not met, return exactly "No visually supported missing component detected." and empty candidate support arrays. This is a distinct location-reasoning stage after classification and component identification, before defect conclusions. Use visual geometry, casting shape, mounting position, nearby hoses/wiring/connectors, and surrounding visible components first; use vehicle architecture only to narrow plausible locations and relationships. Never let vehicle context override contradictory pixels.
 
@@ -1020,7 +1020,7 @@ Return a technician-friendly broad vehicleAreaLocation only when supported (for 
     } catch (error) {
       markDiagnostic(diagnostic, 'R_VEHICLE_AREA_RELATIONSHIP_FAILED', { vehicleAreaRelationshipResultPresent: false, vehicleAreaRelationshipErrorMessage: sanitizeDiagnosticText(error?.message), vehicleAreaRelationshipElapsedMs: Math.max(0, Date.now() - relationshipStartedAt) });
     }
-  } else markDiagnostic(diagnostic, diagnostic.stage, { vehicleAreaRelationshipAttempted: false, vehicleAreaRelationshipSkipped: true, vehicleAreaRelationshipSkipReason: vehicleContext ? 'NON_AUTOMOTIVE_CATEGORY' : 'NO_ACTIVE_VEHICLE_CONTEXT' });
+  } else markDiagnostic(diagnostic, diagnostic.stage, { vehicleAreaRelationshipAttempted: false, vehicleAreaRelationshipSkipped: true, vehicleAreaRelationshipSkipReason: 'NON_AUTOMOTIVE_CATEGORY' });
   let visualConditionInspection = null;
   if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
     const conditionStartedAt = Date.now();

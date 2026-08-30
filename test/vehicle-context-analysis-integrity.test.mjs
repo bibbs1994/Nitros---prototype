@@ -31,7 +31,8 @@ test('accepted automotive relationship stages complete with deterministic PASS o
   assert.match(client,/function finalizeAcceptedAnalysisStages/);
   assert.match(client,/set\(21,complete\?'PASS':'FAIL'\);set\(22,complete\?'PASS':'FAIL'\);set\(23,complete\?'PASS':'FAIL'\)/);
   assert.match(client,/finalizeAcceptedAnalysisStages\(run,routed\)/);
-  assert.match(client,/set\(24,contextPass\?'PASS':'FAIL'\);set\(25,contextPass\?'SKIPPED':'FAIL'\)/);
+  assert.match(client,/set\(24,contextPass\?'PASS':'FAIL'\);set\(25,contextPass\?'NOT DETERMINED':'FAIL'\)/);
+  assert.match(client,/set\(24,'NOT AVAILABLE'\);set\(25,'NOT DETERMINED'\)/);
 });
 
 test('two-layer lock uses diagnostic active-case authority and aborts before dispatch on a vehicle switch',()=>{
