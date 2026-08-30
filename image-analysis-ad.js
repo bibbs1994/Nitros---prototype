@@ -1,6 +1,6 @@
 /* Nitros 10.12.23 appointment dedicated field commit fix. */
 (()=>{'use strict';
-  const BUILD='10.13.115';
+  const BUILD='10.13.116';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
   const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
   const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
@@ -149,8 +149,9 @@
       set(21,server.vehicleAreaRelationshipAttempted?'FAIL':'SKIPPED');set(22,server.vehicleAreaRelationshipAttempted?'FAIL':'SKIPPED');set(23,server.vehicleAreaRelationshipAttempted?'FAIL':'SKIPPED');
       set(24,run.analyzer.vehicleContextSnapshot?'FAIL':'SKIPPED');set(25,run.analyzer.vehicleContextSnapshot?'FAIL':'SKIPPED');
     }
-    const pointerCircuit=hasElectricalPointerTarget(result);
-    if(pointerCircuit){set(16,'PASS');set(17,'PASS');set(18,'PASS');run.analyzer.pointerTargetCircuitAnalysis='PASS';run.analyzer.pointerTargetGuidance='PASS'}
+    const electricalPipeline=result.routingData?.electricalCircuitAnalysis||null;
+    if(electricalPipeline?.wiringAnalysisExecuted&&electricalPipeline?.visibleCircuitAnalysisExecuted&&electricalPipeline?.testGuidanceGenerated){set(16,'PASS');set(17,'PASS');set(18,'PASS');Object.assign(run.analyzer,{electricalCircuitPipeline:'PASS',electricalDiagramStatus:electricalPipeline.diagramStatus,electricalVisibleCircuitStatus:electricalPipeline.visibleCircuitStatus})}
+    else if(!electricalPipeline){set(16,'SKIPPED — not_electrical');set(17,'SKIPPED — not_electrical');set(18,'SKIPPED — not_electrical');run.analyzer.electricalCircuitPipeline='SKIPPED — not_electrical'}
     renderStages(run);
   }
 
@@ -552,6 +553,7 @@
     if(automotiveGraphAnalysis)automotiveGraphAnalysis={...automotiveGraphAnalysis,freshResultVerification:'PASS',freshResultProvenance:Object.freeze({status:'PASS',runId:run.runId,semanticRequestId:run.analyzer.requestId,imageHash:run.imageHash,transactionMatch:'PASS',imageHashMatch:'PASS',activeRunMatch:'PASS'})};
     const vehicleContextApplied=raw.vehicleContextApplied&&typeof raw.vehicleContextApplied==='object'?{available:raw.vehicleContextApplied.available===true,summary:String(raw.vehicleContextApplied.summary||'').trim()}:null,vehicleContextBinding=raw.vehicleContextBinding&&typeof raw.vehicleContextBinding==='object'?raw.vehicleContextBinding:null,requestedVehicleContext=run.analyzer.vehicleContextSnapshot||null;
     if(requestedVehicleContext&&(!vehicleContextBinding||!sameVehicleContext(requestedVehicleContext,vehicleContextBinding)||!sameVehicleContext(requestedVehicleContext,activeVehicleAnalysisContext()))){run.analyzer.vehicleContextValidation='BLOCKED';run.analyzer.vehicleContextMismatchBlocked=true;throw new Error('Vehicle context mismatch — stale vehicle-aware result was blocked. Re-run analysis for the active repair order.');}
+    raw.routingData={...(raw.routingData&&typeof raw.routingData==='object'?raw.routingData:{}),electricalCircuitAnalysis:raw.electricalCircuitAnalysis||null};
     return {runId:run.runId,semanticRequestId:raw.transactionId,imageHash:raw.imageHash,category,confidence,rawConfidence:raw.rawConfidence??null,normalizedConfidence:confidence,componentIdentification,vehicleAreaRelationshipAnalysis,visualConditionInspection,automotiveGraphAnalysis,wiringDiagramAnalysis,documentRepairInformation,objects,evidence,description:String(raw.description||'').trim(),automotiveEvidence,graphEvidence,documentEvidence,vehicleContextApplied,vehicleContextBinding,source:String(raw.source||'NitrosVisionAnalyzer semantic result'),transportStatus:raw.transportStatus??null,routingData:raw.routingData??null};
   }
 
@@ -658,7 +660,7 @@
     // easier-to-identify neighboring component to silently replace the selected target.
     const pointerEvidence=(result.evidence||[]).find(item=>/\b(?:finger|hand|screwdriver|probe|pick|test lead|flashlight|arrow|pointer)\b.{0,100}\b(?:pointing|indicat|toward|at)\b|\b(?:pointing|indicat)\b.{0,100}\b(?:finger|hand|screwdriver|probe|pick|test lead|flashlight|arrow|pointer)\b/i.test(String(item)))||'';
     const pointerTarget=pointerEvidence.replace(/^.*?\b(?:pointing|indicat(?:ing|ed)?)\b\s*(?:at|toward)?\s*/i,'').trim().replace(/[.]+$/,'')||'the technician-indicated component/connection area';
-    const electricalPointerTarget=hasElectricalPointerTarget(result),pointerTargetType=electricalPointerTarget?'Electrical / Electronic candidate':'Mechanical / Unknown';
+    const electricalPipeline=result.routingData?.electricalCircuitAnalysis||null,electricalPointerTarget=Boolean(electricalPipeline?.wiringAnalysisExecuted),pointerTargetType=electricalPointerTarget?'Electrical / Electronic candidate':'Mechanical / Unknown';
     const pointerGuidance=electricalPointerTarget?['Inspect the indicated sensor/connector/harness area for a fully seated connector, lock/retainer condition, exposed or corroded terminals, damaged insulation, chafing, routing, clips, and mounting damage.','If the pictured area cannot establish operation, verify the applicable connector condition, scan data, and circuit power/ground/signal with vehicle-specific wiring information before condemning a component.']:[];
     // Defect-first is intentionally rendered before component naming: a recognizable part never
     // downgrades a visible separation, damage, residue, or safety concern.

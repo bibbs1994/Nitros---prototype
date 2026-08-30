@@ -36,12 +36,12 @@ test('10.12.28 canonical normalizer rejects malformed and incomplete semantic co
   const normalize=semanticNormalizer();assert.equal(normalize({semanticResult:'```json\n{bad json}\n```'}),null);assert.equal(normalize({semanticResult:{category:'AUTOMOTIVE_GRAPH'}}),null);
 });
 
-test('10.13.115 keeps the proven analyzer and production endpoint', () => {
-  assert.match(analyzer, /const BUILD='10\.13\.115'/);
-  assert.match(html, /10\.13\.115/);
+test('10.13.116 keeps the proven analyzer and production endpoint', () => {
+  assert.match(analyzer, /const BUILD='10\.13\.116'/);
+  assert.match(html, /10\.13\.116/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.13\.115'/);
+  assert.match(serviceWorker, /const VERSION = '10\.13\.116'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -84,11 +84,20 @@ test('technician pointer evidence is preserved as the primary visual-analysis ta
 test('electrical or wheel-area pointer targets run visible-circuit inspection and guidance without forcing a wiring diagram', () => {
   assert.match(analyzer,/function hasElectricalPointerTarget\(result\)/);
   assert.match(analyzer,/pointer&&\(electrical\|\|wheelArea\)/);
-  assert.match(analyzer,/pointerTargetCircuitAnalysis='PASS'/);
-  assert.match(analyzer,/pointerTargetGuidance='PASS'/);
+  assert.match(analyzer,/electricalCircuitPipeline:'PASS'/);
+  assert.match(analyzer,/electricalDiagramStatus:electricalPipeline\.diagramStatus/);
   assert.match(analyzer,/Visible circuit inspection:<\/strong> PERFORMED/);
   assert.match(analyzer,/Component verification guidance:<\/strong> GENERATED/);
   assert.match(analyzer,/Wiring diagram confirmed/);
+});
+
+test('executed backend electrical pipeline controls circuit-stage status and non-electrical skips carry a reason', () => {
+  assert.match(analyzer,/electricalCircuitAnalysis:raw\.electricalCircuitAnalysis\|\|null/);
+  assert.match(analyzer,/electricalPipeline\?\.wiringAnalysisExecuted&&electricalPipeline\?\.visibleCircuitAnalysisExecuted&&electricalPipeline\?\.testGuidanceGenerated/);
+  assert.match(analyzer,/SKIPPED — not_electrical/);
+  assert.match(core,/function buildElectricalCircuitAnalysis/);
+  assert.match(core,/diagramStatus: 'DIAGRAM_REQUIRED'/);
+  assert.match(core,/visibleCircuitStatus: visible\.length \? 'INSPECTED_LIMITED_TO_VISIBLE_AREAS' : 'NOT_VISIBLE_ADDITIONAL_PHOTO_REQUIRED'/);
 });
 
 test('10.12.42 final shared triplet gate validates and renders one frozen canonical object',()=>{
@@ -329,7 +338,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.13\.115'/);
+  assert.match(html, /version:'10\.13\.116'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
