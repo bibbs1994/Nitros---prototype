@@ -369,6 +369,13 @@ function hasDistinctPhysicalConditionEvidence(finding) {
   return /\b(?:gap|separat(?:ed|ion)|exposed\s+(?:terminal|pin|wire|metal|connector)|(?:terminal|pin)s?\s+(?:are\s+)?(?:exposed|visible)|broken|crack(?:ed)?|damag(?:e|ed)|burn(?:ed|ing)?|corrosion|leak(?:age|ing)?|fluid|residue|stain(?:ing|ed)?|wet(?:ness|-looking)?|backed[- ]out|disengaged|uneven(?:\s+\w+){0,2}\s+(?:insertion|seating)|misalign(?:ed|ment)|displaced|missing\s+(?:clamp|fastener|retainer)|outside\s+(?:the\s+)?coupler|rubbing|chaf(?:ed|ing))\b/i.test(evidence);
 }
 
+function hasAffirmativeMatingEvidence(finding) {
+  const evidence = `${finding?.visibleEvidence || ''} ${finding?.appearance || ''}`;
+  return /\b(?:fully\s+(?:mated|seated|engaged|installed)|mating\s+(?:halves|surfaces?|relationship)\s+(?:are\s+)?(?:visible|engaged|seated)|(?:connector|hose|terminal|clamp|fastener|fitting|coupler|joint)\b[^.]{0,100}\b(?:fully\s+)?(?:mated|seated|engaged|installed)|(?:locking|retention)\s+(?:tab|clip|relationship|feature)[^.]{0,80}\b(?:engaged|latched|in\s+place)|no\s+(?:abnormal\s+)?(?:gap|separation)\s+(?:is\s+)?visible)/i.test(evidence);
+}
+
+const VISUAL_CONNECTION_VERIFICATION = 'Unable to verify from this image. Obtain a close, well-lit photo that shows the full mating interface and retention feature, then physically verify seating, engagement, and retention.';
+
 export function normalizeVisualConditionConsistency(raw) {
   const normalized = { ...raw, connectionAssessments: Array.isArray(raw?.connectionAssessments) ? raw.connectionAssessments.map(item => ({ ...item })) : [], possibleConcerns: Array.isArray(raw?.possibleConcerns) ? raw.possibleConcerns.map(item => ({ ...item })) : [] };
   const corrections = [];
@@ -391,6 +398,18 @@ export function normalizeVisualConditionConsistency(raw) {
     corrections.push(`${unsupportedConcerns.length} possible concern omitted because uncertainty or ordinary visible routing is not direct defect evidence.`);
   }
   const assessments = normalized.connectionAssessments;
+  const unsupportedNoDefect = assessments.filter(item => item?.findingType === 'NO_DEFECT_VISIBLE' && (!item?.matingComponentVisible || item?.seatingStatus !== 'NO_GAP_OR_SEPARATION_VISIBLE' || !hasAffirmativeMatingEvidence(item)));
+  if (unsupportedNoDefect.length) {
+    unsupportedNoDefect.forEach(item => {
+      item.seatingStatus = 'NOT_RELIABLY_VISIBLE'; item.findingType = 'SEATING_NOT_RELIABLY_VISIBLE'; item.severity = 'UNDETERMINED';
+      item.findingConfidence = Math.min(normalizeSemanticConfidence(item.findingConfidence) ?? 50, 50);
+      item.missingContext = item.missingContext || 'The full mating/retention relationship is not clearly visible.';
+      item.recommendedVerification = item.recommendedVerification || VISUAL_CONNECTION_VERIFICATION;
+      item.visibleEvidence = `${item.visibleEvidence} Unable to verify from this image that the full mating and retention relationship is engaged.`.trim();
+    });
+    normalized.status = 'UNABLE_TO_INSPECT'; normalized.unableToInspectReason = 'Unable to verify from this image that the relevant mating/retention relationship is fully visible and engaged.';
+    corrections.push(`${unsupportedNoDefect.length} no-visible-defect finding${unsupportedNoDefect.length === 1 ? '' : 's'} changed to unable to verify because the image did not affirmatively show the full mating/retention relationship.`);
+  }
   if (assessments.some(item => item?.findingType === 'CLEAR_DEFECT') && normalized.status !== 'OBSERVED_CONDITION') {
     normalized.status = 'OBSERVED_CONDITION';
     corrections.push('Inspection status changed to OBSERVED_CONDITION because a retained finding has direct visible clear-defect evidence.');
@@ -411,8 +430,8 @@ export function normalizeVisualConditionConsistency(raw) {
       corrections.push('POSSIBLE_CONCERN_DETECTED changed to UNABLE_TO_INSPECT because no specific visible condition or assessable connection was returned.');
     }
   }
-  if (normalized.status === 'POSSIBLE_CONCERN_DETECTED') {
-    const evidenceConfidence = assessments.filter(item => ['POSSIBLE_CONCERN','CLEAR_DEFECT','RESIDUE_OR_STAINING'].includes(item?.findingType)).map(item => normalizeSemanticConfidence(item.findingConfidence)).filter(Number.isFinite);
+  if (['OBSERVED_CONDITION','POSSIBLE_CONCERN_DETECTED','NO_VISIBLE_CONCERN_DETECTED'].includes(normalized.status)) {
+    const evidenceConfidence = assessments.filter(item => ['POSSIBLE_CONCERN','CLEAR_DEFECT','RESIDUE_OR_STAINING','NO_DEFECT_VISIBLE'].includes(item?.findingType)).map(item => normalizeSemanticConfidence(item.findingConfidence)).filter(Number.isFinite);
     const reportedConfidence = normalizeSemanticConfidence(normalized.conditionConfidence);
     if (reportedConfidence !== null && evidenceConfidence.length) {
       const maximumEvidenceConfidence = Math.max(...evidenceConfidence);
@@ -479,6 +498,7 @@ function validateVisualConditionInspection(raw) {
     if (!location || !['SEPARATION_OR_GAP_VISIBLE','POSSIBLE_IMPROPER_SEATING','NO_GAP_OR_SEPARATION_VISIBLE','NOT_RELIABLY_VISIBLE','COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE'].includes(seatingStatus) || !['CLEAR_DEFECT','POSSIBLE_CONCERN','UNVERIFIED_CONDITION','RESIDUE_OR_STAINING','SEATING_NOT_RELIABLY_VISIBLE','NO_DEFECT_VISIBLE'].includes(findingType) || !['CRITICAL','HIGH','MODERATE','LOW','UNDETERMINED'].includes(severity) || !evidence || !verification || findingConfidence === null) throw new Error(`Visual condition connection assessment ${index + 1} lacks required finding evidence.`);
     if (seatingStatus === 'SEPARATION_OR_GAP_VISIBLE' && (findingType !== 'CLEAR_DEFECT' || !['CRITICAL','HIGH','MODERATE'].includes(severity))) throw new Error('Visible connection separation must be classified as a clear defect with operational severity.');
     if (seatingStatus === 'NOT_RELIABLY_VISIBLE' && (findingType !== 'SEATING_NOT_RELIABLY_VISIBLE' || severity !== 'UNDETERMINED')) throw new Error('Obscured connection seating must remain undetermined.');
+    if (findingType === 'NO_DEFECT_VISIBLE' && (!matingComponentVisible || seatingStatus !== 'NO_GAP_OR_SEPARATION_VISIBLE' || !hasAffirmativeMatingEvidence(assessment))) throw new Error('No-visible-defect finding requires direct evidence of the complete mating and retention relationship.');
     if (!matingComponentVisible && !directDamageVisible && (seatingStatus !== 'COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE' || findingType !== 'UNVERIFIED_CONDITION' || severity !== 'UNDETERMINED' || !missingContext)) throw new Error('A connection without visible mating-component context must remain unverified unless direct damage is visible.');
     if (findingType === 'UNVERIFIED_CONDITION' && (severity !== 'UNDETERMINED' || !missingContext || assessment.safetyDrivabilityImpact)) throw new Error('Unverified connection context cannot carry severity or a safety/drivability claim.');
     return { location, seatingStatus, findingType, severity, findingConfidence, visibleEvidence: evidence, matingComponentVisible, directDamageVisible, missingContext, recommendedVerification: verification, safetyDrivabilityImpact: typeof assessment.safetyDrivabilityImpact === 'string' ? assessment.safetyDrivabilityImpact.trim().slice(0, 500) || null : null };
@@ -490,7 +510,7 @@ function validateVisualConditionInspection(raw) {
   if (status === 'POSSIBLE_CONCERN_DETECTED' && !possibleConcerns.length) throw new Error('Possible visual concern requires a physical verification step.');
   if (status === 'UNVERIFIED_CONDITION' && !uniqueConnectionAssessments.some(assessment => assessment.findingType === 'UNVERIFIED_CONDITION')) throw new Error('Unverified visual condition requires missing component or connection context.');
   if (status === 'UNABLE_TO_INSPECT' && !unableToInspectReason) throw new Error('Unable-to-inspect status requires a reason.');
-  if (status === 'NO_VISIBLE_CONCERN_DETECTED' && (!uniqueConnectionAssessments.length || uniqueConnectionAssessments.some(assessment => assessment.seatingStatus !== 'NO_GAP_OR_SEPARATION_VISIBLE' || assessment.findingType !== 'NO_DEFECT_VISIBLE'))) throw new Error('No-visible-concern status requires every visible connection to be affirmatively assessed as seated.');
+  if (status === 'NO_VISIBLE_CONCERN_DETECTED' && (!uniqueConnectionAssessments.length || uniqueConnectionAssessments.some(assessment => assessment.seatingStatus !== 'NO_GAP_OR_SEPARATION_VISIBLE' || assessment.findingType !== 'NO_DEFECT_VISIBLE' || !assessment.matingComponentVisible || !hasAffirmativeMatingEvidence(assessment)))) throw new Error('No-visible-concern status requires direct evidence that every visible connection mating and retention relationship is fully assembled.');
   if (uniqueConnectionAssessments.some(assessment => assessment.seatingStatus === 'SEPARATION_OR_GAP_VISIBLE') && status !== 'OBSERVED_CONDITION') throw new Error('Visible connection separation cannot be downgraded below an observed condition.');
   return { status, conditionConfidence: normalizeSemanticConfidence(raw.conditionConfidence), rawConditionConfidence: raw.rawConditionConfidence ?? raw.conditionConfidence ?? null, normalizedConditionConfidence: normalizeSemanticConfidence(raw.conditionConfidence), observedCondition, possibleConcerns, connectionAssessments: uniqueConnectionAssessments, noVisibleConcernMessage: status === 'NO_VISIBLE_CONCERN_DETECTED' ? NO_VISIBLE_DEFECT_MESSAGE : '', unableToInspectReason, visibleEvidence, recommendedVerification, safetyDrivabilityImpact: typeof raw.safetyDrivabilityImpact === 'string' ? raw.safetyDrivabilityImpact.trim().slice(0, 500) || null : null, consistencyCorrections: Array.isArray(raw.consistencyCorrections) ? raw.consistencyCorrections.slice(0, 8) : [] };
 }
