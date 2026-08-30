@@ -376,6 +376,19 @@ function hasAffirmativeMatingEvidence(finding) {
 
 const VISUAL_CONNECTION_VERIFICATION = 'Unable to verify from this image. Obtain a close, well-lit photo that shows the full mating interface and retention feature, then physically verify seating, engagement, and retention.';
 
+function hasVerifiedDisconnectionEvidence(finding) {
+  const evidence = `${finding?.visibleEvidence || ''} ${finding?.appearance || ''}`;
+  return /\b(?:air\s+gap|physical\s+separation|(?:connector|plug|housing|terminal|hose)\s+(?:is\s+)?(?:visibly\s+)?(?:disconnected|separated|displaced|hanging|loose)|empty\s+(?:socket|receptacle|mating\s+cavity)|exposed\s+(?:mating\s+)?(?:cavity|terminal|pin)|(?:plug|connector)\s+(?:beside|next\s+to)\s+(?:an\s+)?(?:empty\s+)?(?:socket|receptacle)|not\s+(?:physically\s+)?inserted|latch[^.]{0,80}\bnot\s+engaged)\b/i.test(evidence);
+}
+
+function connectionStateFor(assessment) {
+  const evidence = String(assessment?.visibleEvidence || '');
+  if (hasVerifiedDisconnectionEvidence(assessment) || assessment?.seatingStatus === 'SEPARATION_OR_GAP_VISIBLE') return 'DISCONNECTED_VERIFIED';
+  if (assessment?.seatingStatus === 'POSSIBLE_IMPROPER_SEATING') return 'PARTIALLY_SEATED_OR_SUSPECTED';
+  if (assessment?.seatingStatus === 'NO_GAP_OR_SEPARATION_VISIBLE' && hasAffirmativeMatingEvidence(assessment)) return /\b(?:CPA|TPA|secondary\s+(?:lock|retention)|retention\s+(?:not|cannot)|lock(?:ing)?\s+(?:not|cannot)|latch\s+(?:not|cannot))\b/i.test(evidence) ? 'CONNECTED_BUT_RETENTION_NOT_VERIFIABLE' : 'CONNECTED_VERIFIED';
+  return 'UNABLE_TO_DETERMINE_FROM_IMAGE';
+}
+
 export function normalizeVisualConditionConsistency(raw) {
   const normalized = { ...raw, connectionAssessments: Array.isArray(raw?.connectionAssessments) ? raw.connectionAssessments.map(item => ({ ...item })) : [], possibleConcerns: Array.isArray(raw?.possibleConcerns) ? raw.possibleConcerns.map(item => ({ ...item })) : [] };
   const corrections = [];
@@ -398,6 +411,12 @@ export function normalizeVisualConditionConsistency(raw) {
     corrections.push(`${unsupportedConcerns.length} possible concern omitted because uncertainty or ordinary visible routing is not direct defect evidence.`);
   }
   const assessments = normalized.connectionAssessments;
+  const contradictoryNormalClaims = assessments.filter(item => item?.findingType === 'NO_DEFECT_VISIBLE' && hasVerifiedDisconnectionEvidence(item));
+  if (contradictoryNormalClaims.length) {
+    contradictoryNormalClaims.forEach(item => { item.seatingStatus='SEPARATION_OR_GAP_VISIBLE'; item.findingType='CLEAR_DEFECT'; item.severity='HIGH'; item.findingConfidence=Math.max(normalizeSemanticConfidence(item.findingConfidence) ?? 0, 85); item.directDamageVisible=true; item.matingComponentVisible=true; item.recommendedVerification='Inspect the connector housing, terminals, locking tab/CPA where applicable, wiring condition, and mating receptacle. Reconnect correctly if appropriate and verify retention and system operation.'; });
+    normalized.status='OBSERVED_CONDITION';
+    corrections.push(`${contradictoryNormalClaims.length} no-visible-defect finding${contradictoryNormalClaims.length === 1 ? '' : 's'} changed to a visible disconnected-connection defect because separation, an empty receptacle, or a loose plug was directly described.`);
+  }
   const unsupportedNoDefect = assessments.filter(item => item?.findingType === 'NO_DEFECT_VISIBLE' && (!item?.matingComponentVisible || item?.seatingStatus !== 'NO_GAP_OR_SEPARATION_VISIBLE' || !hasAffirmativeMatingEvidence(item)));
   if (unsupportedNoDefect.length) {
     unsupportedNoDefect.forEach(item => {
@@ -441,6 +460,7 @@ export function normalizeVisualConditionConsistency(raw) {
       }
     }
   }
+  normalized.connectionAssessments = normalized.connectionAssessments.map(item => ({ ...item, connectionState: connectionStateFor(item), connectionStateConfidence: normalizeSemanticConfidence(item.findingConfidence) }));
   return { normalized, corrections };
 }
 
@@ -501,7 +521,8 @@ function validateVisualConditionInspection(raw) {
     if (findingType === 'NO_DEFECT_VISIBLE' && (!matingComponentVisible || seatingStatus !== 'NO_GAP_OR_SEPARATION_VISIBLE' || !hasAffirmativeMatingEvidence(assessment))) throw new Error('No-visible-defect finding requires direct evidence of the complete mating and retention relationship.');
     if (!matingComponentVisible && !directDamageVisible && (seatingStatus !== 'COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE' || findingType !== 'UNVERIFIED_CONDITION' || severity !== 'UNDETERMINED' || !missingContext)) throw new Error('A connection without visible mating-component context must remain unverified unless direct damage is visible.');
     if (findingType === 'UNVERIFIED_CONDITION' && (severity !== 'UNDETERMINED' || !missingContext || assessment.safetyDrivabilityImpact)) throw new Error('Unverified connection context cannot carry severity or a safety/drivability claim.');
-    return { location, seatingStatus, findingType, severity, findingConfidence, visibleEvidence: evidence, matingComponentVisible, directDamageVisible, missingContext, recommendedVerification: verification, safetyDrivabilityImpact: typeof assessment.safetyDrivabilityImpact === 'string' ? assessment.safetyDrivabilityImpact.trim().slice(0, 500) || null : null };
+    const result={ location, seatingStatus, findingType, severity, findingConfidence, visibleEvidence: evidence, matingComponentVisible, directDamageVisible, missingContext, recommendedVerification: verification, safetyDrivabilityImpact: typeof assessment.safetyDrivabilityImpact === 'string' ? assessment.safetyDrivabilityImpact.trim().slice(0, 500) || null : null };
+    return { ...result, connectionState: connectionStateFor(result), connectionStateConfidence: findingConfidence };
   }) : [];
   const priority = { CLEAR_DEFECT: 0, POSSIBLE_CONCERN: 1, UNVERIFIED_CONDITION: 2, RESIDUE_OR_STAINING: 3, SEATING_NOT_RELIABLY_VISIBLE: 4, NO_DEFECT_VISIBLE: 5 };
   const uniqueConnectionAssessments = [...new Map(connectionAssessments.map(assessment => [`${assessment.location.toLowerCase()}|${assessment.seatingStatus}|${assessment.visibleEvidence.toLowerCase()}`, assessment])).values()].sort((a, b) => priority[a.findingType] - priority[b.findingType]);

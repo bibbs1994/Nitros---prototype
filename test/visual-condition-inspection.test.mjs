@@ -59,6 +59,22 @@ test('10.13.119 preserves positive faults and accepts only directly demonstrated
   assert.equal(displaced.normalized.conditionConfidence,93);
 });
 
+test('10.13.120 derives independent electrical connection states and lets visible geometry override a normal claim',()=>{
+  const base={location:'EGR-area electrical connector',severity:'LOW',findingConfidence:90,matingComponentVisible:true,directDamageVisible:false,missingContext:null,recommendedVerification:'Inspect the connector and mating receptacle.'};
+  const disconnected=normalizeVisualConditionConsistency({status:'NO_VISIBLE_CONCERN_DETECTED',conditionConfidence:90,visibleEvidence:['The loose harness plug is beside an empty component-side receptacle with an air gap.'],connectionAssessments:[{...base,seatingStatus:'NO_GAP_OR_SEPARATION_VISIBLE',findingType:'NO_DEFECT_VISIBLE',visibleEvidence:'The loose harness plug is beside an empty component-side receptacle with an air gap between the connector housing and mating socket.'}]});
+  assert.equal(disconnected.normalized.status,'OBSERVED_CONDITION');
+  assert.equal(disconnected.normalized.connectionAssessments[0].findingType,'CLEAR_DEFECT');
+  const states=[
+    ['NO_GAP_OR_SEPARATION_VISIBLE','NO_DEFECT_VISIBLE','Both connector halves are fully mated and the locking tab is visibly engaged.','CONNECTED_VERIFIED'],
+    ['SEPARATION_OR_GAP_VISIBLE','CLEAR_DEFECT','A visible air gap separates the plug from the empty component-side receptacle.','DISCONNECTED_VERIFIED'],
+    ['POSSIBLE_IMPROPER_SEATING','POSSIBLE_CONCERN','The connector is partly inserted with uneven insertion depth.','PARTIALLY_SEATED_OR_SUSPECTED'],
+    ['NO_GAP_OR_SEPARATION_VISIBLE','NO_DEFECT_VISIBLE','The connector body is fully seated, but the CPA secondary lock is not visible.','CONNECTED_BUT_RETENTION_NOT_VERIFIABLE'],
+    ['NOT_RELIABLY_VISIBLE','SEATING_NOT_RELIABLY_VISIBLE','The connector mating interface is hidden behind the harness.','UNABLE_TO_DETERMINE_FROM_IMAGE']
+  ];
+  for(const [seatingStatus,findingType,visibleEvidence,connectionState] of states){const result=normalizeVisualConditionConsistency({status:findingType==='CLEAR_DEFECT'?'OBSERVED_CONDITION':findingType==='NO_DEFECT_VISIBLE'?'NO_VISIBLE_CONCERN_DETECTED':'POSSIBLE_CONCERN_DETECTED',conditionConfidence:75,visibleEvidence:[visibleEvidence],possibleConcerns:findingType==='POSSIBLE_CONCERN'?[{location:base.location,appearance:visibleEvidence,physicalConfirmationRequired:true,recommendedVerification:base.recommendedVerification}]:[],connectionAssessments:[{...base,seatingStatus,findingType,visibleEvidence}]});const item=result.normalized.connectionAssessments[0];assert.equal(item.connectionState,connectionState);}
+  assert.match(readFileSync(new URL('../semantic-analyzer-core.mjs',import.meta.url),'utf8'),/PROXIMITY IS NOT CONNECTION|not evidence that it is connected/i);
+});
+
 test('visual consistency repair preserves precise image-relative locations and rejects vague or unsupported vehicle-side claims',()=>{
   const normalized=normalizeVisualConditionConsistency({status:'UNVERIFIED_CONDITION',conditionConfidence:42,visibleEvidence:['Connector and cable are visible.'],possibleConcerns:[],connectionAssessments:[
     {location:'center, near visible harness',findingType:'UNVERIFIED_CONDITION',findingConfidence:42,seatingStatus:'COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE'},
