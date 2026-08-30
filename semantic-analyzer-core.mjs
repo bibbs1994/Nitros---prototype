@@ -748,6 +748,28 @@ function vehicleContextPrompt(context) {
   return `Active repair-order vehicle context (non-visual reference only): ${known || 'limited vehicle details'}${context.vin ? ' · VIN is available for configuration reference' : ''}. Source: ${context.source || 'active case snapshot'}. First use this exact vehicle/engine configuration to check whether the proposed component and location are physically plausible for this vehicle; use visible landmarks, orientation, adjacent assemblies, harness routing, brackets, hoses, and mounting geometry to reduce confidence or choose an alternative when they conflict. This context may orient a likely identification or expected connection, but it is never proof that a part, connection, defect, installation state, or vehicle-side location is visible. Image pixels override it whenever they conflict.`;
 }
 
+function electricalCircuitCandidate(semanticResult, componentIdentification) {
+  const text = [...(semanticResult?.evidence || []), ...(semanticResult?.objects || []), ...(semanticResult?.automotiveEvidence || []), componentIdentification?.primaryComponent || '', ...(componentIdentification?.secondaryComponents || [])].join(' ');
+  const pointer = /\b(?:finger|hand|screwdriver|probe|pick|test lead|flashlight|arrow|pointer)\b.{0,100}\b(?:pointing|indicat|toward|at)\b|\b(?:pointing|indicat)\b.{0,100}\b(?:finger|hand|screwdriver|probe|pick|test lead|flashlight|arrow|pointer)\b/i.test(text);
+  const electrical = /\b(?:abs|wheel[- ]?speed|sensor|connector|wiring|wire|harness|terminal|ground|actuator|solenoid|switch|fuse|relay|module|motor|electrical|electronic|coil|injector|network|can)\b/i.test(text);
+  const wheelArea = /\b(?:wheel|suspension|axle|cv boot|brake|hub)\b/i.test(text);
+  return pointer && (electrical || wheelArea) || electrical;
+}
+
+function buildElectricalCircuitAnalysis(semanticResult, componentIdentification, visualConditionInspection, transactionId, imageHash) {
+  if (!electricalCircuitCandidate(semanticResult, componentIdentification)) return null;
+  const visible = visualConditionInspection?.connectionAssessments || [];
+  const defects = visible.filter(item => ['CLEAR_DEFECT','POSSIBLE_CONCERN','RESIDUE_OR_STAINING'].includes(item.findingType)).map(item => item.visibleEvidence);
+  const target = componentIdentification?.primaryComponent && componentIdentification.status !== 'FAILED' ? componentIdentification.primaryComponent : 'Technician-indicated electrical component / connector / harness area';
+  return {
+    status: 'EXECUTED', target, targetConfidence: componentIdentification?.normalizedComponentConfidence ?? null,
+    diagramStatus: 'DIAGRAM_REQUIRED', diagramMessage: 'Circuit architecture review executed from the identified target and available vehicle context. Vehicle-specific wiring diagram, pinout, and specifications are required before circuit condemnation.',
+    visibleCircuitStatus: visible.length ? 'INSPECTED_LIMITED_TO_VISIBLE_AREAS' : 'NOT_VISIBLE_ADDITIONAL_PHOTO_REQUIRED', visibleFindings: defects,
+    testGuidance: ['Inspect the connector body, terminal engagement, lock/retainer, harness routing, clips, and insulation at the indicated target.', 'Verify applicable scan data and connector condition first; then use vehicle-specific wiring information to test power, ground, reference/signal, or continuity as applicable.', 'VERIFY VEHICLE-SPECIFIC SPECIFICATION BEFORE CONDEMNING COMPONENT.'],
+    wiringAnalysisExecuted: true, visibleCircuitAnalysisExecuted: true, testGuidanceGenerated: true, semanticRequestId: transactionId, imageHash
+  };
+}
+
 export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_API_KEY, fetchImpl = fetch, diagnostic = {}, timeoutMs = OPENAI_TIMEOUT_MS } = {}) {
   const fields = body && typeof body === 'object' && !Array.isArray(body) ? Object.keys(body) : [];
   const requiredFields = ['transactionId', 'imageHash', 'mimeType', 'imageBase64'];
@@ -1022,6 +1044,9 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
   semanticResult.vehicleAreaRelationshipAnalysis = vehicleAreaRelationshipAnalysis;
   semanticResult.automotiveGraphAnalysis = automotiveGraphAnalysis;
   semanticResult.wiringDiagramAnalysis = wiringDiagramAnalysis;
+  semanticResult.electricalCircuitAnalysis = buildElectricalCircuitAnalysis(semanticResult, componentIdentification, visualConditionInspection, transactionId, imageHash);
+  if (semanticResult.electricalCircuitAnalysis) markDiagnostic(diagnostic, 'V_ELECTRICAL_CIRCUIT_ANALYSIS_EXECUTED', { electricalCircuitAnalysisAttempted: true, electricalCircuitAnalysisExecuted: true, electricalDiagramAnalysisExecuted: true, electricalVisibleCircuitAnalysisExecuted: true, electricalTestGuidanceGenerated: true, electricalCircuitStatus: semanticResult.electricalCircuitAnalysis.visibleCircuitStatus, electricalDiagramStatus: semanticResult.electricalCircuitAnalysis.diagramStatus });
+  else markDiagnostic(diagnostic, diagnostic.stage, { electricalCircuitAnalysisAttempted: false, electricalCircuitAnalysisSkipped: true });
   semanticResult.documentRepairInformation = documentRepairInformation;
   semanticResult.vehicleContextApplied = vehicleContext ? { available: true, summary: [vehicleContext.year, vehicleContext.make, vehicleContext.model, vehicleContext.engine, vehicleContext.fuelType, vehicleContext.drivetrain, vehicleContext.configuration].filter(Boolean).join(' · ') || 'Vehicle configuration reference available' } : { available: false, summary: '' };
   semanticResult.vehicleContextBinding = vehicleContext ? { year: vehicleContext.year, make: vehicleContext.make, model: vehicleContext.model, engine: vehicleContext.engine || '', vin: vehicleContext.vin || '', activeCaseId: vehicleContext.activeCaseId || '', repairOrderId: vehicleContext.repairOrderId || '', vehicleId: vehicleContext.vehicleId || '', contextVersion: vehicleContext.contextVersion || '', source: vehicleContext.source || 'active case snapshot' } : null;

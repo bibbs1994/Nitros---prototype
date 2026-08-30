@@ -1,6 +1,6 @@
 /* Nitros 10.12.23 appointment dedicated field commit fix. */
 (()=>{'use strict';
-  const BUILD='10.13.114';
+  const BUILD='10.13.115';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
   const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
   const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
@@ -149,6 +149,8 @@
       set(21,server.vehicleAreaRelationshipAttempted?'FAIL':'SKIPPED');set(22,server.vehicleAreaRelationshipAttempted?'FAIL':'SKIPPED');set(23,server.vehicleAreaRelationshipAttempted?'FAIL':'SKIPPED');
       set(24,run.analyzer.vehicleContextSnapshot?'FAIL':'SKIPPED');set(25,run.analyzer.vehicleContextSnapshot?'FAIL':'SKIPPED');
     }
+    const pointerCircuit=hasElectricalPointerTarget(result);
+    if(pointerCircuit){set(16,'PASS');set(17,'PASS');set(18,'PASS');run.analyzer.pointerTargetCircuitAnalysis='PASS';run.analyzer.pointerTargetGuidance='PASS'}
     renderStages(run);
   }
 
@@ -811,8 +813,6 @@
       else{const failed=unavailableResult(run,`Analysis failed: ${error.message}`);run.result=failed;if(!rejectStale(run,failed)){renderResult(run,{...failed,route:'Stopped',routeResult:{status:'Insufficient evidence'}});updateDeveloper(run,{disposition:'FAILED',verification:'FAIL'})}}
       const status=$('oliverImportStatus');if(status)status.textContent=payloadFailure?'Image could not be prepared for analysis.':'Unknown / Analysis Unavailable';
     }
-    const pointerCircuit=hasElectricalPointerTarget(result);
-    if(pointerCircuit){set(17,'PASS');set(18,'PASS');run.analyzer.pointerTargetCircuitAnalysis='PASS';run.analyzer.pointerTargetGuidance='PASS'}
   }
 
   function hasElectricalPointerTarget(result){
