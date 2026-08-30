@@ -36,12 +36,12 @@ test('10.12.28 canonical normalizer rejects malformed and incomplete semantic co
   const normalize=semanticNormalizer();assert.equal(normalize({semanticResult:'```json\n{bad json}\n```'}),null);assert.equal(normalize({semanticResult:{category:'AUTOMOTIVE_GRAPH'}}),null);
 });
 
-test('10.13.120 keeps the proven analyzer and production endpoint', () => {
-  assert.match(analyzer, /const BUILD='10\.13\.120'/);
-  assert.match(html, /10\.13\.120/);
+test('10.13.123 keeps the proven analyzer and production endpoint', () => {
+  assert.match(analyzer, /const BUILD='10\.13\.123'/);
+  assert.match(html, /10\.13\.123/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.13\.120'/);
+  assert.match(serviceWorker, /const VERSION = '10\.13\.123'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -190,8 +190,8 @@ test('analysis payload is a single bounded JPEG copy with optional active-RO con
   assert.match(analyzer, /run\.bytes=sourceBuffer\.slice\(0\)/);
   assert.match(analyzer, /payloadImageCount:1/);
   assert.match(analyzer,/vehicleContext\?\{vehicleContext\}:\{\}/);
-  assert.equal((core.match(/type:\s*'input_image'/g)||[]).length, 9);
-  assert.equal((core.match(/image_url:/g)||[]).length, 9);
+  assert.equal((core.match(/type:\s*'input_image'/g)||[]).length, 15);
+  assert.equal((core.match(/image_url:/g)||[]).length, 15);
   assert.match(core, /requiredFields = \['transactionId', 'imageHash', 'mimeType', 'imageBase64'\]/);
   assert.match(core,/nitros_vehicle_area_relationship/);
   assert.match(analyzer,/VEHICLE-AREA &amp; COMPONENT RELATIONSHIP/);
@@ -353,7 +353,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.13\.120'/);
+  assert.match(html, /version:'10\.13\.123'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {

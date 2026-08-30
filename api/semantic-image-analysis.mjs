@@ -35,7 +35,7 @@ export default async function handler(request, response) {
     diagnostic.requestBodyParsed = true;
     diagnostic.requestId = typeof body?.transactionId === 'string' ? body.transactionId : 'invalid';
     diagnostic.imagePayloadFound = typeof body?.imageBase64 === 'string' && body.imageBase64.length > 0;
-    const result = await analyzeSemanticImage(body, { diagnostic });
+    const result = await analyzeSemanticImage(body, { diagnostic, enableVisualObservation: true });
     diagnostic.stage = 'L_RESPONSE_RETURNED';
     diagnostic.success = true;
     diagnostic.responseReturned = true;

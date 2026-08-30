@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto';
+import { visualObservationSchema, validateVisualObservation, mergeObservationWithCondition, rawVisualObservationPrompt } from './visual-observation-core.mjs';
+import { createLocalizedCrops, candidateRegionSchema, localizedInspectionSchema, validateLocalizedInspection, validateNormalizedRegion } from './localized-image-crop-core.mjs';
 
 export const ALLOWED_CATEGORIES = Object.freeze([
   'AUTOMOTIVE_GRAPH',
@@ -811,7 +813,14 @@ function buildElectricalCircuitAnalysis(semanticResult, componentIdentification,
   };
 }
 
-export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_API_KEY, fetchImpl = fetch, diagnostic = {}, timeoutMs = OPENAI_TIMEOUT_MS } = {}) {
+export function fuseLocalizedVisualEvidence(condition, inspections = []) {
+  const verified = inspections.filter(item => item?.localizedVisualVerification === true && ['CONNECTED', 'DISCONNECTED', 'PARTIALLY_SEATED'].includes(item.connectionState));
+  if (!verified.length) return condition;
+  const additions = verified.map(item => ({ candidateId: item.candidateId, localizedVisualVerification: true, localizedConnectionState: item.connectionState, localizedDefectState: item.defectState, localizedConfidence: item.confidence, localizedEvidence: item.evidenceObserved, contradictoryEvidence: item.contradictoryEvidence, visibilityLimitations: item.visibilityLimitations, connectionState: item.connectionState === 'CONNECTED' ? 'CONNECTED_VERIFIED' : item.connectionState === 'DISCONNECTED' ? 'DISCONNECTED_VERIFIED' : 'PARTIALLY_SEATED_OR_SUSPECTED', findingType: item.defectState === 'NO_VISIBLE_DEFECT_CONFIRMED' ? 'NO_DEFECT_VISIBLE' : item.defectState === 'CONFIRMED_VISIBLE_DEFECT' ? 'CLEAR_DEFECT' : 'POSSIBLE_CONCERN', visibleEvidence: item.evidenceObserved.join(' '), findingConfidence: item.confidence, evidenceProvenance: 'LOCALIZED_DETAIL_CONTEXT_VISUAL_EVIDENCE' }));
+  return { ...condition, localizedVisualEvidence: additions, connectionAssessments: [...additions, ...(condition?.connectionAssessments || [])], status: additions.some(item => item.findingType === 'CLEAR_DEFECT') ? 'OBSERVED_CONDITION' : condition?.status };
+}
+
+export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_API_KEY, fetchImpl = fetch, diagnostic = {}, timeoutMs = OPENAI_TIMEOUT_MS, enableVisualObservation = false } = {}) {
   const fields = body && typeof body === 'object' && !Array.isArray(body) ? Object.keys(body) : [];
   const requiredFields = ['transactionId', 'imageHash', 'mimeType', 'imageBase64'];
   const allowedFields = new Set([...requiredFields, 'vehicleContext']);
@@ -902,6 +911,56 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   catch (error) { throw diagnosticFailure(diagnostic, `Malformed semantic response: ${error.message}`, 502, 'K_SEMANTIC_OUTPUT_EXTRACTED', 'UNEXPECTED_OPENAI_RESPONSE', { semanticOutputPresent: false, transportStatus }); }
   markDiagnostic(diagnostic, 'K_SEMANTIC_OUTPUT_EXTRACTED', { success: true, semanticOutputPresent: true, semanticObjectsReturned: semanticResult.objects.length, errorCategory: null, errorMessage: null });
 
+  let visualObservation=null;
+  if(enableVisualObservation&&semanticResult.category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'){markDiagnostic(diagnostic,'L_RAW_VISUAL_OBSERVATION_REQUEST',{rawVisualObservationRequest:'PASS',rawVisualObservationResponse:'PENDING',objectInventory:'PENDING',physicalRelationshipAnalysis:'PENDING',electricalConnectionStateAnalysis:'PENDING',abnormalStateDetection:'PENDING'});try{const r=await fetchImpl('https://api.openai.com/v1/responses',{method:'POST',headers:{'Authorization':`Bearer ${apiKey}`,'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,store:false,max_output_tokens:1100,input:[{role:'user',content:[{type:'input_text',text:rawVisualObservationPrompt},{type:'input_image',image_url:`data:${mimeType};base64,${imageBase64}`,detail:'high'}]}],text:{format:{type:'json_schema',name:'nitros_raw_visual_observation',strict:true,schema:visualObservationSchema}}}),signal:AbortSignal.timeout(Math.min(timeoutMs,COMPONENT_TIMEOUT_MS))});if(!r.ok)throw Error(`Raw visual observation failed with HTTP ${r.status}.`);visualObservation=validateVisualObservation(JSON.parse(extractOutputText(await r.json())));markDiagnostic(diagnostic,'L_RAW_VISUAL_OBSERVATION_COMPLETE',{rawVisualObservationResponse:'PASS',objectInventory:'PASS',objectsInventoried:visualObservation.objects.length,relationshipCapableObjects:visualObservation.objects.filter(x=>/connector|receptacle|terminal|hose|clamp|plug|wire/i.test(x.type)).length,physicalRelationshipAnalysis:'PASS',electricalConnectionStateAnalysis:'PASS',abnormalStateDetection:'PASS',confirmedPhysicalAbnormalities:visualObservation.abnormalFindings.length,structuredVisualEvidenceHandoff:'PASS'});}catch(e){markDiagnostic(diagnostic,'L_RAW_VISUAL_OBSERVATION_FAILED',{rawVisualObservationResponse:'FAIL',objectInventory:'FAIL',physicalRelationshipAnalysis:'FAIL',electricalConnectionStateAnalysis:'FAIL',abnormalStateDetection:'FAIL',structuredVisualEvidenceHandoff:'FAIL',rawVisualObservationErrorMessage:sanitizeDiagnosticText(e?.message)});}}
+  let localizedVisualInspections = [];
+  let localizedStageHandled = false;
+  if (visualObservation) {
+    const sourceCandidates = visualObservation.objects.filter(item => /connector|plug|terminal|hose|clamp|fastener/i.test(item.type)).slice(0, 3).map(item => ({ id: item.id, type: item.type, location: item.location }));
+    try {
+      const locatorPrompt = `Locate only these existing candidate IDs in this original image and return normalized 0-to-1 regions: ${JSON.stringify(sourceCandidates)}. x/y are the left/top edges divided by image width/height; width/height are region size divided by image width/height. Do not create candidates, identify vehicle/component names, or assess condition.`;
+      const locatorResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 700, input: [{ role: 'user', content: [{ type: 'input_text', text: locatorPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }], text: { format: { type: 'json_schema', name: 'nitros_candidate_regions', strict: true, schema: candidateRegionSchema } } }), signal: AbortSignal.timeout(Math.min(timeoutMs, COMPONENT_TIMEOUT_MS)) });
+      if (!locatorResponse.ok) throw new Error(`Candidate localization failed with HTTP ${locatorResponse.status}.`);
+      const located = JSON.parse(extractOutputText(await locatorResponse.json())).candidates || [];
+      for (const candidate of located.slice(0, 3)) {
+        const pass1 = visualObservation.objects.find(item => item.id === candidate.candidate_id);
+        const region = validateNormalizedRegion(candidate.region);
+        if (!pass1 || !region) { localizedVisualInspections.push({ candidateId: candidate.candidate_id, localizedVisualVerification: false, failureReason: 'INVALID_OR_UNMATCHED_REGION' }); continue; }
+        try {
+          const crops = await createLocalizedCrops(bytes, region);
+const localPrompt = `Independently inspect candidate ${pass1.id}. IMAGE 1 is DETAIL crop; IMAGE 2 is CONTEXT crop; IMAGE 3 is ORIGINAL supplementary context. Determine only what these pixels prove. PROXIMITY IS NOT CONNECTION: connector/socket, battery terminal/post, and hose/port all require visible physical mating evidence. If mating geometry cannot be established return UNCERTAIN; absence of a detected defect is not proof of a secure connection. Return the strict localized inspection schema.`;
+          const response2 = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 850, input: [{ role: 'user', content: [{ type: 'input_text', text: localPrompt }, { type: 'input_image', image_url: `data:image/png;base64,${crops.detail.toString('base64')}`, detail: 'high' }, { type: 'input_image', image_url: `data:image/png;base64,${crops.context.toString('base64')}`, detail: 'high' }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'low' }] }], text: { format: { type: 'json_schema', name: 'nitros_localized_inspection', strict: true, schema: localizedInspectionSchema } } }), signal: AbortSignal.timeout(Math.min(timeoutMs, COMPONENT_TIMEOUT_MS)) });
+          if (!response2.ok) throw new Error(`Localized inspection failed with HTTP ${response2.status}.`);
+          const inspection = validateLocalizedInspection(JSON.parse(extractOutputText(await response2.json())), pass1);
+          localizedVisualInspections.push({ ...inspection, normalizedRegion: region, pixelRegion: { detail: crops.detailRegion, context: crops.contextRegion }, sourceDimensions: crops.source, detailDimensions: crops.detailMetadata, contextDimensions: crops.contextMetadata, cropStatus: 'SUCCESS', detailSupplied: true, contextSupplied: true, originalSupplied: true });
+        } catch (error) { localizedVisualInspections.push({ candidateId: pass1.id, normalizedRegion: region, localizedVisualVerification: false, failureReason: sanitizeDiagnosticText(error?.message) }); }
+      }
+      localizedStageHandled = true;
+      markDiagnostic(diagnostic, 'L_LOCALIZED_VISUAL_INSPECTION_COMPLETE', { localizedVisualVerification: localizedVisualInspections.some(item => item.localizedVisualVerification), localizedVisualInspections, localizedCandidateLimit: 3 });
+    } catch (error) { markDiagnostic(diagnostic, 'L_LOCALIZED_VISUAL_INSPECTION_FAILED', { localizedVisualVerification: false, localizedVisualFailureReason: sanitizeDiagnosticText(error?.message) }); }
+  }
+  if (visualObservation && !localizedStageHandled) {
+    const localStartedAt = Date.now();
+    const candidates = visualObservation.objects.filter(item => /connector|plug|terminal/i.test(item.type) && (item.connectionState === 'UNKNOWN' || item.matingStatus === 'UNKNOWN')).slice(0, 2);
+    const pass2 = [];
+    for (const candidate of candidates) {
+      const localPrompt = `Independently inspect connector candidate ${candidate.id} in the ${candidate.location} region of this same image. Use the candidate ID exactly. Inspect only direct local geometry: connector body, harness termination, mating face, exposed/open end, open space, nearby receptacle, insertion path, gap/separation, lock area, occlusion, and image quality. Do not identify vehicle or component names, and do not infer a final connection state. Return the standard raw observation schema; set TRUE only for visible geometry and provide concise direct evidence.`;
+      try {
+        const localResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 900, input: [{ role: 'user', content: [{ type: 'input_text', text: localPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }], text: { format: { type: 'json_schema', name: 'nitros_local_connector_observation', strict: true, schema: visualObservationSchema } } }), signal: AbortSignal.timeout(Math.min(timeoutMs, COMPONENT_TIMEOUT_MS)) });
+        if (!localResponse.ok) throw new Error(`Local connector observation failed with HTTP ${localResponse.status}.`);
+        const local = validateVisualObservation(JSON.parse(extractOutputText(await localResponse.json())));
+        const localCandidate = local.objects.find(item => item.id === candidate.id) || local.objects.find(item => /connector|plug|terminal/i.test(item.type));
+        pass2.push({ candidateId: candidate.id, localCandidate: localCandidate || null, abnormalFindings: local.abnormalFindings });
+        if (localCandidate) {
+          const reconciled = { ...candidate, ...localCandidate, id: candidate.id, location: candidate.location };
+          const objects = visualObservation.objects.map(item => item.id === candidate.id ? reconciled : item);
+          const abnormalities = [...visualObservation.abnormalFindings.filter(item => item.objectId !== candidate.id), ...local.abnormalFindings.filter(item => item.objectId === localCandidate.id).map(item => ({ ...item, objectId: candidate.id }))];
+          visualObservation = validateVisualObservation({ ...visualObservation, objects, abnormalFindings: abnormalities });
+        }
+      } catch (error) { pass2.push({ candidateId: candidate.id, error: sanitizeDiagnosticText(error?.message) }); }
+    }
+    markDiagnostic(diagnostic, 'L_LOCAL_CONNECTOR_OBSERVATION_COMPLETE', { localConnectorCandidates: candidates.map(item => item.id), localConnectorObservations: pass2, localConnectorModelCalls: candidates.length, localConnectorElapsedMs: Math.max(0, Date.now() - localStartedAt) });
+  }
   let componentIdentification = null;
   if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
     const componentStartedAt = Date.now();
@@ -1080,6 +1139,10 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
       markDiagnostic(diagnostic, 'U_DOCUMENT_EXTRACTION_FAILED', { documentExtractionResponseParsed: false, documentExtractionResultPresent: false, documentExtractionStatus: 'UNREADABLE', documentExtractionErrorMessage: safeMessage });
     }
   } else markDiagnostic(diagnostic, diagnostic.stage, { documentExtractionAttempted: false, documentExtractionSkipped: true });
+  visualConditionInspection=mergeObservationWithCondition(visualObservation,visualConditionInspection);
+  visualConditionInspection=fuseLocalizedVisualEvidence(visualConditionInspection,localizedVisualInspections);
+  semanticResult.visualObservation=visualObservation;
+  semanticResult.localizedVisualInspections = localizedVisualInspections;
   semanticResult.componentIdentification = componentIdentification;
   semanticResult.visualConditionInspection = visualConditionInspection;
   semanticResult.vehicleAreaRelationshipAnalysis = vehicleAreaRelationshipAnalysis;
