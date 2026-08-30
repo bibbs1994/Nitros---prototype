@@ -40,3 +40,30 @@ test('10.13.125 E–G blocks unsupported missing claims and resolves conflicting
   assert.equal(conflict.connectionAssessments[0].connectionState, 'DISCONNECTED_VERIFIED');
   assert.equal(conflict.crossFindingConsistency.conflictsResolved, true);
 });
+
+test('10.13.126 A–F isolates malformed findings and promotes direct visible defects', () => {
+  const directDisconnect = finding({ connectionState: 'INDETERMINATE', seatingStatus: 'NOT_RELIABLY_VISIBLE', findingType: 'SEATING_NOT_RELIABLY_VISIBLE', severity: 'UNDETERMINED', findingConfidence: 94, connectionStateConfidence: 94, visibleEvidence: 'The electrical connector is visibly separated from its matching receptacle by an air gap.' });
+  const promoted = reconcile([directDisconnect]);
+  assert.equal(promoted.status, 'OBSERVED_CONDITION', 'A: direct separation is promoted even when component state started indeterminate');
+  assert.equal(promoted.connectionAssessments[0].connectionState, 'DISCONNECTED_VERIFIED');
+  assert.equal(promoted.finalEvidencePromotion.promotedCount, 1);
+
+  const uncertainComponent = reconcileVisualFindings({ status: 'POSSIBLE_CONCERN_DETECTED', componentIdentification: { status: 'UNCERTAIN', primaryComponent: 'Likely actuator', possibleAlternatives: ['EGR valve', 'purge valve'] }, connectionAssessments: [directDisconnect] });
+  assert.equal(uncertainComponent.connectionAssessments[0].findingType, 'CLEAR_DEFECT', 'B: defect certainty remains independent of component-name certainty');
+
+  const ambiguous = reconcile([finding({ connectionState: 'INDETERMINATE', visibleEvidence: 'Electrical connector is visible, but the mating face is obscured.', findingConfidence: 72, connectionStateConfidence: 72 })]);
+  assert.notEqual(ambiguous.connectionAssessments[0].findingType, 'CLEAR_DEFECT', 'C: obscured seating is not promoted');
+
+  const noDefect = reconcile([finding({ connectionState: 'CONNECTED_VERIFIED', seatingStatus: 'NO_GAP_OR_SEPARATION_VISIBLE', findingType: 'NO_DEFECT_VISIBLE', severity: 'LOW', visibleEvidence: 'Both connector halves are fully seated with the latch visibly engaged and no abnormal gap.' })]);
+  assert.equal(noDefect.finalEvidencePromotion.promotedCount, 0, 'D: no-defect output completes the positive-evidence gate before returning none');
+
+  const partial = reconcile([null, directDisconnect]);
+  assert.equal(partial.crossFindingConsistency.status, 'PARTIAL', 'E: one malformed candidate cannot fail reconciliation globally');
+  assert.equal(partial.connectionAssessments.length, 1);
+  assert.match(partial.reconciliationErrors[0].reason, /not an object/i);
+
+  const conflict = reconcile([directDisconnect, finding({ connectionState: 'CONNECTED_VERIFIED', seatingStatus: 'NO_GAP_OR_SEPARATION_VISIBLE', findingType: 'NO_DEFECT_VISIBLE', severity: 'LOW', visibleEvidence: 'Connector body is visible near the component.', findingConfidence: 55, connectionStateConfidence: 55 })]);
+  assert.equal(conflict.connectionAssessments.length, 1, 'F: weaker generic secure claim is removed for the same object');
+  assert.equal(conflict.connectionAssessments[0].connectionState, 'DISCONNECTED_VERIFIED');
+  assert.equal(conflict.crossFindingConsistency.conflictsResolved, true);
+});

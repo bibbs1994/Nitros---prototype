@@ -1,6 +1,6 @@
 /* Nitros 10.12.23 appointment dedicated field commit fix. */
 (()=>{'use strict';
-  const BUILD='10.13.125';
+  const BUILD='10.13.126';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
   const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
   const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
@@ -134,7 +134,7 @@
     else if(server.vehicleContextValidation==='BLOCKED'){set(24,'FAIL');set(25,'BLOCKED')}
     else if(server.vehicleContextValidation==='NOT_AVAILABLE'){set(24,'NOT AVAILABLE');set(25,'NOT DETERMINED')}
     else {set(24,'SKIPPED — awaiting automotive result');set(25,'SKIPPED — awaiting vehicle-context evaluation')}
-    if(server.crossFindingConsistency==='PASS'){set(26,'PASS');set(27,server.crossFindingConflictsResolved?'PASS':'NONE')}
+    if(['PASS','PARTIAL'].includes(server.crossFindingConsistency)){set(26,server.crossFindingConsistency);set(27,server.crossFindingConflictsResolved?'PASS':'NONE');set(28,server.finalEvidencePromotion||'PENDING')}
     else if(diag.outcome==='FAILED'){set(26,'FAIL');set(27,'SKIPPED')}
     renderStages(run);
   }
@@ -158,9 +158,10 @@
       set(21,server.vehicleAreaRelationshipAttempted?'FAIL':`SKIPPED — ${reason}`);set(22,server.vehicleAreaRelationshipAttempted?'FAIL':`SKIPPED — ${reason}`);set(23,server.vehicleAreaRelationshipAttempted?'FAIL':`SKIPPED — ${reason}`);
       set(24,run.analyzer.vehicleContextSnapshot?'FAIL':'NOT AVAILABLE');set(25,run.analyzer.vehicleContextSnapshot?'FAIL':'NOT DETERMINED');
     }
-    const reconciliation=result.visualConditionInspection?.crossFindingConsistency;
-    set(26,reconciliation?.status==='PASS'?'PASS':automotive?'FAIL':'SKIPPED — non-automotive category');
-    set(27,reconciliation?.status==='PASS'?(reconciliation.conflictsResolved?'PASS':'NONE'):(automotive?'SKIPPED':'SKIPPED — non-automotive category'));
+    const reconciliation=result.visualConditionInspection?.crossFindingConsistency,promotion=result.visualConditionInspection?.finalEvidencePromotion;
+    set(26,['PASS','PARTIAL'].includes(reconciliation?.status)?reconciliation.status:automotive?'FAIL':'SKIPPED — non-automotive category');
+    set(27,['PASS','PARTIAL'].includes(reconciliation?.status)?(reconciliation.conflictsResolved?'PASS':'NONE'):(automotive?'SKIPPED':'SKIPPED — non-automotive category'));
+    set(28,promotion?.status==='PASS'?'PASS':automotive?'FAIL':'SKIPPED — non-automotive category');
     const electricalPipeline=result.routingData?.electricalCircuitAnalysis||null;
     if(electricalPipeline?.wiringAnalysisExecuted&&electricalPipeline?.visibleCircuitAnalysisExecuted&&electricalPipeline?.testGuidanceGenerated){set(16,'PASS');set(17,'PASS');set(18,'PASS');Object.assign(run.analyzer,{electricalCircuitPipeline:'PASS',electricalDiagramStatus:electricalPipeline.diagramStatus,electricalVisibleCircuitStatus:electricalPipeline.visibleCircuitStatus})}
     else if(!electricalPipeline){set(16,'SKIPPED — not_electrical');set(17,'SKIPPED — not_electrical');set(18,'SKIPPED — not_electrical');run.analyzer.electricalCircuitPipeline='SKIPPED — not_electrical'}
@@ -773,7 +774,8 @@
       {label:'Validating active vehicle context…',status:'PENDING'},
       {label:'Vehicle context mismatch…',status:'PENDING'},
       {label:'Reconciling visual findings…',status:'PENDING'},
-      {label:'Cross-finding conflicts…',status:'PENDING'}
+      {label:'Cross-finding conflicts…',status:'PENDING'},
+      {label:'Final evidence promotion…',status:'PENDING'}
     ]};
     Object.assign(analyzer,{vehicleContextSnapshot,vehicleContextValidation:vehicleContextSnapshot?'PENDING':'NOT_AVAILABLE',vehicleContextMismatchBlocked:false});
     activeRun=run;
