@@ -1,6 +1,6 @@
 /* Nitros 10.12.23 appointment dedicated field commit fix. */
 (()=>{'use strict';
-  const BUILD='10.13.116';
+  const BUILD='10.13.117';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
   const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
   const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
@@ -553,7 +553,7 @@
     if(automotiveGraphAnalysis)automotiveGraphAnalysis={...automotiveGraphAnalysis,freshResultVerification:'PASS',freshResultProvenance:Object.freeze({status:'PASS',runId:run.runId,semanticRequestId:run.analyzer.requestId,imageHash:run.imageHash,transactionMatch:'PASS',imageHashMatch:'PASS',activeRunMatch:'PASS'})};
     const vehicleContextApplied=raw.vehicleContextApplied&&typeof raw.vehicleContextApplied==='object'?{available:raw.vehicleContextApplied.available===true,summary:String(raw.vehicleContextApplied.summary||'').trim()}:null,vehicleContextBinding=raw.vehicleContextBinding&&typeof raw.vehicleContextBinding==='object'?raw.vehicleContextBinding:null,requestedVehicleContext=run.analyzer.vehicleContextSnapshot||null;
     if(requestedVehicleContext&&(!vehicleContextBinding||!sameVehicleContext(requestedVehicleContext,vehicleContextBinding)||!sameVehicleContext(requestedVehicleContext,activeVehicleAnalysisContext()))){run.analyzer.vehicleContextValidation='BLOCKED';run.analyzer.vehicleContextMismatchBlocked=true;throw new Error('Vehicle context mismatch — stale vehicle-aware result was blocked. Re-run analysis for the active repair order.');}
-    raw.routingData={...(raw.routingData&&typeof raw.routingData==='object'?raw.routingData:{}),electricalCircuitAnalysis:raw.electricalCircuitAnalysis||null};
+    raw.routingData={...(raw.routingData&&typeof raw.routingData==='object'?raw.routingData:{}),electricalCircuitAnalysis:raw.electricalCircuitAnalysis||null,authoritativeImageContext:authoritativeImageContext({category,objects,evidence,automotiveEvidence,componentIdentification,vehicleContextBinding,vehicleContextApplied})};
     return {runId:run.runId,semanticRequestId:raw.transactionId,imageHash:raw.imageHash,category,confidence,rawConfidence:raw.rawConfidence??null,normalizedConfidence:confidence,componentIdentification,vehicleAreaRelationshipAnalysis,visualConditionInspection,automotiveGraphAnalysis,wiringDiagramAnalysis,documentRepairInformation,objects,evidence,description:String(raw.description||'').trim(),automotiveEvidence,graphEvidence,documentEvidence,vehicleContextApplied,vehicleContextBinding,source:String(raw.source||'NitrosVisionAnalyzer semantic result'),transportStatus:raw.transportStatus??null,routingData:raw.routingData??null};
   }
 
@@ -825,6 +825,16 @@
     return pointer&&(electrical||wheelArea);
   }
 
+  function authoritativeImageContext(result){
+    const evidence=[...(result?.evidence||[]),...(result?.objects||[]),...(result?.automotiveEvidence||[]),result?.componentIdentification?.primaryComponent||'',...(result?.componentIdentification?.secondaryComponents||[])].join(' ');
+    const inherited=window.NitrosAskOliverContext?.get?.()||{};
+    const inheritedVisualText=[inherited.concern,inherited.complaint,inherited.notes,inherited.target,inherited.section].filter(Boolean).join(' ');
+    const engine=/\b(?:engine|underhood|under-hood|intake|maf|air intake|throttle)\b/i.test(evidence),wheel=/\b(?:cv axle|wheel hub|abs|suspension|brake|steering)\b/i.test(evidence);
+    const staleWheel=/\b(?:cv axle|wheel hub|abs|suspension|brake|steering)\b/i.test(inheritedVisualText),staleEngine=/\b(?:engine|underhood|under-hood|intake|maf|air intake|throttle)\b/i.test(inheritedVisualText);
+    const conflict=(engine&&staleWheel)||(wheel&&staleEngine);
+    return {currentImageClassification:result?.category||'UNKNOWN',inheritedContextDetected:Boolean(inheritedVisualText),contextConflictDetected:conflict,staleVisualContextSuppressed:conflict,vehicleContextRetained:Boolean(result?.vehicleContextBinding||result?.vehicleContextApplied?.available),pointerTargetDetected:/\b(?:finger|hand|pointer|probe|screwdriver|arrow)\b/i.test(evidence),authoritativeVehicleArea:engine?'Upper engine / air-intake area':wheel?'Wheel / suspension area':'Current image area not conclusively classified',authoritativeComponentFamily:engine?'Engine air-intake / sensor / connector family':wheel?'Wheel-end / suspension family':'Current image component family',historicalVisualContext:conflict?'Retained for history only; excluded from active image routing.':''};
+  }
+
   function updateDeveloper(run,extra={}){
     const result=run?.result;
     const values={
@@ -845,6 +855,7 @@
     };
     Object.entries(values).forEach(([id,value])=>{const element=$(id);if(element)element.textContent=value});
     window.NitrosDeveloperMode=window.NitrosDeveloperMode||{};window.NitrosDeveloperMode.semanticTransport=run?.analyzer?JSON.parse(JSON.stringify(run.analyzer)):null;
+    window.NitrosDeveloperMode.authoritativeImageContext=result?.routingData?.authoritativeImageContext||null;
     window.NitrosDeveloperMode.componentTestSession=run?.componentTestSession?JSON.parse(JSON.stringify(run.componentTestSession)):null;
     window.NitrosDeveloperMode.finalCanonicalPidEvidence=result?.automotiveGraphAnalysis?.finalCanonicalPidEvidence||null;
     window.NitrosDeveloperMode.renderedInvariantLog=result?.automotiveGraphAnalysis?.renderedInvariantLog||null;

@@ -36,12 +36,12 @@ test('10.12.28 canonical normalizer rejects malformed and incomplete semantic co
   const normalize=semanticNormalizer();assert.equal(normalize({semanticResult:'```json\n{bad json}\n```'}),null);assert.equal(normalize({semanticResult:{category:'AUTOMOTIVE_GRAPH'}}),null);
 });
 
-test('10.13.116 keeps the proven analyzer and production endpoint', () => {
-  assert.match(analyzer, /const BUILD='10\.13\.116'/);
-  assert.match(html, /10\.13\.116/);
+test('10.13.117 keeps the proven analyzer and production endpoint', () => {
+  assert.match(analyzer, /const BUILD='10\.13\.117'/);
+  assert.match(html, /10\.13\.117/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.13\.116'/);
+  assert.match(serviceWorker, /const VERSION = '10\.13\.117'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -98,6 +98,15 @@ test('executed backend electrical pipeline controls circuit-stage status and non
   assert.match(core,/function buildElectricalCircuitAnalysis/);
   assert.match(core,/diagramStatus: 'DIAGRAM_REQUIRED'/);
   assert.match(core,/visibleCircuitStatus: visible\.length \? 'INSPECTED_LIMITED_TO_VISIBLE_AREAS' : 'NOT_VISIBLE_ADDITIONAL_PHOTO_REQUIRED'/);
+});
+
+test('current image context suppresses incompatible inherited visual targets while retaining vehicle context', () => {
+  assert.match(analyzer,/function authoritativeImageContext\(result\)/);
+  assert.match(analyzer,/contextConflictDetected:conflict/);
+  assert.match(analyzer,/staleVisualContextSuppressed:conflict/);
+  assert.match(analyzer,/vehicleContextRetained:Boolean\(result\?\.vehicleContextBinding\|\|result\?\.vehicleContextApplied\?\.available\)/);
+  assert.match(analyzer,/Engine air-intake \/ sensor \/ connector family/);
+  assert.match(analyzer,/window\.NitrosDeveloperMode\.authoritativeImageContext/);
 });
 
 test('10.12.42 final shared triplet gate validates and renders one frozen canonical object',()=>{
@@ -338,7 +347,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.13\.116'/);
+  assert.match(html, /version:'10\.13\.117'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
