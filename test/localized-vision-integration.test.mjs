@@ -8,7 +8,7 @@ import { analyzeSemanticImage, fuseLocalizedVisualEvidence } from '../semantic-a
 
 const region = { x: 0.25, y: 0.2, width: 0.2, height: 0.2 };
 const candidate = { id: 'OBJ-101', type: 'electrical_connector' };
-const localizedRaw = { candidate_id: 'OBJ-101', candidate_class: 'electrical_connector', localized_visual_verification: true, connection_state: 'DISCONNECTED', defect_state: 'CONFIRMED_VISIBLE_DEFECT', confidence: 91, evidence_observed: ['Visible air gap at connector mating end.'], contradictory_evidence: [], visibility_limitations: [] };
+const localizedRaw = { candidate_id: 'OBJ-101', candidate_class: 'electrical_connector', localized_visual_verification: true, connection_state: 'DISCONNECTED', defect_state: 'CONFIRMED_VISIBLE_DEFECT', confidence: 91, evidence_observed: ['Visible air gap between the connector mating end and matching receptacle.'], contradictory_evidence: [], visibility_limitations: [] };
 
 async function fixture() { return sharp({ create: { width: 1000, height: 800, channels: 3, background: { r: 20, g: 40, b: 60 } } }).png().toBuffer(); }
 

@@ -339,7 +339,7 @@ test('valid request reaches mocked server-side OpenAI path without secret disclo
   });
   assert.equal(calls, 1);
   assert.equal(JSON.stringify(result).includes('test-only-placeholder'), false);
-  assert.equal(result.serverDiagnostic.stage, 'K_SEMANTIC_OUTPUT_EXTRACTED');
+  assert.equal(result.serverDiagnostic.stage, 'S_CROSS_FINDING_RECONCILIATION_COMPLETE');
   assert.equal(result.serverDiagnostic.openaiCredentialConfigured, true);
   assert.equal(result.serverDiagnostic.openaiRequestAttempted, true);
   assert.equal(result.serverDiagnostic.openaiResponseReceived, true);
