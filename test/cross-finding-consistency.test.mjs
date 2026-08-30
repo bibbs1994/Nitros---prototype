@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { reconcileVisualFindings, validateVehicleAreaRelationship } from '../semantic-analyzer-core.mjs';
+import { lockPrimaryComponentIdentity, reconcileVisualFindings, validateVehicleAreaRelationship } from '../semantic-analyzer-core.mjs';
 
 const finding = overrides => ({
   location: 'Central-left EGR-area connector', observedObject: 'Electrical connector', seatingStatus: 'NOT_RELIABLY_VISIBLE', findingType: 'SEATING_NOT_RELIABLY_VISIBLE', severity: 'UNDETERMINED', findingConfidence: 92, connectionState: 'INDETERMINATE', connectionStateConfidence: 92, visibleEvidence: 'Electrical connector body is visible, but its mating socket is obscured.', recommendedVerification: 'Photograph both connector halves and the latch from another angle.', safetyDrivabilityImpact: null, ...overrides
@@ -66,4 +66,25 @@ test('10.13.126 A–F isolates malformed findings and promotes direct visible de
   assert.equal(conflict.connectionAssessments.length, 1, 'F: weaker generic secure claim is removed for the same object');
   assert.equal(conflict.connectionAssessments[0].connectionState, 'DISCONNECTED_VERIFIED');
   assert.equal(conflict.crossFindingConsistency.conflictsResolved, true);
+});
+
+test('10.13.127 locks primary identity apart from nearby assemblies and connection state', () => {
+  const locked = lockPrimaryComponentIdentity({ status: 'IDENTIFIED', primaryComponent: 'EGR valve', componentConfidence: 84, normalizedComponentConfidence: 84, supportingEvidence: ['Metal tube and actuator housing are visibly mounted at the intake/exhaust interface.'], possibleAlternatives: ['Vacuum pump'] }, { objects: [{ id: 'OBJ-001', type: 'electrical connector', location: 'Center-right', evidence: 'Connector body visible.', connectionState: 'UNKNOWN' }] });
+  assert.equal(locked.primaryComponent, 'EGR valve');
+  assert.equal(locked.primaryComponentIdentity.primaryComponent, 'EGR valve');
+  assert.deepEqual(locked.primaryComponentIdentity.primaryComponentAlternatives, ['Vacuum pump']);
+  assert.equal(locked.primaryComponentIdentity.rawVisualTopology[0].objectType, 'electrical connector');
+  const connection = reconcile([finding({ location: 'Center-right connector', connectionState: 'INDETERMINATE', visibleEvidence: 'Connector body is visible, but the mating interface is obscured.' })]);
+  assert.notEqual(connection.connectionAssessments[0].connectionState, 'DISCONNECTED_VERIFIED');
+});
+
+test('10.13.127 promotes a visibly separated EGR connector but not an obscured one', () => {
+  const egrIdentity = { status: 'IDENTIFIED', primaryComponent: 'EGR valve', componentConfidence: 88, normalizedComponentConfidence: 88, supportingEvidence: ['Actuator housing and exhaust-gas tube relationship are visible.'], possibleAlternatives: ['Vacuum pump'] };
+  const separated = reconcileVisualFindings({ status: 'POSSIBLE_CONCERN_DETECTED', componentIdentification: lockPrimaryComponentIdentity(egrIdentity), connectionAssessments: [finding({ location: 'EGR valve connector', observedObject: 'Electrical connector on EGR valve', connectionState: 'INDETERMINATE', seatingStatus: 'NOT_RELIABLY_VISIBLE', findingType: 'SEATING_NOT_RELIABLY_VISIBLE', severity: 'UNDETERMINED', findingConfidence: 95, connectionStateConfidence: 95, visibleEvidence: 'The EGR electrical connector is visibly separated from its matching EGR-valve receptacle by a clear air gap with exposed mating terminals.' })] });
+  assert.equal(separated.componentIdentification.primaryComponent, 'EGR valve');
+  assert.equal(separated.connectionAssessments[0].connectionState, 'DISCONNECTED_VERIFIED');
+  assert.equal(separated.connectionAssessments[0].findingType, 'CLEAR_DEFECT');
+  assert.ok(separated.connectionAssessments[0].connectionStateConfidence >= 90);
+  const obscured = reconcile([finding({ location: 'EGR valve connector', observedObject: 'Electrical connector on EGR valve', connectionState: 'INDETERMINATE', visibleEvidence: 'The EGR connector body is visible, but the mating receptacle and seating interface are obscured.' })]);
+  assert.notEqual(obscured.connectionAssessments[0].connectionState, 'DISCONNECTED_VERIFIED');
 });

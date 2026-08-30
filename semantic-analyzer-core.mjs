@@ -340,6 +340,26 @@ function validateAutomotiveComponent(raw) {
   return result;
 }
 
+export function lockPrimaryComponentIdentity(component, observation = null) {
+  if (!component || component.status === 'FAILED') return component;
+  const visibleEvidence = Array.isArray(component.supportingEvidence) ? component.supportingEvidence.filter(Boolean).slice(0, 16) : [];
+  const rawTopology = Array.isArray(observation?.objects) ? observation.objects.map(item => ({ objectId: item.id, objectType: item.type, location: item.location, evidence: item.evidence })).slice(0, 12) : [];
+  const confidence = component.normalizedComponentConfidence ?? component.componentConfidence ?? null;
+  const alternatives = Array.isArray(component.possibleAlternatives) ? component.possibleAlternatives.filter(candidate => candidate && candidate.toLowerCase() !== String(component.primaryComponent || '').toLowerCase()).slice(0, 8) : [];
+  return {
+    ...component,
+    primaryComponentIdentity: {
+      primaryComponent: component.primaryComponent,
+      primaryComponentConfidence: confidence,
+      primaryComponentVisibleEvidence: visibleEvidence,
+      primaryComponentVehicleEvidence: [],
+      primaryComponentAlternatives: alternatives,
+      primaryComponentConflictState: alternatives.length ? 'ALTERNATIVES_RETAINED' : 'NO_CONFLICT_VISIBLE',
+      rawVisualTopology: rawTopology
+    }
+  };
+}
+
 export function validateVehicleAreaRelationship(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !['READY','INSUFFICIENT_CONTEXT'].includes(raw.status)) throw new Error('Vehicle-area relationship analysis returned no valid structured result.');
   const itemText = (value, limit) => typeof value === 'string' ? value.trim().slice(0, limit) : '';
@@ -1025,7 +1045,8 @@ const localPrompt = `Independently inspect candidate ${pass1.id}. IMAGE 1 is DET
   let componentIdentification = null;
   if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
     const componentStartedAt = Date.now();
-    const componentPrompt = `Identify the primary automotive component visible in this current image using only visible pixels. Do not use filenames, metadata, OCR text alone, prior images, prior cases, cached results, or the category confidence. ${vehicleContextPrompt(vehicleContext)} Return the most specific component supported by visible evidence, its automotive system, secondary visible components, and pixel-supported evidence. Component confidence must be independent from category confidence. If vehicle context makes an identity plausible but its defining physical features are not visible, keep status UNCERTAIN and state that it is a likely identification from vehicle context, not a confirmed visual identification. If the exact component is not visually defensible, use status UNCERTAIN, list visually supported alternatives, explain what view or evidence is missing, and never force or invent a component.
+    const rawTopologyForIdentity = (visualObservation?.objects || []).map(item => ({ id: item.id, type: item.type, location: item.location, evidence: item.evidence, connectionState: item.connectionState })).slice(0, 12);
+    const componentPrompt = `Identify the primary automotive component visible in this current image using only visible pixels. Do not use filenames, metadata, OCR text alone, prior images, prior cases, cached results, or the category confidence. ${vehicleContextPrompt(vehicleContext)} A prior raw visual inventory is supplied only as non-identifying topology context: ${JSON.stringify(rawTopologyForIdentity)}. First distinguish physical attachment, crossing/occlusion, adjacency, parent assembly, and connector ownership. Proximity is not ownership. Generate plausible alternatives internally, compare discriminating visible geometry, mounting, ports, tubes, actuator form, and harness routing, then select an identity only when those features support it. Keep the selected primary component separate from nearest assembly and likely connector destination. Return the most specific component supported by visible evidence, its automotive system, secondary visible components, and pixel-supported evidence. Component confidence must be independent from category confidence. If vehicle context makes an identity plausible but its defining physical features are not visible, keep status UNCERTAIN and state that it is a likely identification from vehicle context, not a confirmed visual identification. If the exact component is not visually defensible, use status UNCERTAIN, list visually supported alternatives, explain what view or evidence is missing, and never force or invent a component.
 
 Keep “visible component identification” separate from “likely connection or destination.” A cable, wire, terminal, or electrical connector is visible wiring, not the housing it may normally connect to. Never call a starter, starter solenoid, or other component visible unless its physical housing or defining features are actually visible. If a starter is installed and its housing, solenoid body, mounting, or other defining features are clearly visible, identify it from those features. In particular, a heavy-gauge positive battery cable near the transmission/bellhousing may be a disconnected starter power cable, and a smaller connector may be a starter-solenoid exciter wire; neither is itself a starter or solenoid. When only those wires are visible, identify the wires, state their likely purpose only as an unconfirmed interpretation, and say the component may be removed, outside the frame, or obscured. Reduce confidence whenever defining visual evidence is missing.
 
@@ -1053,7 +1074,7 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
       if (!componentResponse.ok) throw Object.assign(new Error(componentBody?.error?.message || `Component request failed with HTTP ${componentResponse.status}.`), { componentErrorCategory: classifyOpenAIError(componentResponse.status, componentBody), componentHttpStatus: componentResponse.status });
       if (!componentBody) throw new Error('Component response was not valid JSON.');
       const componentParsed = JSON.parse(extractOutputText(componentBody));
-      componentIdentification = { ...validateAutomotiveComponent(componentParsed), semanticRequestId: transactionId, imageHash };
+      componentIdentification = lockPrimaryComponentIdentity({ ...validateAutomotiveComponent(componentParsed), semanticRequestId: transactionId, imageHash }, visualObservation);
       markDiagnostic(diagnostic, 'O_COMPONENT_RESULT_EXTRACTED', { componentResponseParsed: true, componentResultPresent: true, componentConfidenceNormalized: componentIdentification.normalizedComponentConfidence !== null, componentStatus: componentIdentification.status, componentErrorCategory: null, componentErrorMessage: null });
     } catch (error) {
       const timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError' || /timed out|timeout/i.test(String(error?.message || ''));
