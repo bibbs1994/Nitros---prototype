@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildCanonicalVisualState, reconcileVisualFindings, validateVehicleAreaRelationship } from '../semantic-analyzer-core.mjs';
+import { buildCanonicalVisualState, evaluateCrossFindingConflicts, promoteFinalEvidence, reconcileVisualFindings, validateVehicleAreaRelationship } from '../semantic-analyzer-core.mjs';
 
 const finding = overrides => ({
   location: 'Central-left EGR-area connector', observedObject: 'Electrical connector', seatingStatus: 'NOT_RELIABLY_VISIBLE', findingType: 'SEATING_NOT_RELIABLY_VISIBLE', severity: 'UNDETERMINED', findingConfidence: 92, connectionState: 'INDETERMINATE', connectionStateConfidence: 92, visibleEvidence: 'Electrical connector body is visible, but its mating socket is obscured.', recommendedVerification: 'Photograph both connector halves and the latch from another angle.', safetyDrivabilityImpact: null, ...overrides
@@ -68,12 +68,60 @@ test('10.13.126 A–F isolates malformed findings and promotes direct visible de
   assert.equal(conflict.crossFindingConsistency.conflictsResolved, true);
 });
 
-test('10.13.129 locks the evidence-backed component identity and reconciled disconnected state for downstream consumers', () => {
-  const component = { status: 'IDENTIFIED', primaryComponent: 'EGR valve', normalizedComponentConfidence: 94 };
-  const condition = reconcile([finding({ candidateId: 'connector-a', observedObject: 'Electrical connector', seatingStatus: 'SEPARATION_OR_GAP_VISIBLE', findingType: 'CLEAR_DEFECT', severity: 'HIGH', connectionState: 'DISCONNECTED_VERIFIED', visibleEvidence: 'A visible air gap separates the electrical connector from its matching receptacle.', findingConfidence: 96, connectionStateConfidence: 96 })]);
-  const canonical = buildCanonicalVisualState(component, condition);
-  assert.equal(canonical.componentIdentity.primaryComponent, 'EGR valve');
-  assert.equal(canonical.connectionStates[0].connectionState, 'DISCONNECTED_VERIFIED');
-  assert.equal(canonical.connectionStates[0].source, 'RECONCILED_VISUAL_EVIDENCE');
-  assert.equal(canonical.downstreamOverrideAllowed, false);
+test('10.13.128 A–C retains connected, disconnected, and partially seated EGR connector states independently of identity', () => {
+  const egr = { status: 'IDENTIFIED', primaryComponent: 'EGR valve', normalizedComponentConfidence: 94 };
+  const connected = buildCanonicalVisualState(egr, reconcile([finding({ candidateId: 'egr-connector', connectionState: 'CONNECTED_VERIFIED', seatingStatus: 'NO_GAP_OR_SEPARATION_VISIBLE', findingType: 'NO_DEFECT_VISIBLE', severity: 'LOW', visibleEvidence: 'Both connector halves are fully seated, the latch is engaged, and no abnormal gap is visible.', findingConfidence: 95, connectionStateConfidence: 95 })]));
+  assert.equal(connected.componentIdentity.primaryComponent, 'EGR valve');
+  assert.equal(connected.connectionStates[0].connectionState, 'CONNECTED_VERIFIED');
+  const disconnected = buildCanonicalVisualState(egr, reconcile([finding({ candidateId: 'egr-connector', connectionState: 'DISCONNECTED_VERIFIED', seatingStatus: 'SEPARATION_OR_GAP_VISIBLE', findingType: 'CLEAR_DEFECT', severity: 'HIGH', visibleEvidence: 'A visible air gap separates the electrical connector from its matching receptacle.', findingConfidence: 96, connectionStateConfidence: 96 })]));
+  assert.equal(disconnected.connectionStates[0].connectionState, 'DISCONNECTED_VERIFIED');
+  const partial = buildCanonicalVisualState(egr, reconcile([finding({ candidateId: 'egr-connector', connectionState: 'PARTIALLY_SEATED', seatingStatus: 'POSSIBLE_IMPROPER_SEATING', findingType: 'POSSIBLE_CONCERN', severity: 'MODERATE', visibleEvidence: 'The connector is cocked with a visible partial insertion gap at the mating interface.', findingConfidence: 82, connectionStateConfidence: 82 })]));
+  assert.equal(partial.connectionStates[0].connectionState, 'PARTIALLY_SEATED');
+});
+
+test('10.13.128 D–F makes image evidence canonical against prompt bias, identity correction, and stale contradictory claims', () => {
+  const directDisconnect = finding({ candidateId: 'egr-connector', connectionState: 'DISCONNECTED_VERIFIED', seatingStatus: 'SEPARATION_OR_GAP_VISIBLE', findingType: 'CLEAR_DEFECT', severity: 'HIGH', visibleEvidence: 'A visible air gap separates the electrical connector from its matching receptacle.', findingConfidence: 96, connectionStateConfidence: 96 });
+  const reconciled = reconcile([directDisconnect, finding({ candidateId: 'egr-connector', connectionState: 'CONNECTED_VERIFIED', seatingStatus: 'NO_GAP_OR_SEPARATION_VISIBLE', findingType: 'NO_DEFECT_VISIBLE', severity: 'LOW', visibleEvidence: 'Connector body is visible near the component.', findingConfidence: 92, connectionStateConfidence: 92 })]);
+  assert.equal(reconciled.connectionAssessments.length, 1, 'F: one evidence-resolved item remains after a conflicting stale claim');
+  const correctedIdentity = buildCanonicalVisualState({ status: 'IDENTIFIED', primaryComponent: 'EGR valve', normalizedComponentConfidence: 91 }, reconciled);
+  assert.equal(correctedIdentity.componentIdentity.primaryComponent, 'EGR valve', 'E: reconciliation may correct identity');
+  assert.equal(correctedIdentity.connectionStates[0].connectionState, 'DISCONNECTED_VERIFIED', 'E: identity correction cannot reverse physical separation');
+  assert.match(correctedIdentity.connectionStates[0].directVisibleEvidence, /air gap/i, 'D: prompt or proximity language cannot replace direct visible geometry');
+  assert.equal(correctedIdentity.downstreamOverrideAllowed, false);
+});
+
+test('10.13.128 retains a directly observed free electrical termination even when the intended receptacle is not visible', () => {
+  const freeEnd = reconcile([finding({ candidateId: 'connector-free', connectionState: 'DISCONNECTED_VERIFIED', seatingStatus: 'SEPARATION_OR_GAP_VISIBLE', findingType: 'CLEAR_DEFECT', severity: 'HIGH', visibleEvidence: 'Connector shows exposed mating interface with harness terminated but not connected to a visible interface.', findingConfidence: 90, connectionStateConfidence: 90 })]);
+  assert.equal(freeEnd.connectionAssessments[0].connectionState, 'DISCONNECTED_VERIFIED');
+  assert.equal(freeEnd.connectionAssessments[0].findingType, 'CLEAR_DEFECT');
+  assert.equal(freeEnd.finalEvidencePromotion.promotedCount, 1);
+});
+
+test('10.13.130 reconciles and promotes direct connection evidence without vehicle context', () => {
+  const disconnected = finding({ candidateId: 'egr-connector', observedObject: 'EGR solenoid connector', connectionState: 'DISCONNECTED_VERIFIED', seatingStatus: 'SEPARATION_OR_GAP_VISIBLE', findingType: 'CLEAR_DEFECT', severity: 'HIGH', visibleEvidence: 'A visible air gap separates the electrical connector from its matching receptacle.', findingConfidence: 96, connectionStateConfidence: 96 });
+  const reconciled = reconcileVisualFindings({ status: 'OBSERVED_CONDITION', connectionAssessments: [disconnected] }, { vehicleContextState: 'UNAVAILABLE' });
+  const conflict = evaluateCrossFindingConflicts(reconciled);
+  const promotion = promoteFinalEvidence(reconciled, conflict);
+  assert.equal(reconciled.reconciliation.reason, 'RECONCILE_OK');
+  assert.equal(reconciled.reconciliation.vehicleContextAvailable, false);
+  assert.equal(reconciled.reconciliation.vehicleMismatch, null);
+  assert.equal(conflict.status, 'PASS');
+  assert.equal(conflict.hasUnresolvedConflict, false);
+  assert.equal(promotion.status, 'PASS');
+  assert.equal(promotion.eligible, true);
+  assert.equal(promotion.evidence[0].visibleState, 'DISCONNECTED');
+  assert.equal(promotion.evidence[0].contextLimited, true);
+});
+
+test('10.13.130 represents a real state contradiction without throwing or promoting', () => {
+  const disconnected = finding({ candidateId: 'same-target', observedObject: 'EGR valve connector', connectionState: 'DISCONNECTED_VERIFIED', seatingStatus: 'SEPARATION_OR_GAP_VISIBLE', findingType: 'CLEAR_DEFECT', visibleEvidence: 'A visible air gap separates the electrical connector from its matching receptacle.', findingConfidence: 95, connectionStateConfidence: 95 });
+  const connected = finding({ candidateId: 'same-target', observedObject: 'EGR solenoid connector', connectionState: 'CONNECTED_VERIFIED', seatingStatus: 'NO_GAP_OR_SEPARATION_VISIBLE', findingType: 'NO_DEFECT_VISIBLE', visibleEvidence: 'Both connector halves are fully seated, the latch is engaged, and no abnormal gap is visible.', findingConfidence: 95, connectionStateConfidence: 95 });
+  const reconciled = reconcileVisualFindings({ status: 'OBSERVED_CONDITION', connectionAssessments: [disconnected, connected] }, { vehicleContextState: 'UNAVAILABLE' });
+  const conflict = evaluateCrossFindingConflicts(reconciled);
+  const promotion = promoteFinalEvidence(reconciled, conflict);
+  assert.equal(conflict.status, 'PASS');
+  assert.equal(conflict.hasUnresolvedConflict, true);
+  assert.equal(conflict.conflicts[0].type, 'CONNECTION_STATE_CONTRADICTION');
+  assert.equal(promotion.status, 'BLOCKED_CONFLICT');
+  assert.equal(promotion.promotedCount, 0);
 });

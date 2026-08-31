@@ -814,16 +814,26 @@ function buildElectricalCircuitAnalysis(semanticResult, componentIdentification,
 }
 
 const directMatingEvidence = evidence => hasAffirmativeMatingEvidence({ visibleEvidence: String(evidence || '') });
-const directSeparationEvidence = evidence => { const text = String(evidence || ''); const gap = /\b(?:separat(?:ed|ion)|disconnect(?:ed|ion)|air\s+gap|gap)\b/i.test(text); const electricalPair = /\b(?:connector|plug|terminal)\b/i.test(text) && /\b(?:socket|receptacle|post)\b/i.test(text); const fluidPair = /\b(?:hose|tube|line|pipe)\b/i.test(text) && /\b(?:fitting|port|coupler)\b/i.test(text); return !/\bno\s+(?:abnormal\s+)?gap\b/i.test(text) && gap && (electricalPair || fluidPair); };
+const directSeparationEvidence = evidence => { const text = String(evidence || ''); const gap = /\b(?:separat(?:ed|ion)|disconnect(?:ed|ion)|air\s+gap|gap)\b/i.test(text); const electricalPair = /\b(?:connector|plug|terminal)\b/i.test(text) && /\b(?:socket|receptacle|post)\b/i.test(text); const fluidPair = /\b(?:hose|tube|line|pipe)\b/i.test(text) && /\b(?:fitting|port|coupler)\b/i.test(text); const freeElectricalTermination = /\b(?:connector|plug|terminal)\b/i.test(text) && /\b(?:harness|wire|wiring)\b[^.]{0,100}\bterminat(?:es|ed|ing)\b/i.test(text) && /\b(?:exposed|open|free|unmated)\b[^.]{0,100}\b(?:mating|interface|face|end|connector|plug)\b|\bnot\s+connected\s+to\s+(?:a\s+)?visible\s+interface\b/i.test(text); return !/\bno\s+(?:abnormal\s+)?gap\b/i.test(text) && ((gap && (electricalPair || fluidPair)) || freeElectricalTermination); };
 const directPhysicalDefectEvidence = evidence => /\b(?:broken|crack(?:ed)?|torn|split|leak(?:ing)?|corrosion|corroded|damaged\s+(?:wire|wiring|harness)|missing\s+(?:fastener|bolt|clip)|displaced\s+clamp|unplugged\s+harness|terminal\s+(?:removed|corroded))\b/i.test(String(evidence || ''));
 const partialSeatingEvidence = evidence => /\b(?:partially|not fully|uneven)\s+(?:seated|inserted|engaged)|\b(?:exposed|visible)\s+(?:connector neck|sealing surface|insertion gap)\b/i.test(String(evidence || ''));
 const suspectSeatingEvidence = evidence => /\b(?:loose|displaced|misalign|corrosion|rust|clamp[^.]{0,80}(?:rearward|displaced)|possible|suspect)\b/i.test(String(evidence || ''));
 const observedObjectFor = finding => /\bhose|tube|line\b/i.test(`${finding?.observedObject || ''} ${finding?.visibleEvidence || ''}`) ? 'Hose / tube connection' : /\bclamp\b/i.test(`${finding?.observedObject || ''} ${finding?.visibleEvidence || ''}`) ? 'Clamp connection' : /\bterminal\b/i.test(`${finding?.observedObject || ''} ${finding?.visibleEvidence || ''}`) ? 'Electrical terminal' : 'Electrical connector';
 const canonicalFindingKey = finding => finding?.candidateId ? `candidate:${finding.candidateId}` : `${observedObjectFor(finding).toLowerCase()}|${String(finding?.location || '').toLowerCase().replace(/\s+/g, ' ').trim()}`;
 
-export function reconcileVisualFindings(condition, { observation = null, relationship = null } = {}) {
-  if (!condition) return condition;
-  const source = Array.isArray(condition.connectionAssessments) ? condition.connectionAssessments : [];
+const canonicalConnectionState = state => ({ CONNECTED_VERIFIED: 'CONNECTED', DISCONNECTED_VERIFIED: 'DISCONNECTED', PARTIALLY_SEATED: 'PARTIALLY_DISCONNECTED', LOOSE_OR_SUSPECT: 'LOOSE_OR_UNSEATED', INDETERMINATE: 'UNKNOWN' }[state] || 'UNKNOWN');
+const canonicalComponentFamily = value => {
+  const text = String(value || '').toLowerCase();
+  if (/\begr\b/.test(text)) return 'EGR_CONTROL';
+  if (/\b(?:connector|plug|terminal|harness)\b/.test(text)) return 'ELECTRICAL_CONNECTION';
+  if (/\b(?:hose|tube|line)\b/.test(text)) return 'FLUID_CONNECTION';
+  return text.replace(/\b(?:valve|solenoid|control|assembly|connector)\b/g, '').replace(/[^a-z0-9]+/g, ' ').trim() || 'UNKNOWN_COMPONENT';
+};
+const reconciliationReason = (code, error = null) => ({ code, errorName: error?.name || null, errorMessage: sanitizeDiagnosticText(error?.message) || null });
+
+export function reconcileVisualFindings(condition, { observation = null, relationship = null, vehicleContextState = 'UNAVAILABLE' } = {}) {
+  const base = condition && typeof condition === 'object' ? condition : { status: 'UNABLE_TO_INSPECT', connectionAssessments: [] };
+  const source = Array.isArray(base.connectionAssessments) ? base.connectionAssessments : [];
   const reconciliationErrors = [];
   const reconciled = [];
   source.forEach((rawItem, index) => {
@@ -860,7 +870,7 @@ export function reconcileVisualFindings(condition, { observation = null, relatio
   const strongest = new Map();
   const rank = item => item.connectionState === 'DISCONNECTED_VERIFIED' && directSeparationEvidence(item.visibleEvidence) ? 4 : item.connectionState === 'CONNECTED_VERIFIED' && directMatingEvidence(item.visibleEvidence) ? 3 : item.connectionState === 'PARTIALLY_SEATED' ? 2 : item.connectionState === 'LOOSE_OR_SUSPECT' ? 1 : 0;
   for (const item of reconciled) {
-    const key = `${canonicalFindingKey(item)}|${['CONNECTED_VERIFIED', 'DISCONNECTED_VERIFIED'].includes(item.connectionState) ? 'mating-claim' : item.connectionState}`, previous = strongest.get(key);
+    const key = `${canonicalFindingKey(item)}|${rank(item) >= 3 ? item.connectionState : ['CONNECTED_VERIFIED', 'DISCONNECTED_VERIFIED'].includes(item.connectionState) ? 'mating-claim' : item.connectionState}`, previous = strongest.get(key);
     if (!previous || rank(item) > rank(previous) || (rank(item) === rank(previous) && (item.findingConfidence || 0) > (previous.findingConfidence || 0))) strongest.set(key, item);
   }
   const directClaimKeys = new Set(reconciled.filter(item => ['CONNECTED_VERIFIED', 'DISCONNECTED_VERIFIED'].includes(item.connectionState) && rank(item) >= 3).map(canonicalFindingKey));
@@ -869,9 +879,34 @@ export function reconcileVisualFindings(condition, { observation = null, relatio
   const promotedFindings = finalFindings.filter(item => item.findingType === 'CLEAR_DEFECT' && (directSeparationEvidence(item.directVisibleEvidence || item.visibleEvidence) || directPhysicalDefectEvidence(item.directVisibleEvidence || item.visibleEvidence)));
   const hasClearDefect = promotedFindings.length > 0;
   const hasConcern = finalFindings.some(item => item.findingType === 'POSSIBLE_CONCERN');
-  const status = hasClearDefect ? 'OBSERVED_CONDITION' : hasConcern ? 'POSSIBLE_CONCERN_DETECTED' : finalFindings.length ? condition.status : condition.status;
-  const reconciliationStatus = reconciliationErrors.length ? (finalFindings.length ? 'PARTIAL' : 'PARTIAL') : 'PASS';
-  return { ...condition, status, connectionAssessments: finalFindings, reconciliationErrors, crossFindingConsistency: { status: reconciliationStatus, conflictsResolved, findingCount: finalFindings.length, rejectedFindingCount: reconciliationErrors.length, relationshipAnalysisAvailable: Boolean(relationship), stageOneObservationAvailable: Boolean(observation) }, finalEvidencePromotion: { status: 'PASS', promotedCount: promotedFindings.length, positiveEvidenceAdjudicated: true, adjudications: [...promotedFindings.map(item => ({ findingId: item.findingId, disposition: 'VISIBLE_DEFECT' })), ...reconciliationErrors.map(item => ({ findingId: item.findingId, disposition: 'REJECTED', reason: item.reason }))] } };
+  const status = hasClearDefect ? 'OBSERVED_CONDITION' : hasConcern ? 'POSSIBLE_CONCERN_DETECTED' : base.status;
+  const reason = reconciliationErrors.length && !finalFindings.length ? reconciliationReason('RECONCILE_NO_FINDINGS') : reconciliationErrors.length ? reconciliationReason('RECONCILE_PARTIAL') : reconciliationReason('RECONCILE_OK');
+  const result = { ...base, status, connectionAssessments: finalFindings, reconciliationErrors, reconciliation: { status: 'reconciled', findings: finalFindings, visualState: finalFindings[0] ? canonicalConnectionState(finalFindings[0].connectionState) : null, vehicleContextAvailable: vehicleContextState !== 'UNAVAILABLE', vehicleMismatch: vehicleContextState === 'MISMATCH' ? true : vehicleContextState === 'MATCH' ? false : null, conflicts: [], promotable: false, reason: reason.code, reasonDetail: reason }, crossFindingConsistency: { status: reconciliationErrors.length ? 'PARTIAL' : 'PASS', conflictsResolved, findingCount: finalFindings.length, rejectedFindingCount: reconciliationErrors.length, relationshipAnalysisAvailable: Boolean(relationship), stageOneObservationAvailable: Boolean(observation) } };
+  const conflictEvaluation = evaluateCrossFindingConflicts(result);
+  const finalEvidencePromotion = promoteFinalEvidence(result, conflictEvaluation);
+  return { ...result, conflictEvaluation, finalEvidencePromotion, reconciliation: { ...result.reconciliation, conflicts: conflictEvaluation.conflicts, promotable: finalEvidencePromotion.eligible } };
+}
+
+export function evaluateCrossFindingConflicts(reconciledEvidence) {
+  const findings = Array.isArray(reconciledEvidence?.connectionAssessments) ? reconciledEvidence.connectionAssessments : [];
+  const grouped = new Map();
+  for (const item of findings) {
+    const key = `${canonicalComponentFamily(item.observedObject || item.componentIdentity)}|${String(item.location || '').toLowerCase().replace(/\s+/g, ' ').trim()}`;
+    const states = grouped.get(key) || []; states.push(item); grouped.set(key, states);
+  }
+  const conflicts = [...grouped.entries()].flatMap(([key, items]) => {
+    const states = new Set(items.map(item => canonicalConnectionState(item.connectionState)));
+    return states.has('CONNECTED') && states.has('DISCONNECTED') ? [{ key, type: 'CONNECTION_STATE_CONTRADICTION', findingIds: items.map(item => item.findingId), states: [...states] }] : [];
+  });
+  return { status: 'PASS', executed: true, conflicts, hasUnresolvedConflict: conflicts.length > 0, reason: conflicts.length ? 'CONFLICT_REPRESENTED' : 'NO_CONFLICT' };
+}
+
+export function promoteFinalEvidence(reconciledEvidence, conflictEvaluation) {
+  const findings = Array.isArray(reconciledEvidence?.connectionAssessments) ? reconciledEvidence.connectionAssessments : [];
+  const eligible = !conflictEvaluation?.hasUnresolvedConflict;
+  const promoted = eligible ? findings.filter(item => item.findingType === 'CLEAR_DEFECT' && Number(item.findingConfidence || 0) >= 70 && Boolean(item.directVisibleEvidence || item.visibleEvidence)) : [];
+  const contextLimited = reconciledEvidence?.reconciliation?.vehicleContextAvailable === false;
+  return { status: eligible ? 'PASS' : 'BLOCKED_CONFLICT', eligible: eligible && promoted.length > 0, promotedCount: promoted.length, positiveEvidenceAdjudicated: true, evidence: promoted.map(item => ({ evidenceId: item.findingId, observationType: item.findingType, canonicalComponent: canonicalComponentFamily(item.observedObject), visibleState: canonicalConnectionState(item.connectionState), confidence: item.findingConfidence, contextLimited, qualification: contextLimited ? 'Vehicle context unavailable; statement is limited to direct visible evidence.' : null })), adjudications: [...promoted.map(item => ({ findingId: item.findingId, disposition: 'VISIBLE_DEFECT' })), ...(reconciledEvidence?.reconciliationErrors || []).map(item => ({ findingId: item.findingId, disposition: 'REJECTED', reason: item.reason }))], reason: eligible ? (promoted.length ? 'PROMOTION_OK' : 'NO_PROMOTABLE_EVIDENCE') : 'UNRESOLVED_CONFLICT' };
 }
 
 // This is deliberately a handoff, not another analyzer: component identity comes
@@ -897,7 +932,7 @@ export function buildCanonicalVisualState(componentIdentification, visualConditi
     source: 'RECONCILED_VISUAL_EVIDENCE'
   }));
   return {
-    version: '10.13.129',
+    version: '10.13.130',
     componentIdentity: {
       primaryComponent: componentIdentification?.primaryComponent || 'Unable to determine exact component',
       status: componentIdentification?.status || 'NOT_ANALYZED',
@@ -1062,6 +1097,8 @@ const localPrompt = `Independently inspect candidate ${pass1.id}. IMAGE 1 is DET
   if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
     const componentStartedAt = Date.now();
     const componentPrompt = `Identify the primary automotive component visible in this current image using only visible pixels. Do not use filenames, metadata, OCR text alone, prior images, prior cases, cached results, or the category confidence. ${vehicleContextPrompt(vehicleContext)} Return the most specific component supported by visible evidence, its automotive system, secondary visible components, and pixel-supported evidence. Component confidence must be independent from category confidence. If vehicle context makes an identity plausible but its defining physical features are not visible, keep status UNCERTAIN and state that it is a likely identification from vehicle context, not a confirmed visual identification. If the exact component is not visually defensible, use status UNCERTAIN, list visually supported alternatives, explain what view or evidence is missing, and never force or invent a component.
+
+When distinguishing visually similar emissions and vacuum assemblies, compare multiple independent visible cues before naming either: actuator and connector placement; body and mounting geometry; flange or exhaust-gas passage features; adjacent metal EGR tubing or relevant plumbing; pump drive/vacuum-port features; engine location; and readable marking only when it agrees with the physical assembly. Identify an EGR valve when the visible cues support an electrically actuated exhaust-gas recirculation valve. Do not identify a vacuum pump merely because a nearby connector, hose, or similar housing is visible. If these cues cannot distinguish the assemblies, return UNCERTAIN with both as alternatives. Component identity is separate from connection state: never use an assumed component identity to change the directly visible physical state of a connector.
 
 Keep “visible component identification” separate from “likely connection or destination.” A cable, wire, terminal, or electrical connector is visible wiring, not the housing it may normally connect to. Never call a starter, starter solenoid, or other component visible unless its physical housing or defining features are actually visible. If a starter is installed and its housing, solenoid body, mounting, or other defining features are clearly visible, identify it from those features. In particular, a heavy-gauge positive battery cable near the transmission/bellhousing may be a disconnected starter power cable, and a smaller connector may be a starter-solenoid exciter wire; neither is itself a starter or solenoid. When only those wires are visible, identify the wires, state their likely purpose only as an unconfirmed interpretation, and say the component may be removed, outside the frame, or obscured. Reduce confidence whenever defining visual evidence is missing.
 
@@ -1238,10 +1275,13 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
   } else markDiagnostic(diagnostic, diagnostic.stage, { documentExtractionAttempted: false, documentExtractionSkipped: true });
   visualConditionInspection=mergeObservationWithCondition(visualObservation,visualConditionInspection);
   visualConditionInspection=fuseLocalizedVisualEvidence(visualConditionInspection,localizedVisualInspections);
-  visualConditionInspection=reconcileVisualFindings(visualConditionInspection,{observation:visualObservation,relationship:vehicleAreaRelationshipAnalysis});
+  visualConditionInspection=reconcileVisualFindings(visualConditionInspection,{observation:visualObservation,relationship:vehicleAreaRelationshipAnalysis,vehicleContextState:vehicleContext?'MATCH':'UNAVAILABLE'});
+  const conflictEvaluation=evaluateCrossFindingConflicts(visualConditionInspection);
+  const finalEvidencePromotion=promoteFinalEvidence(visualConditionInspection,conflictEvaluation);
+  visualConditionInspection={...visualConditionInspection,conflictEvaluation,finalEvidencePromotion,reconciliation:{...visualConditionInspection.reconciliation,conflicts:conflictEvaluation.conflicts,promotable:finalEvidencePromotion.eligible}};
   const canonicalVisualState=buildCanonicalVisualState(componentIdentification,visualConditionInspection);
   visualConditionInspection={...visualConditionInspection,canonicalVisualState};
-  markDiagnostic(diagnostic,'S_CROSS_FINDING_RECONCILIATION_COMPLETE',{crossFindingConsistency:visualConditionInspection?.crossFindingConsistency?.status||'NOT_APPLICABLE',crossFindingConflictsResolved:Boolean(visualConditionInspection?.crossFindingConsistency?.conflictsResolved),crossFindingRejectionReasons:visualConditionInspection?.reconciliationErrors?.map(item=>item.reason)||[],finalEvidencePromotion:visualConditionInspection?.finalEvidencePromotion?.status||'NOT_APPLICABLE',visibleDefectPromotedCount:visualConditionInspection?.finalEvidencePromotion?.promotedCount||0});
+  markDiagnostic(diagnostic,'S_CROSS_FINDING_RECONCILIATION_COMPLETE',{reconciliationReasonCode:visualConditionInspection?.reconciliation?.reason||'RECONCILE_EXCEPTION',crossFindingConsistency:conflictEvaluation.status,crossFindingConflictsResolved:!conflictEvaluation.hasUnresolvedConflict,crossFindingRejectionReasons:visualConditionInspection?.reconciliationErrors?.map(item=>item.reason)||[],finalEvidencePromotion:finalEvidencePromotion.status,visibleDefectPromotedCount:finalEvidencePromotion.promotedCount||0});
   semanticResult.visualObservation=visualObservation;
   semanticResult.localizedVisualInspections = localizedVisualInspections;
   semanticResult.componentIdentification = componentIdentification;

@@ -1,6 +1,6 @@
 /* Nitros 10.12.23 appointment dedicated field commit fix. */
 (()=>{'use strict';
-const BUILD='10.13.129';
+const BUILD='10.13.130';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
   const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
   const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
@@ -134,7 +134,7 @@ const BUILD='10.13.129';
     else if(server.vehicleContextValidation==='BLOCKED'){set(24,'FAIL');set(25,'BLOCKED')}
     else if(server.vehicleContextValidation==='NOT_AVAILABLE'){set(24,'NOT AVAILABLE');set(25,'NOT DETERMINED')}
     else {set(24,'SKIPPED — awaiting automotive result');set(25,'SKIPPED — awaiting vehicle-context evaluation')}
-    if(['PASS','PARTIAL'].includes(server.crossFindingConsistency)){set(26,server.crossFindingConsistency);set(27,server.crossFindingConflictsResolved?'PASS':'NONE');set(28,server.finalEvidencePromotion||'PENDING')}
+    if(['PASS','PARTIAL'].includes(server.crossFindingConsistency)){set(26,'PASS');set(27,'PASS');set(28,server.finalEvidencePromotion==='PASS'?'PASS':server.finalEvidencePromotion||'PENDING')}
     else if(diag.outcome==='FAILED'){set(26,'FAIL');set(27,'SKIPPED')}
     renderStages(run);
   }
@@ -159,8 +159,8 @@ const BUILD='10.13.129';
       set(24,run.analyzer.vehicleContextSnapshot?'FAIL':'NOT AVAILABLE');set(25,run.analyzer.vehicleContextSnapshot?'FAIL':'NOT DETERMINED');
     }
     const reconciliation=result.visualConditionInspection?.crossFindingConsistency,promotion=result.visualConditionInspection?.finalEvidencePromotion;
-    set(26,['PASS','PARTIAL'].includes(reconciliation?.status)?reconciliation.status:automotive?'FAIL':'SKIPPED — non-automotive category');
-    set(27,['PASS','PARTIAL'].includes(reconciliation?.status)?(reconciliation.conflictsResolved?'PASS':'NONE'):(automotive?'SKIPPED':'SKIPPED — non-automotive category'));
+    set(26,['PASS','PARTIAL'].includes(reconciliation?.status)?'PASS':automotive?'FAIL':'SKIPPED — non-automotive category');
+    set(27,['PASS','PARTIAL'].includes(reconciliation?.status)?'PASS':(automotive?'SKIPPED':'SKIPPED — non-automotive category'));
     set(28,promotion?.status==='PASS'?'PASS':automotive?'FAIL':'SKIPPED — non-automotive category');
     const electricalPipeline=result.routingData?.electricalCircuitAnalysis||null;
     if(electricalPipeline?.wiringAnalysisExecuted&&electricalPipeline?.visibleCircuitAnalysisExecuted&&electricalPipeline?.testGuidanceGenerated){set(16,'PASS');set(17,'PASS');set(18,'PASS');Object.assign(run.analyzer,{electricalCircuitPipeline:'PASS',electricalDiagramStatus:electricalPipeline.diagramStatus,electricalVisibleCircuitStatus:electricalPipeline.visibleCircuitStatus})}

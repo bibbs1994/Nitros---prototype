@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { analyzeSemanticImage, NO_VISIBLE_DEFECT_MESSAGE, STRICT_OUTPUT_SCHEMAS, assertStrictOutputSchema, normalizeVehicleAnalysisContext, normalizeVisualConditionConsistency } from '../semantic-analyzer-core.mjs';
+import { mergeObservationWithCondition } from '../visual-observation-core.mjs';
 
 const bytes = Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a,0]);
 const response = payload => ({ok:true,status:200,async json(){return {output:[{type:'message',content:[{type:'output_text',text:JSON.stringify(payload)}]}]}}});
@@ -73,6 +74,14 @@ test('10.13.120 derives independent electrical connection states and lets visibl
   ];
   for(const [seatingStatus,findingType,visibleEvidence,connectionState] of states){const result=normalizeVisualConditionConsistency({status:findingType==='CLEAR_DEFECT'?'OBSERVED_CONDITION':findingType==='NO_DEFECT_VISIBLE'?'NO_VISIBLE_CONCERN_DETECTED':'POSSIBLE_CONCERN_DETECTED',conditionConfidence:75,visibleEvidence:[visibleEvidence],possibleConcerns:findingType==='POSSIBLE_CONCERN'?[{location:base.location,appearance:visibleEvidence,physicalConfirmationRequired:true,recommendedVerification:base.recommendedVerification}]:[],connectionAssessments:[{...base,seatingStatus,findingType,visibleEvidence}]});const item=result.normalized.connectionAssessments[0];assert.equal(item.connectionState,connectionState);}
   assert.match(readFileSync(new URL('../semantic-analyzer-core.mjs',import.meta.url),'utf8'),/PROXIMITY IS NOT CONNECTION|not evidence that it is connected/i);
+});
+
+test('stage-one geometry prevents a generic downstream loose claim from creating a false partial-seating state',()=>{
+  const observation={objects:[{id:'OBJ-101',connectionState:'UNKNOWN'}],relationships:[],abnormalFindings:[]};
+  const condition={status:'POSSIBLE_CONCERN_DETECTED',connectionAssessments:[{location:'Center connector',connectionState:'PARTIALLY_SEATED_OR_SUSPECTED',seatingStatus:'POSSIBLE_IMPROPER_SEATING',findingType:'POSSIBLE_CONCERN',severity:'MODERATE',findingConfidence:70,visibleEvidence:'Connector appears possibly misaligned or loose.',recommendedVerification:'Inspect connector seating.'}]};
+  const merged=mergeObservationWithCondition(observation,condition).connectionAssessments[0];
+  assert.equal(merged.connectionState,'UNABLE_TO_DETERMINE_FROM_IMAGE');
+  assert.equal(merged.findingType,'SEATING_NOT_RELIABLY_VISIBLE');
 });
 
 test('visual consistency repair preserves precise image-relative locations and rejects vague or unsupported vehicle-side claims',()=>{
