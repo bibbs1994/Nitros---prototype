@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { lockPrimaryComponentIdentity, normalizePhysicalMatingDestination, reconcileVisualFindings, validateVehicleAreaRelationship } from '../semantic-analyzer-core.mjs';
+import { buildCanonicalVisualState, reconcileVisualFindings, validateVehicleAreaRelationship } from '../semantic-analyzer-core.mjs';
 
 const finding = overrides => ({
   location: 'Central-left EGR-area connector', observedObject: 'Electrical connector', seatingStatus: 'NOT_RELIABLY_VISIBLE', findingType: 'SEATING_NOT_RELIABLY_VISIBLE', severity: 'UNDETERMINED', findingConfidence: 92, connectionState: 'INDETERMINATE', connectionStateConfidence: 92, visibleEvidence: 'Electrical connector body is visible, but its mating socket is obscured.', recommendedVerification: 'Photograph both connector halves and the latch from another angle.', safetyDrivabilityImpact: null, ...overrides
@@ -68,45 +68,12 @@ test('10.13.126 A–F isolates malformed findings and promotes direct visible de
   assert.equal(conflict.crossFindingConsistency.conflictsResolved, true);
 });
 
-test('10.13.127 locks primary identity apart from nearby assemblies and connection state', () => {
-  const locked = lockPrimaryComponentIdentity({ status: 'IDENTIFIED', primaryComponent: 'EGR valve', componentConfidence: 84, normalizedComponentConfidence: 84, supportingEvidence: ['Metal tube and actuator housing are visibly mounted at the intake/exhaust interface.'], possibleAlternatives: ['Vacuum pump'] }, { objects: [{ id: 'OBJ-001', type: 'electrical connector', location: 'Center-right', evidence: 'Connector body visible.', connectionState: 'UNKNOWN' }] });
-  assert.equal(locked.primaryComponent, 'EGR valve');
-  assert.equal(locked.primaryComponentIdentity.primaryComponent, 'EGR valve');
-  assert.deepEqual(locked.primaryComponentIdentity.primaryComponentAlternatives, ['Vacuum pump']);
-  assert.equal(locked.primaryComponentIdentity.rawVisualTopology[0].objectType, 'electrical connector');
-  const connection = reconcile([finding({ location: 'Center-right connector', connectionState: 'INDETERMINATE', visibleEvidence: 'Connector body is visible, but the mating interface is obscured.' })]);
-  assert.notEqual(connection.connectionAssessments[0].connectionState, 'DISCONNECTED_VERIFIED');
-});
-
-test('10.13.127 promotes a visibly separated EGR connector but not an obscured one', () => {
-  const egrIdentity = { status: 'IDENTIFIED', primaryComponent: 'EGR valve', componentConfidence: 88, normalizedComponentConfidence: 88, supportingEvidence: ['Actuator housing and exhaust-gas tube relationship are visible.'], possibleAlternatives: ['Vacuum pump'] };
-  const separated = reconcileVisualFindings({ status: 'POSSIBLE_CONCERN_DETECTED', componentIdentification: lockPrimaryComponentIdentity(egrIdentity), connectionAssessments: [finding({ location: 'EGR valve connector', observedObject: 'Electrical connector on EGR valve', connectionState: 'INDETERMINATE', seatingStatus: 'NOT_RELIABLY_VISIBLE', findingType: 'SEATING_NOT_RELIABLY_VISIBLE', severity: 'UNDETERMINED', findingConfidence: 95, connectionStateConfidence: 95, visibleEvidence: 'The EGR electrical connector is visibly separated from its matching EGR-valve receptacle by a clear air gap with exposed mating terminals.' })] });
-  assert.equal(separated.componentIdentification.primaryComponent, 'EGR valve');
-  assert.equal(separated.connectionAssessments[0].connectionState, 'DISCONNECTED_VERIFIED');
-  assert.equal(separated.connectionAssessments[0].findingType, 'CLEAR_DEFECT');
-  assert.ok(separated.connectionAssessments[0].connectionStateConfidence >= 90);
-  const obscured = reconcile([finding({ location: 'EGR valve connector', observedObject: 'Electrical connector on EGR valve', connectionState: 'INDETERMINATE', visibleEvidence: 'The EGR connector body is visible, but the mating receptacle and seating interface are obscured.' })]);
-  assert.notEqual(obscured.connectionAssessments[0].connectionState, 'DISCONNECTED_VERIFIED');
-});
-
-test('10.13.128 locks a morphology-led identity and records contradiction-first nearby rejection', () => {
-  const locked = lockPrimaryComponentIdentity({
-    status: 'IDENTIFIED', primaryComponent: 'Exhaust-gas control valve', componentConfidence: 91, normalizedComponentConfidence: 91,
-    supportingEvidence: ['Cast actuator housing is bolted between a metal gas tube and intake-side mounting face.'], possibleAlternatives: ['Throttle position sensor', 'Vacuum pump'],
-    componentCandidates: [
-      { candidate: 'Exhaust-gas control valve', morphologyEvidence: ['Cast actuator housing and gas-passage body are visible.'], mountingEvidence: ['Bolted flange and tube interface are visible.'], connectorPositionEvidence: ['Electrical receptacle is on the actuator housing.'], plumbingEvidence: ['Metal gas tube enters the valve body.'], physicalLocationEvidence: ['Upper-engine gas-transfer interface is visible.'], neighboringComponentEvidence: [], vehicleContextEvidence: [], contradictions: [], score: 91 },
-      { candidate: 'Throttle position sensor', morphologyEvidence: ['Electrical connector is nearby.'], mountingEvidence: [], connectorPositionEvidence: [], plumbingEvidence: [], physicalLocationEvidence: [], neighboringComponentEvidence: ['Intake hardware is nearby.'], vehicleContextEvidence: [], contradictions: ['The visible body has a gas tube and flange rather than a throttle-shaft mounting pattern.'], score: 20 }
-    ],
-    targetIsolation: { subjectEvidence: ['The exposed actuator/flange body occupies the inspection focus.'], nearbyContextItems: ['Adjacent intake hardware'], isolationBasis: ['Physical mounting and gas tube terminate at the selected body.'] }
-  });
-  assert.equal(locked.primaryComponentIdentity.componentIdentityLocked, true);
-  assert.equal(locked.primaryComponentIdentity.rejectedCandidates[0].candidate, 'Throttle position sensor');
-  assert.match(locked.primaryComponentIdentity.rejectedCandidates[0].rejectionReasons.join(' '), /throttle-shaft mounting pattern/i);
-  assert.match(locked.primaryComponentIdentity.targetIsolation.nearbyContextItems.join(' '), /intake hardware/i);
-});
-
-test('10.13.128 keeps physical mating destination local and rejects broad electronic destinations', () => {
-  assert.equal(normalizePhysicalMatingDestination('PCM control module', true), 'Physical mating destination not visually confirmed.');
-  assert.equal(normalizePhysicalMatingDestination('Component-side electrical receptacle', true), 'Component-side electrical receptacle');
-  assert.equal(normalizePhysicalMatingDestination('Component-side electrical receptacle', false), 'Physical mating destination not visually confirmed.');
+test('10.13.129 locks the evidence-backed component identity and reconciled disconnected state for downstream consumers', () => {
+  const component = { status: 'IDENTIFIED', primaryComponent: 'EGR valve', normalizedComponentConfidence: 94 };
+  const condition = reconcile([finding({ candidateId: 'connector-a', observedObject: 'Electrical connector', seatingStatus: 'SEPARATION_OR_GAP_VISIBLE', findingType: 'CLEAR_DEFECT', severity: 'HIGH', connectionState: 'DISCONNECTED_VERIFIED', visibleEvidence: 'A visible air gap separates the electrical connector from its matching receptacle.', findingConfidence: 96, connectionStateConfidence: 96 })]);
+  const canonical = buildCanonicalVisualState(component, condition);
+  assert.equal(canonical.componentIdentity.primaryComponent, 'EGR valve');
+  assert.equal(canonical.connectionStates[0].connectionState, 'DISCONNECTED_VERIFIED');
+  assert.equal(canonical.connectionStates[0].source, 'RECONCILED_VISUAL_EVIDENCE');
+  assert.equal(canonical.downstreamOverrideAllowed, false);
 });

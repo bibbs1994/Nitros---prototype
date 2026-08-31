@@ -75,7 +75,7 @@ const targetedPidRecoverySchema = {
 const automotiveComponentSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['status', 'primaryComponent', 'componentConfidence', 'system', 'secondaryComponents', 'supportingEvidence', 'possibleAlternatives', 'likelyConnectionsOrDestinations', 'uncertaintyReason', 'componentCandidates', 'targetIsolation', 'drivetrainDiscrimination'],
+  required: ['status', 'primaryComponent', 'componentConfidence', 'system', 'secondaryComponents', 'supportingEvidence', 'possibleAlternatives', 'likelyConnectionsOrDestinations', 'uncertaintyReason', 'drivetrainDiscrimination'],
   properties: {
     status: { type: 'string', enum: ['IDENTIFIED', 'UNCERTAIN'] },
     primaryComponent: { type: 'string', maxLength: 160 },
@@ -86,10 +86,6 @@ const automotiveComponentSchema = {
     possibleAlternatives: { type: 'array', items: { type: 'string' }, maxItems: 8 },
     likelyConnectionsOrDestinations: { type: 'array', items: { type: 'string' }, maxItems: 8 },
     uncertaintyReason: { anyOf: [{ type: 'string', maxLength: 500 }, { type: 'null' }] },
-    componentCandidates: { type: 'array', minItems: 1, maxItems: 5, items: { type: 'object', additionalProperties: false, required: ['candidate','morphologyEvidence','mountingEvidence','connectorPositionEvidence','plumbingEvidence','physicalLocationEvidence','neighboringComponentEvidence','vehicleContextEvidence','contradictions','score'], properties: {
-      candidate: { type: 'string', maxLength: 160 }, morphologyEvidence: { type: 'array', items: { type: 'string', maxLength: 400 }, maxItems: 6 }, mountingEvidence: { type: 'array', items: { type: 'string', maxLength: 400 }, maxItems: 6 }, connectorPositionEvidence: { type: 'array', items: { type: 'string', maxLength: 400 }, maxItems: 6 }, plumbingEvidence: { type: 'array', items: { type: 'string', maxLength: 400 }, maxItems: 6 }, physicalLocationEvidence: { type: 'array', items: { type: 'string', maxLength: 400 }, maxItems: 6 }, neighboringComponentEvidence: { type: 'array', items: { type: 'string', maxLength: 400 }, maxItems: 6 }, vehicleContextEvidence: { type: 'array', items: { type: 'string', maxLength: 400 }, maxItems: 4 }, contradictions: { type: 'array', items: { type: 'string', maxLength: 400 }, maxItems: 6 }, score: { anyOf: [{ type: 'number', minimum: 0, maximum: 100 }, { type: 'null' }] }
-    } } },
-    targetIsolation: { type: 'object', additionalProperties: false, required: ['subjectEvidence','nearbyContextItems','isolationBasis'], properties: { subjectEvidence: { type: 'array', items: { type: 'string', maxLength: 400 }, maxItems: 8 }, nearbyContextItems: { type: 'array', items: { type: 'string', maxLength: 240 }, maxItems: 8 }, isolationBasis: { type: 'array', items: { type: 'string', maxLength: 400 }, maxItems: 8 } } },
     drivetrainDiscrimination: {
       type: 'object', additionalProperties: false,
       required: ['applicable', 'candidateType', 'engineConnection', 'transmissionConnection', 'longitudinalShafts', 'lateralAxleOutputs', 'axleTubes', 'location', 'powerFlowRole', 'distinguishingFeaturesComplete', 'evidence', 'competingCandidate'],
@@ -121,8 +117,8 @@ const visualConditionInspectionSchema = {
     possibleConcerns: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['location','appearance','physicalConfirmationRequired','recommendedVerification'], properties: {
       location: { type: 'string', maxLength: 240 }, appearance: { type: 'string', maxLength: 500 }, physicalConfirmationRequired: { type: 'boolean' }, recommendedVerification: { type: 'string', maxLength: 500 }
     } }, maxItems: 8 },
-    connectionAssessments: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['location','seatingStatus','findingType','severity','findingConfidence','visibleEvidence','matingComponentVisible','directDamageVisible','physicalMatingDestination','matingDestinationConfidence','missingContext','recommendedVerification','safetyDrivabilityImpact'], properties: {
-      location: { type: 'string', maxLength: 240 }, seatingStatus: { type: 'string', enum: ['SEPARATION_OR_GAP_VISIBLE','POSSIBLE_IMPROPER_SEATING','NO_GAP_OR_SEPARATION_VISIBLE','NOT_RELIABLY_VISIBLE','COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE'] }, findingType: { type: 'string', enum: ['CLEAR_DEFECT','POSSIBLE_CONCERN','UNVERIFIED_CONDITION','RESIDUE_OR_STAINING','SEATING_NOT_RELIABLY_VISIBLE','NO_DEFECT_VISIBLE'] }, severity: { type: 'string', enum: ['CRITICAL','HIGH','MODERATE','LOW','UNDETERMINED'] }, findingConfidence: { anyOf: [{ type: 'number', minimum: 0, maximum: 100 }, { type: 'string', pattern: '^\\s*(?:\\d+(?:\\.\\d+)?|\\.\\d+)\\s*%?\\s*$' }, { type: 'null' }] }, visibleEvidence: { type: 'string', maxLength: 500 }, matingComponentVisible: { type: 'boolean' }, directDamageVisible: { type: 'boolean' }, physicalMatingDestination: { type: 'string', maxLength: 240 }, matingDestinationConfidence: { anyOf: [{ type: 'number', minimum: 0, maximum: 100 }, { type: 'null' }] }, missingContext: { anyOf: [{ type: 'string', maxLength: 500 }, { type: 'null' }] }, recommendedVerification: { type: 'string', maxLength: 500 }, safetyDrivabilityImpact: { anyOf: [{ type: 'string', maxLength: 500 }, { type: 'null' }] }
+    connectionAssessments: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['location','seatingStatus','findingType','severity','findingConfidence','visibleEvidence','matingComponentVisible','directDamageVisible','missingContext','recommendedVerification','safetyDrivabilityImpact'], properties: {
+      location: { type: 'string', maxLength: 240 }, seatingStatus: { type: 'string', enum: ['SEPARATION_OR_GAP_VISIBLE','POSSIBLE_IMPROPER_SEATING','NO_GAP_OR_SEPARATION_VISIBLE','NOT_RELIABLY_VISIBLE','COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE'] }, findingType: { type: 'string', enum: ['CLEAR_DEFECT','POSSIBLE_CONCERN','UNVERIFIED_CONDITION','RESIDUE_OR_STAINING','SEATING_NOT_RELIABLY_VISIBLE','NO_DEFECT_VISIBLE'] }, severity: { type: 'string', enum: ['CRITICAL','HIGH','MODERATE','LOW','UNDETERMINED'] }, findingConfidence: { anyOf: [{ type: 'number', minimum: 0, maximum: 100 }, { type: 'string', pattern: '^\\s*(?:\\d+(?:\\.\\d+)?|\\.\\d+)\\s*%?\\s*$' }, { type: 'null' }] }, visibleEvidence: { type: 'string', maxLength: 500 }, matingComponentVisible: { type: 'boolean' }, directDamageVisible: { type: 'boolean' }, missingContext: { anyOf: [{ type: 'string', maxLength: 500 }, { type: 'null' }] }, recommendedVerification: { type: 'string', maxLength: 500 }, safetyDrivabilityImpact: { anyOf: [{ type: 'string', maxLength: 500 }, { type: 'null' }] }
     } }, maxItems: 12 },
     noVisibleConcernMessage: { type: 'string', maxLength: 240 },
     unableToInspectReason: { anyOf: [{ type: 'string', maxLength: 500 }, { type: 'null' }] },
@@ -286,14 +282,6 @@ function validateAutomotiveComponent(raw) {
   if (drivetrain.applicable && !drivetrainEvidence.length) throw new Error('Drivetrain discrimination has no spatial evidence.');
   if (drivetrain.applicable && !drivetrain.distinguishingFeaturesComplete && normalizedConfidence !== null) normalizedConfidence = Math.min(84, normalizedConfidence);
   const likelyConnectionsOrDestinations = Array.isArray(raw.likelyConnectionsOrDestinations) ? cleanStringArray(raw.likelyConnectionsOrDestinations, 'likelyConnectionsOrDestinations').slice(0, 8) : [];
-  const candidateEvidence = value => Array.isArray(value) ? value.filter(item => typeof item === 'string').map(item => item.trim()).filter(Boolean).slice(0, 6) : [];
-  const componentCandidates = Array.isArray(raw.componentCandidates) && raw.componentCandidates.length ? raw.componentCandidates.slice(0, 5).map(candidate => ({
-    candidate: String(candidate?.candidate || '').trim().slice(0, 160),
-    morphologyEvidence: candidateEvidence(candidate?.morphologyEvidence), mountingEvidence: candidateEvidence(candidate?.mountingEvidence), connectorPositionEvidence: candidateEvidence(candidate?.connectorPositionEvidence), plumbingEvidence: candidateEvidence(candidate?.plumbingEvidence), physicalLocationEvidence: candidateEvidence(candidate?.physicalLocationEvidence), neighboringComponentEvidence: candidateEvidence(candidate?.neighboringComponentEvidence), vehicleContextEvidence: candidateEvidence(candidate?.vehicleContextEvidence), contradictions: candidateEvidence(candidate?.contradictions), score: normalizeSemanticConfidence(candidate?.score)
-  })).filter(candidate => candidate.candidate) : [{ candidate: primaryComponent, morphologyEvidence: [], mountingEvidence: [], connectorPositionEvidence: [], plumbingEvidence: [], physicalLocationEvidence: [], neighboringComponentEvidence: [], vehicleContextEvidence: [], contradictions: [], score: normalizedConfidence }];
-  const targetIsolation = raw.targetIsolation && typeof raw.targetIsolation === 'object' ? {
-    subjectEvidence: candidateEvidence(raw.targetIsolation.subjectEvidence), nearbyContextItems: candidateEvidence(raw.targetIsolation.nearbyContextItems), isolationBasis: candidateEvidence(raw.targetIsolation.isolationBasis)
-  } : { subjectEvidence: [], nearbyContextItems: [], isolationBasis: [] };
   const result = {
     status: raw.status,
     primaryComponent,
@@ -305,8 +293,6 @@ function validateAutomotiveComponent(raw) {
     supportingEvidence: cleanStringArray(raw.supportingEvidence, 'supportingEvidence').slice(0, 16),
     possibleAlternatives: cleanStringArray(raw.possibleAlternatives, 'possibleAlternatives').slice(0, 8),
     likelyConnectionsOrDestinations,
-    componentCandidates,
-    targetIsolation,
     uncertaintyReason: typeof raw.uncertaintyReason === 'string' ? raw.uncertaintyReason.trim().slice(0, 500) || null : null,
     drivetrainDiscrimination: {
       applicable: Boolean(drivetrain.applicable),
@@ -352,39 +338,6 @@ function validateAutomotiveComponent(raw) {
   if (result.status === 'IDENTIFIED' && !result.supportingEvidence.length) throw new Error('Component identification has no visible supporting evidence.');
   if (result.status === 'UNCERTAIN' && !result.uncertaintyReason) throw new Error('Component uncertainty reason is missing.');
   return result;
-}
-
-export function lockPrimaryComponentIdentity(component, observation = null) {
-  if (!component || component.status === 'FAILED') return component;
-  const visibleEvidence = Array.isArray(component.supportingEvidence) ? component.supportingEvidence.filter(Boolean).slice(0, 16) : [];
-  const rawTopology = Array.isArray(observation?.objects) ? observation.objects.map(item => ({ objectId: item.id, objectType: item.type, location: item.location, evidence: item.evidence })).slice(0, 12) : [];
-  const confidence = component.normalizedComponentConfidence ?? component.componentConfidence ?? null;
-  const alternatives = Array.isArray(component.possibleAlternatives) ? component.possibleAlternatives.filter(candidate => candidate && candidate.toLowerCase() !== String(component.primaryComponent || '').toLowerCase()).slice(0, 8) : [];
-  const candidates = Array.isArray(component.componentCandidates) ? component.componentCandidates : [];
-  const primaryKey = String(component.primaryComponent || '').toLowerCase();
-  const selected = candidates.find(candidate => String(candidate.candidate || '').toLowerCase() === primaryKey) || candidates[0] || null;
-  const positiveVisualFeatures = selected ? ['morphologyEvidence','mountingEvidence','connectorPositionEvidence','plumbingEvidence','physicalLocationEvidence'].flatMap(key => selected[key] || []).filter(Boolean).slice(0, 16) : visibleEvidence;
-  const contradictions = selected?.contradictions || [];
-  const identityLocked = component.status === 'IDENTIFIED' && Number.isFinite(confidence) && confidence >= 70 && visibleEvidence.length > 0 && contradictions.length < 2;
-  const rejectedCandidates = candidates.filter(candidate => candidate !== selected && candidate.candidate).map(candidate => ({ candidate: candidate.candidate, score: candidate.score, rejectionReasons: candidate.contradictions.length ? candidate.contradictions : ['Lower visible morphology support than the selected component.'] })).slice(0, 4);
-  return {
-    ...component,
-    primaryComponentIdentity: {
-      primaryComponent: component.primaryComponent,
-      primaryComponentConfidence: confidence,
-      primaryComponentVisibleEvidence: visibleEvidence,
-      primaryComponentVehicleEvidence: [],
-      primaryComponentAlternatives: alternatives,
-      primaryComponentConflictState: alternatives.length ? 'ALTERNATIVES_RETAINED' : 'NO_CONFLICT_VISIBLE',
-      rawVisualTopology: rawTopology,
-      componentIdentityLocked: identityLocked,
-      identityLockStatus: identityLocked ? 'LOCKED_FROM_VISIBLE_MORPHOLOGY' : 'NOT_LOCKED_INSUFFICIENT_VISIBLE_MORPHOLOGY',
-      supportingVisualFeatures: positiveVisualFeatures.length ? positiveVisualFeatures : visibleEvidence,
-      rejectedCandidates,
-      componentCandidates: candidates,
-      targetIsolation: component.targetIsolation || { subjectEvidence: [], nearbyContextItems: [], isolationBasis: [] }
-    }
-  };
 }
 
 export function validateVehicleAreaRelationship(raw) {
@@ -544,12 +497,6 @@ function retainVisibleConnectionContext(rawCondition, componentIdentification) {
   };
 }
 
-export function normalizePhysicalMatingDestination(value, matingComponentVisible) {
-  const requestedDestination = String(value || '').trim().slice(0, 240);
-  const nonPhysicalDestination = /\b(?:ecu|pcm|ecm|control module|computer)\b/i.test(requestedDestination);
-  return matingComponentVisible && requestedDestination && !nonPhysicalDestination ? requestedDestination : 'Physical mating destination not visually confirmed.';
-}
-
 function validateVisualConditionInspection(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !['OBSERVED_CONDITION','POSSIBLE_CONCERN_DETECTED','UNVERIFIED_CONDITION','NO_VISIBLE_CONCERN_DETECTED','UNABLE_TO_INSPECT'].includes(raw.status)) throw new Error('Visual condition inspection returned no valid structured result.');
   const status = raw.status;
@@ -576,9 +523,7 @@ function validateVisualConditionInspection(raw) {
     if (findingType === 'NO_DEFECT_VISIBLE' && (!matingComponentVisible || seatingStatus !== 'NO_GAP_OR_SEPARATION_VISIBLE' || !hasAffirmativeMatingEvidence(assessment))) throw new Error('No-visible-defect finding requires direct evidence of the complete mating and retention relationship.');
     if (!matingComponentVisible && !directDamageVisible && (seatingStatus !== 'COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE' || findingType !== 'UNVERIFIED_CONDITION' || severity !== 'UNDETERMINED' || !missingContext)) throw new Error('A connection without visible mating-component context must remain unverified unless direct damage is visible.');
     if (findingType === 'UNVERIFIED_CONDITION' && (severity !== 'UNDETERMINED' || !missingContext || assessment.safetyDrivabilityImpact)) throw new Error('Unverified connection context cannot carry severity or a safety/drivability claim.');
-    const physicalMatingDestination = normalizePhysicalMatingDestination(assessment.physicalMatingDestination, matingComponentVisible);
-    const matingDestinationConfidence = physicalMatingDestination === 'Physical mating destination not visually confirmed.' ? null : normalizeSemanticConfidence(assessment.matingDestinationConfidence);
-    const result={ location, seatingStatus, findingType, severity, findingConfidence, visibleEvidence: evidence, matingComponentVisible, directDamageVisible, physicalMatingDestination, matingDestinationConfidence, missingContext, recommendedVerification: verification, safetyDrivabilityImpact: typeof assessment.safetyDrivabilityImpact === 'string' ? assessment.safetyDrivabilityImpact.trim().slice(0, 500) || null : null };
+    const result={ location, seatingStatus, findingType, severity, findingConfidence, visibleEvidence: evidence, matingComponentVisible, directDamageVisible, missingContext, recommendedVerification: verification, safetyDrivabilityImpact: typeof assessment.safetyDrivabilityImpact === 'string' ? assessment.safetyDrivabilityImpact.trim().slice(0, 500) || null : null };
     return { ...result, connectionState: connectionStateFor(result), connectionStateConfidence: findingConfidence };
   }) : [];
   const priority = { CLEAR_DEFECT: 0, POSSIBLE_CONCERN: 1, UNVERIFIED_CONDITION: 2, RESIDUE_OR_STAINING: 3, SEATING_NOT_RELIABLY_VISIBLE: 4, NO_DEFECT_VISIBLE: 5 };
@@ -929,6 +874,42 @@ export function reconcileVisualFindings(condition, { observation = null, relatio
   return { ...condition, status, connectionAssessments: finalFindings, reconciliationErrors, crossFindingConsistency: { status: reconciliationStatus, conflictsResolved, findingCount: finalFindings.length, rejectedFindingCount: reconciliationErrors.length, relationshipAnalysisAvailable: Boolean(relationship), stageOneObservationAvailable: Boolean(observation) }, finalEvidencePromotion: { status: 'PASS', promotedCount: promotedFindings.length, positiveEvidenceAdjudicated: true, adjudications: [...promotedFindings.map(item => ({ findingId: item.findingId, disposition: 'VISIBLE_DEFECT' })), ...reconciliationErrors.map(item => ({ findingId: item.findingId, disposition: 'REJECTED', reason: item.reason }))] } };
 }
 
+// This is deliberately a handoff, not another analyzer: component identity comes
+// from the component pass and connection state comes from reconciled pixel evidence.
+// Consumers must use this record rather than independently reinterpret either one.
+export function buildCanonicalVisualState(componentIdentification, visualConditionInspection) {
+  const source = Array.isArray(visualConditionInspection?.connectionAssessments) ? visualConditionInspection.connectionAssessments : [];
+  const byFinding = new Map();
+  const stateRank = item => item?.connectionState === 'DISCONNECTED_VERIFIED' && directSeparationEvidence(item.directVisibleEvidence || item.visibleEvidence) ? 4 : item?.connectionState === 'PARTIALLY_SEATED' ? 3 : item?.connectionState === 'CONNECTED_VERIFIED' && directMatingEvidence(item.directVisibleEvidence || item.visibleEvidence) ? 2 : 1;
+  for (const item of source) {
+    const key = canonicalFindingKey(item);
+    const previous = byFinding.get(key);
+    if (!previous || stateRank(item) > stateRank(previous) || (stateRank(item) === stateRank(previous) && Number(item.connectionStateConfidence || 0) > Number(previous.connectionStateConfidence || 0))) byFinding.set(key, item);
+  }
+  const connectionStates = [...byFinding.entries()].map(([findingKey, item]) => ({
+    findingKey,
+    candidateId: item.candidateId || null,
+    observedObject: item.observedObject || observedObjectFor(item),
+    location: item.location,
+    connectionState: item.connectionState || 'INDETERMINATE',
+    confidence: item.connectionStateConfidence ?? item.findingConfidence ?? null,
+    directVisibleEvidence: item.directVisibleEvidence || item.visibleEvidence || '',
+    source: 'RECONCILED_VISUAL_EVIDENCE'
+  }));
+  return {
+    version: '10.13.129',
+    componentIdentity: {
+      primaryComponent: componentIdentification?.primaryComponent || 'Unable to determine exact component',
+      status: componentIdentification?.status || 'NOT_ANALYZED',
+      confidence: componentIdentification?.normalizedComponentConfidence ?? componentIdentification?.componentConfidence ?? null,
+      source: 'COMPONENT_IDENTIFICATION_PASS'
+    },
+    connectionStates,
+    downstreamOverrideAllowed: false,
+    source: 'CANONICAL_COMPONENT_IDENTITY_AND_RECONCILED_CONNECTION_STATE'
+  };
+}
+
 export function fuseLocalizedVisualEvidence(condition, inspections = []) {
   const verified = inspections.filter(item => item?.localizedVisualVerification === true && ['CONNECTED', 'DISCONNECTED', 'PARTIALLY_SEATED'].includes(item.connectionState));
   if (!verified.length) return condition;
@@ -1080,10 +1061,7 @@ const localPrompt = `Independently inspect candidate ${pass1.id}. IMAGE 1 is DET
   let componentIdentification = null;
   if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
     const componentStartedAt = Date.now();
-    const rawTopologyForIdentity = (visualObservation?.objects || []).map(item => ({ id: item.id, type: item.type, location: item.location, evidence: item.evidence, connectionState: item.connectionState })).slice(0, 12);
-    const componentPrompt = `Identify the primary automotive component visible in this current image using only visible pixels. Do not use filenames, metadata, OCR text alone, prior images, prior cases, cached results, or the category confidence. ${vehicleContextPrompt(vehicleContext)} A prior raw visual inventory is supplied only as non-identifying topology context: ${JSON.stringify(rawTopologyForIdentity)}. Follow this irreversible order: (1) inventory raw housing geometry, material, casting/form, actuator shape, connector orientation, bolts/mounting, flanges, ports/plumbing, shielding, labels, and harness routing; (2) isolate the actual inspection subject from nearby contextual assemblies using framing, physical attachment, repeated prominence, and exposed interface; (3) build candidate assessments; (4) eliminate candidates with visible contradictions before selecting one. First distinguish physical attachment, crossing/occlusion, adjacency, parent assembly, and connector ownership. Proximity is not ownership.
-
-For every componentCandidates entry, score morphology, mounting, connector position, plumbing/ports, physical location, neighboring components, and vehicle context separately. Put only pixel-supported support into the visible evidence arrays; vehicle context is supporting only. Put every visible mismatch into contradictions. A nearby component must not enter the candidate set merely because it shares a system. A candidate with major physical contradictions must score lower than a candidate with stronger morphology. Set targetIsolation.subjectEvidence and targetIsolation.isolationBasis from the actual subject, and list adjacent but non-competing items in targetIsolation.nearbyContextItems. Select a specific component only when direct morphology and mounting evidence dominate its alternatives; otherwise return UNCERTAIN. Keep the selected primary component separate from nearest assembly, electrical circuit destination, and likely connector destination. Return the most specific component supported by visible evidence, its automotive system, secondary visible components, and pixel-supported evidence. Component confidence must be independent from category confidence. If vehicle context makes an identity plausible but its defining physical features are not visible, keep status UNCERTAIN and state that it is a likely identification from vehicle context, not a confirmed visual identification. If the exact component is not visually defensible, use status UNCERTAIN, list visually supported alternatives, explain what view or evidence is missing, and never force or invent a component.
+    const componentPrompt = `Identify the primary automotive component visible in this current image using only visible pixels. Do not use filenames, metadata, OCR text alone, prior images, prior cases, cached results, or the category confidence. ${vehicleContextPrompt(vehicleContext)} Return the most specific component supported by visible evidence, its automotive system, secondary visible components, and pixel-supported evidence. Component confidence must be independent from category confidence. If vehicle context makes an identity plausible but its defining physical features are not visible, keep status UNCERTAIN and state that it is a likely identification from vehicle context, not a confirmed visual identification. If the exact component is not visually defensible, use status UNCERTAIN, list visually supported alternatives, explain what view or evidence is missing, and never force or invent a component.
 
 Keep “visible component identification” separate from “likely connection or destination.” A cable, wire, terminal, or electrical connector is visible wiring, not the housing it may normally connect to. Never call a starter, starter solenoid, or other component visible unless its physical housing or defining features are actually visible. If a starter is installed and its housing, solenoid body, mounting, or other defining features are clearly visible, identify it from those features. In particular, a heavy-gauge positive battery cable near the transmission/bellhousing may be a disconnected starter power cable, and a smaller connector may be a starter-solenoid exciter wire; neither is itself a starter or solenoid. When only those wires are visible, identify the wires, state their likely purpose only as an unconfirmed interpretation, and say the component may be removed, outside the frame, or obscured. Reduce confidence whenever defining visual evidence is missing.
 
@@ -1111,7 +1089,7 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
       if (!componentResponse.ok) throw Object.assign(new Error(componentBody?.error?.message || `Component request failed with HTTP ${componentResponse.status}.`), { componentErrorCategory: classifyOpenAIError(componentResponse.status, componentBody), componentHttpStatus: componentResponse.status });
       if (!componentBody) throw new Error('Component response was not valid JSON.');
       const componentParsed = JSON.parse(extractOutputText(componentBody));
-      componentIdentification = lockPrimaryComponentIdentity({ ...validateAutomotiveComponent(componentParsed), semanticRequestId: transactionId, imageHash }, visualObservation);
+      componentIdentification = { ...validateAutomotiveComponent(componentParsed), semanticRequestId: transactionId, imageHash };
       markDiagnostic(diagnostic, 'O_COMPONENT_RESULT_EXTRACTED', { componentResponseParsed: true, componentResultPresent: true, componentConfidenceNormalized: componentIdentification.normalizedComponentConfidence !== null, componentStatus: componentIdentification.status, componentErrorCategory: null, componentErrorMessage: null });
     } catch (error) {
       const timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError' || /timed out|timeout/i.test(String(error?.message || ''));
@@ -1156,7 +1134,7 @@ Use exact terminology only where the pictured feature supports it. Keep one sele
     try {
       const conditionResponse = await fetchImpl('https://api.openai.com/v1/responses', {
         method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 950, input: [{ role: 'user', content: [{ type: 'input_text', text: `${conditionPrompt}\nPhysical-mating destination rule: report only the actual directly visible receiving interface (component-side receptacle, hose nipple, flange, or battery post). Never call ECU, PCM, ECM, or a control module the physical mating destination unless that exact photographed module is the mating body. If the receiving interface is not visible, return "Physical mating destination not visually confirmed." with null matingDestinationConfidence.\nCompleted component-identification context: ${componentIdentification?.primaryComponent||'Automotive component identification was unavailable'}. Use this context only to orient the inspection; all condition claims still require visible pixels.` }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }], text: { format: { type: 'json_schema', name: 'nitros_visual_condition_inspection', strict: true, schema: visualConditionInspectionSchema } } }), signal: AbortSignal.timeout(Math.min(timeoutMs, VISUAL_CONDITION_TIMEOUT_MS))
+        body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 950, input: [{ role: 'user', content: [{ type: 'input_text', text: `${conditionPrompt}\nCompleted component-identification context: ${componentIdentification?.primaryComponent||'Automotive component identification was unavailable'}. Use this context only to orient the inspection; all condition claims still require visible pixels.` }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }], text: { format: { type: 'json_schema', name: 'nitros_visual_condition_inspection', strict: true, schema: visualConditionInspectionSchema } } }), signal: AbortSignal.timeout(Math.min(timeoutMs, VISUAL_CONDITION_TIMEOUT_MS))
       });
       const conditionBody = await conditionResponse.json().catch(() => null);
       markDiagnostic(diagnostic, 'P_VISUAL_CONDITION_RESPONSE_RECEIVED', { visualConditionResponseReceived: true, visualConditionResponseOk: conditionResponse.ok, visualConditionHttpStatus: conditionResponse.status, visualConditionElapsedMs: Math.max(0, Date.now() - conditionStartedAt) });
@@ -1261,11 +1239,14 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
   visualConditionInspection=mergeObservationWithCondition(visualObservation,visualConditionInspection);
   visualConditionInspection=fuseLocalizedVisualEvidence(visualConditionInspection,localizedVisualInspections);
   visualConditionInspection=reconcileVisualFindings(visualConditionInspection,{observation:visualObservation,relationship:vehicleAreaRelationshipAnalysis});
+  const canonicalVisualState=buildCanonicalVisualState(componentIdentification,visualConditionInspection);
+  visualConditionInspection={...visualConditionInspection,canonicalVisualState};
   markDiagnostic(diagnostic,'S_CROSS_FINDING_RECONCILIATION_COMPLETE',{crossFindingConsistency:visualConditionInspection?.crossFindingConsistency?.status||'NOT_APPLICABLE',crossFindingConflictsResolved:Boolean(visualConditionInspection?.crossFindingConsistency?.conflictsResolved),crossFindingRejectionReasons:visualConditionInspection?.reconciliationErrors?.map(item=>item.reason)||[],finalEvidencePromotion:visualConditionInspection?.finalEvidencePromotion?.status||'NOT_APPLICABLE',visibleDefectPromotedCount:visualConditionInspection?.finalEvidencePromotion?.promotedCount||0});
   semanticResult.visualObservation=visualObservation;
   semanticResult.localizedVisualInspections = localizedVisualInspections;
   semanticResult.componentIdentification = componentIdentification;
   semanticResult.visualConditionInspection = visualConditionInspection;
+  semanticResult.canonicalVisualState = canonicalVisualState;
   semanticResult.vehicleAreaRelationshipAnalysis = vehicleAreaRelationshipAnalysis;
   semanticResult.automotiveGraphAnalysis = automotiveGraphAnalysis;
   semanticResult.wiringDiagramAnalysis = wiringDiagramAnalysis;
