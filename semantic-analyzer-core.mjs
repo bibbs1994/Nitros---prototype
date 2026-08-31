@@ -932,7 +932,7 @@ export function buildCanonicalVisualState(componentIdentification, visualConditi
     source: 'RECONCILED_VISUAL_EVIDENCE'
   }));
   return {
-    version: '10.13.130',
+    version: '10.13.131',
     componentIdentity: {
       primaryComponent: componentIdentification?.primaryComponent || 'Unable to determine exact component',
       status: componentIdentification?.status || 'NOT_ANALYZED',

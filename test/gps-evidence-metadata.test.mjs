@@ -29,8 +29,8 @@ test('GPS persists in the shared photo store and record copies',()=>{
 test('AQ GPS diagnostics remain present in the VI deployment',()=>{
   assert.match(html,/id="nitrosGpsDiagnostic"/);
   assert.match(html,/nitros-single-build-and-service-worker-authority/);
-  assert.match(html,/Final Visual Evidence Reconciliation/);
-  assert.match(sw,/const VERSION = '10\.13\.130'/);
+  assert.match(html,/Reconciliation Contract Repair/);
+  assert.match(sw,/const VERSION = '10\.13\.131'/);
 });
 
 test('check-in and RO serialization propagates each saved photo GPS snapshot',()=>{
