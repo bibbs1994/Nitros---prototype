@@ -126,13 +126,16 @@ test('10.13.130 represents a real state contradiction without throwing or promot
   assert.equal(promotion.promotedCount, 0);
 });
 
-test('10.13.132 preserves a visibly free electrical connector through location, defect, and photo guidance reconciliation', () => {
+test('10.13.133 preserves intended destination separately from a visibly disconnected electrical connector', () => {
   const disconnected = finding({ location: 'Center of engine compartment', observedObject: 'Electrical connector', connectionState: 'DISCONNECTED_VERIFIED', seatingStatus: 'SEPARATION_OR_GAP_VISIBLE', findingType: 'CLEAR_DEFECT', severity: 'HIGH', visibleEvidence: 'A free electrical connector is held beside its visible empty mating receptacle with a clear air gap.', findingConfidence: 96, connectionStateConfidence: 96 });
   const condition = reconcile([disconnected]);
   const relationship = reconcileVehicleAreaRelationship({ status: 'READY', vehicleAreaLocation: 'Location uncertain', locationConfidence: 40, locationEvidence: ['Engine compartment components are visible.'], vehicleContextSupport: [], primaryVisibleAssembly: 'Broad assembly cannot be confirmed', observedItems: [], expectedComponentCheck: { expectedMajorComponents: [], visiblyAccountedFor: [], possibleMissingOrRemovedComponent: 'No visually supported missing component detected.', supportingVisualEvidence: [], vehicleContextSupport: [], confidence: null, whatPreventsConfirmation: 'Exact component identity is not visible.', recommendedTechnicianVerification: 'Capture the mating interface.' }, whatPreventsConfirmation: 'Exact component identity is not visible.', recommendedNextPhotoVerification: 'Verify whether the connector is connected.' }, condition);
   assert.match(condition.observedCondition.join(' '), /electrical connector visibly disconnected/i);
   assert.match(condition.recommendedVerification.join(' '), /reconnect.*seated and latched/i);
   assert.equal(relationship.vehicleAreaLocation, 'Engine compartment — visible electrical connector/component interface');
-  assert.match(relationship.observedItems[0].likelyRelationshipOrDestination, /physically disconnected/i);
-  assert.match(relationship.recommendedNextPhotoVerification, /reconnect.*seated and latched/i);
+  assert.match(relationship.observedItems[0].intendedRelationship, /electrical connector for/i);
+  assert.equal(relationship.observedItems[0].physicalConnectionState, 'DISCONNECTED');
+  assert.match(relationship.observedItems[0].visibleStateEvidence, /free electrical connector|air gap/i);
+  assert.doesNotMatch(relationship.observedItems[0].likelyRelationshipOrDestination, /(?:is |directly |securely |fully )connected|attached|seated/i);
+  assert.match(relationship.recommendedNextPhotoVerification, /connector.*component-side electrical receptacle.*together/i);
 });
