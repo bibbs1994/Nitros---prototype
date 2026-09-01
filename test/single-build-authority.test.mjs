@@ -6,7 +6,7 @@ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 
 test('10.13.135 has one canonical build authority',()=>{
-  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.135',[\s\S]+release:'Relationship Recovery \/ Evidence Completion',[\s\S]+buildDate:'2026-09-01'/);
+  assert.match(html,/window\.NitrosBuild=Object\.freeze\(\{[\s\S]+version:'10\.13\.135',[\s\S]+release:'Visual Evidence Promotion \/ Contradiction Elimination Gate',[\s\S]+buildDate:'2026-09-01'/);
   assert.match(html,/const \{version:VERSION,buildDate:BUILD,release:RELEASE\}=window\.NitrosBuild/);
   assert.match(html,/Authoritative Diagnostic State — v\$\{VERSION\}/);
   assert.match(html,/build:window\.NitrosBuild\.version/);

@@ -29,7 +29,7 @@ test('GPS persists in the shared photo store and record copies',()=>{
 test('AQ GPS diagnostics remain present in the VI deployment',()=>{
   assert.match(html,/id="nitrosGpsDiagnostic"/);
   assert.match(html,/nitros-single-build-and-service-worker-authority/);
-  assert.match(html,/Relationship Recovery \/ Evidence Completion/);
+  assert.match(html,/Visual Evidence Promotion \/ Contradiction Elimination Gate/);
   assert.match(sw,/const VERSION = '10\.13\.135'/);
 });
 

@@ -113,17 +113,74 @@ test('10.13.130 reconciles and promotes direct connection evidence without vehic
   assert.equal(promotion.evidence[0].contextLimited, true);
 });
 
-test('10.13.130 represents a real state contradiction without throwing or promoting', () => {
+test('10.13.135 direct visible separation wins over a conflicting no-defect claim', () => {
   const disconnected = finding({ candidateId: 'same-target', observedObject: 'EGR valve connector', connectionState: 'DISCONNECTED_VERIFIED', seatingStatus: 'SEPARATION_OR_GAP_VISIBLE', findingType: 'CLEAR_DEFECT', visibleEvidence: 'A visible air gap separates the electrical connector from its matching receptacle.', findingConfidence: 95, connectionStateConfidence: 95 });
   const connected = finding({ candidateId: 'same-target', observedObject: 'EGR solenoid connector', connectionState: 'CONNECTED_VERIFIED', seatingStatus: 'NO_GAP_OR_SEPARATION_VISIBLE', findingType: 'NO_DEFECT_VISIBLE', visibleEvidence: 'Both connector halves are fully seated, the latch is engaged, and no abnormal gap is visible.', findingConfidence: 95, connectionStateConfidence: 95 });
   const reconciled = reconcileVisualFindings({ status: 'OBSERVED_CONDITION', connectionAssessments: [disconnected, connected] }, { vehicleContextState: 'UNAVAILABLE' });
   const conflict = evaluateCrossFindingConflicts(reconciled);
   const promotion = promoteFinalEvidence(reconciled, conflict);
   assert.equal(conflict.status, 'PASS');
-  assert.equal(conflict.hasUnresolvedConflict, true);
-  assert.equal(conflict.conflicts[0].type, 'CONNECTION_STATE_CONTRADICTION');
-  assert.equal(promotion.status, 'BLOCKED_CONFLICT');
-  assert.equal(promotion.promotedCount, 0);
+  assert.equal(conflict.hasUnresolvedConflict, false);
+  assert.equal(reconciled.connectionAssessments.length, 1);
+  assert.equal(reconciled.connectionAssessments[0].connectionState, 'DISCONNECTED_VERIFIED');
+  assert.equal(promotion.status, 'PASS');
+  assert.equal(promotion.promotedCount, 1);
+});
+
+test('10.13.135 promotes explicit visible defects, removes contradictions, and suppresses unsupported coolant-leak consequences', () => {
+  const reconciled = reconcileVisualFindings({
+    status: 'UNVERIFIED_CONDITION',
+    conditionConfidence: 88,
+    observedCondition: ['The center-right connector appears visibly separate and unconnected.', 'A rusty hose clamp is visible in the lower-left area.'],
+    possibleConcerns: [{ location: 'Lower-left hose clamp', appearance: 'The rusty clamp may indicate a possible coolant leak.', physicalConfirmationRequired: true, recommendedVerification: 'Inspect the clamp and hose sealing interface for wetness, residue, seepage, or loss of clamp position.' }],
+    connectionAssessments: [finding({
+      location: 'Center-right beside the wiring harness',
+      observedObject: 'Electrical connector',
+      seatingStatus: 'COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE',
+      findingType: 'UNVERIFIED_CONDITION',
+      severity: 'UNDETERMINED',
+      findingConfidence: 88,
+      connectionState: 'INDETERMINATE',
+      connectionStateConfidence: 88,
+      visibleEvidence: 'The connector appears visibly separate and unconnected.',
+      missingContext: 'The connection state cannot be visually verified and requires physical verification.',
+      recommendedVerification: 'Inspect terminals, connector lock, wiring, and circuit operation after reconnection.'
+    })],
+    noVisibleConcernMessage: 'No visible defects were detected.',
+    unableToInspectReason: 'The connector connection state cannot be visually verified.',
+    visibleEvidence: ['The center-right connector appears visibly separate and unconnected.', 'Visible rust is present on the lower-left hose clamp.'],
+    recommendedVerification: ['Continue the whole-image inspection and physically inspect both reported areas.'],
+    safetyDrivabilityImpact: 'A possible coolant leak may affect drivability.'
+  }, { observation: { objects: [{ id: 'OBJ-001' }, { id: 'OBJ-002' }] }, relationship: { status: 'READY' } });
+
+  assert.equal(reconciled.status, 'OBSERVED_CONDITION');
+  assert.equal(reconciled.connectionAssessments[0].location, 'Center-right beside the wiring harness');
+  assert.equal(reconciled.connectionAssessments[0].findingType, 'CLEAR_DEFECT');
+  assert.equal(reconciled.connectionAssessments[0].connectionState, 'DISCONNECTED_VERIFIED');
+  assert.doesNotMatch(reconciled.connectionAssessments[0].missingContext, /connection state cannot be visually verified/i);
+  assert.match(reconciled.connectionAssessments[0].recommendedVerification, /terminals|connector lock|circuit operation/i);
+  assert.ok(reconciled.connectionAssessments.some(item => item.findingType === 'CLEAR_DEFECT' && /corrosion|rust/i.test(item.visibleEvidence)));
+  assert.equal(reconciled.unableToInspectReason, null);
+  assert.equal(reconciled.noVisibleConcernMessage, '');
+  assert.equal(reconciled.conflictEvaluation.hasUnresolvedConflict, false);
+  assert.equal(reconciled.finalEvidencePromotion.promotedCount, 2);
+  assert.match(reconciled.observedCondition[0], /electrical connector visibly disconnected/i);
+  assert.doesNotMatch(JSON.stringify(reconciled), /possible coolant leak/i);
+  assert.match(reconciled.recommendedVerification.join(' '), /continue the whole-image inspection/i);
+});
+
+test('10.13.135 promotes multiple direct visual claim forms without requiring hidden or internal proof', () => {
+  const cases = [
+    ['Electrical connector', 'The connector is clearly unmated from its socket.', 'DISCONNECTED_VERIFIED'],
+    ['Hose / tube connection', 'The hose is visibly disconnected from the fitting.', 'DISCONNECTED_VERIFIED'],
+    ['Wire / harness', 'The wire is visibly broken near the lower-center bracket.', 'INDETERMINATE'],
+    ['Fastener / retainer', 'A fastener is visibly missing from the expected visible mounting point.', 'INDETERMINATE']
+  ];
+  const reconciled = reconcileVisualFindings({ status: 'UNABLE_TO_INSPECT', connectionAssessments: cases.map(([observedObject, visibleEvidence], index) => finding({ location: `Area ${index + 1}`, observedObject, connectionState: 'INDETERMINATE', findingType: 'UNVERIFIED_CONDITION', severity: 'UNDETERMINED', visibleEvidence, missingContext: 'Hidden internal condition requires physical inspection.' })) });
+  assert.equal(reconciled.connectionAssessments.length, cases.length);
+  assert.deepEqual(reconciled.connectionAssessments.map(item => item.findingType), cases.map(() => 'CLEAR_DEFECT'));
+  assert.deepEqual(reconciled.connectionAssessments.map(item => item.connectionState), cases.map(item => item[2]));
+  assert.equal(reconciled.finalEvidencePromotion.promotedCount, cases.length);
 });
 
 test('10.13.133 preserves intended destination separately from a visibly disconnected electrical connector', () => {

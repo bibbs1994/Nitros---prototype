@@ -433,7 +433,7 @@ function normalizeImageRelativeLocation(rawLocation) {
 
 function hasDistinctPhysicalConditionEvidence(finding) {
   const evidence = `${finding?.visibleEvidence || ''} ${finding?.appearance || ''}`;
-  return /\b(?:gap|separat(?:ed|ion)|exposed\s+(?:terminal|pin|wire|metal|connector)|(?:terminal|pin)s?\s+(?:are\s+)?(?:exposed|visible)|broken|crack(?:ed)?|damag(?:e|ed)|burn(?:ed|ing)?|corrosion|leak(?:age|ing)?|fluid|residue|stain(?:ing|ed)?|wet(?:ness|-looking)?|backed[- ]out|disengaged|uneven(?:\s+\w+){0,2}\s+(?:insertion|seating)|misalign(?:ed|ment)|displaced|missing\s+(?:clamp|fastener|retainer)|outside\s+(?:the\s+)?coupler|rubbing|chaf(?:ed|ing))\b/i.test(evidence);
+  return /\b(?:gap|separat(?:ed|ion)|unmated|unplugged|unconnected|hanging\s+(?:free|loose)|exposed\s+(?:terminal|pin|wire|metal|connector)|(?:terminal|pin)s?\s+(?:are\s+)?(?:exposed|visible)|broken|crack(?:ed)?|damag(?:e|ed)|burn(?:ed|ing)?|corrosion|corroded|rust(?:ed|y|ing)?|leak(?:age|ing)?|fluid|residue|stain(?:ing|ed)?|wet(?:ness|-looking)?|backed[- ]out|disengaged|uneven(?:\s+\w+){0,2}\s+(?:insertion|seating)|misalign(?:ed|ment)|displaced|missing\s+(?:clamp|fastener|retainer)|outside\s+(?:the\s+)?coupler|rubbing|chaf(?:ed|ing))\b/i.test(evidence);
 }
 
 function hasAffirmativeMatingEvidence(finding) {
@@ -445,7 +445,7 @@ const VISUAL_CONNECTION_VERIFICATION = 'Unable to verify from this image. Obtain
 
 function hasVerifiedDisconnectionEvidence(finding) {
   const evidence = `${finding?.visibleEvidence || ''} ${finding?.appearance || ''}`;
-  return /\b(?:air\s+gap|physical\s+separation|(?:connector|plug|housing|terminal|hose)\s+(?:is\s+)?(?:visibly\s+)?(?:disconnected|separated|displaced|hanging|loose)|empty\s+(?:socket|receptacle|mating\s+cavity)|exposed\s+(?:mating\s+)?(?:cavity|terminal|pin)|(?:plug|connector)\s+(?:beside|next\s+to)\s+(?:an\s+)?(?:empty\s+)?(?:socket|receptacle)|not\s+(?:physically\s+)?inserted|latch[^.]{0,80}\bnot\s+engaged)\b/i.test(evidence);
+  return /\b(?:air\s+gap|physical\s+separation|(?:connector|plug|housing|terminal|hose|tube|line)\s+(?:appears\s+|is\s+)?(?:clearly\s+|visibly\s+|physically\s+)?(?:disconnected|separated|unmated|unplugged|unconnected|displaced|hanging\s+(?:free|loose)|loose)|empty\s+(?:socket|receptacle|mating\s+cavity)|exposed\s+(?:mating\s+)?(?:cavity|terminal|pin)|(?:plug|connector)\s+(?:beside|next\s+to)\s+(?:an\s+)?(?:empty\s+)?(?:socket|receptacle)|not\s+(?:physically\s+)?inserted|latch[^.]{0,80}\bnot\s+engaged)\b/i.test(evidence);
 }
 
 function connectionStateFor(assessment) {
@@ -879,12 +879,52 @@ function buildElectricalCircuitAnalysis(semanticResult, componentIdentification,
 }
 
 const directMatingEvidence = evidence => hasAffirmativeMatingEvidence({ visibleEvidence: String(evidence || '') });
-const directSeparationEvidence = evidence => { const text = String(evidence || ''); const gap = /\b(?:separat(?:ed|ion)|disconnect(?:ed|ion)|air\s+gap|gap)\b/i.test(text); const electricalPair = /\b(?:connector|plug|terminal)\b/i.test(text) && /\b(?:socket|receptacle|post)\b/i.test(text); const fluidPair = /\b(?:hose|tube|line|pipe)\b/i.test(text) && /\b(?:fitting|port|coupler)\b/i.test(text); const freeElectricalTermination = /\b(?:connector|plug|terminal)\b/i.test(text) && /\b(?:harness|wire|wiring)\b[^.]{0,100}\bterminat(?:es|ed|ing)\b/i.test(text) && /\b(?:exposed|open|free|unmated)\b[^.]{0,100}\b(?:mating|interface|face|end|connector|plug)\b|\bnot\s+connected\s+to\s+(?:a\s+)?visible\s+interface\b/i.test(text); return !/\bno\s+(?:abnormal\s+)?gap\b/i.test(text) && ((gap && (electricalPair || fluidPair)) || freeElectricalTermination); };
-const directPhysicalDefectEvidence = evidence => /\b(?:broken|crack(?:ed)?|torn|split|leak(?:ing)?|corrosion|corroded|damaged\s+(?:wire|wiring|harness)|missing\s+(?:fastener|bolt|clip)|displaced\s+clamp|unplugged\s+harness|terminal\s+(?:removed|corroded))\b/i.test(String(evidence || ''));
+const directSeparationEvidence = evidence => {
+  const text = String(evidence || '');
+  const gap = /\b(?:separat(?:ed|ion)|disconnect(?:ed|ion)|air\s+gap|gap)\b/i.test(text);
+  const electricalPair = /\b(?:connector|plug|terminal)\b/i.test(text) && /\b(?:socket|receptacle|post)\b/i.test(text);
+  const fluidPair = /\b(?:hose|tube|line|pipe)\b/i.test(text) && /\b(?:fitting|port|coupler)\b/i.test(text);
+  const explicitVisibleState = /\b(?:connector|plug|terminal|hose|tube|line|pipe|wire|harness)\b[^.]{0,100}\b(?:appears\s+)?(?:clearly\s+|visibly\s+|physically\s+)?(?:disconnected|separated|unmated|unplugged|unconnected|hanging\s+(?:free|loose))\b|\b(?:visibly|clearly|physically)\s+(?:disconnected|separated|unmated|unplugged|unconnected)\b/i.test(text);
+  const notInserted = /\b(?:connector|plug|terminal|hose|tube|line|pipe)\b[^.]{0,120}\bnot\s+(?:fully\s+|physically\s+)?inserted\s+(?:into|in|onto|on)\b/i.test(text);
+  const freeElectricalTermination = /\b(?:connector|plug|terminal)\b/i.test(text) && /\b(?:harness|wire|wiring)\b[^.]{0,100}\bterminat(?:es|ed|ing)\b/i.test(text) && /\b(?:exposed|open|free|unmated)\b[^.]{0,100}\b(?:mating|interface|face|end|connector|plug)\b|\bnot\s+connected\s+to\s+(?:a\s+)?visible\s+interface\b/i.test(text);
+  const hedgedOnly = /\b(?:possible|possibly|may|might|could|suspect(?:ed)?)\b[^.]{0,80}\b(?:disconnected|separated|unmated|unplugged|unconnected)\b/i.test(text) && !/\b(?:visibly|clearly|physical(?:ly)?|air\s+gap|hanging\s+(?:free|loose))\b/i.test(text);
+  return !hedgedOnly && !/\b(?:no|without)\s+(?:an?\s+)?(?:visible\s+|abnormal\s+)?(?:gap|separation|disconnection)\b/i.test(text) && ((gap && (electricalPair || fluidPair)) || explicitVisibleState || notInserted || freeElectricalTermination);
+};
+const directPhysicalDefectEvidence = evidence => /\b(?:broken|crack(?:ed)?|torn|split|leak(?:ing)?|visible\s+(?:fluid\s+)?(?:residue|staining|seepage|wetness)|(?:fluid\s+)?(?:residue|staining|seepage|wetness)\s+(?:is\s+)?visible|corrosion|corroded|rust(?:ed|y|ing)?|damaged\s+(?:wire|wiring|harness|component|terminal|insulation)|(?:wire|wiring|harness|component|terminal|insulation)\b[^.]{0,60}\b(?:broken|cracked|damaged)|missing\s+(?:(?:fastener|bolt|clip|retainer|component)\b|from\s+(?:an?\s+)?(?:expected\s+)?visible\s+mounting\s+point)|(?:fastener|bolt|clip|retainer|component)\b[^.]{0,80}\b(?:visibly\s+)?missing\b|displaced\s+clamp|clamp\b[^.]{0,60}\b(?:visibly\s+)?displaced|unplugged\s+harness|terminal\s+(?:removed|corroded))\b/i.test(String(evidence || ''));
 const partialSeatingEvidence = evidence => /\b(?:partially|not fully|uneven)\s+(?:seated|inserted|engaged)|\b(?:exposed|visible)\s+(?:connector neck|sealing surface|insertion gap)\b/i.test(String(evidence || ''));
 const suspectSeatingEvidence = evidence => /\b(?:loose|displaced|misalign|corrosion|rust|clamp[^.]{0,80}(?:rearward|displaced)|possible|suspect)\b/i.test(String(evidence || ''));
 const observedObjectFor = finding => /\bhose|tube|line\b/i.test(`${finding?.observedObject || ''} ${finding?.visibleEvidence || ''}`) ? 'Hose / tube connection' : /\bclamp\b/i.test(`${finding?.observedObject || ''} ${finding?.visibleEvidence || ''}`) ? 'Clamp connection' : /\bterminal\b/i.test(`${finding?.observedObject || ''} ${finding?.visibleEvidence || ''}`) ? 'Electrical terminal' : 'Electrical connector';
 const canonicalFindingKey = finding => finding?.candidateId ? `candidate:${finding.candidateId}` : `${observedObjectFor(finding).toLowerCase()}|${String(finding?.location || '').toLowerCase().replace(/\s+/g, ' ').trim()}`;
+
+const locationBucket = value => String(value || '').toLowerCase().match(/\b(?:upper|center|lower|top|bottom)[- ](?:left|center|right)\b/)?.[0].replace(' ', '-') || String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const contradictionFindingKey = finding => `${canonicalComponentFamily(finding?.observedObject || observedObjectFor(finding))}|${locationBucket(finding?.location)}`;
+const visibleDefectKind = evidence => {
+  const text = String(evidence || '').trim();
+  if (!text) return null;
+  const explicitVisual = /\b(?:visible|visibly|clearly|physical(?:ly)?|air\s+gap|hanging\s+(?:free|loose)|exposed|empty\s+(?:socket|receptacle|mounting)|not\s+inserted)\b/i.test(text);
+  const hedged = /\b(?:possible|possibly|may|might|could|suspect(?:ed)?|uncertain)\b[^.]{0,100}\b(?:disconnect|separat|unmat|unplug|unconnect|broken|crack|missing|leak)\w*\b/i.test(text);
+  if (partialSeatingEvidence(text) && (explicitVisual || /\b(?:connector|plug|hose|line|pipe)\b[^.]{0,80}\b(?:partially|improperly|not fully)\b/i.test(text))) return 'PARTIAL_CONNECTION';
+  if (directSeparationEvidence(text)) return 'DISCONNECTED_CONNECTION';
+  if (/\b(?:corrosion|corroded|rust(?:ed|y|ing)?)\b/i.test(text) && !/\b(?:no|without)\s+(?:visible\s+)?(?:corrosion|rust)\b/i.test(text)) return 'CORROSION';
+  if (/\b(?:visible\s+(?:fluid\s+)?(?:residue|staining|seepage|wetness)|(?:fluid\s+)?(?:residue|staining|seepage|wetness)\s+(?:is\s+)?visible|(?:fluid|coolant|oil)\s+(?:is\s+)?visibly\s+leaking|active\s+(?:fluid\s+)?leak)\b/i.test(text) && !/\b(?:no|without)\s+(?:visible\s+)?(?:residue|staining|seepage|wetness|leak)\b/i.test(text)) return 'LEAK_OR_RESIDUE';
+  if (!hedged && directPhysicalDefectEvidence(text)) return 'PHYSICAL_DAMAGE';
+  return null;
+};
+const unsupportedLeakClaim = text => {
+  const value = String(text || '');
+  if (!/\b(?:possible\s+|suspected\s+)?(?:coolant|fluid)\s+leak(?:age)?\b|\bleaking\s+(?:coolant|fluid)\b/i.test(value)) return false;
+  const positive = value.replace(/\b(?:no|without|not)\s+(?:visible\s+)?(?:wet(?:ness)?|residue|stain(?:ing)?|seepage|leak(?:age)?|split|disconnect(?:ion|ed)?)\b/gi, '');
+  return !/\b(?:wet\s+coolant|coolant\s+(?:residue|stain(?:ing)?|seepage)|visible\s+(?:wetness|residue|staining|seepage|fluid)|active\s+(?:seepage|leak)|hose\s+(?:is\s+)?(?:split|disconnected)|compromised\s+seal(?:ing)?|displaced\s+clamp[^.]{0,80}\bseal(?:ing)?)\b/i.test(positive);
+};
+const removeUnsupportedLeakConsequence = text => {
+  const value = String(text || '').trim();
+  if (!unsupportedLeakClaim(value)) return value;
+  if (/\b(?:corrosion|corroded|rust(?:ed|y|ing)?)\b/i.test(value)) return 'Clamp shows visible corrosion/rust.';
+  return value.split(/(?<=[.!?])\s+/).filter(sentence => !/\b(?:coolant|fluid)\s+leak(?:age)?\b|\bleaking\s+(?:coolant|fluid)\b/i.test(sentence)).join(' ').trim();
+};
+const hiddenVerificationLimitation = finding => /\b(?:connector|plug|terminal|wire|harness)\b/i.test(`${finding?.observedObject || ''} ${finding?.visibleEvidence || ''}`) ? 'Terminal condition, pin fit, internal electrical integrity, retention force, and circuit operation require physical verification.' : /\b(?:hose|tube|line|pipe|clamp|fitting|port)\b/i.test(`${finding?.observedObject || ''} ${finding?.visibleEvidence || ''}`) ? 'Hidden sealing surfaces and sealing integrity require physical verification.' : 'Hidden or internal condition and functional integrity require physical verification.';
+const contradictoryVisibilityLimitation = value => /\b(?:cannot|can(?:not|'t)|unable|not\s+possible)\b[^.]{0,100}\b(?:visually\s+)?(?:verif(?:y|ied|ication)|determin(?:e|ed|ation)|confirm(?:ed|ation)?)\b[^.]{0,100}\b(?:connection|connected|disconnected|separation|seating|physical\s+state)\b|\b(?:connection|connected|disconnected|separation|seating|physical\s+state)\b[^.]{0,100}\b(?:cannot|can(?:not|'t)|unable)\b[^.]{0,80}\b(?:verif(?:y|ied|ication)|determin(?:e|ed|ation)|confirm(?:ed|ation)?)\b/i.test(String(value || ''));
+const findingPriority = item => item?.findingType === 'CLEAR_DEFECT' && visibleDefectKind(item.directVisibleEvidence || item.visibleEvidence) ? 0 : ({ CLEAR_DEFECT: 1, POSSIBLE_CONCERN: 2, RESIDUE_OR_STAINING: 3, UNVERIFIED_CONDITION: 4, SEATING_NOT_RELIABLY_VISIBLE: 5, NO_DEFECT_VISIBLE: 6 }[item?.findingType] ?? 9);
 
 const canonicalConnectionState = state => ({ CONNECTED_VERIFIED: 'CONNECTED', DISCONNECTED_VERIFIED: 'DISCONNECTED', PARTIALLY_SEATED: 'PARTIALLY_DISCONNECTED', LOOSE_OR_SUSPECT: 'LOOSE_OR_UNSEATED', INDETERMINATE: 'UNKNOWN' }[state] || 'UNKNOWN');
 const canonicalComponentFamily = value => {
@@ -898,58 +938,92 @@ const reconciliationReason = (code, error = null) => ({ code, errorName: error?.
 
 export function reconcileVisualFindings(condition, { observation = null, relationship = null, vehicleContextState = 'UNAVAILABLE' } = {}) {
   const base = condition && typeof condition === 'object' ? condition : { status: 'UNABLE_TO_INSPECT', connectionAssessments: [] };
-  const source = Array.isArray(base.connectionAssessments) ? base.connectionAssessments : [];
+  const source = Array.isArray(base.connectionAssessments) ? base.connectionAssessments.map(item => item && typeof item === 'object' ? { ...item, visibleEvidence: removeUnsupportedLeakConsequence(item.visibleEvidence), safetyDrivabilityImpact: unsupportedLeakClaim(`${item.safetyDrivabilityImpact || ''} ${item.visibleEvidence || ''}`) ? null : item.safetyDrivabilityImpact } : item) : [];
+  const inferLocation = (text, fallback = '') => {
+    const match = String(text || '').match(/\b(?:upper|center|lower|top|bottom)[- ](?:left|center|right)\b/i)?.[0];
+    return String(fallback || match || 'Image-relative location cannot be determined reliably.').slice(0, 240);
+  };
+  const inferObject = (text, fallback = '') => fallback || (/\bclamp\b/i.test(text) ? 'Clamp' : /\b(?:hose|tube|line|pipe)\b/i.test(text) ? 'Hose / tube connection' : /\b(?:wire|wiring|harness)\b/i.test(text) ? 'Wire / harness' : /\b(?:connector|plug|terminal)\b/i.test(text) ? 'Electrical connector' : /\b(?:fastener|bolt|clip|retainer)\b/i.test(text) ? 'Fastener / retainer' : 'Visible component');
+  const derived = [];
+  const addDerivedFinding = (statement, metadata = {}) => {
+    const visibleEvidence = removeUnsupportedLeakConsequence(statement);
+    const kind = visibleDefectKind(visibleEvidence);
+    if (!kind) return;
+    const location = inferLocation(visibleEvidence, metadata.location);
+    const observedObject = inferObject(visibleEvidence, metadata.observedObject);
+    const duplicate = [...source, ...derived].some(item => item && typeof item === 'object' && visibleDefectKind(item.visibleEvidence || item.directVisibleEvidence) && canonicalComponentFamily(item.observedObject || observedObjectFor(item)) === canonicalComponentFamily(observedObject) && locationBucket(item.location) === locationBucket(location));
+    if (duplicate) return;
+    const partial = kind === 'PARTIAL_CONNECTION', disconnected = kind === 'DISCONNECTED_CONNECTION';
+    derived.push({ findingId: `promoted-${derived.length + 1}`, sourceStage: metadata.sourceStage || 'FINAL_EVIDENCE_PROMOTION', location, observedObject, seatingStatus: disconnected ? 'SEPARATION_OR_GAP_VISIBLE' : partial ? 'POSSIBLE_IMPROPER_SEATING' : 'NOT_RELIABLY_VISIBLE', findingType: 'CLEAR_DEFECT', severity: kind === 'CORROSION' || kind === 'LEAK_OR_RESIDUE' ? 'LOW' : 'MODERATE', findingConfidence: metadata.confidence ?? 80, connectionState: disconnected ? 'DISCONNECTED_VERIFIED' : partial ? 'PARTIALLY_SEATED' : 'INDETERMINATE', connectionStateConfidence: metadata.confidence ?? 80, visibleEvidence, directVisibleEvidence: visibleEvidence, matingComponentVisible: metadata.matingComponentVisible === true, directDamageVisible: true, missingContext: metadata.missingContext && !contradictoryVisibilityLimitation(metadata.missingContext) ? metadata.missingContext : hiddenVerificationLimitation({ observedObject, visibleEvidence }), recommendedVerification: metadata.recommendedVerification || hiddenVerificationLimitation({ observedObject, visibleEvidence }), safetyDrivabilityImpact: null, evidenceProvenance: metadata.sourceStage || 'FINAL_EVIDENCE_PROMOTION' });
+  };
+  for (const concern of Array.isArray(base.possibleConcerns) ? base.possibleConcerns : []) addDerivedFinding(concern?.appearance, { location: concern?.location, recommendedVerification: concern?.recommendedVerification, sourceStage: 'POSSIBLE_CONCERN_PROMOTION' });
+  for (const statement of Array.isArray(base.observedCondition) ? base.observedCondition : []) addDerivedFinding(statement, { sourceStage: 'OBSERVED_CONDITION_PROMOTION' });
+  for (const item of Array.isArray(relationship?.observedItems) ? relationship.observedItems : []) addDerivedFinding(item?.visibleStateEvidence || item?.visibleEvidence, { location: item?.itemLocationInImage, observedObject: item?.observedItem, confidence: item?.physicalStateConfidence ?? item?.relationshipConfidence, missingContext: item?.whatCannotBeConfirmed, recommendedVerification: item?.recommendedNextPhotoVerification, sourceStage: 'RELATIONSHIP_EVIDENCE_PROMOTION' });
   const reconciliationErrors = [];
   const reconciled = [];
-  source.forEach((rawItem, index) => {
+  [...source, ...derived].forEach((rawItem, index) => {
     try {
       if (!rawItem || typeof rawItem !== 'object' || Array.isArray(rawItem)) throw new Error('finding is not an object');
       const item = { ...rawItem, findingId: String(rawItem.findingId || rawItem.candidateId || `finding-${index + 1}`).slice(0, 80), sourceStage: String(rawItem.sourceStage || rawItem.evidenceProvenance || 'VISUAL_CONDITION').slice(0, 80), location: String(rawItem.location || 'Image-relative location cannot be determined reliably.').slice(0, 240) };
       const visibleEvidence = String(item.visibleEvidence || item.directVisibleEvidence || '').trim().slice(0, 500);
       if (!visibleEvidence) throw new Error('missing direct visible evidence');
-    const directDisconnected = directSeparationEvidence(visibleEvidence);
-    const directlyMated = directMatingEvidence(visibleEvidence);
-    const directlyDefective = directPhysicalDefectEvidence(visibleEvidence);
-    const partiallySeated = !directDisconnected && partialSeatingEvidence(visibleEvidence);
-    const suspected = !directDisconnected && !directlyMated && suspectSeatingEvidence(visibleEvidence);
-    const interfaceVisible = /\b(?:connector|plug|terminal|hose|tube|line)\b[^.]{0,140}\b(?:socket|receptacle|fitting|port|post|coupler)\b/i.test(visibleEvidence);
-    const claimedVerified = ['CONNECTED_VERIFIED', 'DISCONNECTED_VERIFIED'].includes(item.connectionState);
-    if (!claimedVerified && !directDisconnected && !directlyMated && !directlyDefective) {
-      const ceiling = item.connectionState === 'INDETERMINATE' ? 60 : item.connectionState === 'LOOSE_OR_SUSPECT' || item.connectionState === 'PARTIALLY_SEATED' ? 85 : 70;
-      reconciled.push({ ...item, observedObject: item.observedObject || observedObjectFor(item), findingConfidence: Math.min(Number.isFinite(item.findingConfidence) ? item.findingConfidence : 0, ceiling), connectionStateConfidence: Math.min(Number.isFinite(item.connectionStateConfidence) ? item.connectionStateConfidence : Number(item.findingConfidence) || 0, ceiling), directVisibleEvidence: visibleEvidence, reconciliationNote: '' });
-      return;
-    }
-    let connectionState = directDisconnected ? 'DISCONNECTED_VERIFIED' : directlyMated ? 'CONNECTED_VERIFIED' : partiallySeated ? 'PARTIALLY_SEATED' : suspected ? 'LOOSE_OR_SUSPECT' : 'INDETERMINATE';
-    let findingType = directDisconnected || directlyDefective ? 'CLEAR_DEFECT' : directlyMated ? 'NO_DEFECT_VISIBLE' : partiallySeated || suspected ? 'POSSIBLE_CONCERN' : 'SEATING_NOT_RELIABLY_VISIBLE';
-    let seatingStatus = directDisconnected ? 'SEPARATION_OR_GAP_VISIBLE' : directlyMated ? 'NO_GAP_OR_SEPARATION_VISIBLE' : partiallySeated || suspected ? 'POSSIBLE_IMPROPER_SEATING' : 'NOT_RELIABLY_VISIBLE';
-    let severity = directDisconnected || directlyDefective ? (item.severity === 'CRITICAL' ? 'CRITICAL' : item.severity === 'HIGH' ? 'HIGH' : 'MODERATE') : partiallySeated || suspected ? (item.severity === 'HIGH' || item.severity === 'CRITICAL' ? 'MODERATE' : item.severity || 'LOW') : 'UNDETERMINED';
-    const ceiling = directDisconnected || directlyMated || directlyDefective ? 99 : partiallySeated || suspected ? 85 : interfaceVisible ? 70 : 60;
-    const findingConfidence = Math.min(Number.isFinite(item.findingConfidence) ? item.findingConfidence : 0, ceiling);
-    const connectionStateConfidence = Math.min(Number.isFinite(item.connectionStateConfidence) ? item.connectionStateConfidence : findingConfidence, ceiling);
-    const downgraded = item.connectionState === 'DISCONNECTED_VERIFIED' && !directDisconnected;
-    reconciled.push({ ...item, observedObject: item.observedObject || observedObjectFor(item), connectionState, connectionStateConfidence, findingType, seatingStatus, severity, findingConfidence, directVisibleEvidence: visibleEvidence, reconciliationNote: downgraded ? 'Disconnected state downgraded because the evidence does not show both mating members physically separated.' : '' });
+      const defectKind = visibleDefectKind(visibleEvidence);
+      const directDisconnected = defectKind === 'DISCONNECTED_CONNECTION';
+      const directlyMated = directMatingEvidence(visibleEvidence);
+      const directlyDefective = Boolean(defectKind);
+      const partiallySeated = defectKind === 'PARTIAL_CONNECTION' || (!directDisconnected && partialSeatingEvidence(visibleEvidence));
+      const suspected = !directDisconnected && !directlyMated && !directlyDefective && suspectSeatingEvidence(visibleEvidence);
+      const interfaceVisible = /\b(?:connector|plug|terminal|hose|tube|line)\b[^.]{0,140}\b(?:socket|receptacle|fitting|port|post|coupler)\b/i.test(visibleEvidence);
+      const claimedVerified = ['CONNECTED_VERIFIED', 'DISCONNECTED_VERIFIED'].includes(item.connectionState);
+      if (!claimedVerified && !directlyDefective && !directlyMated) {
+        const ceiling = item.connectionState === 'INDETERMINATE' ? 60 : item.connectionState === 'LOOSE_OR_SUSPECT' || item.connectionState === 'PARTIALLY_SEATED' ? 85 : 70;
+        reconciled.push({ ...item, observedObject: item.observedObject || observedObjectFor(item), findingConfidence: Math.min(Number.isFinite(item.findingConfidence) ? item.findingConfidence : 0, ceiling), connectionStateConfidence: Math.min(Number.isFinite(item.connectionStateConfidence) ? item.connectionStateConfidence : Number(item.findingConfidence) || 0, ceiling), directVisibleEvidence: visibleEvidence, safetyDrivabilityImpact: unsupportedLeakClaim(`${item.safetyDrivabilityImpact || ''} ${visibleEvidence}`) ? null : item.safetyDrivabilityImpact, reconciliationNote: '' });
+        return;
+      }
+      const connectionState = directDisconnected ? 'DISCONNECTED_VERIFIED' : directlyMated ? 'CONNECTED_VERIFIED' : partiallySeated ? 'PARTIALLY_SEATED' : suspected ? 'LOOSE_OR_SUSPECT' : 'INDETERMINATE';
+      const findingType = directlyDefective ? 'CLEAR_DEFECT' : directlyMated ? 'NO_DEFECT_VISIBLE' : partiallySeated || suspected ? 'POSSIBLE_CONCERN' : 'SEATING_NOT_RELIABLY_VISIBLE';
+      const seatingStatus = directDisconnected ? 'SEPARATION_OR_GAP_VISIBLE' : directlyMated ? 'NO_GAP_OR_SEPARATION_VISIBLE' : partiallySeated || suspected ? 'POSSIBLE_IMPROPER_SEATING' : item.seatingStatus || 'NOT_RELIABLY_VISIBLE';
+      const severity = directlyDefective ? (defectKind === 'CORROSION' || defectKind === 'LEAK_OR_RESIDUE' ? (item.severity === 'MODERATE' ? 'MODERATE' : 'LOW') : item.severity === 'CRITICAL' ? 'CRITICAL' : item.severity === 'HIGH' ? 'HIGH' : 'MODERATE') : partiallySeated || suspected ? (item.severity === 'HIGH' || item.severity === 'CRITICAL' ? 'MODERATE' : item.severity || 'LOW') : 'UNDETERMINED';
+      const ceiling = directlyDefective || directlyMated ? 99 : partiallySeated || suspected ? 85 : interfaceVisible ? 70 : 60;
+      const findingConfidence = Math.min(Number.isFinite(item.findingConfidence) ? item.findingConfidence : directlyDefective ? 75 : 0, ceiling);
+      const connectionStateConfidence = Math.min(Number.isFinite(item.connectionStateConfidence) ? item.connectionStateConfidence : findingConfidence, ceiling);
+      const downgraded = item.connectionState === 'DISCONNECTED_VERIFIED' && !directDisconnected;
+      const missingContext = directlyDefective && contradictoryVisibilityLimitation(item.missingContext) ? hiddenVerificationLimitation({ ...item, visibleEvidence }) : item.missingContext;
+      reconciled.push({ ...item, observedObject: item.observedObject || observedObjectFor(item), connectionState, connectionStateConfidence, findingType, seatingStatus, severity, findingConfidence, directVisibleEvidence: visibleEvidence, directDamageVisible: directlyDefective || item.directDamageVisible, missingContext, safetyDrivabilityImpact: unsupportedLeakClaim(`${item.safetyDrivabilityImpact || ''} ${visibleEvidence}`) ? null : item.safetyDrivabilityImpact, reconciliationNote: directlyDefective && !['CLEAR_DEFECT'].includes(item.findingType) ? 'Direct visible physical-condition claim promoted to a confirmed visible defect.' : downgraded ? 'Disconnected state downgraded because the evidence does not show direct visible separation.' : '' });
     } catch (error) {
       reconciliationErrors.push({ findingId: rawItem?.findingId || rawItem?.candidateId || `finding-${index + 1}`, reason: sanitizeDiagnosticText(error?.message) || 'finding normalization failed' });
     }
   });
   const strongest = new Map();
-  const rank = item => item.connectionState === 'DISCONNECTED_VERIFIED' && directSeparationEvidence(item.visibleEvidence) ? 4 : item.connectionState === 'CONNECTED_VERIFIED' && directMatingEvidence(item.visibleEvidence) ? 3 : item.connectionState === 'PARTIALLY_SEATED' ? 2 : item.connectionState === 'LOOSE_OR_SUSPECT' ? 1 : 0;
+  const rank = item => item.findingType === 'CLEAR_DEFECT' && visibleDefectKind(item.directVisibleEvidence || item.visibleEvidence) ? 5 : item.connectionState === 'CONNECTED_VERIFIED' && directMatingEvidence(item.visibleEvidence) ? 4 : item.connectionState === 'PARTIALLY_SEATED' ? 3 : item.connectionState === 'LOOSE_OR_SUSPECT' ? 2 : 1;
   for (const item of reconciled) {
-    const key = `${canonicalFindingKey(item)}|${rank(item) >= 3 ? item.connectionState : ['CONNECTED_VERIFIED', 'DISCONNECTED_VERIFIED'].includes(item.connectionState) ? 'mating-claim' : item.connectionState}`, previous = strongest.get(key);
+    const key = `${canonicalFindingKey(item)}|${item.connectionState || item.findingType}`, previous = strongest.get(key);
     if (!previous || rank(item) > rank(previous) || (rank(item) === rank(previous) && (item.findingConfidence || 0) > (previous.findingConfidence || 0))) strongest.set(key, item);
   }
-  const directClaimKeys = new Set(reconciled.filter(item => ['CONNECTED_VERIFIED', 'DISCONNECTED_VERIFIED'].includes(item.connectionState) && rank(item) >= 3).map(canonicalFindingKey));
-  const finalFindings = [...strongest.values()].filter(item => !directClaimKeys.has(canonicalFindingKey(item)) || ['CONNECTED_VERIFIED', 'DISCONNECTED_VERIFIED'].includes(item.connectionState));
+  const strongestValues = [...strongest.values()];
+  const directDefectKeys = new Set(strongestValues.filter(item => item.findingType === 'CLEAR_DEFECT' && visibleDefectKind(item.directVisibleEvidence || item.visibleEvidence)).map(contradictionFindingKey));
+  const finalFindings = strongestValues.filter(item => !directDefectKeys.has(contradictionFindingKey(item)) || item.findingType === 'CLEAR_DEFECT' || (item.findingType === 'POSSIBLE_CONCERN' && visibleDefectKind(item.directVisibleEvidence || item.visibleEvidence))).sort((a, b) => findingPriority(a) - findingPriority(b));
   const conflictsResolved = reconciled.length !== finalFindings.length || reconciled.some(item => item.reconciliationNote);
-  const promotedFindings = finalFindings.filter(item => item.findingType === 'CLEAR_DEFECT' && (directSeparationEvidence(item.directVisibleEvidence || item.visibleEvidence) || directPhysicalDefectEvidence(item.directVisibleEvidence || item.visibleEvidence)));
+  const promotedFindings = finalFindings.filter(item => item.findingType === 'CLEAR_DEFECT' && visibleDefectKind(item.directVisibleEvidence || item.visibleEvidence));
   const hasClearDefect = promotedFindings.length > 0;
-  const hasConcern = finalFindings.some(item => item.findingType === 'POSSIBLE_CONCERN');
+  const possibleConcerns = (Array.isArray(base.possibleConcerns) ? base.possibleConcerns : []).map(item => ({ ...item, appearance: removeUnsupportedLeakConsequence(item?.appearance) })).filter(item => item.appearance && !visibleDefectKind(item.appearance));
+  const hasConcern = finalFindings.some(item => item.findingType === 'POSSIBLE_CONCERN') || possibleConcerns.length > 0;
   const status = hasClearDefect ? 'OBSERVED_CONDITION' : hasConcern ? 'POSSIBLE_CONCERN_DETECTED' : base.status;
   const reason = reconciliationErrors.length && !finalFindings.length ? reconciliationReason('RECONCILE_NO_FINDINGS') : reconciliationErrors.length ? reconciliationReason('RECONCILE_PARTIAL') : reconciliationReason('RECONCILE_OK');
   const directDisconnects = finalFindings.filter(item => item.connectionState === 'DISCONNECTED_VERIFIED' && /\b(?:electrical\s+connector|electrical\s+terminal|wire\s+harness)\b/i.test(`${item.observedObject || ''} ${item.directVisibleEvidence || item.visibleEvidence || ''}`) && directSeparationEvidence(item.directVisibleEvidence || item.visibleEvidence));
   const disconnectGuidance = 'Reconnect the electrical connector fully and capture a follow-up image showing the connector seated and latched at the mating receptacle.';
-  const visibleDefects = directDisconnects.map(item => `Electrical connector visibly disconnected${item.location ? ` at ${item.location}` : ''}.`);
-  const result = { ...base, status, connectionAssessments: finalFindings, observedCondition: [...new Set([...(base.observedCondition || []), ...visibleDefects])], recommendedVerification: [...new Set([...(base.recommendedVerification || []), ...(directDisconnects.length ? [disconnectGuidance] : [])])], noVisibleConcernMessage: directDisconnects.length ? '' : base.noVisibleConcernMessage, unableToInspectReason: directDisconnects.length ? null : base.unableToInspectReason, reconciliationErrors, reconciliation: { status: 'reconciled', findings: finalFindings, visibleDefects, visualState: finalFindings[0] ? canonicalConnectionState(finalFindings[0].connectionState) : null, vehicleContextAvailable: vehicleContextState !== 'UNAVAILABLE', vehicleMismatch: vehicleContextState === 'MISMATCH' ? true : vehicleContextState === 'MATCH' ? false : null, conflicts: [], promotable: false, reason: reason.code, reasonDetail: reason }, crossFindingConsistency: { status: reconciliationErrors.length ? 'PARTIAL' : 'PASS', conflictsResolved, findingCount: finalFindings.length, rejectedFindingCount: reconciliationErrors.length, relationshipAnalysisAvailable: Boolean(relationship), stageOneObservationAvailable: Boolean(observation) } };
+  const visibleDefects = promotedFindings.map(item => {
+    const evidence = item.directVisibleEvidence || item.visibleEvidence;
+    const location = item.location ? ` at ${item.location}` : '';
+    if (item.connectionState === 'DISCONNECTED_VERIFIED' && /\b(?:battery\s+)?terminal\s+clamp|battery\s+post\b/i.test(evidence)) return `Positive battery terminal appears physically disconnected${location}: ${evidence}`;
+    if (item.connectionState === 'DISCONNECTED_VERIFIED' && /\b(?:connector|plug|terminal|wire|harness)\b/i.test(`${item.observedObject || ''} ${evidence}`)) return `Electrical connector visibly disconnected${location}: ${evidence}`;
+    if (item.connectionState === 'DISCONNECTED_VERIFIED' && /\b(?:hose|tube|line|pipe)\b/i.test(`${item.observedObject || ''} ${evidence}`)) return `Hose or line visibly disconnected${location}: ${evidence}`;
+    return `${item.observedObject || 'Visible defect'}${location}: ${evidence}`;
+  });
+  const safeObservedCondition = (Array.isArray(base.observedCondition) ? base.observedCondition : []).map(removeUnsupportedLeakConsequence).filter(Boolean).filter(item => !hasClearDefect || !/\bno\s+(?:obvious\s+|visible\s+)?defects?\b/i.test(item));
+  const safeVisibleEvidence = (Array.isArray(base.visibleEvidence) ? base.visibleEvidence : []).map(removeUnsupportedLeakConsequence).filter(Boolean);
+  const safetyDrivabilityImpact = unsupportedLeakClaim(`${base.safetyDrivabilityImpact || ''} ${safeVisibleEvidence.join(' ')}`) ? null : base.safetyDrivabilityImpact;
+  const result = { ...base, status, possibleConcerns, connectionAssessments: finalFindings, observedCondition: [...new Set([...visibleDefects, ...safeObservedCondition])], visibleEvidence: [...new Set([...promotedFindings.map(item => item.directVisibleEvidence || item.visibleEvidence), ...safeVisibleEvidence])], recommendedVerification: [...new Set([...(base.recommendedVerification || []), ...promotedFindings.map(item => item.recommendedVerification).filter(Boolean), ...(directDisconnects.length ? [disconnectGuidance] : [])])], safetyDrivabilityImpact, noVisibleConcernMessage: hasClearDefect ? '' : base.noVisibleConcernMessage, unableToInspectReason: hasClearDefect ? null : base.unableToInspectReason, reconciliationErrors, reconciliation: { status: 'reconciled', findings: finalFindings, visibleDefects, visualState: finalFindings[0] ? canonicalConnectionState(finalFindings[0].connectionState) : null, vehicleContextAvailable: vehicleContextState !== 'UNAVAILABLE', vehicleMismatch: vehicleContextState === 'MISMATCH' ? true : vehicleContextState === 'MATCH' ? false : null, conflicts: [], promotable: false, reason: reason.code, reasonDetail: reason }, crossFindingConsistency: { status: reconciliationErrors.length ? 'PARTIAL' : 'PASS', conflictsResolved, findingCount: finalFindings.length, rejectedFindingCount: reconciliationErrors.length, relationshipAnalysisAvailable: Boolean(relationship), stageOneObservationAvailable: Boolean(observation) } };
   const conflictEvaluation = evaluateCrossFindingConflicts(result);
   const finalEvidencePromotion = promoteFinalEvidence(result, conflictEvaluation);
   return { ...result, conflictEvaluation, finalEvidencePromotion, reconciliation: { ...result.reconciliation, conflicts: conflictEvaluation.conflicts, promotable: finalEvidencePromotion.eligible } };
@@ -959,20 +1033,24 @@ export function evaluateCrossFindingConflicts(reconciledEvidence) {
   const findings = Array.isArray(reconciledEvidence?.connectionAssessments) ? reconciledEvidence.connectionAssessments : [];
   const grouped = new Map();
   for (const item of findings) {
-    const key = `${canonicalComponentFamily(item.observedObject || item.componentIdentity)}|${String(item.location || '').toLowerCase().replace(/\s+/g, ' ').trim()}`;
+    const key = contradictionFindingKey(item);
     const states = grouped.get(key) || []; states.push(item); grouped.set(key, states);
   }
-  const conflicts = [...grouped.entries()].flatMap(([key, items]) => {
+  const stateConflicts = [...grouped.entries()].flatMap(([key, items]) => {
     const states = new Set(items.map(item => canonicalConnectionState(item.connectionState)));
     return states.has('CONNECTED') && states.has('DISCONNECTED') ? [{ key, type: 'CONNECTION_STATE_CONTRADICTION', findingIds: items.map(item => item.findingId), states: [...states] }] : [];
   });
+  const directVisible = findings.filter(item => item.findingType === 'CLEAR_DEFECT' && visibleDefectKind(item.directVisibleEvidence || item.visibleEvidence));
+  const limitationConflicts = directVisible.filter(item => contradictoryVisibilityLimitation(item.missingContext)).map(item => ({ key: contradictionFindingKey(item), type: 'DIRECT_EVIDENCE_UNVERIFIED_CONTRADICTION', findingIds: [item.findingId], states: [canonicalConnectionState(item.connectionState)] }));
+  const noDefectConflict = directVisible.length && (reconciledEvidence?.noVisibleConcernMessage || /\bno\s+(?:obvious\s+|visible\s+)?defects?\b/i.test((reconciledEvidence?.observedCondition || []).join(' '))) ? [{ key: 'report', type: 'DIRECT_EVIDENCE_NO_DEFECT_CONTRADICTION', findingIds: directVisible.map(item => item.findingId), states: directVisible.map(item => canonicalConnectionState(item.connectionState)) }] : [];
+  const conflicts = [...stateConflicts, ...limitationConflicts, ...noDefectConflict];
   return { status: 'PASS', executed: true, conflicts, hasUnresolvedConflict: conflicts.length > 0, reason: conflicts.length ? 'CONFLICT_REPRESENTED' : 'NO_CONFLICT' };
 }
 
 export function promoteFinalEvidence(reconciledEvidence, conflictEvaluation) {
   const findings = Array.isArray(reconciledEvidence?.connectionAssessments) ? reconciledEvidence.connectionAssessments : [];
   const eligible = !conflictEvaluation?.hasUnresolvedConflict;
-  const promoted = eligible ? findings.filter(item => item.findingType === 'CLEAR_DEFECT' && Number(item.findingConfidence || 0) >= 70 && Boolean(item.directVisibleEvidence || item.visibleEvidence)) : [];
+  const promoted = eligible ? findings.filter(item => item.findingType === 'CLEAR_DEFECT' && Boolean(visibleDefectKind(item.directVisibleEvidence || item.visibleEvidence))) : [];
   const contextLimited = reconciledEvidence?.reconciliation?.vehicleContextAvailable === false;
   return { status: eligible ? 'PASS' : 'BLOCKED_CONFLICT', eligible: eligible && promoted.length > 0, promotedCount: promoted.length, positiveEvidenceAdjudicated: true, evidence: promoted.map(item => ({ evidenceId: item.findingId, observationType: item.findingType, canonicalComponent: canonicalComponentFamily(item.observedObject), visibleState: canonicalConnectionState(item.connectionState), confidence: item.findingConfidence, contextLimited, qualification: contextLimited ? 'Vehicle context unavailable; statement is limited to direct visible evidence.' : null })), adjudications: [...promoted.map(item => ({ findingId: item.findingId, disposition: 'VISIBLE_DEFECT' })), ...(reconciledEvidence?.reconciliationErrors || []).map(item => ({ findingId: item.findingId, disposition: 'REJECTED', reason: item.reason }))], reason: eligible ? (promoted.length ? 'PROMOTION_OK' : 'NO_PROMOTABLE_EVIDENCE') : 'UNRESOLVED_CONFLICT' };
 }
