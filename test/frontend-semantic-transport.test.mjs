@@ -36,16 +36,16 @@ test('10.12.28 canonical normalizer rejects malformed and incomplete semantic co
   const normalize=semanticNormalizer();assert.equal(normalize({semanticResult:'```json\n{bad json}\n```'}),null);assert.equal(normalize({semanticResult:{category:'AUTOMOTIVE_GRAPH'}}),null);
 });
 
-test('10.13.133 keeps the proven analyzer and production endpoint', () => {
-  assert.match(analyzer, /const BUILD='10\.13\.133'/);
-  assert.match(html, /10\.13\.133/);
+test('10.13.134 keeps the proven analyzer and production endpoint', () => {
+  assert.match(analyzer, /const BUILD='10\.13\.134'/);
+  assert.match(html, /10\.13\.134/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.13\.133'/);
+  assert.match(serviceWorker, /const VERSION = '10\.13\.134'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
-test('10.13.133 preserves the final reconciliation contract through client normalization', () => {
+test('10.13.134 preserves the final reconciliation contract through client normalization', () => {
   assert.match(analyzer, /const reconciliationStatus=\['PASS','PARTIAL'\]\.includes\(raw\?\.crossFindingConsistency\?\.status\)/);
   assert.match(analyzer, /crossFindingConsistency:\{status:reconciliationStatus/);
   assert.match(analyzer, /conflictEvaluation,finalEvidencePromotion,semanticRequestId:raw\.semanticRequestId/);
@@ -360,7 +360,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.13\.133'/);
+  assert.match(html, /version:'10\.13\.134'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {

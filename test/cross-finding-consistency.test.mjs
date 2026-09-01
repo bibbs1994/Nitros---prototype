@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildCanonicalVisualState, evaluateCrossFindingConflicts, promoteFinalEvidence, reconcileVehicleAreaRelationship, reconcileVisualFindings, validateVehicleAreaRelationship } from '../semantic-analyzer-core.mjs';
+import { buildCanonicalVisualState, evaluateCrossFindingConflicts, promoteFinalEvidence, reconcileVehicleAreaRelationship, reconcileVisualFindings, selectGlobalVisualCandidates, validateVehicleAreaRelationship } from '../semantic-analyzer-core.mjs';
 
 const finding = overrides => ({
   location: 'Central-left EGR-area connector', observedObject: 'Electrical connector', seatingStatus: 'NOT_RELIABLY_VISIBLE', findingType: 'SEATING_NOT_RELIABLY_VISIBLE', severity: 'UNDETERMINED', findingConfidence: 92, connectionState: 'INDETERMINATE', connectionStateConfidence: 92, visibleEvidence: 'Electrical connector body is visible, but its mating socket is obscured.', recommendedVerification: 'Photograph both connector halves and the latch from another angle.', safetyDrivabilityImpact: null, ...overrides
@@ -138,4 +138,16 @@ test('10.13.133 preserves intended destination separately from a visibly disconn
   assert.match(relationship.observedItems[0].visibleStateEvidence, /free electrical connector|air gap/i);
   assert.doesNotMatch(relationship.observedItems[0].likelyRelationshipOrDestination, /(?:is |directly |securely |fully )connected|attached|seated/i);
   assert.match(relationship.recommendedNextPhotoVerification, /connector.*component-side electrical receptacle.*together/i);
+});
+
+test('10.13.134 global candidate selection inspects two abnormalities ahead of a normal foreground hose', () => {
+  const observation = { objects: [
+    { id: 'OBJ-001', type: 'hose_clamp', location: 'lower-left' },
+    { id: 'OBJ-002', type: 'electrical_connector', location: 'center-right' },
+    { id: 'OBJ-003', type: 'vacuum_hose', location: 'upper-center' }
+  ], abnormalFindings: [
+    { objectId: 'OBJ-002', state: 'DISCONNECTED', priorityRank: 1 },
+    { objectId: 'OBJ-003', state: 'DISCONNECTED', priorityRank: 2 }
+  ] };
+  assert.deepEqual(selectGlobalVisualCandidates(observation).map(item => item.id), ['OBJ-002', 'OBJ-003', 'OBJ-001']);
 });
