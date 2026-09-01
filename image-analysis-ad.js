@@ -1,10 +1,11 @@
-/* Nitros 10.12.23 appointment dedicated field commit fix. */
+/* Nitros 10.13.135 deep whole-image automotive vision. */
 (()=>{'use strict';
-const BUILD='10.13.134';
+const BUILD='10.13.135';
   const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
-  const MAX_ANALYSIS_IMAGE_BYTES=2.4*1024*1024;
-  const MAX_SEMANTIC_REQUEST_BYTES=3.25*1024*1024;
-  const ANALYSIS_STAGES=Object.freeze([{longDimension:1536,quality:.78},{longDimension:1280,quality:.72},{longDimension:1024,quality:.68}]);
+  // Automotive photographs are evidence. Send their original encoded bytes; do
+  // not canvas-resize, crop, or recompress them on the client before inspection.
+  const MAX_ANALYSIS_IMAGE_BYTES=12*1024*1024;
+  const MAX_SEMANTIC_REQUEST_BYTES=16.5*1024*1024;
   const MAX_TEXT_BYTES=1500000;
   const CATEGORIES=new Set([
     'AUTOMOTIVE_GRAPH',
@@ -183,10 +184,6 @@ const BUILD='10.13.134';
     return btoa(binary);
   }
 
-  function canvasToJpeg(canvas,quality){
-    return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Analysis JPEG encoding failed.')),'image/jpeg',quality));
-  }
-
   async function prepareAnalysisImage(originalBytes,mimeType,signal,requestId){
     if(signal?.aborted)throw abortError();
     let bitmap;
@@ -194,27 +191,18 @@ const BUILD='10.13.134';
     catch(error){throw diagnosticError('Image could not be prepared for analysis.','PAYLOAD_ERROR',{cause:error})}
     const originalDimensions={width:bitmap.width,height:bitmap.height};
     try{
-      for(let index=0;index<ANALYSIS_STAGES.length;index+=1){
-        if(signal?.aborted)throw abortError();
-        const config=ANALYSIS_STAGES[index],scale=Math.min(1,config.longDimension/Math.max(bitmap.width,bitmap.height));
-        const width=Math.max(1,Math.round(bitmap.width*scale)),height=Math.max(1,Math.round(bitmap.height*scale));
-        const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
-        const context=canvas.getContext('2d',{alpha:false});
-        if(!context)throw new Error('Image canvas is unavailable.');
-        context.drawImage(bitmap,0,0,width,height);
-        const jpeg=await canvasToJpeg(canvas,config.quality),analysisBytes=await jpeg.arrayBuffer();
-        const encodedSize=4*Math.ceil(analysisBytes.byteLength/3);
-        const requestEnvelopeBytes=new TextEncoder().encode(JSON.stringify({transactionId:requestId,imageHash:'0'.repeat(64),mimeType:'image/jpeg',imageBase64:''})).byteLength;
-        const projectedBodyBytes=requestEnvelopeBytes+encodedSize;
-        if(analysisBytes.byteLength<=MAX_ANALYSIS_IMAGE_BYTES&&projectedBodyBytes<=MAX_SEMANTIC_REQUEST_BYTES){
-          return {bytes:analysisBytes,mimeType:'image/jpeg',originalDimensions,dimensions:{width,height},quality:config.quality,stage:index+1,encodedSize,projectedBodyBytes,payloadImageCount:1};
-        }
+      if(signal?.aborted)throw abortError();
+      const encodedSize=4*Math.ceil(originalBytes.byteLength/3);
+      const requestEnvelopeBytes=new TextEncoder().encode(JSON.stringify({transactionId:requestId,imageHash:'0'.repeat(64),mimeType,imageBase64:''})).byteLength;
+      const projectedBodyBytes=requestEnvelopeBytes+encodedSize;
+      if(originalBytes.byteLength<=MAX_ANALYSIS_IMAGE_BYTES&&projectedBodyBytes<=MAX_SEMANTIC_REQUEST_BYTES){
+        return {bytes:originalBytes,mimeType,originalDimensions,dimensions:originalDimensions,quality:null,stage:0,encodedSize,projectedBodyBytes,payloadImageCount:1,recompressed:false,orientationApplied:'SOURCE_EXIF_PRESERVED'};
       }
     }catch(error){
       if(error?.name==='AbortError'||error?.diagnosticCategory==='PAYLOAD_ERROR')throw error;
       throw diagnosticError('Image could not be prepared for analysis.','PAYLOAD_ERROR',{cause:error});
     }finally{bitmap.close?.()}
-    throw diagnosticError('Image could not be prepared for analysis.','PAYLOAD_ERROR',{unsupportedRequestBody:true});
+    throw diagnosticError('Original image exceeds the deep-vision upload limit; capture a smaller original rather than silently downscaling evidence.','PAYLOAD_ERROR',{unsupportedRequestBody:true});
   }
 
   function semanticEndpoint(){return document.querySelector('meta[name="nitros-semantic-endpoint"]')?.content?.trim()||'/api/semantic-image-analysis'}
@@ -502,7 +490,7 @@ const BUILD='10.13.134';
     if((locationConfidence!==null&&(!Number.isFinite(locationConfidence)||locationConfidence<0||locationConfidence>100))||items.some(item=>item.relationshipConfidence!==null&&(!Number.isFinite(item.relationshipConfidence)||item.relationshipConfidence<0||item.relationshipConfidence>100)))throw new Error('Vehicle-area relationship confidence is invalid.');
     const gap=raw.expectedComponentCheck||{},gapVisual=stringArray(gap.supportingVisualEvidence||[],'expected component visual evidence'),gapContext=stringArray(gap.vehicleContextSupport||[],'expected component context support'),gapCandidate=text(gap.possibleMissingOrRemovedComponent,240),gapValid=gapCandidate&&gapCandidate!=='No visually supported missing component detected.'&&gapVisual.length&&gapContext.length;
     const expectedComponentCheck={expectedMajorComponents:stringArray(gap.expectedMajorComponents||[],'expected major components'),visiblyAccountedFor:stringArray(gap.visiblyAccountedFor||[],'visibly accounted components'),possibleMissingOrRemovedComponent:gapValid?gapCandidate:'No visually supported missing component detected.',supportingVisualEvidence:gapValid?gapVisual:[],vehicleContextSupport:gapValid?gapContext:[],confidence:gapValid?confidence(gap.confidence):null,whatPreventsConfirmation:text(gap.whatPreventsConfirmation,500)||'No visually supported missing component can be confirmed from this image.',recommendedTechnicianVerification:text(gap.recommendedTechnicianVerification,500)||'Take a wider, well-lit image showing the mounting area and all nearby connectors.'};
-    return {status:raw.status,vehicleAreaLocation:text(raw.vehicleAreaLocation,240)||'Location uncertain',locationConfidence,locationEvidence:stringArray(raw.locationEvidence||[],'vehicle area locationEvidence'),vehicleContextSupport:stringArray(raw.vehicleContextSupport||[],'vehicle area vehicleContextSupport'),primaryVisibleAssembly:text(raw.primaryVisibleAssembly,240)||'Broad assembly cannot be confirmed',observedItems:items,expectedComponentCheck,whatPreventsConfirmation:text(raw.whatPreventsConfirmation,500),recommendedNextPhotoVerification:text(raw.recommendedNextPhotoVerification,500),semanticRequestId:raw.semanticRequestId,imageHash:raw.imageHash};
+    return {status:'READY',vehicleAreaLocation:text(raw.vehicleAreaLocation,240)||'Automotive component area visible; precise vehicle position uncertain.',locationConfidence,locationEvidence:stringArray(raw.locationEvidence||[],'vehicle area locationEvidence'),vehicleContextSupport:stringArray(raw.vehicleContextSupport||[],'vehicle area vehicleContextSupport'),primaryVisibleAssembly:text(raw.primaryVisibleAssembly,240)||'Visible automotive component area',observedItems:items,expectedComponentCheck,whatPreventsConfirmation:text(raw.whatPreventsConfirmation,500)||'Precise orientation or hidden mating relationships cannot be confirmed from this image.',recommendedNextPhotoVerification:text(raw.recommendedNextPhotoVerification,500)||'Capture additional angles of the area if verification of hidden connections or mounting points is required.',vehicleAreaSource:['semantic','derived','fallback'].includes(raw.vehicleAreaSource)?raw.vehicleAreaSource:'fallback',vehicleAreaReason:text(raw.vehicleAreaReason,500)||'Generalized automotive area completion applied.',relationshipSource:['semantic','derived','fallback'].includes(raw.relationshipSource)?raw.relationshipSource:'fallback',relationshipReason:text(raw.relationshipReason,500)||'No definite abnormal component relationship established from visible evidence.',photoGuidanceSource:['semantic','derived','fallback'].includes(raw.photoGuidanceSource)?raw.photoGuidanceSource:'fallback',photoGuidanceReason:text(raw.photoGuidanceReason,500)||'General hidden-connection verification guidance applied.',semanticRequestId:raw.semanticRequestId,imageHash:raw.imageHash};
   }
   function normalizeWiringDiagram(raw,category,run){
     if(category!=='AUTOMOTIVE_WIRING_DIAGRAM')return null;

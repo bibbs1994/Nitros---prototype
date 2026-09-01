@@ -43,6 +43,22 @@ export async function createLocalizedCrops(sourceBytes, region) {
   return { source: { width: metadata.width, height: metadata.height }, normalizedRegion: validateNormalizedRegion(region), detailRegion, contextRegion, detail, context, detailMetadata: { width: detailMetadata.width, height: detailMetadata.height }, contextMetadata: { width: contextMetadata.width, height: contextMetadata.height } };
 }
 
+// Nine overlapping views give the deep pass complete coverage while keeping
+// boundary-spanning connectors and hoses visible in at least two regions.
+export async function createWholeImageRegions(sourceBytes) {
+  const source = sharp(sourceBytes, { failOn: 'none' }).rotate();
+  const metadata = await source.metadata();
+  if (!metadata.width || !metadata.height) throw new Error('Source image dimensions are unavailable.');
+  const regions = [];
+  for (let row = 0; row < 3; row += 1) for (let column = 0; column < 3; column += 1) {
+    const region = validateNormalizedRegion({ x: Math.max(0, column / 3 - 0.055), y: Math.max(0, row / 3 - 0.055), width: Math.min(1 - Math.max(0, column / 3 - 0.055), 1 / 3 + 0.11), height: Math.min(1 - Math.max(0, row / 3 - 0.055), 1 / 3 + 0.11) });
+    const pixels = regionToPixels(region, metadata.width, metadata.height);
+    const image = await sharp(sourceBytes, { failOn: 'none' }).rotate().extract(pixels).png().toBuffer();
+    regions.push({ id: `REGION-${row + 1}-${column + 1}`, row, column, region, pixels, image });
+  }
+  return { source: { width: metadata.width, height: metadata.height }, regions };
+}
+
 export const localizedInspectionSchema = {
   type: 'object', additionalProperties: false,
   required: ['candidate_id', 'candidate_class', 'localized_visual_verification', 'connection_state', 'defect_state', 'confidence', 'evidence_observed', 'contradictory_evidence', 'visibility_limitations'],
