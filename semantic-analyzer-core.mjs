@@ -355,6 +355,27 @@ export function validateVehicleAreaRelationship(raw) {
   return result;
 }
 
+// Direct physical evidence may establish a broad area and mating relationship even
+// when exact component identification remains uncertain.
+export function reconcileVehicleAreaRelationship(relationship, condition) {
+  if (!relationship || typeof relationship !== 'object') return relationship;
+  const findings = Array.isArray(condition?.connectionAssessments) ? condition.connectionAssessments : [];
+  const disconnected = findings.filter(item => item?.connectionState === 'DISCONNECTED_VERIFIED' && /\b(?:electrical\s+connector|electrical\s+terminal|wire\s+harness)\b/i.test(`${item.observedObject || ''} ${item.directVisibleEvidence || item.visibleEvidence || ''}`) && directSeparationEvidence(item.directVisibleEvidence || item.visibleEvidence));
+  if (!disconnected.length) return relationship;
+  const relationshipText = [relationship.vehicleAreaLocation, relationship.primaryVisibleAssembly, ...(relationship.locationEvidence || [])].join(' ');
+  const engineAreaVisible = /\b(?:engine|underhood|engine compartment|powertrain)\b/i.test(relationshipText);
+  const broadArea = engineAreaVisible ? 'Engine compartment — visible electrical connector/component interface' : relationship.vehicleAreaLocation;
+  const areaNeedsRepair = !String(relationship.vehicleAreaLocation || '').trim() || /\b(?:unknown|uncertain|unverified|skipped)\b/i.test(relationship.vehicleAreaLocation);
+  const evidence = disconnected.map(item => item.directVisibleEvidence || item.visibleEvidence).filter(Boolean);
+  const guidance = 'Reconnect the electrical connector fully and capture a follow-up image showing it seated and latched at the mating receptacle.';
+  const observedItems = [...(relationship.observedItems || [])];
+  disconnected.forEach(item => {
+    const represented = observedItems.some(existing => /\b(?:connector|plug|terminal)\b/i.test(`${existing.observedItem} ${existing.visibleEvidence}`) && /\b(?:disconnect|separat|gap|free|unplug)\b/i.test(`${existing.likelyRelationshipOrDestination} ${existing.visibleEvidence}`));
+    if (!represented && observedItems.length < 8) observedItems.push({ observedItem: item.observedObject || 'Electrical connector', itemLocationInImage: item.location || 'Visible component area', nearestIdentifiableAssembly: engineAreaVisible ? broadArea : relationship.primaryVisibleAssembly || 'Visible component area', likelyRelationshipOrDestination: 'Electrical connector is physically disconnected from its visible mating receptacle/component interface.', relationshipConfidence: item.connectionStateConfidence ?? item.findingConfidence, visibleEvidence: item.directVisibleEvidence || item.visibleEvidence, vehicleContextEvidence: '', whatCannotBeConfirmed: 'Exact component identity cannot be confirmed from this image alone.', recommendedNextPhotoVerification: guidance });
+  });
+  return { ...relationship, status: 'READY', vehicleAreaLocation: areaNeedsRepair && engineAreaVisible ? broadArea : relationship.vehicleAreaLocation, locationConfidence: areaNeedsRepair && engineAreaVisible ? Math.max(70, relationship.locationConfidence || 0) : relationship.locationConfidence, primaryVisibleAssembly: engineAreaVisible && /\b(?:unknown|uncertain|cannot be confirmed)\b/i.test(String(relationship.primaryVisibleAssembly || '')) ? broadArea : relationship.primaryVisibleAssembly, locationEvidence: [...new Set([...(relationship.locationEvidence || []), ...evidence])].slice(0, 12), observedItems, recommendedNextPhotoVerification: guidance };
+}
+
 export const NO_VISIBLE_DEFECT_MESSAGE = 'No visible defect can be confirmed from this image. Inspect the component physically before making a repair decision.';
 const STARTER_CONTEXT_VERIFICATION = 'Widen the image to include the starter mounting location and verify whether the starter is installed before classifying the loose connections as a defect.';
 
@@ -881,7 +902,10 @@ export function reconcileVisualFindings(condition, { observation = null, relatio
   const hasConcern = finalFindings.some(item => item.findingType === 'POSSIBLE_CONCERN');
   const status = hasClearDefect ? 'OBSERVED_CONDITION' : hasConcern ? 'POSSIBLE_CONCERN_DETECTED' : base.status;
   const reason = reconciliationErrors.length && !finalFindings.length ? reconciliationReason('RECONCILE_NO_FINDINGS') : reconciliationErrors.length ? reconciliationReason('RECONCILE_PARTIAL') : reconciliationReason('RECONCILE_OK');
-  const result = { ...base, status, connectionAssessments: finalFindings, reconciliationErrors, reconciliation: { status: 'reconciled', findings: finalFindings, visualState: finalFindings[0] ? canonicalConnectionState(finalFindings[0].connectionState) : null, vehicleContextAvailable: vehicleContextState !== 'UNAVAILABLE', vehicleMismatch: vehicleContextState === 'MISMATCH' ? true : vehicleContextState === 'MATCH' ? false : null, conflicts: [], promotable: false, reason: reason.code, reasonDetail: reason }, crossFindingConsistency: { status: reconciliationErrors.length ? 'PARTIAL' : 'PASS', conflictsResolved, findingCount: finalFindings.length, rejectedFindingCount: reconciliationErrors.length, relationshipAnalysisAvailable: Boolean(relationship), stageOneObservationAvailable: Boolean(observation) } };
+  const directDisconnects = finalFindings.filter(item => item.connectionState === 'DISCONNECTED_VERIFIED' && /\b(?:electrical\s+connector|electrical\s+terminal|wire\s+harness)\b/i.test(`${item.observedObject || ''} ${item.directVisibleEvidence || item.visibleEvidence || ''}`) && directSeparationEvidence(item.directVisibleEvidence || item.visibleEvidence));
+  const disconnectGuidance = 'Reconnect the electrical connector fully and capture a follow-up image showing the connector seated and latched at the mating receptacle.';
+  const visibleDefects = directDisconnects.map(item => `Electrical connector visibly disconnected${item.location ? ` at ${item.location}` : ''}.`);
+  const result = { ...base, status, connectionAssessments: finalFindings, observedCondition: [...new Set([...(base.observedCondition || []), ...visibleDefects])], recommendedVerification: [...new Set([...(base.recommendedVerification || []), ...(directDisconnects.length ? [disconnectGuidance] : [])])], noVisibleConcernMessage: directDisconnects.length ? '' : base.noVisibleConcernMessage, unableToInspectReason: directDisconnects.length ? null : base.unableToInspectReason, reconciliationErrors, reconciliation: { status: 'reconciled', findings: finalFindings, visibleDefects, visualState: finalFindings[0] ? canonicalConnectionState(finalFindings[0].connectionState) : null, vehicleContextAvailable: vehicleContextState !== 'UNAVAILABLE', vehicleMismatch: vehicleContextState === 'MISMATCH' ? true : vehicleContextState === 'MATCH' ? false : null, conflicts: [], promotable: false, reason: reason.code, reasonDetail: reason }, crossFindingConsistency: { status: reconciliationErrors.length ? 'PARTIAL' : 'PASS', conflictsResolved, findingCount: finalFindings.length, rejectedFindingCount: reconciliationErrors.length, relationshipAnalysisAvailable: Boolean(relationship), stageOneObservationAvailable: Boolean(observation) } };
   const conflictEvaluation = evaluateCrossFindingConflicts(result);
   const finalEvidencePromotion = promoteFinalEvidence(result, conflictEvaluation);
   return { ...result, conflictEvaluation, finalEvidencePromotion, reconciliation: { ...result.reconciliation, conflicts: conflictEvaluation.conflicts, promotable: finalEvidencePromotion.eligible } };
@@ -932,7 +956,7 @@ export function buildCanonicalVisualState(componentIdentification, visualConditi
     source: 'RECONCILED_VISUAL_EVIDENCE'
   }));
   return {
-    version: '10.13.131',
+    version: '10.13.132',
     componentIdentity: {
       primaryComponent: componentIdentification?.primaryComponent || 'Unable to determine exact component',
       status: componentIdentification?.status || 'NOT_ANALYZED',
@@ -1276,6 +1300,7 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
   visualConditionInspection=mergeObservationWithCondition(visualObservation,visualConditionInspection);
   visualConditionInspection=fuseLocalizedVisualEvidence(visualConditionInspection,localizedVisualInspections);
   visualConditionInspection=reconcileVisualFindings(visualConditionInspection,{observation:visualObservation,relationship:vehicleAreaRelationshipAnalysis,vehicleContextState:vehicleContext?'MATCH':'UNAVAILABLE'});
+  vehicleAreaRelationshipAnalysis=reconcileVehicleAreaRelationship(vehicleAreaRelationshipAnalysis,visualConditionInspection);
   const conflictEvaluation=evaluateCrossFindingConflicts(visualConditionInspection);
   const finalEvidencePromotion=promoteFinalEvidence(visualConditionInspection,conflictEvaluation);
   visualConditionInspection={...visualConditionInspection,conflictEvaluation,finalEvidencePromotion,reconciliation:{...visualConditionInspection.reconciliation,conflicts:conflictEvaluation.conflicts,promotable:finalEvidencePromotion.eligible}};

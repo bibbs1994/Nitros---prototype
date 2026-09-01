@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildCanonicalVisualState, evaluateCrossFindingConflicts, promoteFinalEvidence, reconcileVisualFindings, validateVehicleAreaRelationship } from '../semantic-analyzer-core.mjs';
+import { buildCanonicalVisualState, evaluateCrossFindingConflicts, promoteFinalEvidence, reconcileVehicleAreaRelationship, reconcileVisualFindings, validateVehicleAreaRelationship } from '../semantic-analyzer-core.mjs';
 
 const finding = overrides => ({
   location: 'Central-left EGR-area connector', observedObject: 'Electrical connector', seatingStatus: 'NOT_RELIABLY_VISIBLE', findingType: 'SEATING_NOT_RELIABLY_VISIBLE', severity: 'UNDETERMINED', findingConfidence: 92, connectionState: 'INDETERMINATE', connectionStateConfidence: 92, visibleEvidence: 'Electrical connector body is visible, but its mating socket is obscured.', recommendedVerification: 'Photograph both connector halves and the latch from another angle.', safetyDrivabilityImpact: null, ...overrides
@@ -124,4 +124,15 @@ test('10.13.130 represents a real state contradiction without throwing or promot
   assert.equal(conflict.conflicts[0].type, 'CONNECTION_STATE_CONTRADICTION');
   assert.equal(promotion.status, 'BLOCKED_CONFLICT');
   assert.equal(promotion.promotedCount, 0);
+});
+
+test('10.13.132 preserves a visibly free electrical connector through location, defect, and photo guidance reconciliation', () => {
+  const disconnected = finding({ location: 'Center of engine compartment', observedObject: 'Electrical connector', connectionState: 'DISCONNECTED_VERIFIED', seatingStatus: 'SEPARATION_OR_GAP_VISIBLE', findingType: 'CLEAR_DEFECT', severity: 'HIGH', visibleEvidence: 'A free electrical connector is held beside its visible empty mating receptacle with a clear air gap.', findingConfidence: 96, connectionStateConfidence: 96 });
+  const condition = reconcile([disconnected]);
+  const relationship = reconcileVehicleAreaRelationship({ status: 'READY', vehicleAreaLocation: 'Location uncertain', locationConfidence: 40, locationEvidence: ['Engine compartment components are visible.'], vehicleContextSupport: [], primaryVisibleAssembly: 'Broad assembly cannot be confirmed', observedItems: [], expectedComponentCheck: { expectedMajorComponents: [], visiblyAccountedFor: [], possibleMissingOrRemovedComponent: 'No visually supported missing component detected.', supportingVisualEvidence: [], vehicleContextSupport: [], confidence: null, whatPreventsConfirmation: 'Exact component identity is not visible.', recommendedTechnicianVerification: 'Capture the mating interface.' }, whatPreventsConfirmation: 'Exact component identity is not visible.', recommendedNextPhotoVerification: 'Verify whether the connector is connected.' }, condition);
+  assert.match(condition.observedCondition.join(' '), /electrical connector visibly disconnected/i);
+  assert.match(condition.recommendedVerification.join(' '), /reconnect.*seated and latched/i);
+  assert.equal(relationship.vehicleAreaLocation, 'Engine compartment — visible electrical connector/component interface');
+  assert.match(relationship.observedItems[0].likelyRelationshipOrDestination, /physically disconnected/i);
+  assert.match(relationship.recommendedNextPhotoVerification, /reconnect.*seated and latched/i);
 });
