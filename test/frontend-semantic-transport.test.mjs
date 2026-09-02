@@ -37,12 +37,12 @@ test('10.12.28 canonical normalizer rejects malformed and incomplete semantic co
   const normalize=semanticNormalizer();assert.equal(normalize({semanticResult:'```json\n{bad json}\n```'}),null);assert.equal(normalize({semanticResult:{category:'AUTOMOTIVE_GRAPH'}}),null);
 });
 
-test('10.13.138 keeps the proven analyzer and production endpoint', () => {
-  assert.match(analyzer, /const BUILD='10\.13\.138'/);
-  assert.match(html, /10\.13\.138/);
+test('10.13.139 keeps the proven analyzer and production endpoint', () => {
+  assert.match(analyzer, /const BUILD='10\.13\.139'/);
+  assert.match(html, /10\.13\.139/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.13\.138'/);
+  assert.match(serviceWorker, /const VERSION = '10\.13\.139'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -82,11 +82,11 @@ test('automotive graphs route into Oliver with context-safe structured findings'
   for(const field of ['nitrosTemporalRoutingDecision','nitrosTemporalInterpretationPermissions','nitrosTemporalClaimValidation','nitrosTemporalClaimConflictDetected'])assert.ok(analyzer.includes(field),`missing temporal enforcement diagnostic ${field}`);
 });
 
-test('technician pointer evidence is preserved as the primary visual-analysis target', () => {
-  assert.match(analyzer,/TECHNICIAN-INDICATED TARGET — PRIMARY INSPECTION AREA/);
+test('technician pointer evidence remains contextual and cannot override whole-image primary selection', () => {
+  assert.match(analyzer,/TECHNICIAN-INDICATED TARGET — CONTEXTUAL INSPECTION AREA/);
   assert.match(analyzer,/pointerEvidence=\(result\.evidence\|\|\[\]\)\.find/);
   assert.match(analyzer,/No definite defect can be confirmed at the technician-indicated location from this image/);
-  assert.match(analyzer,/Analyze this target and its immediate connections before secondary nearby components/);
+  assert.match(analyzer,/primary selection follows the completed whole-image candidate sweep/);
 });
 
 test('electrical or wheel-area pointer targets run visible-circuit inspection and guidance without forcing a wiring diagram', () => {
@@ -119,7 +119,7 @@ test('current image context suppresses incompatible inherited visual targets whi
 
 test('a visible disconnected electrical connector is reported as an observation before its recommendation', () => {
   assert.match(analyzer,/Visible observation: Electrical connector appears disconnected\/unplugged/);
-  assert.match(analyzer,/Recommendation: \$\{escapeHtml\(item\.recommendedVerification\)\}/);
+  assert.match(analyzer,/Recommended technician verification:<\/strong> \$\{escapeHtml\(item\.recommendedVerification\)\}/);
   assert.match(core,/Condition confidence must be independent from component-identification confidence/);
 });
 
@@ -364,7 +364,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.13\.138'/);
+  assert.match(html, /version:'10\.13\.139'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {

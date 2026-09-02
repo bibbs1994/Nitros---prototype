@@ -27,9 +27,12 @@ test('late or mismatched vehicle results are rejected before rendering',()=>{
   assert.match(client,/sameVehicleContext\(requestedVehicleContext,vehicleContextBinding\)/);
 });
 
-test('accepted automotive relationship stages complete with deterministic PASS or FAIL',()=>{
+test('accepted automotive relationship stages distinguish pass, indeterminate, and degraded outcomes',()=>{
   assert.match(client,/function finalizeAcceptedAnalysisStages/);
-  assert.match(client,/set\(21,complete\?'PASS':'FAIL'\);set\(22,complete\?'PASS':'FAIL'\);set\(23,complete\?'PASS':'FAIL'\)/);
+  assert.match(client,/PASS — RELATIONSHIP ESTABLISHED/);
+  assert.match(client,/PASS — NO ABNORMAL RELATIONSHIP FOUND/);
+  assert.match(client,/INDETERMINATE — INSUFFICIENT VISIBLE EVIDENCE/);
+  assert.match(client,/DEGRADED — FALLBACK PRESERVED/);
   assert.match(client,/finalizeAcceptedAnalysisStages\(run,routed\)/);
   assert.match(client,/set\(24,contextPass\?'PASS':'FAIL'\);set\(25,contextPass\?'NOT DETERMINED':'FAIL'\)/);
   assert.match(client,/set\(24,'NOT AVAILABLE'\);set\(25,'NOT DETERMINED'\)/);

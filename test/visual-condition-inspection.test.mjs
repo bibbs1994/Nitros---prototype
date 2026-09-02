@@ -238,7 +238,7 @@ test('uncertain drivetrain identity remains one cautious label while a separate 
   try {
     const result=await analyzeSemanticImage(body,{apiKey:'test-key',fetchImpl:async()=>response([classifier,uncertainDrivetrain,clearConnector][call++])});
     const identified=result.semanticResult.componentIdentification, finding=result.semanticResult.visualConditionInspection.connectionAssessments[0];
-    assert.equal(identified.primaryComponent,'Drivetrain housing — exact assembly not confirmed');
+    assert.equal(identified.primaryComponent,'Powertrain housing — exact assembly not confirmed');
     assert.ok(identified.componentConfidence<=45);
     assert.equal(finding.findingType,'CLEAR_DEFECT');
     assert.equal(finding.findingConfidence,94);
