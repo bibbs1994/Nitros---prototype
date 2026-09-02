@@ -1,7 +1,7 @@
-/* Nitros 10.13.135 deep whole-image automotive vision. */
+/* Nitros 10.13.136 deep whole-image automotive vision. */
 (()=>{'use strict';
-const BUILD='10.13.135';
-  const SEMANTIC_REQUEST_TIMEOUT_MS=60_000;
+const BUILD='10.13.136';
+  const SEMANTIC_REQUEST_TIMEOUT_MS=290_000;
   // Automotive photographs are evidence. Send their original encoded bytes; do
   // not canvas-resize, crop, or recompress them on the client before inspection.
   const MAX_ANALYSIS_IMAGE_BYTES=12*1024*1024;

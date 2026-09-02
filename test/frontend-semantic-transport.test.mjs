@@ -5,12 +5,13 @@ import { readFile } from 'node:fs/promises';
 import { normalizeWiringField } from '../semantic-analyzer-core.mjs';
 
 const root = new URL('../', import.meta.url);
-const [analyzer, html, serviceWorker, endpoint, core] = await Promise.all([
+const [analyzer, html, serviceWorker, endpoint, core, vercelConfig] = await Promise.all([
   readFile(new URL('image-analysis-ad.js', root), 'utf8'),
   readFile(new URL('index.html', root), 'utf8'),
   readFile(new URL('sw.js', root), 'utf8'),
   readFile(new URL('api/semantic-image-analysis.mjs', root), 'utf8'),
-  readFile(new URL('semantic-analyzer-core.mjs', root), 'utf8')
+  readFile(new URL('semantic-analyzer-core.mjs', root), 'utf8'),
+  readFile(new URL('vercel.json', root), 'utf8')
 ]);
 
 function semanticNormalizer(){
@@ -36,12 +37,12 @@ test('10.12.28 canonical normalizer rejects malformed and incomplete semantic co
   const normalize=semanticNormalizer();assert.equal(normalize({semanticResult:'```json\n{bad json}\n```'}),null);assert.equal(normalize({semanticResult:{category:'AUTOMOTIVE_GRAPH'}}),null);
 });
 
-test('10.13.134 keeps the proven analyzer and production endpoint', () => {
-  assert.match(analyzer, /const BUILD='10\.13\.135'/);
-  assert.match(html, /10\.13\.135/);
+test('10.13.136 keeps the proven analyzer and production endpoint', () => {
+  assert.match(analyzer, /const BUILD='10\.13\.136'/);
+  assert.match(html, /10\.13\.136/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
-  assert.match(serviceWorker, /const VERSION = '10\.13\.135'/);
+  assert.match(serviceWorker, /const VERSION = '10\.13\.136'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });
 
@@ -363,7 +364,7 @@ test('AO wiring parser defensively normalizes legacy semantic field shapes', () 
   assert.match(analyzer, /Normalized power path/);
   assert.match(analyzer, /Visible test points/);
   assert.doesNotMatch(analyzer, /stringArray\(raw\[field\],field\)/);
-  assert.match(html, /version:'10\.13\.135'/);
+  assert.match(html, /version:'10\.13\.136'/);
 });
 
 test('VJ partial-readable wiring evidence retains reliable circuit data without inventing unreadable pins', () => {
@@ -434,10 +435,16 @@ test('CORS preflight explicitly allows the production request headers', () => {
 });
 
 test('semantic transport has a bounded client timeout while preserving image-reset aborts', () => {
-  assert.match(analyzer, /SEMANTIC_REQUEST_TIMEOUT_MS=60_000/);
+  assert.match(analyzer, /SEMANTIC_REQUEST_TIMEOUT_MS=290_000/);
   assert.match(analyzer, /new DOMException\('Semantic analysis timeout','TimeoutError'\)/);
   assert.match(analyzer, /signal\?\.addEventListener\('abort',forwardAbort,\{once:true\}\)/);
   assert.match(analyzer, /clearTimeout\(requestTimer\)/);
+});
+
+test('Vercel duration exceeds the bounded portal timeout for deep-vision completion', () => {
+  const config=JSON.parse(vercelConfig);
+  assert.equal(config.functions['api/semantic-image-analysis.mjs'].maxDuration,300);
+  assert.match(analyzer,/SEMANTIC_REQUEST_TIMEOUT_MS=290_000/);
 });
 
 test('response diagnostics retain sanitized structure without semantic values', () => {
