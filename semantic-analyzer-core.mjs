@@ -270,49 +270,157 @@ function tolerantWiringStrings(value) {
   return normalizeWiringField(value).map(node => node.component || node.description || [node.terminal,node.wire,node.circuit,node.voltageExpected].filter(Boolean).join(' — ')).filter(Boolean);
 }
 
-function validateAutomotiveComponent(raw) {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Component analyzer returned no structured result.');
-  if (!['IDENTIFIED', 'UNCERTAIN'].includes(raw.status)) throw new Error('Component analyzer status is invalid.');
-  const primaryComponent = typeof raw.primaryComponent === 'string' ? raw.primaryComponent.trim().slice(0, 160) : '';
-  if (!primaryComponent) throw new Error('Component analyzer returned no primary identification state.');
-  let normalizedConfidence = normalizeSemanticConfidence(raw.componentConfidence);
-  const drivetrain = raw.drivetrainDiscrimination;
-  if (!drivetrain || typeof drivetrain !== 'object' || Array.isArray(drivetrain)) throw new Error('Drivetrain discrimination result is missing.');
+const COMPONENT_NAME_ALIASES = ['primaryComponent','component','componentName','component_name','name','part','partName','part_name','identifiedComponent','specificComponent','label','title'];
+const COMPONENT_CONFIDENCE_ALIASES = ['componentConfidence','normalizedComponentConfidence','confidence','confidenceScore','confidence_score','score','probability','certainty'];
+const COMPONENT_AREA_ALIASES = ['area','location','vehicleArea','vehicle_area','region','systemLocation'];
+const COMPONENT_STATE_ALIASES = ['visualState','visual_state','connectionState','connection_state','finding','condition','state'];
+
+function componentValue(raw, aliases) {
+  if (!raw || typeof raw !== 'object') return undefined;
+  for (const key of aliases) if (raw[key] !== undefined && raw[key] !== null) return raw[key];
+  return undefined;
+}
+
+function componentText(raw, aliases, limit) {
+  if (!raw || typeof raw !== 'object') return '';
+  for (const key of aliases) {
+    const value = raw[key];
+    if (typeof value !== 'string' && typeof value !== 'number') continue;
+    const text = String(value).trim();
+    if (text) return text.slice(0, limit);
+  }
+  return '';
+}
+
+function componentStrings(raw, aliases, limit = 24) {
+  if (!raw || typeof raw !== 'object') return [];
+  const values = aliases.flatMap(key => Array.isArray(raw[key]) ? raw[key] : typeof raw[key] === 'string' || typeof raw[key] === 'number' ? [raw[key]] : []);
+  return [...new Set(values.filter(item => typeof item === 'string' || typeof item === 'number').map(item => String(item).trim()).filter(Boolean))].slice(0, limit);
+}
+
+function componentConfidence(rawConfidence) {
+  if (rawConfidence === null || rawConfidence === undefined) return { fraction: null, percent: null, status: 'UNKNOWN' };
+  const text = typeof rawConfidence === 'string' ? rawConfidence.trim() : rawConfidence;
+  const cleaned = typeof text === 'string' ? text.replace(/%$/, '').trim() : text;
+  if ((typeof cleaned !== 'number' && typeof cleaned !== 'string') || cleaned === '' || (typeof cleaned === 'string' && !/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(cleaned))) return { fraction: null, percent: null, status: 'INVALID' };
+  const numeric = Number(cleaned);
+  if (!Number.isFinite(numeric) || numeric < 0 || numeric > 100) return { fraction: null, percent: null, status: 'INVALID' };
+  const fraction = numeric <= 1 ? numeric : numeric / 100;
+  return { fraction, percent: Math.round(fraction * 100), status: 'NORMALIZED' };
+}
+
+function componentDebugValue(value, depth = 0) {
+  if (typeof value === 'string') return value.slice(0, 500);
+  if (typeof value === 'number' || typeof value === 'boolean' || value === null) return value;
+  if (depth >= 2) return '[nested value]';
+  if (Array.isArray(value)) return value.slice(0, 16).map(item => componentDebugValue(item, depth + 1));
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).slice(0, 32).map(([key, item]) => [String(key).slice(0, 80), componentDebugValue(item, depth + 1)]));
+  return null;
+}
+
+function componentCandidate(raw) {
+  const queue = [raw], seen = new Set();
+  while (queue.length) {
+    const candidate = queue.shift();
+    if (!candidate || typeof candidate !== 'object' || seen.has(candidate)) continue;
+    seen.add(candidate);
+    if (Array.isArray(candidate)) { queue.push(...candidate); continue; }
+    if ([...COMPONENT_NAME_ALIASES, ...COMPONENT_CONFIDENCE_ALIASES, 'supportingEvidence', 'evidence', 'description'].some(key => candidate[key] !== undefined)) return candidate;
+    for (const key of ['componentIdentification','componentResult','result','data','output_parsed','candidate','candidates']) if (candidate[key] !== undefined) queue.push(candidate[key]);
+  }
+  return null;
+}
+
+function normalizedComponentState(raw, evidenceText) {
+  const value = String(componentValue(raw, COMPONENT_STATE_ALIASES) || '').trim().toUpperCase().replace(/[\s-]+/g, '_');
+  if (/^(?:DISCONNECTED|UNPLUGGED|UNMATED|SEPARATED)$/.test(value)) return 'DISCONNECTED';
+  if (/^(?:PARTIALLY_CONNECTED|PARTIALLY_SEATED|NOT_FULLY_SEATED)$/.test(value)) return 'PARTIALLY_CONNECTED';
+  if (/^(?:CONNECTED|SEATED|MATED|ATTACHED)$/.test(value)) return 'CONNECTED';
+  if (/^(?:LOOSE|UNSECURED)$/.test(value)) return 'LOOSE';
+  if (directSeparationEvidence(evidenceText)) return 'DISCONNECTED';
+  if (partialSeatingEvidence(evidenceText)) return 'PARTIALLY_CONNECTED';
+  if (directMatingEvidence(evidenceText)) return 'CONNECTED';
+  return null;
+}
+
+function defaultDrivetrainDiscrimination() {
+  return { applicable: false, candidateType: 'OTHER', engineConnection: 'UNKNOWN', transmissionConnection: 'UNKNOWN', longitudinalShafts: 'UNKNOWN', lateralAxleOutputs: 'UNKNOWN', axleTubes: 'UNKNOWN', location: 'UNKNOWN', powerFlowRole: 'UNKNOWN', distinguishingFeaturesComplete: false, evidence: [], competingCandidate: null };
+}
+
+export function normalizeAutomotiveComponentResult(raw, context = {}) {
+  const candidate = componentCandidate(raw);
+  const semantic = context.semanticResult && typeof context.semanticResult === 'object' ? context.semanticResult : {};
+  const observation = context.observation && typeof context.observation === 'object' ? context.observation : {};
+  const observationObjects = Array.isArray(observation.objects) ? observation.objects.flatMap(item => [item?.type, item?.description]).filter(Boolean).map(String) : [];
+  const semanticObjects = Array.isArray(semantic.objects) ? semantic.objects.filter(item => typeof item === 'string') : [];
+  const fallbackObjects = [...semanticObjects, ...observationObjects].map(item => item.trim()).filter(Boolean);
+  const preferredFallback = fallbackObjects.find(item => /\b(?:connector|terminal|harness|sensor|valve|solenoid|motor|pump|alternator|starter|battery|hose|line|pipe|turbo|intake|manifold|engine|transmission|differential|transfer case|brake|suspension)\b/i.test(item)) || fallbackObjects[0] || '';
+  const incomingName = componentText(candidate, COMPONENT_NAME_ALIASES, 160);
+  const placeholderName = /^(?:unknown|none|n\/?a|unable to determine|technical component-analysis failure)$/i.test(incomingName);
+  const resolvedComponentName = (!placeholderName && incomingName) || preferredFallback.slice(0, 160) || '';
+  const description = componentText(candidate, ['description','componentDescription','component_description','summary','detail'], 500) || (typeof semantic.description === 'string' ? semantic.description.trim().slice(0, 500) : '');
+  const system = componentText(candidate, ['system','category','partCategory','part_category','type'], 160) || null;
+  const rawEvidence = componentStrings(candidate, ['supportingEvidence','evidence','visualEvidence','visual_evidence','observations'], 16);
+  const fallbackEvidence = [...(Array.isArray(semantic.evidence) ? semantic.evidence : []), ...(Array.isArray(semantic.automotiveEvidence) ? semantic.automotiveEvidence : []), ...(Array.isArray(observation.abnormalFindings) ? observation.abnormalFindings.flatMap(item => [item?.evidence, item?.visibleEvidence]) : [])].filter(item => typeof item === 'string').map(item => item.trim()).filter(Boolean);
+  const supportingEvidence = [...new Set([...rawEvidence, ...fallbackEvidence])].slice(0, 16);
+  if (!resolvedComponentName && !description && !system && !supportingEvidence.length) return null;
+  const primaryComponent = resolvedComponentName || 'Visible automotive component';
+  const rawConfidence = componentValue(candidate, COMPONENT_CONFIDENCE_ALIASES);
+  const normalized = componentConfidence(rawConfidence);
+  const normalizedStateConfidence = componentConfidence(componentValue(candidate, ['stateConfidence','state_confidence','physicalStateConfidence','connectionConfidence','connection_confidence']));
+  const stateEvidence = [description, ...supportingEvidence].join(' ');
+  const state = normalizedComponentState(candidate, stateEvidence);
+  const area = componentText(candidate, COMPONENT_AREA_ALIASES, 240) || deriveGeneralVehicleArea([primaryComponent, system, ...supportingEvidence].filter(Boolean).join(' '));
+  const incomingStatus = String(candidate?.status || '').trim().toUpperCase();
+  let status = ['IDENTIFIED','UNCERTAIN'].includes(incomingStatus) ? incomingStatus : 'UNCERTAIN';
+  let uncertaintyReason = componentText(candidate, ['uncertaintyReason','uncertainty_reason','limitation','limitations','whatCannotBeConfirmed'], 500) || null;
+  if (status === 'IDENTIFIED' && !rawEvidence.length) {
+    status = 'UNCERTAIN';
+    uncertaintyReason = uncertaintyReason || 'The component name is retained, but the dedicated result did not supply defining visual evidence.';
+  }
+  if (!candidate) uncertaintyReason = uncertaintyReason || 'The dedicated component response was incomplete; the component description was preserved from validated semantic image evidence.';
+  if (normalized.status === 'INVALID') uncertaintyReason = uncertaintyReason || 'The supplied component confidence was not usable; identity is retained with unknown confidence.';
   const drivetrainTypes = ['TRANSFER_CASE', 'DIFFERENTIAL', 'TRANSMISSION', 'TRANSAXLE'];
-  const drivetrainEvidence = cleanStringArray(drivetrain.evidence, 'drivetrainDiscrimination.evidence').slice(0, 12);
+  const rawDrivetrain = candidate?.drivetrainDiscrimination && typeof candidate.drivetrainDiscrimination === 'object' && !Array.isArray(candidate.drivetrainDiscrimination) ? candidate.drivetrainDiscrimination : defaultDrivetrainDiscrimination();
+  const drivetrainEvidence = componentStrings(rawDrivetrain, ['evidence'], 12);
+  const drivetrain = { ...defaultDrivetrainDiscrimination(), applicable: Boolean(rawDrivetrain.applicable), candidateType: drivetrainTypes.includes(rawDrivetrain.candidateType) ? rawDrivetrain.candidateType : 'OTHER', engineConnection: String(rawDrivetrain.engineConnection || 'UNKNOWN'), transmissionConnection: String(rawDrivetrain.transmissionConnection || 'UNKNOWN'), longitudinalShafts: String(rawDrivetrain.longitudinalShafts || 'UNKNOWN'), lateralAxleOutputs: String(rawDrivetrain.lateralAxleOutputs || 'UNKNOWN'), axleTubes: String(rawDrivetrain.axleTubes || 'UNKNOWN'), location: String(rawDrivetrain.location || 'UNKNOWN'), powerFlowRole: String(rawDrivetrain.powerFlowRole || 'UNKNOWN'), distinguishingFeaturesComplete: Boolean(rawDrivetrain.distinguishingFeaturesComplete), evidence: drivetrainEvidence, competingCandidate: typeof rawDrivetrain.competingCandidate === 'string' ? rawDrivetrain.competingCandidate.trim().slice(0, 120) || null : null };
+  let normalizedConfidence = normalized.percent;
   const primaryKey = primaryComponent.toLowerCase();
   const namedDrivetrainType = /transfer\s*case/.test(primaryKey) ? 'TRANSFER_CASE' : /transaxle/.test(primaryKey) ? 'TRANSAXLE' : /differential|final\s*drive/.test(primaryKey) ? 'DIFFERENTIAL' : /transmission/.test(primaryKey) ? 'TRANSMISSION' : null;
-  if (drivetrainTypes.includes(drivetrain.candidateType) && !drivetrain.applicable) throw new Error('Drivetrain candidate was not discrimination-checked.');
-  if (namedDrivetrainType && drivetrain.candidateType !== namedDrivetrainType) throw new Error('Primary drivetrain identification conflicts with the discrimination result.');
-  if (drivetrain.applicable && !drivetrainEvidence.length) throw new Error('Drivetrain discrimination has no spatial evidence.');
+  const drivetrainConflict = Boolean(namedDrivetrainType && drivetrain.applicable && drivetrain.candidateType !== 'OTHER' && drivetrain.candidateType !== namedDrivetrainType);
+  if (namedDrivetrainType && (!drivetrain.applicable || drivetrain.candidateType !== namedDrivetrainType || !drivetrainEvidence.length)) {
+    status = 'UNCERTAIN';
+    normalizedConfidence = normalizedConfidence === null ? null : Math.min(84, normalizedConfidence);
+    uncertaintyReason = uncertaintyReason || (drivetrainConflict ? 'Primary drivetrain identification conflicts with the discrimination result; the name is retained only as an uncertain candidate.' : 'The drivetrain identity is retained as uncertain because complete spatial discrimination evidence was not supplied.');
+  }
   if (drivetrain.applicable && !drivetrain.distinguishingFeaturesComplete && normalizedConfidence !== null) normalizedConfidence = Math.min(84, normalizedConfidence);
-  const likelyConnectionsOrDestinations = Array.isArray(raw.likelyConnectionsOrDestinations) ? cleanStringArray(raw.likelyConnectionsOrDestinations, 'likelyConnectionsOrDestinations').slice(0, 8) : [];
+  const likelyConnectionsOrDestinations = componentStrings(candidate, ['likelyConnectionsOrDestinations','likelyDestinations','destinations','connections'], 8);
   const result = {
-    status: raw.status,
+    name: primaryComponent,
+    category: system,
+    description: description || null,
+    confidence: normalizedConfidence === null ? null : normalizedConfidence / 100,
+    area,
+    state,
+    stateConfidence: normalizedStateConfidence.fraction,
+    evidence: supportingEvidence,
+    source: candidate ? 'semantic' : 'semantic-fallback',
+    confidenceStatus: normalized.status,
+    rawComponentResult: candidate ? componentDebugValue(raw) : null,
+    status,
     primaryComponent,
     componentConfidence: normalizedConfidence,
-    rawComponentConfidence: raw.componentConfidence ?? null,
+    rawComponentConfidence: rawConfidence ?? null,
     normalizedComponentConfidence: normalizedConfidence,
-    system: typeof raw.system === 'string' ? raw.system.trim().slice(0, 160) || null : null,
-    secondaryComponents: cleanStringArray(raw.secondaryComponents, 'secondaryComponents').slice(0, 12),
-    supportingEvidence: cleanStringArray(raw.supportingEvidence, 'supportingEvidence').slice(0, 16),
-    possibleAlternatives: cleanStringArray(raw.possibleAlternatives, 'possibleAlternatives').slice(0, 8),
+    normalizedVisualState: state,
+    normalizedVehicleArea: area,
+    system,
+    secondaryComponents: componentStrings(candidate, ['secondaryComponents','secondary_components','relatedComponents','related_components'], 12),
+    supportingEvidence,
+    possibleAlternatives: componentStrings(candidate, ['possibleAlternatives','possible_alternatives','alternatives','candidates'], 8),
     likelyConnectionsOrDestinations,
-    uncertaintyReason: typeof raw.uncertaintyReason === 'string' ? raw.uncertaintyReason.trim().slice(0, 500) || null : null,
-    drivetrainDiscrimination: {
-      applicable: Boolean(drivetrain.applicable),
-      candidateType: drivetrainTypes.includes(drivetrain.candidateType) ? drivetrain.candidateType : 'OTHER',
-      engineConnection: String(drivetrain.engineConnection || 'UNKNOWN'),
-      transmissionConnection: String(drivetrain.transmissionConnection || 'UNKNOWN'),
-      longitudinalShafts: String(drivetrain.longitudinalShafts || 'UNKNOWN'),
-      lateralAxleOutputs: String(drivetrain.lateralAxleOutputs || 'UNKNOWN'),
-      axleTubes: String(drivetrain.axleTubes || 'UNKNOWN'),
-      location: String(drivetrain.location || 'UNKNOWN'),
-      powerFlowRole: String(drivetrain.powerFlowRole || 'UNKNOWN'),
-      distinguishingFeaturesComplete: Boolean(drivetrain.distinguishingFeaturesComplete),
-      evidence: drivetrainEvidence,
-      competingCandidate: typeof drivetrain.competingCandidate === 'string' ? drivetrain.competingCandidate.trim().slice(0, 120) || null : null
-    }
+    uncertaintyReason,
+    drivetrainDiscrimination: drivetrain
   };
   // A wire or connector can suggest where a component normally connects, but it is not
   // the component housing. Keep that inference separate and prevent a confident starter
@@ -340,8 +448,15 @@ function validateAutomotiveComponent(raw) {
     result.componentConfidence = result.normalizedComponentConfidence = result.normalizedComponentConfidence === null ? null : Math.min(45, result.normalizedComponentConfidence);
     result.uncertaintyReason = result.uncertaintyReason || 'Visible housing geometry does not establish one exact drivetrain assembly.';
   }
-  if (result.status === 'IDENTIFIED' && !result.supportingEvidence.length) throw new Error('Component identification has no visible supporting evidence.');
-  if (result.status === 'UNCERTAIN' && !result.uncertaintyReason) throw new Error('Component uncertainty reason is missing.');
+  if (result.status === 'UNCERTAIN' && !result.uncertaintyReason) result.uncertaintyReason = 'Exact component identity is not fully established by the available visible evidence.';
+  result.name = result.primaryComponent;
+  result.confidence = result.normalizedComponentConfidence === null ? null : result.normalizedComponentConfidence / 100;
+  return result;
+}
+
+function validateAutomotiveComponent(raw, context = {}) {
+  const result = normalizeAutomotiveComponentResult(raw, context);
+  if (!result) throw new Error('Component analyzer returned no usable component result.');
   return result;
 }
 
@@ -364,6 +479,49 @@ function deriveRelationshipPhotoGuidance(state, evidence = '') {
   if (state === 'DISCONNECTED' && /\b(?:hose|line|pipe|port|nipple|fitting)\b/i.test(text)) return 'Capture the hose or line end and corresponding port from an angle showing both mating surfaces.';
   if (/\b(?:mount|bracket|fastener|attachment|retainer)\b/i.test(text)) return 'Capture the component mounting point and surrounding attachment from a closer angle.';
   return 'Capture additional angles of the area if verification of hidden connections or mounting points is required.';
+}
+
+function componentContextIsUnseen(evidence) {
+  return /\b(?:mating|destination|socket|receptacle|port|fitting|attachment point)\b[^.]{0,100}\b(?:not visible|outside (?:the )?(?:image|frame)|out of frame|cannot be (?:seen|identified|determined|confirmed)|unknown)\b/i.test(String(evidence || ''));
+}
+
+export function canonicalComponentVisualFinding(component) {
+  if (!component || typeof component !== 'object') return null;
+  const evidence = [...(Array.isArray(component.evidence) ? component.evidence : []), ...(Array.isArray(component.supportingEvidence) ? component.supportingEvidence : []), component.description].filter(Boolean).map(String).join(' ').trim().slice(0, 500);
+  if (!evidence) return null;
+  const state = component.state || component.normalizedVisualState || null;
+  const location = String(component.area || component.normalizedVehicleArea || 'Image-relative location cannot be determined reliably.').slice(0, 240);
+  const observedObject = String(component.name || component.primaryComponent || 'Visible automotive component').slice(0, 240);
+  const contextUnseen = componentContextIsUnseen(evidence);
+  const pairVisible = /\b(?:both|two)\b[^.]{0,100}\b(?:halves|mating|connector|socket|receptacle|post|port|fitting|coupler)\b[^.]{0,100}\bvisible\b|\bvisible\b[^.]{0,100}\b(?:connector|terminal|hose|line|pipe)\b[^.]{0,100}\b(?:socket|receptacle|post|port|fitting|coupler)\b/i.test(evidence);
+  const disconnected = state === 'DISCONNECTED' && directSeparationEvidence(evidence) && (!contextUnseen || pairVisible);
+  const partiallyConnected = state === 'PARTIALLY_CONNECTED' && partialSeatingEvidence(evidence) && (!contextUnseen || pairVisible);
+  const connected = state === 'CONNECTED' && directMatingEvidence(evidence);
+  const confidence = Number.isFinite(component.stateConfidence) ? Math.round(component.stateConfidence * 100) : disconnected || partiallyConnected || connected ? 75 : 60;
+  if (!disconnected && !partiallyConnected && !connected && !contextUnseen) return null;
+  const handoffEvidence = contextUnseen && !pairVisible ? `${observedObject} is visible, but its intended mating point is outside the image or cannot be identified; physical connection state cannot be verified.` : evidence;
+  const physicalState = disconnected ? 'DISCONNECTED_VERIFIED' : partiallyConnected ? 'PARTIALLY_SEATED' : connected ? 'CONNECTED_VERIFIED' : 'INDETERMINATE';
+  const findingType = disconnected || partiallyConnected ? 'CLEAR_DEFECT' : connected ? 'NO_DEFECT_VISIBLE' : 'UNVERIFIED_CONDITION';
+  const seatingStatus = disconnected ? 'SEPARATION_OR_GAP_VISIBLE' : partiallyConnected ? 'POSSIBLE_IMPROPER_SEATING' : connected ? 'NO_GAP_OR_SEPARATION_VISIBLE' : 'COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE';
+  const guidance = deriveRelationshipPhotoGuidance(disconnected ? 'DISCONNECTED' : partiallyConnected ? 'PARTIALLY_CONNECTED' : connected ? 'CONNECTED' : 'CANNOT_VERIFY', `${observedObject} ${evidence}`);
+  return { findingId: 'canonical-component-state', sourceStage: 'CANONICAL_COMPONENT_HANDOFF', location, observedObject, seatingStatus, findingType, severity: disconnected || partiallyConnected ? 'MODERATE' : 'UNDETERMINED', findingConfidence: confidence, connectionState: physicalState, connectionStateConfidence: confidence, visibleEvidence: handoffEvidence, directVisibleEvidence: handoffEvidence, reportedComponentEvidence: evidence, matingComponentVisible: pairVisible || connected, directDamageVisible: disconnected || partiallyConnected, missingContext: contextUnseen && !pairVisible ? 'The intended mating point is outside the image or cannot be identified; physical connection state remains unverified.' : null, recommendedVerification: guidance, safetyDrivabilityImpact: null, evidenceProvenance: 'CANONICAL_COMPONENT_HANDOFF' };
+}
+
+export function mergeCanonicalComponentEvidence(condition, component) {
+  const base = condition && typeof condition === 'object' ? condition : { status: 'UNVERIFIED_CONDITION', conditionConfidence: null, rawConditionConfidence: null, normalizedConditionConfidence: null, observedCondition: [], possibleConcerns: [], connectionAssessments: [], noVisibleConcernMessage: '', unableToInspectReason: null, visibleEvidence: [], recommendedVerification: [], safetyDrivabilityImpact: null };
+  const finding = canonicalComponentVisualFinding(component);
+  if (!finding) return base;
+  const existing = Array.isArray(base.connectionAssessments) ? base.connectionAssessments : [];
+  const duplicate = existing.some(item => canonicalComponentFamily(item?.observedObject || observedObjectFor(item)) === canonicalComponentFamily(finding.observedObject) && locationBucket(item?.location) === locationBucket(finding.location));
+  return duplicate ? base : { ...base, connectionAssessments: [...existing, finding] };
+}
+
+export function buildVehicleAreaRelationshipFallback(context = {}) {
+  const component = context.componentIdentification || {};
+  const finding = canonicalComponentVisualFinding(component);
+  const evidence = [...(component.supportingEvidence || []), ...(context.semanticResult?.automotiveEvidence || []), ...(context.semanticResult?.evidence || [])].filter(Boolean).map(String);
+  const item = finding ? [{ observedItem: finding.observedObject, itemLocationInImage: finding.location, nearestIdentifiableAssembly: component.primaryComponent || finding.observedObject, likelyRelationshipOrDestination: 'Physical relationship to the visible or expected mating point', relationshipConfidence: finding.connectionStateConfidence, intendedDestination: component.primaryComponent || finding.observedObject, intendedRelationship: 'Physical connection or attachment', physicalConnectionState: finding.connectionState === 'DISCONNECTED_VERIFIED' ? 'DISCONNECTED' : finding.connectionState === 'PARTIALLY_SEATED' ? 'PARTIALLY_CONNECTED' : finding.connectionState === 'CONNECTED_VERIFIED' ? 'CONNECTED' : 'CANNOT_VERIFY', physicalStateConfidence: finding.connectionStateConfidence, visibleStateEvidence: finding.directVisibleEvidence, visibleEvidence: finding.visibleEvidence, vehicleContextEvidence: '', whatCannotBeConfirmed: finding.missingContext || 'Exact component identity and hidden connection integrity require physical confirmation.', recommendedNextPhotoVerification: finding.recommendedVerification }] : [];
+  return validateVehicleAreaRelationship({ status: 'INSUFFICIENT_CONTEXT', vehicleAreaLocation: component.area || component.normalizedVehicleArea || '', locationConfidence: null, locationEvidence: evidence, vehicleContextSupport: [], primaryVisibleAssembly: component.primaryComponent || '', observedItems: item, expectedComponentCheck: { expectedMajorComponents: [], visiblyAccountedFor: [], possibleMissingOrRemovedComponent: 'No visually supported missing component detected.', supportingVisualEvidence: [], vehicleContextSupport: [], confidence: null, whatPreventsConfirmation: 'No visually supported missing component can be confirmed from this image.', recommendedTechnicianVerification: 'Take a wider, well-lit image showing the mounting area and all nearby connectors.', topologyInventory: [], missingAssemblyCandidates: [] }, whatPreventsConfirmation: 'The dedicated relationship result was unavailable; generalized location and directly supported physical state were preserved.', recommendedNextPhotoVerification: finding?.recommendedVerification || deriveRelationshipPhotoGuidance('CANNOT_VERIFY', evidence.join(' ')) }, context);
 }
 
 export function validateVehicleAreaRelationship(raw, context = {}) {
@@ -1078,12 +1236,15 @@ export function buildCanonicalVisualState(componentIdentification, visualConditi
     source: 'RECONCILED_VISUAL_EVIDENCE'
   }));
   return {
-    version: '10.13.136',
+    version: '10.13.137',
     componentIdentity: {
-      primaryComponent: componentIdentification?.primaryComponent || 'Unable to determine exact component',
+      name: componentIdentification?.name || componentIdentification?.primaryComponent || 'Unable to determine exact component',
+      primaryComponent: componentIdentification?.name || componentIdentification?.primaryComponent || 'Unable to determine exact component',
       status: componentIdentification?.status || 'NOT_ANALYZED',
+      canonicalConfidence: componentIdentification?.confidence ?? null,
       confidence: componentIdentification?.normalizedComponentConfidence ?? componentIdentification?.componentConfidence ?? null,
-      source: 'COMPONENT_IDENTIFICATION_PASS'
+      confidenceStatus: componentIdentification?.confidenceStatus || (componentIdentification?.confidence === null ? 'UNKNOWN' : 'NORMALIZED'),
+      source: componentIdentification?.source || 'COMPONENT_IDENTIFICATION_PASS'
     },
     connectionStates,
     downstreamOverrideAllowed: false,
@@ -1278,17 +1439,27 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
         signal: AbortSignal.timeout(Math.min(timeoutMs, COMPONENT_TIMEOUT_MS))
       });
       const componentBody = await componentResponse.json().catch(() => null);
-      markDiagnostic(diagnostic, 'N_COMPONENT_RESPONSE_RECEIVED', { componentResponseReceived: true, componentResponseOk: componentResponse.ok, componentHttpStatus: componentResponse.status, componentElapsedMs: Math.max(0, Date.now() - componentStartedAt) });
+      markDiagnostic(diagnostic, 'N_COMPONENT_RESPONSE_RECEIVED', { componentResponseReceived: true, componentResponseOk: componentResponse.ok, componentHttpStatus: componentResponse.status, componentResponseStatus: componentBody?.status || null, componentIncompleteReason: componentBody?.incomplete_details?.reason || null, componentElapsedMs: Math.max(0, Date.now() - componentStartedAt) });
       if (!componentResponse.ok) throw Object.assign(new Error(componentBody?.error?.message || `Component request failed with HTTP ${componentResponse.status}.`), { componentErrorCategory: classifyOpenAIError(componentResponse.status, componentBody), componentHttpStatus: componentResponse.status });
       if (!componentBody) throw new Error('Component response was not valid JSON.');
-      const componentParsed = JSON.parse(extractOutputText(componentBody));
-      componentIdentification = { ...validateAutomotiveComponent(componentParsed), semanticRequestId: transactionId, imageHash };
-      markDiagnostic(diagnostic, 'O_COMPONENT_RESULT_EXTRACTED', { componentResponseParsed: true, componentResultPresent: true, componentConfidenceNormalized: componentIdentification.normalizedComponentConfidence !== null, componentStatus: componentIdentification.status, componentErrorCategory: null, componentErrorMessage: null });
+      let componentParsed = null, componentParseError = null;
+      try { componentParsed = JSON.parse(extractOutputText(componentBody)); }
+      catch (error) { componentParseError = error; }
+      componentIdentification = { ...validateAutomotiveComponent(componentParsed, { semanticResult, observation: visualObservation }), semanticRequestId: transactionId, imageHash };
+      const componentFallbackApplied = componentIdentification.source === 'semantic-fallback';
+      const componentErrorMessage = componentFallbackApplied ? sanitizeDiagnosticText(componentParseError?.message || (componentBody?.status === 'incomplete' ? 'The dedicated component response was incomplete; validated semantic evidence was preserved.' : 'The dedicated component result was unavailable; validated semantic evidence was preserved.')) : null;
+      markDiagnostic(diagnostic, 'O_COMPONENT_RESULT_EXTRACTED', { componentResponseParsed: Boolean(componentParsed), componentResultPresent: true, componentConfidenceNormalized: componentIdentification.confidenceStatus === 'NORMALIZED', componentConfidenceStatus: componentIdentification.confidenceStatus, componentStatus: componentIdentification.status, componentResultSource: componentIdentification.source, componentFallbackApplied, rawComponentResult: componentIdentification.rawComponentResult, normalizedComponentName: componentIdentification.name, normalizedComponentConfidence: componentIdentification.confidence, normalizedComponentState: componentIdentification.state, normalizedVehicleArea: componentIdentification.area, componentErrorCategory: componentFallbackApplied ? 'COMPONENT_RESPONSE_INCOMPLETE' : null, componentErrorMessage });
     } catch (error) {
       const timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError' || /timed out|timeout/i.test(String(error?.message || ''));
       const safeMessage = timedOut ? 'Specific component identification timeout.' : sanitizeDiagnosticText(error?.message) || 'Specific component identification failed.';
-      componentIdentification = { status: 'FAILED', primaryComponent: 'Technical component-analysis failure', componentConfidence: null, rawComponentConfidence: null, normalizedComponentConfidence: null, system: null, secondaryComponents: [], supportingEvidence: [], possibleAlternatives: [], uncertaintyReason: safeMessage, semanticRequestId: transactionId, imageHash };
-      markDiagnostic(diagnostic, 'O_COMPONENT_RESULT_FAILED', { componentIdentificationAttempted: true, componentResponseReceived: Boolean(diagnostic.componentResponseReceived), componentResponseParsed: false, componentResultPresent: false, componentConfidenceNormalized: false, componentErrorCategory: error?.componentErrorCategory || (timedOut ? 'OPENAI_TIMEOUT' : 'COMPONENT_ANALYSIS_ERROR'), componentErrorMessage: safeMessage, componentHttpStatus: error?.componentHttpStatus ?? diagnostic.componentHttpStatus ?? null, componentElapsedMs: Math.max(0, Date.now() - componentStartedAt) });
+      const recovered = normalizeAutomotiveComponentResult(null, { semanticResult, observation: visualObservation });
+      if (recovered) {
+        componentIdentification = { ...recovered, uncertaintyReason: recovered.uncertaintyReason || safeMessage, semanticRequestId: transactionId, imageHash };
+        markDiagnostic(diagnostic, 'O_COMPONENT_RESULT_RECOVERED', { componentIdentificationAttempted: true, componentResponseReceived: Boolean(diagnostic.componentResponseReceived), componentResponseParsed: false, componentResultPresent: true, componentConfidenceNormalized: false, componentConfidenceStatus: componentIdentification.confidenceStatus, componentStatus: componentIdentification.status, componentResultSource: componentIdentification.source, componentFallbackApplied: true, rawComponentResult: null, normalizedComponentName: componentIdentification.name, normalizedComponentConfidence: componentIdentification.confidence, normalizedComponentState: componentIdentification.state, normalizedVehicleArea: componentIdentification.area, componentErrorCategory: error?.componentErrorCategory || (timedOut ? 'OPENAI_TIMEOUT' : 'COMPONENT_ANALYSIS_ERROR'), componentErrorMessage: safeMessage, componentHttpStatus: error?.componentHttpStatus ?? diagnostic.componentHttpStatus ?? null, componentElapsedMs: Math.max(0, Date.now() - componentStartedAt) });
+      } else {
+        componentIdentification = { name: 'Technical component-analysis failure', category: null, description: null, confidence: null, area: null, state: null, stateConfidence: null, evidence: [], source: 'technical-failure', confidenceStatus: 'UNKNOWN', rawComponentResult: null, status: 'FAILED', primaryComponent: 'Technical component-analysis failure', componentConfidence: null, rawComponentConfidence: null, normalizedComponentConfidence: null, normalizedVisualState: null, normalizedVehicleArea: null, system: null, secondaryComponents: [], supportingEvidence: [], possibleAlternatives: [], likelyConnectionsOrDestinations: [], uncertaintyReason: safeMessage, drivetrainDiscrimination: defaultDrivetrainDiscrimination(), semanticRequestId: transactionId, imageHash };
+        markDiagnostic(diagnostic, 'O_COMPONENT_RESULT_FAILED', { componentIdentificationAttempted: true, componentResponseReceived: Boolean(diagnostic.componentResponseReceived), componentResponseParsed: false, componentResultPresent: false, componentConfidenceNormalized: false, componentConfidenceStatus: 'UNKNOWN', componentStatus: 'FAILED', componentResultSource: 'technical-failure', componentFallbackApplied: false, rawComponentResult: null, normalizedComponentName: null, normalizedComponentConfidence: null, normalizedComponentState: null, normalizedVehicleArea: null, componentErrorCategory: error?.componentErrorCategory || (timedOut ? 'OPENAI_TIMEOUT' : 'COMPONENT_ANALYSIS_ERROR'), componentErrorMessage: safeMessage, componentHttpStatus: error?.componentHttpStatus ?? diagnostic.componentHttpStatus ?? null, componentElapsedMs: Math.max(0, Date.now() - componentStartedAt) });
+      }
     }
   } else {
     markDiagnostic(diagnostic, 'K_SEMANTIC_OUTPUT_EXTRACTED', { componentIdentificationAttempted: false, componentIdentificationSkipped: true });
@@ -1308,7 +1479,13 @@ Return a technician-friendly broad vehicleAreaLocation only when supported (for 
       vehicleAreaRelationshipAnalysis = { ...validateVehicleAreaRelationship(JSON.parse(extractOutputText(relationshipBody)),{componentIdentification,semanticResult,observation:visualObservation}), semanticRequestId: transactionId, imageHash };
       markDiagnostic(diagnostic, 'R_VEHICLE_AREA_RELATIONSHIP_RESULT_EXTRACTED', { vehicleAreaRelationshipResultPresent: true, vehicleAreaRelationshipStatus: vehicleAreaRelationshipAnalysis.status, vehicleAreaRelationshipConfidenceNormalized: vehicleAreaRelationshipAnalysis.locationConfidence !== null, vehicleAreaSource:vehicleAreaRelationshipAnalysis.vehicleAreaSource,vehicleAreaReason:vehicleAreaRelationshipAnalysis.vehicleAreaReason,relationshipSource:vehicleAreaRelationshipAnalysis.relationshipSource,relationshipReason:vehicleAreaRelationshipAnalysis.relationshipReason,photoGuidanceSource:vehicleAreaRelationshipAnalysis.photoGuidanceSource,photoGuidanceReason:vehicleAreaRelationshipAnalysis.photoGuidanceReason,expectedComponentGapDetection:'PASS', missingAssemblyReasoning:'PASS' });
     } catch (error) {
-      markDiagnostic(diagnostic, 'R_VEHICLE_AREA_RELATIONSHIP_FAILED', { vehicleAreaRelationshipResultPresent: false, vehicleAreaRelationshipErrorMessage: sanitizeDiagnosticText(error?.message), vehicleAreaRelationshipElapsedMs: Math.max(0, Date.now() - relationshipStartedAt) });
+      const relationshipErrorMessage = sanitizeDiagnosticText(error?.message);
+      try {
+        vehicleAreaRelationshipAnalysis = { ...buildVehicleAreaRelationshipFallback({ componentIdentification, semanticResult, observation: visualObservation }), semanticRequestId: transactionId, imageHash };
+        markDiagnostic(diagnostic, 'R_VEHICLE_AREA_RELATIONSHIP_RECOVERED', { vehicleAreaRelationshipResultPresent: true, vehicleAreaRelationshipStatus: vehicleAreaRelationshipAnalysis.status, vehicleAreaRelationshipConfidenceNormalized: vehicleAreaRelationshipAnalysis.locationConfidence !== null, vehicleAreaRelationshipFallbackApplied: true, vehicleAreaRelationshipErrorMessage: relationshipErrorMessage, vehicleAreaSource: vehicleAreaRelationshipAnalysis.vehicleAreaSource, vehicleAreaReason: vehicleAreaRelationshipAnalysis.vehicleAreaReason, relationshipSource: vehicleAreaRelationshipAnalysis.relationshipSource, relationshipReason: vehicleAreaRelationshipAnalysis.relationshipReason, photoGuidanceSource: vehicleAreaRelationshipAnalysis.photoGuidanceSource, photoGuidanceReason: vehicleAreaRelationshipAnalysis.photoGuidanceReason, relationshipFindingCount: vehicleAreaRelationshipAnalysis.observedItems.length, vehicleAreaRelationshipElapsedMs: Math.max(0, Date.now() - relationshipStartedAt) });
+      } catch (fallbackError) {
+        markDiagnostic(diagnostic, 'R_VEHICLE_AREA_RELATIONSHIP_FAILED', { vehicleAreaRelationshipResultPresent: false, vehicleAreaRelationshipFallbackApplied: false, vehicleAreaRelationshipErrorMessage: sanitizeDiagnosticText(fallbackError?.message || error?.message), vehicleAreaRelationshipElapsedMs: Math.max(0, Date.now() - relationshipStartedAt) });
+      }
     }
   } else markDiagnostic(diagnostic, diagnostic.stage, { vehicleAreaRelationshipAttempted: false, vehicleAreaRelationshipSkipped: true, vehicleAreaRelationshipSkipReason: 'NON_AUTOMOTIVE_CATEGORY' });
   let visualConditionInspection = null;
@@ -1431,6 +1608,7 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
   } else markDiagnostic(diagnostic, diagnostic.stage, { documentExtractionAttempted: false, documentExtractionSkipped: true });
   visualConditionInspection=mergeObservationWithCondition(visualObservation,visualConditionInspection);
   visualConditionInspection=fuseLocalizedVisualEvidence(visualConditionInspection,localizedVisualInspections);
+  visualConditionInspection=mergeCanonicalComponentEvidence(visualConditionInspection,componentIdentification);
   visualConditionInspection=reconcileVisualFindings(visualConditionInspection,{observation:visualObservation,relationship:vehicleAreaRelationshipAnalysis,vehicleContextState:vehicleContext?'MATCH':'UNAVAILABLE'});
   vehicleAreaRelationshipAnalysis=reconcileVehicleAreaRelationship(vehicleAreaRelationshipAnalysis,visualConditionInspection);
   if(vehicleAreaRelationshipAnalysis)markDiagnostic(diagnostic,'S_RELATIONSHIP_RECOVERY_COMPLETE',{vehicleAreaRelationshipResultPresent:true,vehicleAreaRelationshipStatus:'READY',vehicleAreaSource:vehicleAreaRelationshipAnalysis.vehicleAreaSource,vehicleAreaReason:vehicleAreaRelationshipAnalysis.vehicleAreaReason,relationshipSource:vehicleAreaRelationshipAnalysis.relationshipSource,relationshipReason:vehicleAreaRelationshipAnalysis.relationshipReason,photoGuidanceSource:vehicleAreaRelationshipAnalysis.photoGuidanceSource,photoGuidanceReason:vehicleAreaRelationshipAnalysis.photoGuidanceReason});
@@ -1439,7 +1617,7 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
   visualConditionInspection={...visualConditionInspection,conflictEvaluation,finalEvidencePromotion,reconciliation:{...visualConditionInspection.reconciliation,conflicts:conflictEvaluation.conflicts,promotable:finalEvidencePromotion.eligible}};
   const canonicalVisualState=buildCanonicalVisualState(componentIdentification,visualConditionInspection);
   visualConditionInspection={...visualConditionInspection,canonicalVisualState};
-  markDiagnostic(diagnostic,'S_CROSS_FINDING_RECONCILIATION_COMPLETE',{reconciliationReasonCode:visualConditionInspection?.reconciliation?.reason||'RECONCILE_EXCEPTION',crossFindingConsistency:conflictEvaluation.status,crossFindingConflictsResolved:!conflictEvaluation.hasUnresolvedConflict,crossFindingRejectionReasons:visualConditionInspection?.reconciliationErrors?.map(item=>item.reason)||[],finalEvidencePromotion:finalEvidencePromotion.status,visibleDefectPromotedCount:finalEvidencePromotion.promotedCount||0,finalPositiveVisibleFindings:(visualConditionInspection?.connectionAssessments||[]).filter(item=>['CLEAR_DEFECT','POSSIBLE_CONCERN'].includes(item.findingType)).length,contradictionReconciliationResult:conflictEvaluation.status});
+  markDiagnostic(diagnostic,'S_CROSS_FINDING_RECONCILIATION_COMPLETE',{normalizedVehicleArea:vehicleAreaRelationshipAnalysis?.vehicleAreaLocation||componentIdentification?.area||null,relationshipFindingCount:vehicleAreaRelationshipAnalysis?.observedItems?.length||0,promotedVisibleDefectCount:finalEvidencePromotion.promotedCount||0,reconciliationReasonCode:visualConditionInspection?.reconciliation?.reason||'RECONCILE_EXCEPTION',crossFindingConsistency:conflictEvaluation.status,crossFindingConflictsResolved:!conflictEvaluation.hasUnresolvedConflict,crossFindingRejectionReasons:visualConditionInspection?.reconciliationErrors?.map(item=>item.reason)||[],finalEvidencePromotion:finalEvidencePromotion.status,visibleDefectPromotedCount:finalEvidencePromotion.promotedCount||0,finalPositiveVisibleFindings:(visualConditionInspection?.connectionAssessments||[]).filter(item=>['CLEAR_DEFECT','POSSIBLE_CONCERN'].includes(item.findingType)).length,contradictionReconciliationResult:conflictEvaluation.status});
   semanticResult.visualObservation=visualObservation;
   semanticResult.localizedVisualInspections = localizedVisualInspections;
   semanticResult.componentIdentification = componentIdentification;

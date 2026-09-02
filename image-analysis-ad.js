@@ -1,6 +1,6 @@
-/* Nitros 10.13.136 deep whole-image automotive vision. */
+/* Nitros 10.13.137 component result contract and downstream evidence handoff. */
 (()=>{'use strict';
-const BUILD='10.13.136';
+const BUILD='10.13.137';
   const SEMANTIC_REQUEST_TIMEOUT_MS=290_000;
   // Automotive photographs are evidence. Send their original encoded bytes; do
   // not canvas-resize, crop, or recompress them on the client before inspection.
@@ -125,7 +125,7 @@ const BUILD='10.13.136';
     if(diag.pipeline?.CLASSIFICATION_STARTED==='PASS')set(11,'RUN');
     if(diag.pipeline?.CLASSIFICATION_COMPLETE==='PASS')set(11,'PASS');
     if(diag.pipeline?.CLASSIFICATION_COMPLETE==='FAIL')set(11,'FAIL');
-    if(server.componentIdentificationAttempted){set(12,'PASS');set(13,'PASS');set(14,server.componentResultPresent?'PASS':'FAIL');set(15,server.componentResultPresent?'PASS':'FAIL')}
+    if(server.componentIdentificationAttempted){set(12,'PASS');set(13,'PASS');set(14,server.componentResultPresent?'PASS':'FAIL');set(15,server.componentConfidenceNormalized?'PASS':server.componentResultPresent&&server.componentConfidenceStatus==='UNKNOWN'?'UNKNOWN — NOT PROVIDED':server.componentResultPresent?'UNKNOWN — INVALID SOURCE':'FAIL')}
     else if(server.componentIdentificationSkipped){set(12,diag.pipeline?.CLASSIFICATION_COMPLETE==='PASS'?'PASS':'SKIPPED');set(13,'SKIPPED');set(14,'SKIPPED');set(15,'SKIPPED')}
     if(server.wiringDiagramAnalysisAttempted){set(16,'PASS');set(17,server.wiringDiagramResultPresent?'PASS':'FAIL');set(18,server.wiringDiagramResultPresent?'PASS':'FAIL')}
     else if(server.wiringDiagramAnalysisSkipped){set(16,'SKIPPED');set(17,'SKIPPED');set(18,'SKIPPED')}
@@ -373,7 +373,7 @@ const BUILD='10.13.136';
       `Server stage/error: ${server.stage||'Unknown'} / ${server.errorCategory||'None'} / ${server.errorType||'None'} / ${server.errorCode||'None'} / ${server.errorMessage||'None'}`,
       `Component identification attempted: ${server.componentIdentificationAttempted?'YES':server.componentIdentificationSkipped?'SKIPPED':'NO'}`,
       `Component response/status: ${server.componentResponseReceived?'RECEIVED':'NONE'} / ${server.componentHttpStatus??'No response'} / ${server.componentStatus||'None'}`,
-      `Component result/confidence normalization: ${server.componentResultPresent?'PASS':'FAIL'} / ${server.componentResultPresent?'PASS':'PENDING'}`,
+      `Component result/confidence normalization: ${server.componentResultPresent?'PASS':'FAIL'} / ${server.componentConfidenceNormalized?'PASS':server.componentResultPresent&&server.componentConfidenceStatus==='UNKNOWN'?'UNKNOWN — NOT PROVIDED':server.componentResultPresent?'UNKNOWN — INVALID SOURCE':'PENDING'}`,
       `Component error: ${server.componentErrorCategory||'None'} / ${server.componentErrorMessage||'None'}`,
       '',
       'PIPELINE STATE',
@@ -457,14 +457,15 @@ const BUILD='10.13.136';
   }
 
   function stringArray(raw,name){if(!Array.isArray(raw)||raw.some(item=>typeof item!=='string'))throw new Error(`Semantic response field ${name} is invalid.`);return raw.map(item=>item.trim()).filter(Boolean).slice(0,24)}
+  function componentArray(raw,...keys){const list=keys.flatMap(key=>Array.isArray(raw?.[key])?raw[key]:typeof raw?.[key]==='string'||typeof raw?.[key]==='number'?[raw[key]]:[]);return [...new Set(list.map(item=>String(item).trim()).filter(Boolean))].slice(0,24)}
+  function componentConfidence(raw){const percentValue=raw?.normalizedComponentConfidence??raw?.componentConfidence,canonicalValue=raw?.confidence,selected=percentValue??canonicalValue;if(selected===null||selected===undefined||String(selected).trim()==='')return {fraction:null,percent:null,status:raw?.confidenceStatus==='INVALID'?'INVALID':'UNKNOWN'};const text=String(selected).trim(),cleaned=text.replace(/%$/,'').trim();if(!/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(cleaned))return {fraction:null,percent:null,status:'INVALID'};const numeric=Number(cleaned),isPercent=percentValue!==null&&percentValue!==undefined||/%$/.test(text)||numeric>1;if(!Number.isFinite(numeric)||numeric<0||(isPercent&&numeric>100)||(!isPercent&&numeric>1))return {fraction:null,percent:null,status:'INVALID'};const fraction=isPercent?numeric/100:numeric;return {fraction,percent:Math.round(fraction*100),status:'NORMALIZED'}}
   function normalizeComponentIdentification(raw,category,run){
     if(category!=='AUTOMOTIVE_COMPONENT_OR_VEHICLE')return null;
-    if(!raw||typeof raw!=='object'||!['IDENTIFIED','UNCERTAIN','FAILED'].includes(raw.status))throw new Error('Specific component identification result is missing or invalid.');
+    if(!raw||typeof raw!=='object')throw new Error('Specific component identification result is missing or invalid.');
     if(raw.semanticRequestId!==run.analyzer.requestId||raw.imageHash!==run.imageHash)throw new Error('Specific component identification does not match the current image request.');
-    const confidence=raw.normalizedComponentConfidence===null?null:Number(raw.normalizedComponentConfidence??raw.componentConfidence);
-    if(confidence!==null&&(!Number.isFinite(confidence)||confidence<0||confidence>100))throw new Error('Component identification confidence is invalid.');
-    const supportingEvidence=stringArray(raw.supportingEvidence,'component supportingEvidence'),secondaryComponents=stringArray(raw.secondaryComponents,'secondaryComponents'),possibleAlternatives=stringArray(raw.possibleAlternatives,'possibleAlternatives'),likelyConnectionsOrDestinations=stringArray(raw.likelyConnectionsOrDestinations||[],'likelyConnectionsOrDestinations');
-    return {status:raw.status,primaryComponent:String(raw.primaryComponent||'Unable to determine exact component').trim(),componentConfidence:confidence,rawComponentConfidence:raw.rawComponentConfidence??null,normalizedComponentConfidence:confidence,system:raw.system?String(raw.system).trim():null,secondaryComponents,supportingEvidence,possibleAlternatives,likelyConnectionsOrDestinations,uncertaintyReason:raw.uncertaintyReason?String(raw.uncertaintyReason).trim():null,drivetrainDiscrimination:raw.drivetrainDiscrimination||null,semanticRequestId:raw.semanticRequestId,imageHash:raw.imageHash};
+    const text=(...keys)=>{for(const key of keys){const value=raw[key];if(typeof value==='string'||typeof value==='number'){const normalized=String(value).trim();if(normalized)return normalized}}return ''},name=text('name','primaryComponent','component','componentName','component_name','part','partName','identifiedComponent')||'Unable to determine exact component',normalized=componentConfidence(raw),status=['IDENTIFIED','UNCERTAIN','FAILED'].includes(String(raw.status||'').toUpperCase())?String(raw.status).toUpperCase():'UNCERTAIN';
+    const supportingEvidence=componentArray(raw,'evidence','supportingEvidence','visualEvidence','visual_evidence','observations'),secondaryComponents=componentArray(raw,'secondaryComponents','secondary_components','relatedComponents'),possibleAlternatives=componentArray(raw,'possibleAlternatives','possible_alternatives','alternatives'),likelyConnectionsOrDestinations=componentArray(raw,'likelyConnectionsOrDestinations','likelyDestinations','destinations','connections');
+    return {name,category:text('category','system','partCategory')||null,description:text('description','componentDescription','summary')||null,confidence:normalized.fraction,area:text('area','normalizedVehicleArea','location','vehicleArea','vehicle_area','region')||null,state:text('state','normalizedVisualState','visualState','visual_state','connectionState','connection_state')||null,stateConfidence:raw.stateConfidence===null||raw.stateConfidence===undefined?null:Number(raw.stateConfidence),evidence:supportingEvidence,source:text('source')||'semantic',confidenceStatus:raw.confidenceStatus||normalized.status,rawComponentResult:raw.rawComponentResult??null,status,primaryComponent:name,componentConfidence:normalized.percent,rawComponentConfidence:raw.rawComponentConfidence??raw.confidence??null,normalizedComponentConfidence:normalized.percent,normalizedVisualState:text('normalizedVisualState','state','visualState','connectionState')||null,normalizedVehicleArea:text('normalizedVehicleArea','area','location','vehicleArea')||null,system:text('system','category','partCategory')||null,secondaryComponents,supportingEvidence,possibleAlternatives,likelyConnectionsOrDestinations,uncertaintyReason:text('uncertaintyReason','uncertainty_reason','limitation')||null,drivetrainDiscrimination:raw.drivetrainDiscrimination||null,semanticRequestId:raw.semanticRequestId,imageHash:raw.imageHash};
   }
   function normalizeVisualConditionInspection(raw,category,run){
     if(category!=='AUTOMOTIVE_COMPONENT_OR_VEHICLE')return null;
@@ -864,6 +865,7 @@ const BUILD='10.13.136';
     Object.entries(values).forEach(([id,value])=>{const element=$(id);if(element)element.textContent=value});
     window.NitrosDeveloperMode=window.NitrosDeveloperMode||{};window.NitrosDeveloperMode.semanticTransport=run?.analyzer?JSON.parse(JSON.stringify(run.analyzer)):null;
     window.NitrosDeveloperMode.authoritativeImageContext=result?.routingData?.authoritativeImageContext||null;
+    window.NitrosDeveloperMode.componentHandoff=result?{rawComponentResult:run?.analyzer?.serverDiagnostic?.rawComponentResult??result.componentIdentification?.rawComponentResult??null,normalizedComponentName:result.componentIdentification?.name||result.componentIdentification?.primaryComponent||null,normalizedConfidence:result.componentIdentification?.confidence??null,confidenceStatus:result.componentIdentification?.confidenceStatus||'UNKNOWN',normalizedVisualState:result.componentIdentification?.state||result.componentIdentification?.normalizedVisualState||null,normalizedVehicleArea:result.vehicleAreaRelationshipAnalysis?.vehicleAreaLocation||result.componentIdentification?.area||result.componentIdentification?.normalizedVehicleArea||null,relationshipFindingCount:result.vehicleAreaRelationshipAnalysis?.observedItems?.length||0,promotedVisibleDefectCount:result.visualConditionInspection?.finalEvidencePromotion?.promotedCount||0}:null;
     window.NitrosDeveloperMode.componentTestSession=run?.componentTestSession?JSON.parse(JSON.stringify(run.componentTestSession)):null;
     window.NitrosDeveloperMode.finalCanonicalPidEvidence=result?.automotiveGraphAnalysis?.finalCanonicalPidEvidence||null;
     window.NitrosDeveloperMode.renderedInvariantLog=result?.automotiveGraphAnalysis?.renderedInvariantLog||null;
@@ -920,7 +922,7 @@ const BUILD='10.13.136';
     updateDeveloper(null,{resetReason:'APP_START'});
   }
 
-  function start(){document.title=`Nitros Mobile Technician Portal v${BUILD} — Vehicle Context Isolation & Analysis Completion Integrity — Build 2026-08-28`;buildImportUi()}
+  function start(){document.title=`Nitros Mobile Technician Portal v${BUILD} — Component Result Contract / Downstream Evidence Handoff Repair — Build 2026-09-02`;buildImportUi()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
   window.addEventListener('pageshow',()=>setTimeout(start,40));
   new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))buildImportUi()}).observe(document.documentElement,{childList:true,subtree:true});
