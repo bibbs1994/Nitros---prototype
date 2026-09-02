@@ -74,7 +74,7 @@ test('localized vision F–I carries real crop bytes through the complete produc
   const body = await productionBody();
   const { fetchImpl, requests } = makeContractRouter();
   const result = await analyzeSemanticImage(body, { apiKey: 'test-only-placeholder', fetchImpl, enableVisualObservation: true });
-  assert.deepEqual(requests.map(({ stage }) => stage), ['nitros_image_semantics', 'nitros_raw_visual_observation', 'nitros_candidate_regions', 'nitros_localized_inspection', 'nitros_automotive_component', 'nitros_vehicle_area_relationship', 'nitros_visual_condition_inspection']);
+  assert.deepEqual(requests.map(({ stage }) => stage), ['nitros_image_semantics', 'nitros_visual_condition_inspection', 'nitros_raw_visual_observation', 'nitros_candidate_regions', 'nitros_localized_inspection', 'nitros_automotive_component', 'nitros_vehicle_area_relationship']);
   const localizedRequest = requests.find(({ stage }) => stage === 'nitros_localized_inspection').request;
   const images = inputImages(localizedRequest);
   assert.equal(images.length, 3, 'production Pass-2 carries detail, context, and original images');

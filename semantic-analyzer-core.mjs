@@ -14,15 +14,21 @@ export const ALLOWED_CATEGORIES = Object.freeze([
 const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 export const OPENAI_TIMEOUT_MS = 120_000;
 const COMPONENT_TIMEOUT_MS = 30_000;
-const VISUAL_CONDITION_TIMEOUT_MS = 16_000;
-const VISUAL_CONDITION_RETRY_TIMEOUT_MS = 8_000;
+const VISUAL_CONDITION_TIMEOUT_MS = 55_000;
+const VISUAL_CONDITION_RETRY_TIMEOUT_MS = 40_000;
+const VISUAL_CONDITION_MAX_OUTPUT_TOKENS = 3_000;
+const VISUAL_CONDITION_RETRY_MAX_OUTPUT_TOKENS = 2_400;
+const PRODUCTION_ANALYSIS_BUDGET_MS = 280_000;
+const RESPONSE_RETURN_RESERVE_MS = 10_000;
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 // Kept isolated so a later cost tier can change one policy without rewriting
 // the inspection pipeline. These are current Responses API request fields.
 const MODEL = process.env.OPENAI_VISION_MODEL || 'gpt-5.6-sol';
 const DEEP_VISION_REASONING = Object.freeze({ effort: 'max', mode: 'pro' });
+const VISUAL_CONDITION_REASONING = Object.freeze({ effort: 'low' });
 const DEEP_VISION_DETAIL = 'original';
 const deepVisionRequest = (request) => ({ ...request, model: MODEL, reasoning: DEEP_VISION_REASONING });
+const visualConditionRequest = (request) => ({ ...request, model: MODEL, reasoning: VISUAL_CONDITION_REASONING });
 
 const semanticSchema = {
   type: 'object',
@@ -741,7 +747,7 @@ function validateVisualConditionInspection(raw) {
     const seatingStatus = String(assessment.seatingStatus || 'NOT_RELIABLY_VISIBLE');
     const evidence = String(assessment.visibleEvidence || '').trim().slice(0, 500), findingType = String(assessment.findingType || ''), severity = String(assessment.severity || ''), verification = String(assessment.recommendedVerification || '').trim().slice(0, 500), findingConfidence = normalizeSemanticConfidence(assessment.findingConfidence), matingComponentVisible = assessment.matingComponentVisible === true, directDamageVisible = assessment.directDamageVisible === true, missingContext = typeof assessment.missingContext === 'string' ? assessment.missingContext.trim().slice(0, 500) || null : null;
     if (!location || !['SEPARATION_OR_GAP_VISIBLE','POSSIBLE_IMPROPER_SEATING','NO_GAP_OR_SEPARATION_VISIBLE','NOT_RELIABLY_VISIBLE','COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE'].includes(seatingStatus) || !['CLEAR_DEFECT','POSSIBLE_CONCERN','UNVERIFIED_CONDITION','RESIDUE_OR_STAINING','SEATING_NOT_RELIABLY_VISIBLE','NO_DEFECT_VISIBLE'].includes(findingType) || !['CRITICAL','HIGH','MODERATE','LOW','UNDETERMINED'].includes(severity) || !evidence || !verification || findingConfidence === null) throw new Error(`Visual condition connection assessment ${index + 1} lacks required finding evidence.`);
-    if (seatingStatus === 'SEPARATION_OR_GAP_VISIBLE' && (findingType !== 'CLEAR_DEFECT' || !['CRITICAL','HIGH','MODERATE'].includes(severity))) throw new Error('Visible connection separation must be classified as a clear defect with operational severity.');
+    if (seatingStatus === 'SEPARATION_OR_GAP_VISIBLE' && findingType !== 'CLEAR_DEFECT') throw new Error('Visible connection separation must be classified as a clear defect.');
     if (seatingStatus === 'NOT_RELIABLY_VISIBLE' && (findingType !== 'SEATING_NOT_RELIABLY_VISIBLE' || severity !== 'UNDETERMINED')) throw new Error('Obscured connection seating must remain undetermined.');
     if (findingType === 'NO_DEFECT_VISIBLE' && (!matingComponentVisible || seatingStatus !== 'NO_GAP_OR_SEPARATION_VISIBLE' || !hasAffirmativeMatingEvidence(assessment))) throw new Error('No-visible-defect finding requires direct evidence of the complete mating and retention relationship.');
     if (!matingComponentVisible && !directDamageVisible && (seatingStatus !== 'COMPONENT_OR_CONNECTION_CONTEXT_NOT_VISIBLE' || findingType !== 'UNVERIFIED_CONDITION' || severity !== 'UNDETERMINED' || !missingContext)) throw new Error('A connection without visible mating-component context must remain unverified unless direct damage is visible.');
@@ -759,6 +765,262 @@ function validateVisualConditionInspection(raw) {
   if (status === 'NO_VISIBLE_CONCERN_DETECTED' && (!uniqueConnectionAssessments.length || uniqueConnectionAssessments.some(assessment => assessment.seatingStatus !== 'NO_GAP_OR_SEPARATION_VISIBLE' || assessment.findingType !== 'NO_DEFECT_VISIBLE' || !assessment.matingComponentVisible || !hasAffirmativeMatingEvidence(assessment)))) throw new Error('No-visible-concern status requires direct evidence that every visible connection mating and retention relationship is fully assembled.');
   if (uniqueConnectionAssessments.some(assessment => assessment.seatingStatus === 'SEPARATION_OR_GAP_VISIBLE') && status !== 'OBSERVED_CONDITION') throw new Error('Visible connection separation cannot be downgraded below an observed condition.');
   return { status, conditionConfidence: normalizeSemanticConfidence(raw.conditionConfidence), rawConditionConfidence: raw.rawConditionConfidence ?? raw.conditionConfidence ?? null, normalizedConditionConfidence: normalizeSemanticConfidence(raw.conditionConfidence), observedCondition, possibleConcerns, connectionAssessments: uniqueConnectionAssessments, noVisibleConcernMessage: status === 'NO_VISIBLE_CONCERN_DETECTED' ? NO_VISIBLE_DEFECT_MESSAGE : '', unableToInspectReason, visibleEvidence, recommendedVerification, safetyDrivabilityImpact: typeof raw.safetyDrivabilityImpact === 'string' ? raw.safetyDrivabilityImpact.trim().slice(0, 500) || null : null, consistencyCorrections: Array.isArray(raw.consistencyCorrections) ? raw.consistencyCorrections.slice(0, 8) : [] };
+}
+
+const CORE_VISUAL_CONDITION_PROMPT = `Perform the OBVIOUS VISUAL DEFECT SWEEP for this automotive image. This is the fast physical-condition pass; exact vehicle or component identity is optional and must not delay or weaken a visible physical finding. Inspect the complete whole image in a 3×3 sweep (foreground, middle ground, and background) and continue after the first prominent or abnormal object. Use this fixed evidence order: SEE → LOCATE → IDENTIFY → VERIFY PHYSICAL STATE → DETECT ABNORMALITY → APPLY VEHICLE CONTEXT → REASON → DIAGNOSE.
+
+Independently inspect every visible connector, terminal, plug, wire, harness, hose, line, pipe, port, clamp, fastener, bracket, sensor, module, and assembly for direct evidence of disconnection, free/unmated state, partial seating, looseness, breakage, cracking, damage, exposed mating surfaces, corrosion, displacement, missing retention, incorrect routing, leakage, or separation from a mounting or mating surface. Return every sufficiently supported distinct finding, not only the closest connector or first defect. Describe image-relative location and literal visible geometry. Relate two visible objects when their geometry proves adjacency plus a mating, separation, insertion, gap, mounting, or open-port relationship. A connector beside a receptacle, hose beside a nipple, or terminal beside a post is not connected without visible continuous mating geometry. Proximity is not connection.
+
+Use SEPARATION_OR_GAP_VISIBLE/CLEAR_DEFECT only for directly visible separation, free mating face, exposed matching interface, or equivalent physical proof. Use POSSIBLE_IMPROPER_SEATING/POSSIBLE_CONCERN for visible questionable or incomplete seating. Use NO_GAP_OR_SEPARATION_VISIBLE/NO_DEFECT_VISIBLE only when the complete mating and retention relationship is affirmatively visible. Otherwise use NOT_RELIABLY_VISIBLE/SEATING_NOT_RELIABLY_VISIBLE and say "Unable to verify from this image." A visible free or unmated connector is a successful physical-condition finding even when exact ownership is uncertain. Do not invent a hidden destination, missing component, failure cause, severity, or safety consequence. Preserve each supported finding with its own evidence and verification step. Return the strict structured condition result immediately after the whole-image physical sweep.`;
+
+const safeVisualStrings = (value, limit = 16) => Array.isArray(value) ? value.filter(item => typeof item === 'string').map(item => item.trim()).filter(Boolean).slice(0, limit) : [];
+
+export function recoverPartialVisualCondition(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !Array.isArray(raw.connectionAssessments)) return null;
+  const retained = [];
+  for (const assessment of raw.connectionAssessments.slice(0, 12)) {
+    if (!assessment || typeof assessment !== 'object') continue;
+    const findingType = String(assessment.findingType || '');
+    const status = findingType === 'CLEAR_DEFECT' ? 'OBSERVED_CONDITION'
+      : ['POSSIBLE_CONCERN','RESIDUE_OR_STAINING'].includes(findingType) ? 'POSSIBLE_CONCERN_DETECTED'
+      : findingType === 'UNVERIFIED_CONDITION' ? 'UNVERIFIED_CONDITION'
+      : findingType === 'NO_DEFECT_VISIBLE' ? 'NO_VISIBLE_CONCERN_DETECTED'
+      : 'UNABLE_TO_INSPECT';
+    const evidence = String(assessment.visibleEvidence || '').trim();
+    const location = String(assessment.location || IMAGE_RELATIVE_LOCATION_UNDETERMINED).trim();
+    const recommendedVerification = String(assessment.recommendedVerification || VISUAL_CONNECTION_VERIFICATION).trim();
+    const possibleConcerns = status === 'POSSIBLE_CONCERN_DETECTED' ? [{ location, appearance: evidence, physicalConfirmationRequired: true, recommendedVerification }] : [];
+    try {
+      const candidate = validateVisualConditionInspection({
+        status,
+        conditionConfidence: raw.conditionConfidence ?? assessment.findingConfidence,
+        observedCondition: status === 'OBSERVED_CONDITION' ? [evidence] : [],
+        possibleConcerns,
+        connectionAssessments: [{ ...assessment, location, recommendedVerification }],
+        noVisibleConcernMessage: '',
+        unableToInspectReason: status === 'UNABLE_TO_INSPECT' ? String(raw.unableToInspectReason || 'The returned connection evidence was not sufficiently complete for a physical-state conclusion.') : null,
+        visibleEvidence: [evidence].filter(Boolean),
+        recommendedVerification: [recommendedVerification],
+        safetyDrivabilityImpact: null
+      });
+      retained.push(candidate.connectionAssessments[0]);
+    } catch { /* Preserve other independently valid findings. */ }
+  }
+  if (!retained.length) return null;
+  const hasClearDefect = retained.some(item => item.findingType === 'CLEAR_DEFECT');
+  const hasConcern = retained.some(item => ['POSSIBLE_CONCERN','RESIDUE_OR_STAINING'].includes(item.findingType));
+  const hasUnverified = retained.some(item => item.findingType === 'UNVERIFIED_CONDITION');
+  const allNoDefect = retained.every(item => item.findingType === 'NO_DEFECT_VISIBLE');
+  const status = hasClearDefect ? 'OBSERVED_CONDITION' : hasConcern ? 'POSSIBLE_CONCERN_DETECTED' : hasUnverified ? 'UNVERIFIED_CONDITION' : allNoDefect ? 'NO_VISIBLE_CONCERN_DETECTED' : 'UNABLE_TO_INSPECT';
+  const visibleEvidence = [...new Set([...safeVisualStrings(raw.visibleEvidence), ...retained.map(item => item.visibleEvidence)])];
+  const recommendedVerification = [...new Set([...safeVisualStrings(raw.recommendedVerification, 8), ...retained.map(item => item.recommendedVerification)])].slice(0, 8);
+  const possibleConcerns = status === 'POSSIBLE_CONCERN_DETECTED' ? retained.filter(item => ['POSSIBLE_CONCERN','RESIDUE_OR_STAINING'].includes(item.findingType)).map(item => ({ location: item.location, appearance: item.visibleEvidence, physicalConfirmationRequired: true, recommendedVerification: item.recommendedVerification })) : [];
+  const recovered = {
+    status,
+    conditionConfidence: raw.conditionConfidence ?? Math.max(...retained.map(item => item.findingConfidence || 0)),
+    observedCondition: status === 'OBSERVED_CONDITION' ? [...new Set([...safeVisualStrings(raw.observedCondition, 12), ...retained.filter(item => item.findingType === 'CLEAR_DEFECT').map(item => item.visibleEvidence)])] : safeVisualStrings(raw.observedCondition, 12),
+    possibleConcerns,
+    connectionAssessments: retained,
+    noVisibleConcernMessage: '',
+    unableToInspectReason: status === 'UNABLE_TO_INSPECT' ? String(raw.unableToInspectReason || 'The visible physical state remains uncertain.') : null,
+    visibleEvidence,
+    recommendedVerification,
+    safetyDrivabilityImpact: null
+  };
+  try {
+    const consistency = normalizeVisualConditionConsistency(recovered);
+    return validateVisualConditionInspection({ ...consistency.normalized, consistencyCorrections: [...consistency.corrections, 'Valid physical-condition findings were preserved after a secondary response field failed validation.'] });
+  } catch { return null; }
+}
+
+function traceVisualCondition(diagnostic, event, updates = {}) {
+  const trace = [...(Array.isArray(diagnostic?.visualConditionTrace) ? diagnostic.visualConditionTrace : []), event];
+  markDiagnostic(diagnostic, event, { visualConditionTrace: trace, ...updates });
+  if (process.env.NITROS_DEV_DIAGNOSTICS === '1') console.info(event, Object.fromEntries(Object.entries(updates).filter(([key]) => !/body|prompt|key|image/i.test(key))));
+}
+
+function parseVisualConditionResponse(responseBody, componentIdentification) {
+  if (!responseBody) throw Object.assign(new Error('Visual condition response was not valid JSON.'), { visualConditionMalformedResponse: true });
+  const incompleteReason = String(responseBody?.incomplete_details?.reason || '').trim();
+  let outputText;
+  try { outputText = extractOutputText(responseBody); }
+  catch (error) {
+    if (responseBody?.status === 'incomplete') {
+      throw Object.assign(new Error(`Visual condition response was incomplete${incompleteReason ? `: ${incompleteReason}` : ''}.`), { visualConditionIncompleteResponse: true, visualConditionIncompleteReason: incompleteReason || null });
+    }
+    throw Object.assign(error, { visualConditionMalformedResponse: true });
+  }
+  let parsed;
+  try { parsed = JSON.parse(outputText); }
+  catch (error) { throw Object.assign(error, { visualConditionMalformedResponse: true, visualConditionIncompleteResponse: responseBody?.status === 'incomplete', visualConditionIncompleteReason: incompleteReason || null }); }
+  try {
+    const consistency = normalizeVisualConditionConsistency(retainVisibleConnectionContext(parsed, componentIdentification));
+    return { result: validateVisualConditionInspection({ ...consistency.normalized, consistencyCorrections: consistency.corrections }), corrections: consistency.corrections, partialOutputPreserved: false };
+  } catch (error) {
+    const partial = recoverPartialVisualCondition(parsed);
+    if (partial) return { result: partial, corrections: partial.consistencyCorrections || [], partialOutputPreserved: true, validationError: error };
+    throw Object.assign(error, { visualConditionMalformedResponse: true });
+  }
+}
+
+async function runVisualConditionInspection({ apiKey, fetchImpl, mimeType, imageBase64, componentIdentification, transactionId, imageHash, diagnostic, timeoutFor }) {
+  const startedAt = Date.now();
+  const firstTimeoutMs = timeoutFor(VISUAL_CONDITION_TIMEOUT_MS);
+  const retryTimeoutMs = timeoutFor(VISUAL_CONDITION_RETRY_TIMEOUT_MS);
+  let result = null;
+  traceVisualCondition(diagnostic, 'VISUAL_CONDITION_START', { visualConditionInspectionAttempted: true, visualConditionStarted: true, visualConditionResponseReceived: false, visualConditionResultPresent: false, visualConditionFirstAttemptTimeoutMs: firstTimeoutMs, visualConditionRetryTimeoutMs: retryTimeoutMs, visualConditionCoreResultSource: null });
+
+  const execute = async ({ prompt, schemaName, maxOutputTokens, attempt, attemptTimeoutMs }) => {
+    let response;
+    try {
+      response = await fetchImpl('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(visualConditionRequest({ store: false, max_output_tokens: maxOutputTokens, input: [{ role: 'user', content: [{ type: 'input_text', text: prompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }] }], text: { format: { type: 'json_schema', name: schemaName, strict: true, schema: visualConditionInspectionSchema } } })),
+        signal: AbortSignal.timeout(attemptTimeoutMs)
+      });
+    } catch (error) {
+      const timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError' || /timed out|timeout/i.test(String(error?.message || ''));
+      if (timedOut) {
+        traceVisualCondition(diagnostic, attempt === 'retry' ? 'VISUAL_CONDITION_RETRY_TIMEOUT' : 'VISUAL_CONDITION_TIMEOUT', { visualConditionTimedOut: true, visualConditionFirstRequestTimeout: attempt === 'first' || diagnostic.visualConditionFirstRequestTimeout === true, visualConditionRetryFailure: attempt === 'retry', visualConditionErrorMessage: 'Visual condition inspection timeout.' });
+        traceVisualCondition(diagnostic, 'VISUAL_CONDITION_ABORT', { visualConditionAborted: true, visualConditionAbortAttempt: attempt });
+      }
+      throw error;
+    }
+    const firstByteMs = Math.max(0, Date.now() - startedAt);
+    traceVisualCondition(diagnostic, 'VISUAL_CONDITION_FIRST_BYTE', { visualConditionFirstByteReceived: true, visualConditionFirstByteMs: firstByteMs, visualConditionAttempt: attempt });
+    traceVisualCondition(diagnostic, 'VISUAL_CONDITION_RESPONSE_RECEIVED', { visualConditionResponseReceived: true, visualConditionResponseOk: response.ok, visualConditionHttpStatus: response.status, visualConditionAttempt: attempt });
+    traceVisualCondition(diagnostic, 'VISUAL_CONDITION_PARSE_START', { visualConditionParseStarted: true, visualConditionAttempt: attempt });
+    const parseStartedAt = Date.now();
+    let responseBody;
+    try { responseBody = await response.json(); }
+    catch (error) {
+      const timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError' || /timed out|timeout/i.test(String(error?.message || ''));
+      if (timedOut) {
+        traceVisualCondition(diagnostic, attempt === 'retry' ? 'VISUAL_CONDITION_RETRY_TIMEOUT' : 'VISUAL_CONDITION_TIMEOUT', { visualConditionTimedOut: true, visualConditionFirstRequestTimeout: attempt === 'first' || diagnostic.visualConditionFirstRequestTimeout === true, visualConditionRetryFailure: attempt === 'retry', visualConditionErrorMessage: 'Visual condition inspection timeout.' });
+        traceVisualCondition(diagnostic, 'VISUAL_CONDITION_ABORT', { visualConditionAborted: true, visualConditionAbortAttempt: attempt });
+      } else {
+        traceVisualCondition(diagnostic, 'VISUAL_CONDITION_PARSE_FAILURE', { visualConditionParseFailed: true, visualConditionMalformedResponse: true, visualConditionAttempt: attempt, visualConditionParseMs: Math.max(0, Date.now() - parseStartedAt), visualConditionErrorMessage: sanitizeDiagnosticText(error?.message) });
+      }
+      throw Object.assign(error, { visualConditionMalformedResponse: !timedOut });
+    }
+    const responseState = typeof responseBody?.status === 'string' ? responseBody.status : null;
+    const incompleteReason = typeof responseBody?.incomplete_details?.reason === 'string' ? responseBody.incomplete_details.reason : null;
+    markDiagnostic(diagnostic, diagnostic.stage, {
+      visualConditionResponseStatus: responseState,
+      visualConditionIncompleteReason: incompleteReason,
+      ...(attempt === 'first'
+        ? { visualConditionFirstResponseStatus: responseState, visualConditionFirstIncompleteReason: incompleteReason }
+        : { visualConditionRetryResponseStatus: responseState, visualConditionRetryIncompleteReason: incompleteReason })
+    });
+    if (!response.ok) {
+      traceVisualCondition(diagnostic, 'VISUAL_CONDITION_PARSE_FAILURE', { visualConditionParseFailed: true, visualConditionAttempt: attempt, visualConditionParseMs: Math.max(0, Date.now() - parseStartedAt) });
+      throw Object.assign(new Error(responseBody?.error?.message || `Visual condition request failed with HTTP ${response.status}.`), { visualConditionErrorCategory: classifyOpenAIError(response.status, responseBody), visualConditionHttpStatus: response.status });
+    }
+    try {
+      const parsed = parseVisualConditionResponse(responseBody, componentIdentification);
+      if (parsed.partialOutputPreserved) traceVisualCondition(diagnostic, 'VISUAL_CONDITION_PARSE_FAILURE', { visualConditionParseFailed: true, visualConditionPartialEvidencePreserved: true, visualConditionAttempt: attempt, visualConditionErrorMessage: sanitizeDiagnosticText(parsed.validationError?.message) });
+      traceVisualCondition(diagnostic, 'VISUAL_CONDITION_PARSE_SUCCESS', { visualConditionParseSucceeded: true, visualConditionResponseParsed: true, visualConditionResultPresent: true, visualConditionPartialEvidencePreserved: parsed.partialOutputPreserved, visualConditionParseMs: Math.max(0, Date.now() - parseStartedAt), visualConditionAttempt: attempt });
+      return parsed;
+    } catch (error) {
+      traceVisualCondition(diagnostic, 'VISUAL_CONDITION_PARSE_FAILURE', { visualConditionParseFailed: true, visualConditionMalformedResponse: Boolean(error?.visualConditionMalformedResponse), visualConditionIncompleteResponse: Boolean(error?.visualConditionIncompleteResponse), visualConditionAttempt: attempt, visualConditionParseMs: Math.max(0, Date.now() - parseStartedAt), visualConditionErrorMessage: sanitizeDiagnosticText(error?.message) });
+      throw error;
+    }
+  };
+
+  try {
+    try {
+      const first = await execute({ prompt: CORE_VISUAL_CONDITION_PROMPT, schemaName: 'nitros_visual_condition_inspection', maxOutputTokens: VISUAL_CONDITION_MAX_OUTPUT_TOKENS, attempt: 'first', attemptTimeoutMs: firstTimeoutMs });
+      result = { ...first.result, semanticRequestId: transactionId, imageHash };
+      if (first.corrections.length) markDiagnostic(diagnostic, diagnostic.stage, { visualConditionConsistencyCorrections: first.corrections });
+      markDiagnostic(diagnostic, diagnostic.stage, { visualConditionStatus: result.status, visualConditionConfidenceNormalized: result.normalizedConditionConfidence !== null, visualConditionErrorCategory: null, visualConditionErrorMessage: null, visualConditionCoreResultSource: first.partialOutputPreserved ? 'FAST_PASS_PARTIAL_PRESERVED' : 'FAST_PASS' });
+      return result;
+    } catch (error) {
+      const timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError' || /timed out|timeout/i.test(String(error?.message || ''));
+      markDiagnostic(diagnostic, diagnostic.stage, { visualConditionFirstRequestTimeout: timedOut, visualConditionMalformedResponse: Boolean(error?.visualConditionMalformedResponse), visualConditionIncompleteResponse: Boolean(error?.visualConditionIncompleteResponse), visualConditionErrorMessage: sanitizeDiagnosticText(error?.message) });
+      traceVisualCondition(diagnostic, 'VISUAL_CONDITION_RETRY_START', { visualConditionRetryStarted: true, visualConditionRetrySuccess: false, visualConditionRetryFailure: false, visualConditionRetryTimeoutMs: retryTimeoutMs });
+      const retryPrompt = `${CORE_VISUAL_CONDITION_PROMPT}\nRecovery pass: return the minimum complete structured result now. Keep every directly visible physical finding even when exact identity, ownership, or vehicle-specific interpretation is uncertain.`;
+      try {
+        const retry = await execute({ prompt: retryPrompt, schemaName: 'nitros_visual_condition_retry', maxOutputTokens: VISUAL_CONDITION_RETRY_MAX_OUTPUT_TOKENS, attempt: 'retry', attemptTimeoutMs: retryTimeoutMs });
+        result = { ...retry.result, semanticRequestId: transactionId, imageHash };
+        traceVisualCondition(diagnostic, 'VISUAL_CONDITION_RETRY_SUCCESS', { visualConditionRetrySuccess: true, visualConditionRetryFailure: false, visualConditionResultPresent: true, visualConditionStatus: result.status, visualConditionConfidenceNormalized: result.normalizedConditionConfidence !== null, visualConditionErrorCategory: null, visualConditionErrorMessage: null, visualConditionCoreResultSource: retry.partialOutputPreserved ? 'FAST_RETRY_PARTIAL_PRESERVED' : 'FAST_RETRY' });
+        return result;
+      } catch (retryError) {
+        const firstTimedOut = timedOut;
+        const retryTimedOut = retryError?.name === 'TimeoutError' || retryError?.name === 'AbortError' || /timed out|timeout/i.test(String(retryError?.message || ''));
+        const safeMessage = firstTimedOut || retryTimedOut ? 'Visual condition inspection timeout.' : sanitizeDiagnosticText(retryError?.message || error?.message) || 'Visual condition inspection failed.';
+        result = { status: 'UNABLE_TO_INSPECT', conditionConfidence: null, rawConditionConfidence: null, normalizedConditionConfidence: null, observedCondition: [], possibleConcerns: [], connectionAssessments: [], noVisibleConcernMessage: '', unableToInspectReason: `${safeMessage} The immediate recovery pass also could not complete; preserved whole-image and downstream evidence will still be reconciled when available.`, visibleEvidence: componentIdentification?.supportingEvidence?.slice(0, 3) || [], recommendedVerification: ['Obtain a closer, well-lit image of each connection and perform a physical inspection before repair authorization.'], safetyDrivabilityImpact: null, semanticRequestId: transactionId, imageHash };
+        markDiagnostic(diagnostic, diagnostic.stage, { visualConditionRetrySuccess: false, visualConditionRetryFailure: true, visualConditionResponseParsed: false, visualConditionResultPresent: false, visualConditionStatus: 'UNABLE_TO_INSPECT', visualConditionConfidenceNormalized: false, visualConditionMalformedResponse: Boolean(retryError?.visualConditionMalformedResponse), visualConditionErrorCategory: error?.visualConditionErrorCategory || retryError?.visualConditionErrorCategory || (firstTimedOut || retryTimedOut ? 'OPENAI_TIMEOUT' : 'VISUAL_CONDITION_ANALYSIS_ERROR'), visualConditionErrorMessage: safeMessage, visualConditionHttpStatus: retryError?.visualConditionHttpStatus ?? error?.visualConditionHttpStatus ?? diagnostic.visualConditionHttpStatus ?? null, visualConditionCoreResultSource: 'TECHNICAL_FALLBACK' });
+        return result;
+      }
+    }
+  } finally {
+    traceVisualCondition(diagnostic, 'VISUAL_CONDITION_TOTAL_MS', { visualConditionTotalMs: Math.max(0, Date.now() - startedAt), visualConditionElapsedMs: Math.max(0, Date.now() - startedAt) });
+  }
+}
+
+export function recoverVisualConditionFromObservation(condition, observation) {
+  if (!observation || typeof observation !== 'object') return condition;
+  const merged = mergeObservationWithCondition(observation, condition);
+  const abnormalities = Array.isArray(observation.abnormalFindings) ? observation.abnormalFindings : [];
+  const abnormalEvidence = abnormalities.map(item => String(item?.evidence || '').trim()).filter(Boolean);
+  if (abnormalEvidence.length) {
+    return {
+      ...merged,
+      status: 'OBSERVED_CONDITION',
+      observedCondition: [...new Set([...abnormalEvidence, ...safeVisualStrings(merged?.observedCondition, 12)])].slice(0, 12),
+      visibleEvidence: [...new Set([...abnormalEvidence, ...safeVisualStrings(merged?.visibleEvidence, 16)])].slice(0, 16),
+      recommendedVerification: [...new Set([...abnormalities.map(item => String(item?.recommendedVerification || '').trim()).filter(Boolean), ...safeVisualStrings(merged?.recommendedVerification, 8)])].slice(0, 8),
+      noVisibleConcernMessage: '',
+      unableToInspectReason: null,
+      coreConditionEvidenceSource: 'RAW_WHOLE_IMAGE_OBSERVATION'
+    };
+  }
+  const observationEvidence = Array.isArray(observation.objects) ? observation.objects.map(item => String(item?.evidence || '').trim()).filter(Boolean) : [];
+  if (observation.status === 'READY' && observationEvidence.length && merged?.status === 'UNABLE_TO_INSPECT') {
+    return {
+      ...merged,
+      status: 'UNVERIFIED_CONDITION',
+      observedCondition: [...new Set([...observationEvidence, ...safeVisualStrings(merged.observedCondition, 12)])].slice(0, 12),
+      visibleEvidence: [...new Set([...observationEvidence, ...safeVisualStrings(merged.visibleEvidence, 16)])].slice(0, 16),
+      unableToInspectReason: null,
+      coreConditionEvidenceSource: 'RAW_WHOLE_IMAGE_OBSERVATION'
+    };
+  }
+  return merged;
+}
+
+export function buildGuaranteedStructuredCondition(condition, observation, componentIdentification) {
+  const assessments = Array.isArray(condition?.connectionAssessments) ? condition.connectionAssessments : [];
+  const observationObjects = Array.isArray(observation?.objects) ? observation.objects : [];
+  const observationRelationships = Array.isArray(observation?.relationships) ? observation.relationships : [];
+  const observationAbnormalities = Array.isArray(observation?.abnormalFindings) ? observation.abnormalFindings : [];
+  const visibleFindings = [
+    ...assessments.map(item => ({ findingType: item.findingType || 'UNVERIFIED_CONDITION', physicalState: item.connectionState || item.seatingStatus || 'INDETERMINATE', observedObject: item.observedObject || 'Visible component or connection', location: item.location || IMAGE_RELATIVE_LOCATION_UNDETERMINED, evidence: item.directVisibleEvidence || item.visibleEvidence || '', confidence: item.connectionStateConfidence ?? item.findingConfidence ?? null, recommendedVerification: item.recommendedVerification || '' })),
+    ...observationAbnormalities.map(item => ({ findingType: 'DIRECT_VISUAL_ABNORMALITY', physicalState: item.state, observedObject: observationObjects.find(object => object.id === item.objectId)?.type || item.objectId || 'Visible object', location: observationObjects.find(object => object.id === item.objectId)?.location || IMAGE_RELATIVE_LOCATION_UNDETERMINED, evidence: item.evidence, confidence: normalizeSemanticConfidence(item.confidence), recommendedVerification: item.recommendedVerification }))
+  ];
+  const distinctFindings = [...new Map(visibleFindings.filter(item => item.evidence).map(item => [`${item.location}|${item.physicalState}|${item.evidence}`.toLowerCase(), item])).values()];
+  const observedObjects = observationObjects.map(item => ({ id: item.id, type: item.type, location: item.location, physicalState: item.connectionState || item.matingStatus || 'UNKNOWN', evidence: item.evidence, confidence: normalizeSemanticConfidence(item.physicalStateConfidence ?? item.confidence) }));
+  const physicalRelationships = [
+    ...observationRelationships.map(item => ({ sourceId: item.sourceId, targetId: item.targetId, state: item.state, evidence: item.evidence, confidence: normalizeSemanticConfidence(item.confidence) })),
+    ...assessments.filter(item => item.visibleEvidence).map((item, index) => ({ sourceId: item.candidateId || `CONDITION-${index + 1}`, targetId: null, state: item.connectionState || item.seatingStatus || 'INDETERMINATE', evidence: item.directVisibleEvidence || item.visibleEvidence, confidence: item.connectionStateConfidence ?? item.findingConfidence ?? null }))
+  ];
+  const evidence = [...new Set([...distinctFindings.map(item => item.evidence), ...safeVisualStrings(condition?.visibleEvidence, 16)])].slice(0, 24);
+  const uncertainty = [...new Set([condition?.unableToInspectReason, ...assessments.map(item => item.missingContext), componentIdentification?.uncertaintyReason].filter(item => typeof item === 'string' && item.trim()).map(item => item.trim()))].slice(0, 12);
+  const visibleConditionAssessed = distinctFindings.length > 0 || observedObjects.length > 0 || condition?.status === 'NO_VISIBLE_CONCERN_DETECTED';
+  const inspectionCompleted = Boolean(condition && visibleConditionAssessed);
+  return {
+    ...condition,
+    inspectionCompleted,
+    visibleConditionAssessed,
+    visibleFindings: distinctFindings,
+    observedObjects,
+    physicalRelationships,
+    evidence,
+    uncertainty,
+    componentIdentity: componentIdentification?.name || componentIdentification?.primaryComponent || null,
+    componentIdentityConfidence: componentIdentification?.normalizedComponentConfidence ?? componentIdentification?.componentConfidence ?? null
+  };
 }
 
 function validateWiringDiagram(raw) {
@@ -1042,14 +1304,15 @@ const directSeparationEvidence = evidence => {
   const gap = /\b(?:separat(?:ed|ion)|disconnect(?:ed|ion)|air\s+gap|gap)\b/i.test(text);
   const electricalPair = /\b(?:connector|plug|terminal)\b/i.test(text) && /\b(?:socket|receptacle|post)\b/i.test(text);
   const fluidPair = /\b(?:hose|tube|line|pipe)\b/i.test(text) && /\b(?:fitting|port|coupler)\b/i.test(text);
+  const opposedMatingPair = /\boppos(?:ing|ed)\s+mating\s+(?:geometry|faces?|interfaces?)\b|\b(?:mating\s+(?:faces?|interfaces?)|opposing\s+(?:faces?|interfaces?))\b[^.]{0,120}\b(?:air\s+gap|gap|separat(?:ed|ion))\b|\b(?:air\s+gap|gap|separat(?:ed|ion))\b[^.]{0,120}\b(?:mating\s+(?:faces?|interfaces?)|opposing\s+(?:faces?|interfaces?))\b/i.test(text);
   const explicitVisibleState = /\b(?:connector|plug|terminal|hose|tube|line|pipe|wire|harness)\b[^.]{0,100}\b(?:appears\s+)?(?:clearly\s+|visibly\s+|physically\s+)?(?:disconnected|separated|unmated|unplugged|unconnected|hanging\s+(?:free|loose))\b|\b(?:visibly|clearly|physically)\s+(?:disconnected|separated|unmated|unplugged|unconnected)\b/i.test(text);
   const notInserted = /\b(?:connector|plug|terminal|hose|tube|line|pipe)\b[^.]{0,120}\bnot\s+(?:fully\s+|physically\s+)?inserted\s+(?:into|in|onto|on)\b/i.test(text);
   const freeElectricalTermination = /\b(?:connector|plug|terminal)\b/i.test(text) && /\b(?:harness|wire|wiring)\b[^.]{0,100}\bterminat(?:es|ed|ing)\b/i.test(text) && /\b(?:exposed|open|free|unmated)\b[^.]{0,100}\b(?:mating|interface|face|end|connector|plug)\b|\bnot\s+connected\s+to\s+(?:a\s+)?visible\s+interface\b/i.test(text);
   const hedgedOnly = /\b(?:possible|possibly|may|might|could|suspect(?:ed)?)\b[^.]{0,80}\b(?:disconnected|separated|unmated|unplugged|unconnected)\b/i.test(text) && !/\b(?:visibly|clearly|physical(?:ly)?|air\s+gap|hanging\s+(?:free|loose))\b/i.test(text);
-  return !hedgedOnly && !/\b(?:no|without)\s+(?:an?\s+)?(?:visible\s+|abnormal\s+)?(?:gap|separation|disconnection)\b/i.test(text) && ((gap && (electricalPair || fluidPair)) || explicitVisibleState || notInserted || freeElectricalTermination);
+  return !hedgedOnly && !/\b(?:no|without)\s+(?:an?\s+)?(?:visible\s+|abnormal\s+)?(?:gap|separation|disconnection)\b/i.test(text) && ((gap && (electricalPair || fluidPair || opposedMatingPair)) || explicitVisibleState || notInserted || freeElectricalTermination);
 };
 const directPhysicalDefectEvidence = evidence => /\b(?:broken|crack(?:ed)?|torn|split|leak(?:ing)?|visible\s+(?:fluid\s+)?(?:residue|staining|seepage|wetness)|(?:fluid\s+)?(?:residue|staining|seepage|wetness)\s+(?:is\s+)?visible|corrosion|corroded|rust(?:ed|y|ing)?|damaged\s+(?:wire|wiring|harness|component|terminal|insulation)|(?:wire|wiring|harness|component|terminal|insulation)\b[^.]{0,60}\b(?:broken|cracked|damaged)|missing\s+(?:(?:fastener|bolt|clip|retainer|component)\b|from\s+(?:an?\s+)?(?:expected\s+)?visible\s+mounting\s+point)|(?:fastener|bolt|clip|retainer|component)\b[^.]{0,80}\b(?:visibly\s+)?missing\b|displaced\s+clamp|clamp\b[^.]{0,60}\b(?:visibly\s+)?displaced|unplugged\s+harness|terminal\s+(?:removed|corroded))\b/i.test(String(evidence || ''));
-const partialSeatingEvidence = evidence => /\b(?:partially|not fully|uneven)\s+(?:seated|inserted|engaged)|\b(?:exposed|visible)\s+(?:connector neck|sealing surface|insertion gap)\b/i.test(String(evidence || ''));
+const partialSeatingEvidence = evidence => /\b(?:partially|not fully|uneven)\s+(?:seated|inserted|engaged)|\b(?:exposed|visible)\s+(?:connector neck|sealing surface|insertion gap)|\b(?:visible\s+)?partial\s+insertion\s+gap\b/i.test(String(evidence || ''));
 const suspectSeatingEvidence = evidence => /\b(?:loose|displaced|misalign|corrosion|rust|clamp[^.]{0,80}(?:rearward|displaced)|possible|suspect)\b/i.test(String(evidence || ''));
 const observedObjectFor = finding => /\bhose|tube|line\b/i.test(`${finding?.observedObject || ''} ${finding?.visibleEvidence || ''}`) ? 'Hose / tube connection' : /\bclamp\b/i.test(`${finding?.observedObject || ''} ${finding?.visibleEvidence || ''}`) ? 'Clamp connection' : /\bterminal\b/i.test(`${finding?.observedObject || ''} ${finding?.visibleEvidence || ''}`) ? 'Electrical terminal' : 'Electrical connector';
 const canonicalFindingKey = finding => finding?.candidateId ? `candidate:${finding.candidateId}` : `${observedObjectFor(finding).toLowerCase()}|${String(finding?.location || '').toLowerCase().replace(/\s+/g, ' ').trim()}`;
@@ -1109,7 +1372,13 @@ export function reconcileVisualFindings(condition, { observation = null, relatio
     if (!kind) return;
     const location = inferLocation(visibleEvidence, metadata.location);
     const observedObject = inferObject(visibleEvidence, metadata.observedObject);
-    const duplicate = [...source, ...derived].some(item => item && typeof item === 'object' && visibleDefectKind(item.visibleEvidence || item.directVisibleEvidence) && canonicalComponentFamily(item.observedObject || observedObjectFor(item)) === canonicalComponentFamily(observedObject) && locationBucket(item.location) === locationBucket(location));
+    const duplicate = [...source, ...derived].some(item => {
+      if (!item || typeof item !== 'object') return false;
+      const existingKind = visibleDefectKind(item.visibleEvidence || item.directVisibleEvidence);
+      const sameFamily = canonicalComponentFamily(item.observedObject || observedObjectFor(item)) === canonicalComponentFamily(observedObject);
+      if (!existingKind || existingKind !== kind || !sameFamily) return false;
+      return locationBucket(item.location) === locationBucket(location) || metadata.sourceStage === 'OBSERVED_CONDITION_PROMOTION';
+    });
     if (duplicate) return;
     const partial = kind === 'PARTIAL_CONNECTION', disconnected = kind === 'DISCONNECTED_CONNECTION';
     derived.push({ findingId: `promoted-${derived.length + 1}`, sourceStage: metadata.sourceStage || 'FINAL_EVIDENCE_PROMOTION', location, observedObject, seatingStatus: disconnected ? 'SEPARATION_OR_GAP_VISIBLE' : partial ? 'POSSIBLE_IMPROPER_SEATING' : 'NOT_RELIABLY_VISIBLE', findingType: 'CLEAR_DEFECT', severity: kind === 'CORROSION' || kind === 'LEAK_OR_RESIDUE' ? 'LOW' : 'MODERATE', findingConfidence: metadata.confidence ?? 80, connectionState: disconnected ? 'DISCONNECTED_VERIFIED' : partial ? 'PARTIALLY_SEATED' : 'INDETERMINATE', connectionStateConfidence: metadata.confidence ?? 80, visibleEvidence, directVisibleEvidence: visibleEvidence, matingComponentVisible: metadata.matingComponentVisible === true, directDamageVisible: true, missingContext: metadata.missingContext && !contradictoryVisibilityLimitation(metadata.missingContext) ? metadata.missingContext : hiddenVerificationLimitation({ observedObject, visibleEvidence }), recommendedVerification: metadata.recommendedVerification || hiddenVerificationLimitation({ observedObject, visibleEvidence }), safetyDrivabilityImpact: null, evidenceProvenance: metadata.sourceStage || 'FINAL_EVIDENCE_PROMOTION' });
@@ -1141,7 +1410,7 @@ export function reconcileVisualFindings(condition, { observation = null, relatio
       const connectionState = directDisconnected ? 'DISCONNECTED_VERIFIED' : directlyMated ? 'CONNECTED_VERIFIED' : partiallySeated ? 'PARTIALLY_SEATED' : suspected ? 'LOOSE_OR_SUSPECT' : 'INDETERMINATE';
       const findingType = directlyDefective ? 'CLEAR_DEFECT' : directlyMated ? 'NO_DEFECT_VISIBLE' : partiallySeated || suspected ? 'POSSIBLE_CONCERN' : 'SEATING_NOT_RELIABLY_VISIBLE';
       const seatingStatus = directDisconnected ? 'SEPARATION_OR_GAP_VISIBLE' : directlyMated ? 'NO_GAP_OR_SEPARATION_VISIBLE' : partiallySeated || suspected ? 'POSSIBLE_IMPROPER_SEATING' : item.seatingStatus || 'NOT_RELIABLY_VISIBLE';
-      const severity = directlyDefective ? (defectKind === 'CORROSION' || defectKind === 'LEAK_OR_RESIDUE' ? (item.severity === 'MODERATE' ? 'MODERATE' : 'LOW') : item.severity === 'CRITICAL' ? 'CRITICAL' : item.severity === 'HIGH' ? 'HIGH' : 'MODERATE') : partiallySeated || suspected ? (item.severity === 'HIGH' || item.severity === 'CRITICAL' ? 'MODERATE' : item.severity || 'LOW') : 'UNDETERMINED';
+      const severity = directlyDefective ? (defectKind === 'CORROSION' || defectKind === 'LEAK_OR_RESIDUE' ? (item.severity === 'MODERATE' ? 'MODERATE' : item.severity === 'UNDETERMINED' ? 'UNDETERMINED' : 'LOW') : item.severity === 'CRITICAL' ? 'CRITICAL' : item.severity === 'HIGH' ? 'HIGH' : item.severity === 'UNDETERMINED' ? 'UNDETERMINED' : 'MODERATE') : partiallySeated || suspected ? (item.severity === 'HIGH' || item.severity === 'CRITICAL' ? 'MODERATE' : item.severity || 'LOW') : 'UNDETERMINED';
       const ceiling = directlyDefective || directlyMated ? 99 : partiallySeated || suspected ? 85 : interfaceVisible ? 70 : 60;
       const findingConfidence = Math.min(Number.isFinite(item.findingConfidence) ? item.findingConfidence : directlyDefective ? 75 : 0, ceiling);
       const connectionStateConfidence = Math.min(Number.isFinite(item.connectionStateConfidence) ? item.connectionStateConfidence : findingConfidence, ceiling);
@@ -1236,7 +1505,7 @@ export function buildCanonicalVisualState(componentIdentification, visualConditi
     source: 'RECONCILED_VISUAL_EVIDENCE'
   }));
   return {
-    version: '10.13.137',
+    version: '10.13.138',
     componentIdentity: {
       name: componentIdentification?.name || componentIdentification?.primaryComponent || 'Unable to determine exact component',
       primaryComponent: componentIdentification?.name || componentIdentification?.primaryComponent || 'Unable to determine exact component',
@@ -1268,6 +1537,15 @@ export function selectGlobalVisualCandidates(observation, limit = 3) {
 }
 
 export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_API_KEY, fetchImpl = fetch, diagnostic = {}, timeoutMs = OPENAI_TIMEOUT_MS, enableVisualObservation = false } = {}) {
+  const pipelineStartedAt = Date.now();
+  const productionDeadlineAt = pipelineStartedAt + PRODUCTION_ANALYSIS_BUDGET_MS;
+  const configuredTimeoutMs = Number.isFinite(timeoutMs) && timeoutMs > 0 ? Math.floor(timeoutMs) : OPENAI_TIMEOUT_MS;
+  const timeoutFor = maximumMs => Math.max(1, Math.min(maximumMs, configuredTimeoutMs, productionDeadlineAt - Date.now() - RESPONSE_RETURN_RESERVE_MS));
+  const pipelineSignal = AbortSignal.timeout(PRODUCTION_ANALYSIS_BUDGET_MS - RESPONSE_RETURN_RESERVE_MS);
+  const upstreamFetchImpl = fetchImpl;
+  // Every upstream call keeps its stage timeout and also shares a hard return
+  // deadline, preventing optional enrichment from consuming the response reserve.
+  fetchImpl = (url, options = {}) => upstreamFetchImpl(url, { ...options, signal: options.signal ? AbortSignal.any([options.signal, pipelineSignal]) : pipelineSignal });
   const fields = body && typeof body === 'object' && !Array.isArray(body) ? Object.keys(body) : [];
   const requiredFields = ['transactionId', 'imageHash', 'mimeType', 'imageBase64'];
   const allowedFields = new Set([...requiredFields, 'vehicleContext']);
@@ -1309,7 +1587,7 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   const prompt = `Analyze only the pixels of this current image. Do not use filenames, metadata, prior images, or OCR words as proof of automotive content. Return exactly one category. AUTOMOTIVE_GRAPH requires multiple independent visible graph indicators such as axes or gridlines plus plotted traces, repeated scale markings, panels, legends, or time-series structure. AUTOMOTIVE_WIRING_DIAGRAM requires actual electrical schematic structure such as connected circuit paths plus multiple schematic symbols, component/module blocks, connectors or pin/cavity identifiers, fuse/relay/ground/splice symbols, wire colors, circuit numbers, terminals, power references, or signal/reference/return paths. Automotive words or OCR text alone are insufficient. AUTOMOTIVE_COMPONENT_OR_VEHICLE requires positive visible automotive photographic subjects such as a vehicle, brake/engine/suspension component, connector, physical wiring, dashboard, scan tool, or diagnostic equipment. General photos of animals, people, food, furniture, scenery, or buildings without automotive evidence are GENERAL_NON_AUTOMOTIVE_PHOTO. Non-schematic documents, screenshots, invoices, text screens, and data tables are DOCUMENT_OR_TEXT_SCREENSHOT. Use UNKNOWN_OR_ANALYSIS_UNAVAILABLE when visual evidence is inadequate or conflicting. Evidence and object names must describe visible pixel-supported content. Confidence must reflect the genuine visual classification; use null if a defensible value is unavailable.`;
   markDiagnostic(diagnostic, 'G_OPENAI_REQUEST_CONSTRUCTED', { openaiRequestConstructed: true, openaiModel: MODEL, openaiApiType: 'Responses API /v1/responses', openaiReasoningEffort: DEEP_VISION_REASONING.effort, openaiReasoningMode: DEEP_VISION_REASONING.mode, openaiImageDetail: DEEP_VISION_DETAIL, payloadImageCount: 1 });
   const openAIStartedAt = Date.now();
-  const analysisSignal = AbortSignal.timeout(timeoutMs);
+  const analysisSignal = AbortSignal.timeout(timeoutFor(OPENAI_TIMEOUT_MS));
   let openAIResponse;
   try {
     markDiagnostic(diagnostic, 'H_OPENAI_API_CONTACTED', { openaiRequestAttempted: true, openaiResponseReceived: false });
@@ -1360,8 +1638,18 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   catch (error) { throw diagnosticFailure(diagnostic, `Malformed semantic response: ${error.message}`, 502, 'K_SEMANTIC_OUTPUT_EXTRACTED', 'UNEXPECTED_OPENAI_RESPONSE', { semanticOutputPresent: false, transportStatus }); }
   markDiagnostic(diagnostic, 'K_SEMANTIC_OUTPUT_EXTRACTED', { success: true, semanticOutputPresent: true, semanticObjectsReturned: semanticResult.objects.length, errorCategory: null, errorMessage: null });
 
+  let visualConditionInspection = null;
+  if (enableVisualObservation && semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
+    visualConditionInspection = await runVisualConditionInspection({ apiKey, fetchImpl, mimeType, imageBase64, componentIdentification: null, transactionId, imageHash, diagnostic, timeoutFor });
+  }
   let visualObservation=null;
   if(enableVisualObservation&&semanticResult.category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'){markDiagnostic(diagnostic,'L_RAW_VISUAL_OBSERVATION_REQUEST',{rawVisualObservationRequest:'PASS',rawVisualObservationResponse:'PENDING',objectInventory:'PENDING',physicalRelationshipAnalysis:'PENDING',electricalConnectionStateAnalysis:'PENDING',abnormalStateDetection:'PENDING',globalVisualSweep:'PENDING'});try{const regionalSweep=await createWholeImageRegions(bytes);const regionalContent=[{type:'input_text',text:`${globalVisualSweepInstruction}\n${rawVisualObservationPrompt}\nThis is a mandatory whole-image multi-pass inspection. IMAGE 1 is the complete original photograph. IMAGES 2–10 are overlapping regions of that exact photograph, ordered top-left through bottom-right. Sweep all regions before reaching any conclusion; do not let a prompt, finger, central object, or first defect end the search. A directly visible disconnected/free/partially seated connection must appear in abnormalFindings.`},{type:'input_image',image_url:`data:${mimeType};base64,${imageBase64}`,detail:DEEP_VISION_DETAIL},...regionalSweep.regions.map(item=>({type:'input_image',image_url:`data:image/png;base64,${item.image.toString('base64')}`,detail:DEEP_VISION_DETAIL}))];const r=await fetchImpl('https://api.openai.com/v1/responses',{method:'POST',headers:{'Authorization':`Bearer ${apiKey}`,'Content-Type':'application/json'},body:JSON.stringify(deepVisionRequest({store:false,max_output_tokens:2200,input:[{role:'user',content:regionalContent}],text:{format:{type:'json_schema',name:'nitros_raw_visual_observation',strict:true,schema:visualObservationSchema}}})),signal:AbortSignal.timeout(Math.min(timeoutMs,OPENAI_TIMEOUT_MS))});if(!r.ok)throw Error(`Raw visual observation failed with HTTP ${r.status}.`);visualObservation=validateVisualObservation(JSON.parse(extractOutputText(await r.json())));markDiagnostic(diagnostic,'L_RAW_VISUAL_OBSERVATION_COMPLETE',{rawVisualObservationResponse:'PASS',objectInventory:'PASS',objectsInventoried:visualObservation.objects.length,relationshipCapableObjects:visualObservation.objects.filter(x=>/connector|receptacle|terminal|hose|clamp|plug|wire/i.test(x.type)).length,physicalRelationshipAnalysis:'PASS',electricalConnectionStateAnalysis:'PASS',abnormalStateDetection:'PASS',globalVisualSweep:'PASS',supplementalImageRegions:regionalSweep.regions.length,confirmedPhysicalAbnormalities:visualObservation.abnormalFindings.length,structuredVisualEvidenceHandoff:'PASS'});}catch(e){markDiagnostic(diagnostic,'L_RAW_VISUAL_OBSERVATION_FAILED',{rawVisualObservationResponse:'FAIL',objectInventory:'FAIL',physicalRelationshipAnalysis:'FAIL',electricalConnectionStateAnalysis:'FAIL',abnormalStateDetection:'FAIL',globalVisualSweep:'FAIL',structuredVisualEvidenceHandoff:'FAIL',rawVisualObservationErrorMessage:sanitizeDiagnosticText(e?.message)});}}
+  if (visualObservation) {
+    visualConditionInspection = recoverVisualConditionFromObservation(visualConditionInspection, visualObservation);
+    if (visualConditionInspection?.coreConditionEvidenceSource === 'RAW_WHOLE_IMAGE_OBSERVATION') {
+      markDiagnostic(diagnostic, diagnostic.stage, { visualConditionResultPresent: true, visualConditionStatus: visualConditionInspection.status, visualConditionCoreResultSource: 'RAW_WHOLE_IMAGE_OBSERVATION', visualConditionPartialEvidencePreserved: true });
+    }
+  }
   let localizedVisualInspections = [];
   let localizedStageHandled = false;
   if (visualObservation) {
@@ -1488,8 +1776,7 @@ Return a technician-friendly broad vehicleAreaLocation only when supported (for 
       }
     }
   } else markDiagnostic(diagnostic, diagnostic.stage, { vehicleAreaRelationshipAttempted: false, vehicleAreaRelationshipSkipped: true, vehicleAreaRelationshipSkipReason: 'NON_AUTOMOTIVE_CATEGORY' });
-  let visualConditionInspection = null;
-  if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
+  if (!enableVisualObservation && semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
     const conditionStartedAt = Date.now();
     const conditionPrompt = `Perform the OBVIOUS VISUAL DEFECT SWEEP for this same current automotive image before using component identity or vehicle knowledge for diagnostic interpretation. Reason in this non-reversible order: SEE → LOCATE → IDENTIFY → VERIFY PHYSICAL STATE → DETECT ABNORMALITY → APPLY VEHICLE CONTEXT → REASON → DIAGNOSE. Do not let successful component identification influence the condition result. ${vehicleContextPrompt(vehicleContext)} Vehicle context may narrow a likely location only after the pixels are evaluated; it must never override contradictory image evidence. A component being near its expected location is not evidence that it is connected, secure, intact, or installed.
 
@@ -1504,7 +1791,7 @@ Use exact terminology only where the pictured feature supports it. Keep one sele
     try {
       const conditionResponse = await fetchImpl('https://api.openai.com/v1/responses', {
         method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(deepVisionRequest({ store: false, max_output_tokens: 950, input: [{ role: 'user', content: [{ type: 'input_text', text: `${conditionPrompt}\nCompleted component-identification context: ${componentIdentification?.primaryComponent||'Automotive component identification was unavailable'}. Use this context only to orient the inspection; all condition claims still require visible pixels.` }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }] }], text: { format: { type: 'json_schema', name: 'nitros_visual_condition_inspection', strict: true, schema: visualConditionInspectionSchema } } })), signal: AbortSignal.timeout(Math.min(timeoutMs, VISUAL_CONDITION_TIMEOUT_MS))
+        body: JSON.stringify(visualConditionRequest({ store: false, max_output_tokens: VISUAL_CONDITION_MAX_OUTPUT_TOKENS, input: [{ role: 'user', content: [{ type: 'input_text', text: `${conditionPrompt}\nCompleted component-identification context: ${componentIdentification?.primaryComponent||'Automotive component identification was unavailable'}. Use this context only to orient the inspection; all condition claims still require visible pixels.` }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }] }], text: { format: { type: 'json_schema', name: 'nitros_visual_condition_inspection', strict: true, schema: visualConditionInspectionSchema } } })), signal: AbortSignal.timeout(Math.min(timeoutMs, VISUAL_CONDITION_TIMEOUT_MS))
       });
       const conditionBody = await conditionResponse.json().catch(() => null);
       markDiagnostic(diagnostic, 'P_VISUAL_CONDITION_RESPONSE_RECEIVED', { visualConditionResponseReceived: true, visualConditionResponseOk: conditionResponse.ok, visualConditionHttpStatus: conditionResponse.status, visualConditionElapsedMs: Math.max(0, Date.now() - conditionStartedAt) });
@@ -1521,7 +1808,7 @@ Use exact terminology only where the pictured feature supports it. Keep one sele
       markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_FIRST_ATTEMPT_FAILED', { visualConditionFirstRequestTimeout: timedOut, visualConditionMalformedResponse: Boolean(error?.visualConditionMalformedResponse), visualConditionRetryStarted: true, visualConditionErrorMessage: sanitizeDiagnosticText(error?.message) });
       const retryPrompt = `Inspect only the visible physical connections in this same image. Prioritize gaps, separation, incomplete seating, clamp/retainer position, cracks, and disconnected fittings before residue. Return the same structured condition result. Do not invent defects. If a connection cannot be seen, use NOT_RELIABLY_VISIBLE and explain the limitation. Component context: ${componentIdentification?.primaryComponent||'unavailable'}.`;
       try {
-        const retryResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify(deepVisionRequest({ store: false, max_output_tokens: 650, input: [{ role: 'user', content: [{ type: 'input_text', text: retryPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }] }], text: { format: { type: 'json_schema', name: 'nitros_visual_condition_retry', strict: true, schema: visualConditionInspectionSchema } } })), signal: AbortSignal.timeout(Math.min(timeoutMs, VISUAL_CONDITION_RETRY_TIMEOUT_MS)) });
+        const retryResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify(visualConditionRequest({ store: false, max_output_tokens: VISUAL_CONDITION_RETRY_MAX_OUTPUT_TOKENS, input: [{ role: 'user', content: [{ type: 'input_text', text: retryPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }] }], text: { format: { type: 'json_schema', name: 'nitros_visual_condition_retry', strict: true, schema: visualConditionInspectionSchema } } })), signal: AbortSignal.timeout(Math.min(timeoutMs, VISUAL_CONDITION_RETRY_TIMEOUT_MS)) });
         const retryBody = await retryResponse.json().catch(() => null);
         if (!retryResponse.ok) throw Object.assign(new Error(retryBody?.error?.message || `Visual condition retry failed with HTTP ${retryResponse.status}.`), { visualConditionHttpStatus: retryResponse.status });
         if (!retryBody) throw Object.assign(new Error('Visual condition retry response was not valid JSON.'), { visualConditionMalformedResponse: true });
@@ -1615,9 +1902,10 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
   const conflictEvaluation=evaluateCrossFindingConflicts(visualConditionInspection);
   const finalEvidencePromotion=promoteFinalEvidence(visualConditionInspection,conflictEvaluation);
   visualConditionInspection={...visualConditionInspection,conflictEvaluation,finalEvidencePromotion,reconciliation:{...visualConditionInspection.reconciliation,conflicts:conflictEvaluation.conflicts,promotable:finalEvidencePromotion.eligible}};
+  visualConditionInspection=buildGuaranteedStructuredCondition(visualConditionInspection,visualObservation,componentIdentification);
   const canonicalVisualState=buildCanonicalVisualState(componentIdentification,visualConditionInspection);
   visualConditionInspection={...visualConditionInspection,canonicalVisualState};
-  markDiagnostic(diagnostic,'S_CROSS_FINDING_RECONCILIATION_COMPLETE',{normalizedVehicleArea:vehicleAreaRelationshipAnalysis?.vehicleAreaLocation||componentIdentification?.area||null,relationshipFindingCount:vehicleAreaRelationshipAnalysis?.observedItems?.length||0,promotedVisibleDefectCount:finalEvidencePromotion.promotedCount||0,reconciliationReasonCode:visualConditionInspection?.reconciliation?.reason||'RECONCILE_EXCEPTION',crossFindingConsistency:conflictEvaluation.status,crossFindingConflictsResolved:!conflictEvaluation.hasUnresolvedConflict,crossFindingRejectionReasons:visualConditionInspection?.reconciliationErrors?.map(item=>item.reason)||[],finalEvidencePromotion:finalEvidencePromotion.status,visibleDefectPromotedCount:finalEvidencePromotion.promotedCount||0,finalPositiveVisibleFindings:(visualConditionInspection?.connectionAssessments||[]).filter(item=>['CLEAR_DEFECT','POSSIBLE_CONCERN'].includes(item.findingType)).length,contradictionReconciliationResult:conflictEvaluation.status});
+  markDiagnostic(diagnostic,'S_CROSS_FINDING_RECONCILIATION_COMPLETE',{normalizedVehicleArea:vehicleAreaRelationshipAnalysis?.vehicleAreaLocation||componentIdentification?.area||null,relationshipFindingCount:vehicleAreaRelationshipAnalysis?.observedItems?.length||0,promotedVisibleDefectCount:finalEvidencePromotion.promotedCount||0,reconciliationReasonCode:visualConditionInspection?.reconciliation?.reason||'RECONCILE_EXCEPTION',crossFindingConsistency:conflictEvaluation.status,crossFindingConflictsResolved:!conflictEvaluation.hasUnresolvedConflict,crossFindingRejectionReasons:visualConditionInspection?.reconciliationErrors?.map(item=>item.reason)||[],finalEvidencePromotion:finalEvidencePromotion.status,visibleDefectPromotedCount:finalEvidencePromotion.promotedCount||0,finalPositiveVisibleFindings:(visualConditionInspection?.connectionAssessments||[]).filter(item=>['CLEAR_DEFECT','POSSIBLE_CONCERN'].includes(item.findingType)).length,contradictionReconciliationResult:conflictEvaluation.status,visualConditionResultPresent:visualConditionInspection?.inspectionCompleted===true,visualConditionStatus:visualConditionInspection?.status||null,visualConditionStructuredResult:visualConditionInspection?.inspectionCompleted===true?'PASS':'FALLBACK',analyzerTotalMs:Math.max(0,Date.now()-pipelineStartedAt),analyzerBudgetMs:PRODUCTION_ANALYSIS_BUDGET_MS,responseReturnReserveMs:RESPONSE_RETURN_RESERVE_MS});
   semanticResult.visualObservation=visualObservation;
   semanticResult.localizedVisualInspections = localizedVisualInspections;
   semanticResult.componentIdentification = componentIdentification;

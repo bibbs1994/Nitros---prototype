@@ -102,7 +102,7 @@ test('10.13.137 observed incomplete component response recovers a canonical resu
   }
 });
 
-test('10.13.137 F — request transport, model policy, image detail, endpoint, and timeout remain unchanged', () => {
+test('10.13.137 F — request transport, model policy, image detail, endpoint, and deployment budget remain unchanged', () => {
   const core = readFileSync(new URL('../semantic-analyzer-core.mjs', import.meta.url), 'utf8');
   const frontend = readFileSync(new URL('../image-analysis-ad.js', import.meta.url), 'utf8');
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
