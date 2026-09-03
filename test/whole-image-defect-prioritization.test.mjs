@@ -176,3 +176,26 @@ test('10.13.139 relationship outcomes distinguish established, no-abnormal, inde
   assert.equal(degraded.relationshipDiagnosticStatus, 'DEGRADED');
   assert.equal(degraded.relationshipOutcome, 'FALLBACK_PRESERVED');
 });
+
+test('10.13.140 authoritative connection-state reconciliation preserves direct geometry and guidance', () => {
+  const directHose = finding({ findingId: 'hose-direct', candidateId: 'hose-direct', sourceStage: 'RAW_WHOLE_IMAGE_OBSERVATION', location: 'Lower-center', observedObject: 'Hose and clamp', connectionState: 'CONNECTED_VERIFIED', seatingStatus: 'NO_GAP_OR_SEPARATION_VISIBLE', findingType: 'NO_DEFECT_VISIBLE', severity: 'LOW', findingConfidence: 91, connectionStateConfidence: 91, visibleEvidence: 'The hose remains over its fitting, the clamp encircles the joint, and no visible separation or gap is present.' });
+  const fallbackDisconnect = finding({ findingId: 'hose-fallback', sourceStage: 'RELATIONSHIP_EVIDENCE_PROMOTION', location: 'Lower-center', observedObject: 'Hose connection', connectionState: 'DISCONNECTED_VERIFIED', seatingStatus: 'SEPARATION_OR_GAP_VISIBLE', findingType: 'CLEAR_DEFECT', findingConfidence: 94, connectionStateConfidence: 94, visibleEvidence: 'The hose connection is disconnected from the fitting.' });
+  const connected = reconcileVisualFindings(condition([directHose, fallbackDisconnect]));
+  assert.equal(connected.connectionAssessments.filter(item => /hose|clamp/i.test(item.observedObject)).length, 1);
+  assert.equal(connected.connectionAssessments.find(item => /hose|clamp/i.test(item.observedObject)).connectionState, 'CONNECTED_VERIFIED');
+  assert.doesNotMatch(connected.recommendedVerification.join(' '), /reconnect/i);
+  assert.equal(connected.crossFindingConsistency.authoritativeConnectionStatesResolved, 1);
+
+  const directDisconnect = finding({ findingId: 'plug-direct', candidateId: 'plug-direct', sourceStage: 'RAW_WHOLE_IMAGE_OBSERVATION', location: 'Upper-right', observedObject: 'Electrical connector', connectionState: 'DISCONNECTED_VERIFIED', seatingStatus: 'SEPARATION_OR_GAP_VISIBLE', findingType: 'CLEAR_DEFECT', findingConfidence: 90, connectionStateConfidence: 90, visibleEvidence: 'A free electrical connector is visibly separated from its matching receptacle by a clear air gap.' });
+  const fallbackConnect = finding({ findingId: 'plug-fallback', sourceStage: 'RELATIONSHIP_EVIDENCE_PROMOTION', location: 'Upper-right', observedObject: 'Electrical connector', connectionState: 'CONNECTED_VERIFIED', seatingStatus: 'NO_GAP_OR_SEPARATION_VISIBLE', findingType: 'NO_DEFECT_VISIBLE', findingConfidence: 96, connectionStateConfidence: 96, visibleEvidence: 'The connector is fully seated at the receptacle.' });
+  const disconnectedResult = reconcileVisualFindings(condition([directDisconnect, fallbackConnect]));
+  assert.equal(disconnectedResult.connectionAssessments.length, 1);
+  assert.equal(disconnectedResult.connectionAssessments[0].connectionState, 'DISCONNECTED_VERIFIED');
+
+  const ambiguous = reconcileVisualFindings(condition([finding({ findingId: 'ambiguous', location: 'Center', observedObject: 'Electrical connector', connectionState: 'CONNECTED_VERIFIED', findingType: 'NO_DEFECT_VISIBLE', seatingStatus: 'NO_GAP_OR_SEPARATION_VISIBLE', visibleEvidence: 'The connector interface is obscured and the mating surfaces cannot be adequately seen.' })]));
+  assert.notEqual(ambiguous.connectionAssessments[0].connectionState, 'CONNECTED_VERIFIED');
+  assert.notEqual(ambiguous.connectionAssessments[0].connectionState, 'DISCONNECTED_VERIFIED');
+
+  const unknownIdentity = reconcileVisualFindings(condition([finding({ findingId: 'unknown-identity', location: 'Lower-right', observedObject: 'Visible connector — exact component uncertain', connectionState: 'DISCONNECTED_VERIFIED', seatingStatus: 'SEPARATION_OR_GAP_VISIBLE', findingType: 'CLEAR_DEFECT', visibleEvidence: 'The unidentified connector is visibly separated from a matching socket by a clear air gap.' })]));
+  assert.equal(unknownIdentity.connectionAssessments[0].connectionState, 'DISCONNECTED_VERIFIED');
+});

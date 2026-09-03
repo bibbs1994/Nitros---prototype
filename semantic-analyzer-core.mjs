@@ -1314,7 +1314,7 @@ function buildElectricalCircuitAnalysis(semanticResult, componentIdentification,
   };
 }
 
-const directMatingEvidence = evidence => hasAffirmativeMatingEvidence({ visibleEvidence: String(evidence || '') });
+const directMatingEvidence = evidence => hasAffirmativeMatingEvidence({ visibleEvidence: String(evidence || '') }) || /\b(?:hose|tube|line)\b[^.]{0,100}\b(?:remains|is)\s+(?:over|on|engaged\s+with)\b[^.]{0,100}\b(?:fitting|port|nipple|coupler)\b|\bclamp\b[^.]{0,100}\b(?:encircles|surrounds)\b[^.]{0,100}\b(?:joint|hose|fitting)\b/i.test(String(evidence || ''));
 const directSeparationEvidence = evidence => {
   const text = String(evidence || '');
   const gap = /\b(?:separat(?:ed|ion)|disconnect(?:ed|ion)|air\s+gap|gap)\b/i.test(text);
@@ -1371,6 +1371,72 @@ const canonicalComponentFamily = value => {
   if (/\b(?:hose|tube|line)\b/.test(text)) return 'FLUID_CONNECTION';
   return text.replace(/\b(?:valve|solenoid|control|assembly|connector)\b/g, '').replace(/[^a-z0-9]+/g, ' ').trim() || 'UNKNOWN_COMPONENT';
 };
+// A connection can be described by several stages.  Keep the correlation broad
+// enough for a hose and its clamp to identify the same mating relationship, but
+// never merge fluid and electrical connections merely because they share a region.
+const connectionRelationshipFamily = finding => /\b(?:hose|tube|line|pipe|clamp|fitting|port|coupler|nipple)\b/i.test(`${finding?.observedObject || ''} ${finding?.directVisibleEvidence || finding?.visibleEvidence || ''}`) ? 'FLUID_CONNECTION' : /\b(?:connector|plug|terminal|wire|wiring|harness)\b/i.test(`${finding?.observedObject || ''} ${finding?.directVisibleEvidence || finding?.visibleEvidence || ''}`) ? 'ELECTRICAL_CONNECTION' : canonicalComponentFamily(finding?.observedObject || observedObjectFor(finding));
+// A relationship fallback often has no candidate ID, so family plus image
+// region is the safe bridge that prevents it escaping reconciliation.
+const connectionRelationshipKey = finding => {
+  const family = connectionRelationshipFamily(finding);
+  const location = locationBucket(finding?.location);
+  return family !== 'UNKNOWN_COMPONENT' ? `${family}|${location}` : finding?.candidateId ? `candidate:${finding.candidateId}` : `${family}|${location}`;
+};
+const connectionEvidenceAuthority = finding => {
+  const source = String(finding?.sourceStage || finding?.evidenceProvenance || '').toUpperCase();
+  const evidence = finding?.directVisibleEvidence || finding?.visibleEvidence || '';
+  const geometry = directSeparationEvidence(evidence) || directMatingEvidence(evidence) || partialSeatingEvidence(evidence);
+  if (/STAGE_1|RAW_WHOLE_IMAGE|LOCALIZED/.test(source)) return geometry ? 500 : 450;
+  if (/RELATIONSHIP|FALLBACK|CANONICAL_COMPONENT|SEMANTIC/.test(source)) return geometry ? 200 : 100;
+  return geometry ? 400 : 300; // reconciled whole-image visual-condition finding
+};
+const directGeometryState = finding => {
+  const evidence = finding?.directVisibleEvidence || finding?.visibleEvidence || '';
+  const separated = directSeparationEvidence(evidence), mated = directMatingEvidence(evidence), partial = partialSeatingEvidence(evidence);
+  if ((separated && mated) || (partial && (separated || mated))) return 'UNKNOWN';
+  if (separated) return 'DISCONNECTED';
+  if (mated) return 'CONNECTED';
+  if (partial) return 'PARTIALLY_DISCONNECTED';
+  return canonicalConnectionState(finding?.connectionState);
+};
+function resolveAuthoritativeConnectionStates(findings) {
+  const grouped = new Map();
+  for (const finding of findings) {
+    const key = connectionRelationshipKey(finding);
+    const list = grouped.get(key) || []; list.push(finding); grouped.set(key, list);
+  }
+  const resolved = [], adjudications = [];
+  for (const [key, group] of grouped) {
+    const stateful = group.filter(item => ['CONNECTED','DISCONNECTED','PARTIALLY_DISCONNECTED'].includes(directGeometryState(item)));
+    const states = new Set(stateful.map(directGeometryState));
+    if (states.size < 2) { resolved.push(...group); continue; }
+    const highestAuthority = Math.max(...stateful.map(connectionEvidenceAuthority));
+    const strongest = stateful.filter(item => connectionEvidenceAuthority(item) === highestAuthority);
+    const strongestStates = new Set(strongest.map(directGeometryState));
+    if (strongestStates.size > 1) {
+      // Preserve the established direct-separation gate where an explicit visible
+      // defect conflicts only with a normal-state claim at the same authority.
+      // Otherwise competing direct geometry is genuinely indeterminate.
+      const explicitDefect = strongest.find(item => directGeometryState(item) === 'DISCONNECTED' && item.findingType === 'CLEAR_DEFECT');
+      if (explicitDefect && !strongest.some(item => directGeometryState(item) === 'CONNECTED' && item.findingType === 'CLEAR_DEFECT')) {
+        resolved.push({ ...explicitDefect, authoritativeConnectionState: 'DISCONNECTED', connectionAuthority: highestAuthority });
+        adjudications.push({ key, disposition: 'AUTHORITATIVE_STATE_PRESERVED', authoritativeFindingId: explicitDefect.findingId, authoritativeState: 'DISCONNECTED', rejectedFindingIds: group.filter(item => item !== explicitDefect && directGeometryState(item) !== 'DISCONNECTED').map(item => item.findingId) });
+        continue;
+      }
+      const representative = strongest[0];
+      resolved.push({ ...representative, connectionState: 'INDETERMINATE', findingType: 'SEATING_NOT_RELIABLY_VISIBLE', seatingStatus: 'NOT_RELIABLY_VISIBLE', severity: 'UNDETERMINED', findingConfidence: Math.min(Number(representative.findingConfidence) || 60, 60), connectionStateConfidence: Math.min(Number(representative.connectionStateConfidence ?? representative.findingConfidence) || 60, 60), directDamageVisible: false, missingContext: 'Conflicting visible connection-state evidence requires physical verification.', recommendedVerification: VISUAL_CONNECTION_VERIFICATION, reconciliationNote: 'Conflicting equal-authority physical-state evidence resolved to uncertainty.', authoritativeConnectionState: 'UNCERTAIN', connectionAuthority: highestAuthority });
+      adjudications.push({ key, disposition: 'RESOLVED_TO_UNCERTAIN', rejectedFindingIds: group.map(item => item.findingId) });
+      continue;
+    }
+    const winner = strongest[0], winnerState = directGeometryState(winner);
+    resolved.push({ ...winner, authoritativeConnectionState: winnerState, connectionAuthority: highestAuthority });
+    const rejected = group.filter(item => item !== winner && ['CONNECTED','DISCONNECTED','PARTIALLY_DISCONNECTED'].includes(directGeometryState(item)) && directGeometryState(item) !== winnerState);
+    const compatible = group.filter(item => !rejected.includes(item) && item !== winner);
+    resolved.push(...compatible);
+    adjudications.push({ key, disposition: 'AUTHORITATIVE_STATE_PRESERVED', authoritativeFindingId: winner.findingId, authoritativeState: winnerState, rejectedFindingIds: rejected.map(item => item.findingId) });
+  }
+  return { findings: resolved, adjudications };
+}
 const functionalDefectKinds = new Set(['DISCONNECTED_CONNECTION','PARTIAL_CONNECTION','PHYSICAL_DAMAGE','LOOSE_OR_IMPROPER_ROUTING','ACTIVE_LEAK']);
 const visualCandidateMetrics = (item, sourceIndex = 0) => {
   const evidence = String(item?.directVisibleEvidence || item?.visibleEvidence || '');
@@ -1541,16 +1607,20 @@ export function reconcileVisualFindings(condition, { observation = null, relatio
       reconciliationErrors.push({ findingId: rawItem?.findingId || rawItem?.candidateId || `finding-${index + 1}`, reason: sanitizeDiagnosticText(error?.message) || 'finding normalization failed' });
     }
   });
+  // Resolve opposing states before candidate ranking.  Previously the state was
+  // part of this map's key, so CONNECTED and DISCONNECTED claims for one hose
+  // could survive as separate findings and the later gate only reported them.
+  const authoritativeResolution = resolveAuthoritativeConnectionStates(reconciled);
   const strongest = new Map();
   const rank = item => item.findingType === 'CLEAR_DEFECT' && visibleDefectKind(item.directVisibleEvidence || item.visibleEvidence) ? 5 : item.connectionState === 'CONNECTED_VERIFIED' && directMatingEvidence(item.visibleEvidence) ? 4 : item.connectionState === 'PARTIALLY_SEATED' ? 3 : item.connectionState === 'LOOSE_OR_SUSPECT' ? 2 : 1;
-  for (const item of reconciled) {
+  for (const item of authoritativeResolution.findings) {
     const key = `${canonicalFindingKey(item)}|${item.connectionState || item.findingType}`, previous = strongest.get(key);
     if (!previous || rank(item) > rank(previous) || (rank(item) === rank(previous) && (item.findingConfidence || 0) > (previous.findingConfidence || 0))) strongest.set(key, item);
   }
   const strongestValues = [...strongest.values()];
   const directDefectKeys = new Set(strongestValues.filter(item => item.findingType === 'CLEAR_DEFECT' && visibleDefectKind(item.directVisibleEvidence || item.visibleEvidence)).map(contradictionFindingKey));
   const finalFindings = rankVisualCandidates(strongestValues.filter(item => !directDefectKeys.has(contradictionFindingKey(item)) || item.findingType === 'CLEAR_DEFECT' || (item.findingType === 'POSSIBLE_CONCERN' && visibleDefectKind(item.directVisibleEvidence || item.visibleEvidence))));
-  const conflictsResolved = reconciled.length !== finalFindings.length || reconciled.some(item => item.reconciliationNote);
+  const conflictsResolved = reconciled.length !== finalFindings.length || authoritativeResolution.adjudications.length > 0 || reconciled.some(item => item.reconciliationNote);
   const promotedFindings = finalFindings.filter(item => item.findingType === 'CLEAR_DEFECT' && visibleDefectKind(item.directVisibleEvidence || item.visibleEvidence));
   const hasClearDefect = promotedFindings.length > 0;
   const possibleConcerns = (Array.isArray(base.possibleConcerns) ? base.possibleConcerns : []).map(item => ({ ...item, appearance: removeUnsupportedLeakConsequence(item?.appearance) })).filter(item => item.appearance && !visibleDefectKind(item.appearance));
@@ -1574,7 +1644,7 @@ export function reconcileVisualFindings(condition, { observation = null, relatio
   const recommendedVerification = focusedVerification.length ? [...new Set(focusedVerification)].slice(0, 2) : deduplicateSemanticText([...(base.recommendedVerification || []), ...promotedFindings.map(item => item.recommendedVerification).filter(Boolean), ...(directDisconnects.length ? [disconnectGuidance] : [])]).slice(0, 2);
   const primaryFinding = finalFindings[0] || null;
   const visualCandidateSet = finalFindings.map(item => ({ findingId: item.findingId, candidateId: item.candidateId || null, observedObject: item.observedObject, location: item.location, findingType: item.findingType, defectKind: item.defectKind, diagnosticPriority: item.diagnosticPriority, priorityRank: item.priorityRank, priorityScore: item.priorityScore, confidence: item.findingConfidence, evidence: item.directVisibleEvidence || item.visibleEvidence }));
-  const result = { ...base, status, possibleConcerns, connectionAssessments: finalFindings, primaryFindingId: primaryFinding?.findingId || null, visualCandidateSet, observedCondition: deduplicateSemanticText([...visibleDefects, ...safeObservedCondition]), visibleEvidence: deduplicateSemanticText([...promotedFindings.map(item => item.directVisibleEvidence || item.visibleEvidence), ...safeVisibleEvidence]), recommendedVerification, safetyDrivabilityImpact, noVisibleConcernMessage: hasClearDefect ? '' : base.noVisibleConcernMessage, unableToInspectReason: hasClearDefect ? null : base.unableToInspectReason, reconciliationErrors, reconciliation: { status: 'reconciled', findings: finalFindings, visibleDefects, primaryFindingId: primaryFinding?.findingId || null, visualState: primaryFinding ? canonicalConnectionState(primaryFinding.connectionState) : null, vehicleContextAvailable: vehicleContextState !== 'UNAVAILABLE', vehicleMismatch: vehicleContextState === 'MISMATCH' ? true : vehicleContextState === 'MATCH' ? false : null, conflicts: [], promotable: false, reason: reason.code, reasonDetail: reason }, crossFindingConsistency: { status: reconciliationErrors.length ? 'PARTIAL' : 'PASS', conflictsResolved, findingCount: finalFindings.length, rejectedFindingCount: reconciliationErrors.length, relationshipAnalysisAvailable: Boolean(relationship), stageOneObservationAvailable: Boolean(observation) } };
+  const result = { ...base, status, possibleConcerns, connectionAssessments: finalFindings, primaryFindingId: primaryFinding?.findingId || null, visualCandidateSet, observedCondition: deduplicateSemanticText([...visibleDefects, ...safeObservedCondition]), visibleEvidence: deduplicateSemanticText([...promotedFindings.map(item => item.directVisibleEvidence || item.visibleEvidence), ...safeVisibleEvidence]), recommendedVerification, safetyDrivabilityImpact, noVisibleConcernMessage: hasClearDefect ? '' : base.noVisibleConcernMessage, unableToInspectReason: hasClearDefect ? null : base.unableToInspectReason, reconciliationErrors, reconciliation: { status: 'reconciled', findings: finalFindings, visibleDefects, primaryFindingId: primaryFinding?.findingId || null, visualState: primaryFinding ? canonicalConnectionState(primaryFinding.connectionState) : null, vehicleContextAvailable: vehicleContextState !== 'UNAVAILABLE', vehicleMismatch: vehicleContextState === 'MISMATCH' ? true : vehicleContextState === 'MATCH' ? false : null, conflicts: [], authoritativeConnectionAdjudications: authoritativeResolution.adjudications, promotable: false, reason: reason.code, reasonDetail: reason }, crossFindingConsistency: { status: reconciliationErrors.length ? 'PARTIAL' : 'PASS', conflictsResolved, findingCount: finalFindings.length, rejectedFindingCount: reconciliationErrors.length, relationshipAnalysisAvailable: Boolean(relationship), stageOneObservationAvailable: Boolean(observation), authoritativeConnectionStatesResolved: authoritativeResolution.adjudications.length } };
   const conflictEvaluation = evaluateCrossFindingConflicts(result);
   const finalEvidencePromotion = promoteFinalEvidence(result, conflictEvaluation);
   return { ...result, conflictEvaluation, finalEvidencePromotion, reconciliation: { ...result.reconciliation, conflicts: conflictEvaluation.conflicts, promotable: finalEvidencePromotion.eligible } };
@@ -1633,7 +1703,7 @@ export function buildCanonicalVisualState(componentIdentification, visualConditi
     source: 'RECONCILED_VISUAL_EVIDENCE'
   }));
   return {
-    version: '10.13.139',
+    version: '10.13.140',
     componentIdentity: {
       name: componentIdentification?.name || componentIdentification?.primaryComponent || 'Unable to determine exact component',
       primaryComponent: componentIdentification?.name || componentIdentification?.primaryComponent || 'Unable to determine exact component',

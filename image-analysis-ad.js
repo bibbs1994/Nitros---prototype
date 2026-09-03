@@ -1,6 +1,6 @@
-/* Nitros 10.13.139 whole-image defect prioritization and connection-state reasoning. */
+/* Nitros 10.13.140 authoritative connection-state reconciliation. */
 (()=>{'use strict';
-const BUILD='10.13.139';
+const BUILD='10.13.140';
   const SEMANTIC_REQUEST_TIMEOUT_MS=290_000;
   // Automotive photographs are evidence. Send their original encoded bytes; do
   // not canvas-resize, crop, or recompress them on the client before inspection.
@@ -926,7 +926,7 @@ const BUILD='10.13.139';
     updateDeveloper(null,{resetReason:'APP_START'});
   }
 
-  function start(){document.title=`Nitros Mobile Technician Portal v${BUILD} — Whole-Image Defect Prioritization / Connection-State Reasoning — Build 2026-09-02`;buildImportUi()}
+  function start(){document.title=`Nitros Mobile Technician Portal v${BUILD} — Authoritative Connection-State Reconciliation — Build 2026-09-03`;buildImportUi()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
   window.addEventListener('pageshow',()=>setTimeout(start,40));
   new MutationObserver(()=>{if($('oliverHubSend')&&!$('oliverDiagnosticImport'))buildImportUi()}).observe(document.documentElement,{childList:true,subtree:true});
