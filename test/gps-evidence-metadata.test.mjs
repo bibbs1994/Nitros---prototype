@@ -26,11 +26,11 @@ test('GPS persists in the shared photo store and record copies',()=>{
   assert.match(html,/NitrosGpsEvidence\.html\(item\?\.gps/);
 });
 
-test('AQ GPS diagnostics remain present in the 10.13.142 deployment',()=>{
+test('AQ GPS diagnostics remain present in the 10.13.144 deployment',()=>{
   assert.match(html,/id="nitrosGpsDiagnostic"/);
   assert.match(html,/nitros-single-build-and-service-worker-authority/);
-  assert.match(html,/AI Usage Live Verification & Cost Calibration/);
-  assert.match(sw,/const VERSION = '10\.13\.142'/);
+  assert.match(html,/Vercel Upstash Environment Compatibility/);
+  assert.match(sw,/const VERSION = '10\.13\.144'/);
 });
 
 test('check-in and RO serialization propagates each saved photo GPS snapshot',()=>{

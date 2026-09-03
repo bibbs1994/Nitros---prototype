@@ -32,9 +32,9 @@ test('failed usage has no invented cost or token totals', () => {
   assert.equal(event.status, 'FAILED'); assert.equal(event.estimatedCostUsd, null); assert.equal(event.totalTokens, null); assert.equal(event.errorClassification, 'OPENAI_TIMEOUT');
 });
 
-test('a successful retry replaces its failed idempotency placeholder rather than adding a second event', async () => {
+test('legitimate retry attempts remain separate provider events under one logical operation', async () => {
   const file = join(await mkdtemp(join(tmpdir(), 'nitros-usage-')), 'ledger.json'), repo = new UsageLedgerRepository(file);
-  await repo.record(buildUsageEvent({ body: { transactionId: 'retry-1' }, error: Object.assign(new Error('timeout'), { code: 'OPENAI_TIMEOUT' }) }));
-  await repo.record(buildUsageEvent({ body: { transactionId: 'retry-1' }, result: { usageTelemetry: { model: 'gpt-5.6-sol', tokens: {}, requestCount: 1, imageCount: 1, durationMs: 12 } } }));
-  const report = await repo.report(); assert.equal(report.current.all.requests, 1); assert.equal(report.recent[0].status, 'SUCCEEDED');
+  await repo.record(buildUsageEvent({ body: { transactionId: 'retry-1' }, result: { usageTelemetry: { providerRequestId: 'resp_retry_a', upstreamCallIndex: 0, model: 'gpt-5.6-sol', status: 'FAILED', tokens: {}, requestCount: 1, imageCount: 1, durationMs: 12 } } }));
+  await repo.record(buildUsageEvent({ body: { transactionId: 'retry-1' }, result: { usageTelemetry: { providerRequestId: 'resp_retry_b', upstreamCallIndex: 1, model: 'gpt-5.6-sol', status: 'SUCCEEDED', tokens: {}, requestCount: 1, imageCount: 1, durationMs: 12 } } }));
+  const report = await repo.report(); assert.equal(report.current.all.requests, 1); assert.equal(report.current.all.providerRequests, 2); assert.deepEqual(new Set(report.recent.map(item => item.providerCallStatus)), new Set(['FAILED','SUCCEEDED']));
 });

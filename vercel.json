@@ -3,5 +3,11 @@
     "api/semantic-image-analysis.mjs": {
       "maxDuration": 300
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/admin/ai-usage",
+      "destination": "/ai-usage-dashboard.html"
+    }
+  ]
 }

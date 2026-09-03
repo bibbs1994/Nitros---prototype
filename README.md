@@ -1,17 +1,72 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.142 hardens AI usage verification and cost calibration while preserving the semantic visual-analysis pipeline. Each completed or failed semantic image operation produces one idempotent ledger event in the local server's ignored `data\ai-usage-ledger.json`; provider usage is aggregated across the workflow's internal Responses calls when OpenAI returns it. The deployed Vercel endpoint returns `usageTelemetry` but cannot durably write this file: production-wide ledger persistence requires a configured durable serverless storage adapter before the Vercel route can be claimed as ledger-backed.
+Version 10.13.144 adds direct Vercel Marketplace Upstash environment compatibility to the production durable AI usage ledger without changing the established semantic or visual-diagnostic reasoning pipeline. The Vercel write path records server-derived OpenAI Responses usage in a Redis/Valkey-compatible REST datastore; the protected admin API reads and aggregates that datastore for `/admin/ai-usage`.
 
-The protected local developer dashboard is at `http://localhost:8787/admin/ai-usage`. Set `NITROS_ADMIN_TOKEN` server-side before opening it. Budget settings are persisted with the ledger; `usage-pricing.mjs` is the single model-pricing configuration. GPT-5.6 Sol standard Responses pricing is configured from official OpenAI documentation ($4 input / $0.40 cached input / $20 output per million tokens, verified 2026-09-03); requests identified as fast/non-standard or long-context remain cost-unavailable. `actualProviderCostUsd` remains unavailable unless a provider exposes it. Future providers, BYOK, allowances, and enforcement should produce the same normalized event shape at the server boundary; no credential belongs in browser storage.
+## Durable AI usage ledger
 
-### Tomorrow’s field verification
+### Architecture and data flow
 
-1. Start the local server with `NITROS_ADMIN_TOKEN` configured and open `/admin/ai-usage`; record the current period totals.
-2. Open one active RO, submit exactly one known photo, and retain its semantic transaction ID from Developer Mode.
-3. Confirm one logical `photo_inspection` ledger event for that transaction, its RO/case/VIN context, status, model(s), provider-call count, token fields, and latency. Multiple provider calls are preserved inside that one logical event.
-4. Confirm the cost label: `ESTIMATED` only when provider usage plus a supported standard-model price exists; otherwise `COST UNAVAILABLE`. Never treat unavailable as zero or actual.
-5. Refresh the dashboard and confirm today/month totals and the RO/model breakdown changed once. Repeat from a second RO and confirm its cost appears only under the second RO.
-6. Exercise a failed request and retry: the failed placeholder must have no invented charge; a success for the same transaction replaces it rather than adding another logical event. Test a server restart only on the local ledger server, where the ignored ledger file persists.
+Production data follows one authoritative path:
+
+`semantic-image-analysis server function -> provider response telemetry -> durable-ai-usage-ledger.mjs -> Redis/Valkey REST -> protected /api/admin/ai-usage -> /admin/ai-usage dashboard`
+
+`semantic-analyzer-core.mjs` captures each individual OpenAI response ID, returned model, service tier, latency, token counts, and provider-call status. `api/semantic-image-analysis.mjs` creates one immutable ledger event per provider call while retaining the shared technician `logicalOperationId`. The original request's RO, case, vehicle, and VIN snapshot is copied into every event at creation; a later active-vehicle or active-RO change cannot move historical attribution.
+
+`durable-ai-usage-ledger.mjs` uses Redis `SET ... NX` for atomic duplicate prevention, a sorted-set index for chronological reads, and server-side aggregation from `ai-usage-ledger.mjs`. A provider response ID is the preferred idempotency identity. When a provider response ID is unavailable, the fallback is the logical operation ID plus the provider-call index. Distinct retry calls therefore remain distinct while duplicate delivery of the same call remains one event.
+
+The normalized event schema includes event/timestamp identity, `logicalOperationId`, `providerRequestId`, `upstreamCallIndex`, operation type, RO/case/vehicle/VIN attribution, returned provider/model fields, token counts, latency, operation and provider-call status, and one explicit cost state. `ACTUAL_PROVIDER_COST`, `ESTIMATED_CALCULATED_COST`, and `UNAVAILABLE` are separate. Unknown price or insufficient usage never becomes `$0.00`; budget usage and projections become unavailable when the period contains an unknown-cost provider call.
+
+`usage-pricing.mjs` is the single server-side price table. GPT-5.6 Sol standard Responses rates were verified from the official OpenAI model documentation on 2026-09-03; unrecognized models, non-standard service tiers, and explicitly identified long-context tariffs remain `UNAVAILABLE` until an authoritative rate is configured. Provider-reported actual charges always remain distinct from calculated estimates.
+
+### Required server environment variables
+
+- `OPENAI_API_KEY` — existing protected key used only by the semantic server path.
+- `NITROS_ADMIN_TOKEN` — administrator bearer token required by the company-wide usage API.
+- `KV_REST_API_URL` plus `KV_REST_API_TOKEN` — native Vercel Marketplace Upstash write-capable REST pair.
+- `AI_USAGE_REDIS_REST_URL` plus `AI_USAGE_REDIS_REST_TOKEN` — optional application-specific override pair.
+
+Credential resolution is pair-safe and deterministic: a complete `AI_USAGE_REDIS_REST_URL` + `AI_USAGE_REDIS_REST_TOKEN` pair wins; otherwise a complete `KV_REST_API_URL` + `KV_REST_API_TOKEN` pair is used. A partial override fails closed and is never mixed with the Vercel pair. `KV_REST_API_READ_ONLY_TOKEN` is never selected because the ledger requires write access. Health/status responses expose only `AI_USAGE_OVERRIDE`, `VERCEL_UPSTASH`, or `NOT_CONFIGURED`, never URLs or tokens.
+
+`AI_USAGE_LEDGER_STORE` is optional and local-only; it overrides the ignored JSON file used by `server.mjs`. It is not production durable storage.
+
+### Production configuration
+
+The recommended Vercel-compatible integration is Upstash Redis from the Vercel Marketplace because it supplies a serverless Redis-compatible REST service. The Marketplace listed Free, Pay as You Go, and Fixed options when this version was built; Bobby must review the current limits and select the appropriate plan during setup. A connected Marketplace installation automatically provisions `KV_REST_API_URL` and the write-capable `KV_REST_API_TOKEN`; version 10.13.144 consumes those variables directly. Do not duplicate, reveal, copy, or recreate those credentials. The `AI_USAGE_*` pair remains available only when an intentional application-specific override is needed.
+
+Production requires `OPENAI_API_KEY`, `NITROS_ADMIN_TOKEN`, and either complete Redis pair. When the Vercel Upstash integration has already provisioned `KV_REST_API_URL` and `KV_REST_API_TOKEN` for Production and Preview, no credential duplication is required. Preview should point to an intentionally approved datastore because its usage events will be durable; use a separate preview database when production isolation is required. Local Development uses the ignored JSON ledger by default and does not require Redis.
+
+Deployment before Redis variables exist is safe for the diagnostic result because accounting failure is isolated, logged only by a safe error code, and returned in server diagnostics. It is not a complete production-accounting deployment: the dashboard shows `DURABLE STORAGE: NOT CONFIGURED`, permanent totals are hidden, and usage occurring before configuration is not backfilled.
+
+### Protected read path and status behavior
+
+The production dashboard fetches only `/api/admin/ai-usage` with the administrator bearer token. It has no browser, local-storage, or in-memory fallback. The server returns only these storage states and never returns datastore connection details:
+
+- `DURABLE STORAGE: CONFIGURED` — authenticated health check and durable read succeeded.
+- `DURABLE STORAGE: NOT CONFIGURED` — required durable variables are missing or invalid; permanent totals remain hidden.
+- `DURABLE STORAGE: DEGRADED` — configuration exists but the datastore health/read failed; permanent totals remain hidden.
+
+The API supports server-side filters for time range, RO, case, operation, model, and status. Dashboard aggregation covers today, week, month, logical-operation count, provider calls/retries, photo inspections, success/failure, average cost per request and RO, model/operation/RO breakdowns, recent transactions, and monthly budget used/remaining/projected values where they are mathematically valid.
+
+### Security and failure behavior
+
+All provider and datastore credentials remain server-side. Event construction ignores browser-supplied token or cost totals and uses telemetry captured from the server's provider response. Recursive sanitization strips secret-, credential-, authorization-, password-, API-key-, and token-named fields before persistence and again before admin serialization. The admin API uses a timing-safe bearer-token comparison, no-store responses, and no unauthenticated cost access.
+
+Redis network, protocol, malformed-response, and write failures are classified separately from image analysis. A ledger failure never replaces or destroys a successful diagnostic/vision result. The returned diagnostic exposes only `PERSISTED`, `UNCONFIGURED`, or `FAILED` plus a safe error code. Local development persists atomically to ignored `data\ai-usage-ledger.json` and labels the dashboard `LOCAL DEVELOPMENT STORAGE`, so local totals cannot be mistaken for production durable totals.
+
+### Connection verification with no OpenAI cost
+
+After deploying version 10.13.144, open `/admin/ai-usage`, enter `NITROS_ADMIN_TOKEN`, and select Unlock/refresh. A `DURABLE STORAGE: CONFIGURED` result with safe source label `VERCEL_UPSTASH` proves the protected API resolved the native Vercel pair and completed Redis `PING` and read commands. This does not call OpenAI and creates no OpenAI charge. A direct authenticated `GET /api/admin/ai-usage` is equivalent; never place the bearer token in a URL, screenshot, source file, or shared log.
+
+### Field-test procedure after configuration
+
+1. Perform the no-OpenAI-cost connection check and record the current durable totals.
+2. Open RO A with its intended vehicle and submit exactly one known diagnostic photo. Retain the logical transaction ID from Developer Mode and the returned ledger status.
+3. Confirm the diagnostic result is unchanged and `usageLedgerWriteStatus` is `PERSISTED`.
+4. Refresh the dashboard. Confirm the logical operation appears once, every provider call/retry has its own provider response ID where supplied, all calls share the logical operation ID, and RO A/case/vehicle/VIN attribution matches the captured request.
+5. Confirm each row is explicitly `ACTUAL`, `ESTIMATED`, or `COST UNAVAILABLE`; never accept unknown as zero. Confirm model, operation, today/week/month, and budget aggregations.
+6. Switch to RO B and a different vehicle, submit one intentional test photo, and refresh. Confirm the new events belong only to RO B and the prior RO A records did not move.
+7. Refresh/retry the dashboard read and confirm it does not duplicate either provider response ID. If the diagnostic workflow legitimately makes multiple provider attempts, confirm each unique response ID is retained under the one logical operation.
+8. Temporarily test with a non-production datastore outage only if operationally safe. Confirm the dashboard reports `DEGRADED` and hides totals while a successful diagnostic result remains usable. Restore the datastore and confirm `CONFIGURED`.
 
 ## Local test server
 

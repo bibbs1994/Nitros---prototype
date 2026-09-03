@@ -1,6 +1,6 @@
-/* Nitros 10.13.142 AI usage live verification & cost calibration. */
+/* Nitros 10.13.144 Vercel Upstash environment compatibility. */
 (()=>{'use strict';
-const BUILD='10.13.142';
+const BUILD='10.13.144';
   const SEMANTIC_REQUEST_TIMEOUT_MS=290_000;
   // Automotive photographs are evidence. Send their original encoded bytes; do
   // not canvas-resize, crop, or recompress them on the client before inspection.
