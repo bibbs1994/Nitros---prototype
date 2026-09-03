@@ -1703,7 +1703,7 @@ export function buildCanonicalVisualState(componentIdentification, visualConditi
     source: 'RECONCILED_VISUAL_EVIDENCE'
   }));
   return {
-    version: '10.13.141',
+    version: '10.13.142',
     componentIdentity: {
       name: componentIdentification?.name || componentIdentification?.primaryComponent || 'Unable to determine exact component',
       primaryComponent: componentIdentification?.name || componentIdentification?.primaryComponent || 'Unable to determine exact component',
@@ -1748,7 +1748,7 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
     try {
       const response = await originalFetch(url, options);
       const originalJson = response.json.bind(response); let recorded = false;
-      response.json = async (...args) => { const body = await originalJson(...args); if (!recorded) { recorded = true; const u = body?.usage || {}; usageCalls.push({ model: request.model || null, reasoningEffort: request.reasoning?.effort || null, imageCount: request.input?.flatMap(item => item.content || []).filter(item => item.type === 'input_image').length || 0, durationMs: Math.max(0, Date.now() - startedAt), status: response.ok ? 'SUCCEEDED' : 'FAILED', inputTokens: Number.isFinite(u.input_tokens) ? u.input_tokens : null, cachedInputTokens: Number.isFinite(u.input_tokens_details?.cached_tokens) ? u.input_tokens_details.cached_tokens : null, outputTokens: Number.isFinite(u.output_tokens) ? u.output_tokens : null, totalTokens: Number.isFinite(u.total_tokens) ? u.total_tokens : null, providerUsage: body?.usage ?? null }); } return body; };
+      response.json = async (...args) => { const body = await originalJson(...args); if (!recorded) { recorded = true; const u = body?.usage || {}; usageCalls.push({ model: body?.model || request.model || null, reasoningEffort: request.reasoning?.effort || null, serviceTier: body?.service_tier || null, imageCount: request.input?.flatMap(item => item.content || []).filter(item => item.type === 'input_image').length || 0, durationMs: Math.max(0, Date.now() - startedAt), status: response.ok ? 'SUCCEEDED' : 'FAILED', inputTokens: Number.isFinite(u.input_tokens) ? u.input_tokens : null, cachedInputTokens: Number.isFinite(u.input_tokens_details?.cached_tokens) ? u.input_tokens_details.cached_tokens : null, outputTokens: Number.isFinite(u.output_tokens) ? u.output_tokens : null, reasoningTokens: Number.isFinite(u.output_tokens_details?.reasoning_tokens) ? u.output_tokens_details.reasoning_tokens : null, totalTokens: Number.isFinite(u.total_tokens) ? u.total_tokens : null, providerUsage: body?.usage ?? null }); } return body; };
       return response;
     } catch (error) { usageCalls.push({ model: request.model || null, reasoningEffort: request.reasoning?.effort || null, imageCount: request.input?.flatMap(item => item.content || []).filter(item => item.type === 'input_image').length || 0, durationMs: Math.max(0, Date.now() - startedAt), status: 'FAILED', inputTokens: null, cachedInputTokens: null, outputTokens: null, totalTokens: null, providerUsage: null }); throw error; }
   };
@@ -2139,7 +2139,8 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
   const numeric = field => usageCalls.reduce((total, call) => Number.isFinite(call[field]) ? total + call[field] : total, 0);
   const has = field => usageCalls.some(call => Number.isFinite(call[field]));
   const primary = usageCalls[0] || {};
-  const usageTelemetry = { model: primary.model || MODEL, reasoningEffort: primary.reasoningEffort || DEEP_VISION_REASONING.effort, imageCount: usageCalls.reduce((n, call) => n + (call.imageCount || 0), 0), requestCount: usageCalls.length, durationMs: Math.max(0, Date.now() - pipelineStartedAt), tokens: { inputTokens: has('inputTokens') ? numeric('inputTokens') : null, cachedInputTokens: has('cachedInputTokens') ? numeric('cachedInputTokens') : null, outputTokens: has('outputTokens') ? numeric('outputTokens') : null, totalTokens: has('totalTokens') ? numeric('totalTokens') : null }, providerUsage: usageCalls.map(({ providerUsage, ...safe }) => ({ ...safe, providerUsage })) };
+  const models = [...new Set(usageCalls.map(call => call.model).filter(Boolean))];
+  const usageTelemetry = { model: models.length === 1 ? models[0] : null, models, reasoningEffort: primary.reasoningEffort || DEEP_VISION_REASONING.effort, serviceTier: primary.serviceTier || null, imageCount: usageCalls.reduce((n, call) => n + (call.imageCount || 0), 0), requestCount: usageCalls.length, durationMs: Math.max(0, Date.now() - pipelineStartedAt), tokens: { inputTokens: has('inputTokens') ? numeric('inputTokens') : null, cachedInputTokens: has('cachedInputTokens') ? numeric('cachedInputTokens') : null, outputTokens: has('outputTokens') ? numeric('outputTokens') : null, reasoningTokens: has('reasoningTokens') ? numeric('reasoningTokens') : null, totalTokens: has('totalTokens') ? numeric('totalTokens') : null }, providerUsage: usageCalls.map(({ providerUsage, ...safe }) => ({ ...safe, providerUsage })) };
   return {
     transactionId,
     imageHash,

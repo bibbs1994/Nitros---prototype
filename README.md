@@ -1,8 +1,17 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.141 adds server-side AI usage and budget instrumentation while preserving the semantic visual-analysis pipeline. Each completed or failed semantic image operation produces one idempotent ledger event in the local server's ignored `data\ai-usage-ledger.json`; provider usage is aggregated across the workflow's internal Responses calls when OpenAI returns it. Missing token or actual-cost fields stay `null` rather than being invented.
+Version 10.13.142 hardens AI usage verification and cost calibration while preserving the semantic visual-analysis pipeline. Each completed or failed semantic image operation produces one idempotent ledger event in the local server's ignored `data\ai-usage-ledger.json`; provider usage is aggregated across the workflow's internal Responses calls when OpenAI returns it. The deployed Vercel endpoint returns `usageTelemetry` but cannot durably write this file: production-wide ledger persistence requires a configured durable serverless storage adapter before the Vercel route can be claimed as ledger-backed.
 
-The protected local developer dashboard is at `http://localhost:8787/admin/ai-usage`. Set `NITROS_ADMIN_TOKEN` server-side before opening it. Budget settings are persisted with the ledger; `usage-pricing.mjs` is the single model-pricing configuration. `actualProviderCostUsd` remains unavailable unless a provider exposes it; `estimatedCostUsd` is calculated only for explicitly configured rates. Future providers, BYOK, allowances, and enforcement should produce the same normalized event shape at the server boundary; no credential belongs in browser storage.
+The protected local developer dashboard is at `http://localhost:8787/admin/ai-usage`. Set `NITROS_ADMIN_TOKEN` server-side before opening it. Budget settings are persisted with the ledger; `usage-pricing.mjs` is the single model-pricing configuration. GPT-5.6 Sol standard Responses pricing is configured from official OpenAI documentation ($4 input / $0.40 cached input / $20 output per million tokens, verified 2026-09-03); requests identified as fast/non-standard or long-context remain cost-unavailable. `actualProviderCostUsd` remains unavailable unless a provider exposes it. Future providers, BYOK, allowances, and enforcement should produce the same normalized event shape at the server boundary; no credential belongs in browser storage.
+
+### Tomorrow’s field verification
+
+1. Start the local server with `NITROS_ADMIN_TOKEN` configured and open `/admin/ai-usage`; record the current period totals.
+2. Open one active RO, submit exactly one known photo, and retain its semantic transaction ID from Developer Mode.
+3. Confirm one logical `photo_inspection` ledger event for that transaction, its RO/case/VIN context, status, model(s), provider-call count, token fields, and latency. Multiple provider calls are preserved inside that one logical event.
+4. Confirm the cost label: `ESTIMATED` only when provider usage plus a supported standard-model price exists; otherwise `COST UNAVAILABLE`. Never treat unavailable as zero or actual.
+5. Refresh the dashboard and confirm today/month totals and the RO/model breakdown changed once. Repeat from a second RO and confirm its cost appears only under the second RO.
+6. Exercise a failed request and retry: the failed placeholder must have no invented charge; a success for the same transaction replaces it rather than adding another logical event. Test a server restart only on the local ledger server, where the ignored ledger file persists.
 
 ## Local test server
 
