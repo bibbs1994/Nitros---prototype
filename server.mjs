@@ -5,11 +5,13 @@ import { fileURLToPath } from 'node:url';
 import { analyzeSemanticImage } from './semantic-analyzer-core.mjs';
 import { MAX_JSON_BYTES, allowedOrigin, clientAddress, enforceRateLimit, publicError, validateDeclaredLength, validateJsonContentType } from './backend-http-security.mjs';
 import { SupportTicketRepository } from './support-ticket-repository.mjs';
+import { UsageLedgerRepository, buildUsageEvent } from './ai-usage-ledger.mjs';
 
 const root = fileURLToPath(new URL('.', import.meta.url)).replace(/[\\/]+$/, '');
 const port = Number(process.env.PORT || 8787);
 const host = process.env.HOST || '0.0.0.0';
 const supportTickets = new SupportTicketRepository(process.env.SUPPORT_TICKET_STORE || resolve(root, 'data', 'support-tickets.json'));
+const usageLedger = new UsageLedgerRepository(process.env.AI_USAGE_LEDGER_STORE || resolve(root, 'data', 'ai-usage-ledger.json'));
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml' };
 
 async function loadLocalEnvironment() {
@@ -45,11 +47,18 @@ function supportError(response, error) {
   const body = status >= 500 ? { error: 'Support ticket service is unavailable.', code: 'SUPPORT_TICKET_UNAVAILABLE' } : { error: error.message || 'Support ticket request is invalid.', code: error.code || 'INVALID_SUPPORT_TICKET' };
   return sendJson(response, status, body);
 }
+function adminAuthorized(request) { const token = process.env.NITROS_ADMIN_TOKEN; return Boolean(token) && request.headers.authorization === `Bearer ${token}`; }
 
 await loadLocalEnvironment();
 createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
+    if (url.pathname === '/api/admin/ai-usage') {
+      if (!adminAuthorized(request)) return sendJson(response, 401, { error: 'Admin authorization is required.', code: 'ADMIN_AUTH_REQUIRED' });
+      if (request.method === 'GET') return sendJson(response, 200, await usageLedger.report());
+      if (request.method === 'PATCH') { validateJsonContentType(request.headers['content-type']); const settings = await readJson(request); const permitted = ['monthlyBudgetUsd','warningPercent','criticalPercent','hardStopEnabled']; const clean = Object.fromEntries(permitted.filter(key => Object.hasOwn(settings,key)).map(key => [key, key === 'hardStopEnabled' ? settings[key] === true : Number(settings[key])])); if (Object.values(clean).some(value => typeof value === 'number' && (!Number.isFinite(value) || value < 0))) return sendJson(response, 400, { error: 'Budget settings are invalid.', code: 'INVALID_BUDGET_SETTINGS' }); await usageLedger.updateSettings(clean); return sendJson(response, 200, await usageLedger.report()); }
+      response.setHeader('Allow', 'GET, PATCH'); return sendJson(response, 405, { error: 'Method not allowed.', code: 'METHOD_NOT_ALLOWED' });
+    }
     if (url.pathname === '/api/support-tickets' || url.pathname.startsWith('/api/support-tickets/')) {
       response.setHeader('Vary', 'Origin');
       const origin = request.headers.origin;
@@ -95,8 +104,9 @@ createServer(async (request, response) => {
         enforceRateLimit(`${origin}|${clientAddress(request.headers, request.socket.remoteAddress || 'unknown')}`);
         validateJsonContentType(request.headers['content-type']);
         validateDeclaredLength(request.headers['content-length']);
-        const result = await analyzeSemanticImage(await readJson(request));
-        return sendJson(response, 200, result);
+        const body = await readJson(request);
+        try { const result = await analyzeSemanticImage(body); await usageLedger.record(buildUsageEvent({ body, result })); return sendJson(response, 200, result); }
+        catch (error) { await usageLedger.record(buildUsageEvent({ body, error })); throw error; }
       } catch (error) {
         const failure = publicError(error);
         if (failure.status === 429) response.setHeader('Retry-After', '60');
@@ -107,6 +117,12 @@ createServer(async (request, response) => {
       if (request.method !== 'GET' && request.method !== 'HEAD') return sendJson(response, 405, { error: 'Method not allowed.' });
       const bytes = await readFile(resolve(root, 'dashboard.html'));
       response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+      return response.end(request.method === 'HEAD' ? undefined : bytes);
+    }
+    if (url.pathname === '/admin/ai-usage') {
+      if (request.method !== 'GET' && request.method !== 'HEAD') return sendJson(response, 405, { error: 'Method not allowed.' });
+      const bytes = await readFile(resolve(root, 'ai-usage-dashboard.html'));
+      response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
       return response.end(request.method === 'HEAD' ? undefined : bytes);
     }
     if (request.method !== 'GET' && request.method !== 'HEAD') return sendJson(response, 405, { error: 'Method not allowed.' });

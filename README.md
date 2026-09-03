@@ -1,6 +1,8 @@
 # Nitros Mobile Technician Portal
 
-Version 10.13.94 isolates the authoritative active vehicle from stale case state, locks each analysis to an immutable snapshot, and keeps image pixels as the required proof for any component or defect finding.
+Version 10.13.141 adds server-side AI usage and budget instrumentation while preserving the semantic visual-analysis pipeline. Each completed or failed semantic image operation produces one idempotent ledger event in the local server's ignored `data\ai-usage-ledger.json`; provider usage is aggregated across the workflow's internal Responses calls when OpenAI returns it. Missing token or actual-cost fields stay `null` rather than being invented.
+
+The protected local developer dashboard is at `http://localhost:8787/admin/ai-usage`. Set `NITROS_ADMIN_TOKEN` server-side before opening it. Budget settings are persisted with the ledger; `usage-pricing.mjs` is the single model-pricing configuration. `actualProviderCostUsd` remains unavailable unless a provider exposes it; `estimatedCostUsd` is calculated only for explicitly configured rates. Future providers, BYOK, allowances, and enforcement should produce the same normalized event shape at the server boundary; no credential belongs in browser storage.
 
 ## Local test server
 

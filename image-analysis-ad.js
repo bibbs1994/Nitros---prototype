@@ -1,6 +1,6 @@
-/* Nitros 10.13.140 authoritative connection-state reconciliation. */
+/* Nitros 10.13.141 AI usage cost & budget control. */
 (()=>{'use strict';
-const BUILD='10.13.140';
+const BUILD='10.13.141';
   const SEMANTIC_REQUEST_TIMEOUT_MS=290_000;
   // Automotive photographs are evidence. Send their original encoded bytes; do
   // not canvas-resize, crop, or recompress them on the client before inspection.

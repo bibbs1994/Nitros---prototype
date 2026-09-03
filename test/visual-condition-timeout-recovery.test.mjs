@@ -190,6 +190,6 @@ test('10.13.138 G — the 10.13.137 downstream handoff remains canonical and non
   assert.match(core, /downstreamOverrideAllowed: false/);
   assert.match(core, /mergeCanonicalComponentEvidence\(visualConditionInspection,componentIdentification\)/);
   assert.match(core, /promoteFinalEvidence\(visualConditionInspection,conflictEvaluation\)/);
-  assert.match(core, /version: '10\.13\.140'/);
+  assert.match(core, /version: '10\.13\.141'/);
   for (const field of ['inspectionCompleted','visibleConditionAssessed','visibleFindings','observedObjects','physicalRelationships','structuredEvidence','uncertainty']) assert.match(client, new RegExp(field));
 });

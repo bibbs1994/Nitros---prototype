@@ -1703,7 +1703,7 @@ export function buildCanonicalVisualState(componentIdentification, visualConditi
     source: 'RECONCILED_VISUAL_EVIDENCE'
   }));
   return {
-    version: '10.13.140',
+    version: '10.13.141',
     componentIdentity: {
       name: componentIdentification?.name || componentIdentification?.primaryComponent || 'Unable to determine exact component',
       primaryComponent: componentIdentification?.name || componentIdentification?.primaryComponent || 'Unable to determine exact component',
@@ -1738,6 +1738,20 @@ export function selectGlobalVisualCandidates(observation, limit = 3) {
 
 export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_API_KEY, fetchImpl = fetch, diagnostic = {}, timeoutMs = OPENAI_TIMEOUT_MS, enableVisualObservation = false } = {}) {
   const pipelineStartedAt = Date.now();
+  // Capture provider-reported usage without changing any inspection request or response.
+  // The Responses API may omit usage; null is preserved rather than estimated here.
+  const usageCalls = [];
+  const originalFetch = fetchImpl;
+  fetchImpl = async (url, options = {}) => {
+    const startedAt = Date.now(); let request = {};
+    try { request = JSON.parse(options.body || '{}'); } catch {}
+    try {
+      const response = await originalFetch(url, options);
+      const originalJson = response.json.bind(response); let recorded = false;
+      response.json = async (...args) => { const body = await originalJson(...args); if (!recorded) { recorded = true; const u = body?.usage || {}; usageCalls.push({ model: request.model || null, reasoningEffort: request.reasoning?.effort || null, imageCount: request.input?.flatMap(item => item.content || []).filter(item => item.type === 'input_image').length || 0, durationMs: Math.max(0, Date.now() - startedAt), status: response.ok ? 'SUCCEEDED' : 'FAILED', inputTokens: Number.isFinite(u.input_tokens) ? u.input_tokens : null, cachedInputTokens: Number.isFinite(u.input_tokens_details?.cached_tokens) ? u.input_tokens_details.cached_tokens : null, outputTokens: Number.isFinite(u.output_tokens) ? u.output_tokens : null, totalTokens: Number.isFinite(u.total_tokens) ? u.total_tokens : null, providerUsage: body?.usage ?? null }); } return body; };
+      return response;
+    } catch (error) { usageCalls.push({ model: request.model || null, reasoningEffort: request.reasoning?.effort || null, imageCount: request.input?.flatMap(item => item.content || []).filter(item => item.type === 'input_image').length || 0, durationMs: Math.max(0, Date.now() - startedAt), status: 'FAILED', inputTokens: null, cachedInputTokens: null, outputTokens: null, totalTokens: null, providerUsage: null }); throw error; }
+  };
   const productionDeadlineAt = pipelineStartedAt + PRODUCTION_ANALYSIS_BUDGET_MS;
   const configuredTimeoutMs = Number.isFinite(timeoutMs) && timeoutMs > 0 ? Math.floor(timeoutMs) : OPENAI_TIMEOUT_MS;
   const timeoutFor = maximumMs => Math.max(1, Math.min(maximumMs, configuredTimeoutMs, productionDeadlineAt - Date.now() - RESPONSE_RETURN_RESERVE_MS));
@@ -2122,12 +2136,17 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
   semanticResult.documentRepairInformation = documentRepairInformation;
   semanticResult.vehicleContextApplied = vehicleContext ? { available: true, summary: [vehicleContext.year, vehicleContext.make, vehicleContext.model, vehicleContext.engine, vehicleContext.fuelType, vehicleContext.drivetrain, vehicleContext.configuration].filter(Boolean).join(' · ') || 'Vehicle configuration reference available' } : { available: false, summary: '' };
   semanticResult.vehicleContextBinding = vehicleContext ? { year: vehicleContext.year, make: vehicleContext.make, model: vehicleContext.model, engine: vehicleContext.engine || '', vin: vehicleContext.vin || '', activeCaseId: vehicleContext.activeCaseId || '', repairOrderId: vehicleContext.repairOrderId || '', vehicleId: vehicleContext.vehicleId || '', contextVersion: vehicleContext.contextVersion || '', source: vehicleContext.source || 'active case snapshot' } : null;
+  const numeric = field => usageCalls.reduce((total, call) => Number.isFinite(call[field]) ? total + call[field] : total, 0);
+  const has = field => usageCalls.some(call => Number.isFinite(call[field]));
+  const primary = usageCalls[0] || {};
+  const usageTelemetry = { model: primary.model || MODEL, reasoningEffort: primary.reasoningEffort || DEEP_VISION_REASONING.effort, imageCount: usageCalls.reduce((n, call) => n + (call.imageCount || 0), 0), requestCount: usageCalls.length, durationMs: Math.max(0, Date.now() - pipelineStartedAt), tokens: { inputTokens: has('inputTokens') ? numeric('inputTokens') : null, cachedInputTokens: has('cachedInputTokens') ? numeric('cachedInputTokens') : null, outputTokens: has('outputTokens') ? numeric('outputTokens') : null, totalTokens: has('totalTokens') ? numeric('totalTokens') : null }, providerUsage: usageCalls.map(({ providerUsage, ...safe }) => ({ ...safe, providerUsage })) };
   return {
     transactionId,
     imageHash,
     analyzer: `OpenAI ${MODEL}`,
     transportStatus,
     semanticResult,
+    usageTelemetry,
     serverDiagnostic: diagnostic
   };
 }
