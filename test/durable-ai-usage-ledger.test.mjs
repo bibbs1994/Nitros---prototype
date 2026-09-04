@@ -232,6 +232,8 @@ test('successful production persistence records each provider call with its resp
   assert.equal(retry.schemaValidationStatus, 'ACCEPTED');
   assert.equal(retry.operationDurationMs, 90000);
   assert.equal(retry.executionMode, 'SEQUENTIAL');
+  assert.equal(retry.callType, 'TRUE_RETRY');
+  assert.equal(report.current.all.intentionalSubcalls, 1);
 });
 
 test('logical photo report aggregates the durable stage hierarchy and authoritative timing separately', async () => {
@@ -253,6 +255,7 @@ test('logical photo report aggregates the durable stage hierarchy and authoritat
   assert.equal(operation.executionMode, 'SEQUENTIAL');
   assert.equal(operation.finalOperationStatus, 'SUCCEEDED');
   assert.equal(operation.retryCount, 1);
+  assert.equal(operation.intentionalSubcalls, 1);
   assert.equal(operation.timeoutCount, 0);
   assert.deepEqual(operation.calls.map(item => item.stageName), ['IMAGE_SEMANTIC_CLASSIFICATION', 'REGIONAL_WHOLE_IMAGE_SWEEP']);
   assert.deepEqual(operation.slowestStage, { stageName: 'REGIONAL_WHOLE_IMAGE_SWEEP', durationMs: 160000, upstreamCallIndex: 1 });
@@ -322,7 +325,7 @@ test('production dashboard routes only to the protected API and hides totals whe
   assert.match(dashboard, /Photo inspection telemetry/);
   assert.match(dashboard, /<details class="inspection">/);
   assert.match(dashboard, /renderPhotoInspections\(data\.logicalOperations\)/);
-  for (const label of ['End-to-end time', 'Stage', 'Latency', 'Tokens', 'Images / detail', 'Cost', 'HTTP', 'Schema', 'Retry / timeout']) assert.match(dashboard, new RegExp(label, 'i'));
+  for (const label of ['End-to-end time', 'Stage', 'Call type', 'Intentional analysis stages', 'true retries', 'Latency', 'Tokens', 'Images / detail', 'Cost', 'HTTP', 'Schema', 'Retry / timeout']) assert.match(dashboard, new RegExp(label, 'i'));
   assert.match(dashboard, /\$\('content'\)\.hidden=true/);
   assert.equal(vercel.rewrites.find(item => item.source === '/admin/ai-usage')?.destination, '/ai-usage-dashboard.html');
   assert.doesNotMatch(dashboard, /localStorage|sessionStorage|AI_USAGE_REDIS_REST_TOKEN|OPENAI_API_KEY/);

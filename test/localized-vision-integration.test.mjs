@@ -15,6 +15,7 @@ async function fixture() { return sharp({ create: { width: 1000, height: 800, ch
 const response = (payload, status = 200, metadata = {}) => ({ ok: status >= 200 && status < 300, status, async json() { return { ...metadata, output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(payload) }] }] }; } });
 const drivetrain = () => ({ applicable: false, candidateType: 'OTHER', engineConnection: 'UNKNOWN', transmissionConnection: 'UNKNOWN', longitudinalShafts: 'UNKNOWN', lateralAxleOutputs: 'UNKNOWN', axleTubes: 'UNKNOWN', location: 'UNKNOWN', powerFlowRole: 'UNKNOWN', distinguishingFeaturesComplete: false, evidence: [], competingCandidate: null });
 const connector = () => ({ id: 'OBJ-101', type: 'electrical_connector', location: 'center of image', evidence: 'Connector body and mating interface are visible.', confidence: 92, occluded: false, harnessTermination: 'YES', matingStatus: 'MATED', connectionState: 'CONNECTED_CONFIRMED', physicalStateConfidence: 92, ownershipConfidence: 70, candidateReceptacle: 'OBJ-102', exposedMatingInterface: true, matingFaceVisibility: 'VISIBLE', physicalInsertionObserved: 'TRUE', physicalSeparationObserved: 'FALSE', freeTerminationObserved: 'FALSE', exposedMatingInterfaceObserved: 'TRUE', candidateReceptacleObserved: 'TRUE', gapObserved: 'FALSE', visibleGeometricMatingContinuity: 'TRUE', insertionGeometryEvidence: 'The connector mating face enters the visible receptacle boundary along one continuous axis.', separationGeometryEvidence: '', freeTerminationEvidence: '', rawObservationProvenance: 'Visible connector and receptacle geometry.', connectorBodyVisible: 'TRUE', matingFaceVisible: 'TRUE', receivingReceptacleVisible: 'TRUE', continuousInsertionPathVisible: 'TRUE', connectorFreeInSpace: 'FALSE' });
+const disconnectedConnector = () => ({ ...connector(), location: 'upper-left area of image', evidence: 'The harness terminates at a visible free connector with an exposed mating face and open space beyond it.', matingStatus: 'FREE_UNMATED', connectionState: 'DISCONNECTED_CONFIRMED', physicalInsertionObserved: 'FALSE', physicalSeparationObserved: 'TRUE', freeTerminationObserved: 'TRUE', candidateReceptacleObserved: 'FALSE', gapObserved: 'TRUE', visibleGeometricMatingContinuity: 'FALSE', insertionGeometryEvidence: '', separationGeometryEvidence: 'A visible air gap and open space continue beyond the exposed connector face.', freeTerminationEvidence: 'The harness ends at a visible free connector with an exposed face.', receivingReceptacleVisible: 'FALSE', continuousInsertionPathVisible: 'FALSE', connectorFreeInSpace: 'TRUE' });
 const receptacle = () => ({ ...connector(), id: 'OBJ-102', type: 'electrical_receptacle', location: 'center of image', evidence: 'Receiving receptacle boundary is visible.', harnessTermination: 'NOT_APPLICABLE', candidateReceptacle: '', exposedMatingInterface: false, matingFaceVisibility: 'NOT_APPLICABLE', physicalInsertionObserved: 'NOT_APPLICABLE', physicalSeparationObserved: 'NOT_APPLICABLE', freeTerminationObserved: 'NOT_APPLICABLE', exposedMatingInterfaceObserved: 'NOT_APPLICABLE', candidateReceptacleObserved: 'NOT_APPLICABLE', gapObserved: 'NOT_APPLICABLE', visibleGeometricMatingContinuity: 'NOT_APPLICABLE', insertionGeometryEvidence: '', separationGeometryEvidence: '', freeTerminationEvidence: '', connectorBodyVisible: 'NOT_APPLICABLE', matingFaceVisible: 'NOT_APPLICABLE', receivingReceptacleVisible: 'NOT_APPLICABLE', continuousInsertionPathVisible: 'NOT_APPLICABLE', connectorFreeInSpace: 'NOT_APPLICABLE' });
 const contracts = {
   nitros_image_semantics: { category: 'AUTOMOTIVE_COMPONENT_OR_VEHICLE', confidence: 96, objects: ['electrical connector'], evidence: ['A connector and harness are visible.'], description: 'Automotive electrical connection.', automotiveEvidence: ['Connector body and harness are visible in an engine-bay context.'], graphEvidence: [], documentEvidence: [] },
@@ -38,6 +39,35 @@ function makeContractRouter({ failLocalized = false, withProviderTelemetry = fal
     return response(structuredClone(contracts[stage]), 200, metadata);
   };
   return { fetchImpl, requests };
+}
+
+function makeOptimizedRouter({ failLocalized = false, withProviderTelemetry = false, proveParallel = false, candidates = true, abnormalWithoutBounds = false } = {}) {
+  const requests = [];
+  let inFlight = 0, maximumInFlight = 0;
+  const fetchImpl = async (_url, options) => {
+    const request = JSON.parse(options.body);
+    const stage = request?.text?.format?.name;
+    requests.push({ stage, request });
+    const requestIndex = requests.length;
+    inFlight += 1;
+    maximumInFlight = Math.max(maximumInFlight, inFlight);
+    try {
+      if (proveParallel && stage !== 'nitros_comprehensive_visual_analysis') await new Promise(resolve => setTimeout(resolve, stage === 'nitros_automotive_context_analysis' ? 150 : 40));
+      if (stage === 'nitros_batched_localized_inspection' && failLocalized) return response({ error: { message: 'Forced batched localized inspection failure.' } }, 503);
+      const observation = abnormalWithoutBounds ? { status: 'READY', objects: [disconnectedConnector()], relationships: [], abnormalFindings: [{ objectId: 'OBJ-101', state: 'FREE_UNMATED_ELECTRICAL_TERMINATION', evidence: 'The harness ends at a visibly free unmated connector face.', confidence: 92, priorityRank: 1, recommendedVerification: 'Verify the connector mating face and locate its intended receptacle.' }], summary: 'A free electrical termination is visible.' } : contracts.nitros_raw_visual_observation;
+      const payload = stage === 'nitros_comprehensive_visual_analysis'
+        ? { semantic: contracts.nitros_image_semantics, visualObservation: observation, visualConditionInspection: contracts.nitros_visual_condition_inspection, candidateRegions: candidates ? contracts.nitros_candidate_regions : { candidates: [] } }
+        : stage === 'nitros_automotive_context_analysis'
+          ? { componentIdentification: contracts.nitros_automotive_component, vehicleAreaRelationshipAnalysis: contracts.nitros_vehicle_area_relationship }
+          : stage === 'nitros_batched_localized_inspection'
+            ? { inspections: [localizedRaw] }
+            : null;
+      if (!payload) throw new Error(`Unhandled optimized production stage: ${stage}`);
+      const metadata = withProviderTelemetry ? { id: `resp_optimized_${requestIndex}`, model: 'gpt-5.6-sol', status: 'completed', service_tier: 'default', usage: { input_tokens: 2000 + requestIndex, input_tokens_details: { cached_tokens: requestIndex, cache_write_tokens: 0 }, output_tokens: 200 + requestIndex, output_tokens_details: { reasoning_tokens: 100 + requestIndex }, total_tokens: 2200 + requestIndex } } : {};
+      return response(structuredClone(payload), 200, metadata);
+    } finally { inFlight -= 1; }
+  };
+  return { fetchImpl, requests, maximumInFlight: () => maximumInFlight };
 }
 
 const imageBytes = (url) => Buffer.from(String(url).split(',')[1], 'base64');
@@ -143,6 +173,68 @@ test('production vision telemetry correlates every existing call without adding 
   assert.equal(result.semanticResult.visualConditionInspection.localizedVisualEvidence[0].connectionState, 'DISCONNECTED_VERIFIED', 'diagnostic evidence is unchanged while telemetry is collected');
 });
 
+test('optimized production flow bounds one photo to three intentional calls and preserves diagnostic depth', async () => {
+  const body = await productionBody();
+  const { fetchImpl, requests, maximumInFlight } = makeOptimizedRouter({ withProviderTelemetry: true, proveParallel: true });
+  const result = await analyzeSemanticImage(body, { apiKey: 'test-only-placeholder', fetchImpl, enableVisualObservation: true, optimizeVisualFanout: true });
+  assert.deepEqual(requests.map(({ stage }) => stage), ['nitros_comprehensive_visual_analysis', 'nitros_automotive_context_analysis', 'nitros_batched_localized_inspection']);
+  assert.equal(maximumInFlight(), 2, 'component/relationship reasoning and localized verification overlap after the primary pass');
+  assert.deepEqual(requests.map(({ request }) => inputImages(request).length), [10, 1, 3], 'the original/regional pixels are not resent across seven separate calls');
+  assert.match(requests[0].request.input[0].content[0].text, /inspect the original and every supplied region/i);
+  assert.match(requests[0].request.input[0].content[0].text, /broken or missing hoses\/wires/i);
+  assert.match(requests[1].request.input[0].content[0].text, /compact structured handoff/i);
+  assert.match(requests[1].request.input[0].content[0].text, /Proximity is not connection/i);
+  assert.match(requests[2].request.input[0].content[0].text, /one batch/i);
+  assert.equal(result.semanticResult.category, 'AUTOMOTIVE_COMPONENT_OR_VEHICLE');
+  assert.equal(result.semanticResult.componentIdentification.primaryComponent, 'Electrical connector');
+  assert.equal(result.semanticResult.vehicleAreaRelationshipAnalysis.status, 'READY');
+  assert.equal(result.semanticResult.localizedVisualInspections[0].localizedVisualVerification, true);
+  assert.equal(result.semanticResult.visualConditionInspection.localizedVisualEvidence[0].connectionState, 'DISCONNECTED_VERIFIED');
+  assert.equal(result.usageTelemetry.requestCount, 3);
+  assert.equal(result.usageTelemetry.providerCallCount, 3);
+  assert.equal(result.usageTelemetry.intentionalSubcallCount, 3);
+  assert.equal(result.usageTelemetry.trueRetryCount, 0);
+  assert.equal(result.usageTelemetry.executionMode, 'HYBRID_PARALLEL');
+  assert.ok(result.usageTelemetry.providerUsage.every(call => call.callType === 'INTENTIONAL_STAGE' && call.intentionalSubcall === true && call.retryAttempt === 0));
+  assert.deepEqual(result.usageTelemetry.providerUsage.map(call => call.stageName), ['COMPREHENSIVE_WHOLE_IMAGE_ANALYSIS', 'COMPONENT_AND_RELATIONSHIP_REASONING', 'BATCHED_LOCALIZED_VISUAL_VERIFICATION']);
+});
+
+test('optimized localized-stage failure stays visible and cannot destroy the primary diagnostic result', async () => {
+  const body = await productionBody();
+  const { fetchImpl, requests } = makeOptimizedRouter({ failLocalized: true });
+  const result = await analyzeSemanticImage(body, { apiKey: 'test-only-placeholder', fetchImpl, enableVisualObservation: true, optimizeVisualFanout: true });
+  assert.equal(requests.length, 3);
+  assert.equal(result.semanticResult.localizedVisualInspections[0].localizedVisualVerification, false);
+  assert.match(result.semanticResult.localizedVisualInspections[0].failureReason, /Batched localized inspection failed with HTTP 503/i);
+  assert.equal(result.semanticResult.visualObservation.objects[0].connectionState, 'CONNECTED_CONFIRMED');
+  assert.equal(result.semanticResult.visualConditionInspection.connectionAssessments[0].connectionState, 'CONNECTED_VERIFIED');
+  assert.equal(result.serverDiagnostic.localizedVisualVerification, false);
+});
+
+test('optimized production flow uses two calls when the comprehensive pass selects no crop candidate', async () => {
+  const body = await productionBody();
+  const { fetchImpl, requests } = makeOptimizedRouter({ candidates: false });
+  const result = await analyzeSemanticImage(body, { apiKey: 'test-only-placeholder', fetchImpl, enableVisualObservation: true, optimizeVisualFanout: true });
+  assert.deepEqual(requests.map(({ stage }) => stage), ['nitros_comprehensive_visual_analysis', 'nitros_automotive_context_analysis']);
+  assert.equal(result.usageTelemetry.requestCount, 2);
+  assert.equal(result.usageTelemetry.intentionalSubcallCount, 2);
+  assert.equal(result.usageTelemetry.retryCount, 0);
+  assert.equal(result.usageTelemetry.executionMode, 'SEQUENTIAL');
+  assert.deepEqual(result.semanticResult.localizedVisualInspections, []);
+  assert.equal(result.semanticResult.visualConditionInspection.inspectionCompleted, true);
+});
+
+test('optimized production flow preserves verification when abnormal evidence lacks model-supplied crop bounds', async () => {
+  const body = await productionBody();
+  const { fetchImpl, requests } = makeOptimizedRouter({ candidates: false, abnormalWithoutBounds: true });
+  const result = await analyzeSemanticImage(body, { apiKey: 'test-only-placeholder', fetchImpl, enableVisualObservation: true, optimizeVisualFanout: true });
+  assert.deepEqual(requests.map(({ stage }) => stage), ['nitros_comprehensive_visual_analysis', 'nitros_automotive_context_analysis', 'nitros_batched_localized_inspection']);
+  const batch = requests[2].request;
+  assert.equal(inputImages(batch).length, 3, 'deterministic image-relative fallback still supplies original, detail, and context views');
+  assert.match(batch.input[0].content[0].text, /OBJ-101/);
+  assert.equal(result.semanticResult.localizedVisualInspections[0].candidateId, 'OBJ-101');
+});
+
 test('HTTP success and local schema rejection are recorded independently', async () => {
   const body = await productionBody(), diagnostic = {};
   const fetchImpl = async () => response({ category: 'INVALID_CATEGORY' }, 200, { id: 'resp_invalid_schema', model: 'gpt-5.6-sol', status: 'completed' });
@@ -172,6 +264,7 @@ test('actual localized Pass-2 production prompt rejects proximity as connection'
   const client = await readFile(new URL('../image-analysis-ad.js', import.meta.url), 'utf8');
   for (const requirement of ['PROXIMITY IS NOT CONNECTION', 'connector/socket', 'battery terminal/post', 'hose/port', 'return UNCERTAIN', 'absence of a detected defect is not proof']) assert.ok(core.includes(requirement));
   assert.match(core, /AUTOMOTIVE_COMPONENT_OR_VEHICLE' && \(enableVisualObservation \|\| vehicleContext\)/, 'eligible production automotive images execute relationship analysis without requiring vehicle context');
+  assert.match(endpoint, /enableVisualObservation: true, optimizeVisualFanout: true/, 'production API explicitly selects the bounded optimized visual pipeline');
   for (const requirement of ['vehicleAreaRelationshipAttempted', 'localizedVisualVerification', 'vehicleContextMismatchStatus']) assert.ok(endpoint.includes(requirement), `production telemetry exposes ${requirement}`);
   for (const requirement of ["'NOT AVAILABLE'", "'NOT DETERMINED'", 'SKIPPED — ${reason}']) assert.ok(client.includes(requirement), `Hub trace exposes ${requirement}`);
 });

@@ -160,6 +160,37 @@ const vehicleAreaRelationshipSchema = {
   }
 };
 
+const comprehensiveVisualAnalysisSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['semantic', 'visualObservation', 'visualConditionInspection', 'candidateRegions'],
+  properties: {
+    semantic: semanticSchema,
+    visualObservation: { anyOf: [visualObservationSchema, { type: 'null' }] },
+    visualConditionInspection: { anyOf: [visualConditionInspectionSchema, { type: 'null' }] },
+    candidateRegions: candidateRegionSchema
+  }
+};
+
+const automotiveContextAnalysisSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['componentIdentification', 'vehicleAreaRelationshipAnalysis'],
+  properties: {
+    componentIdentification: automotiveComponentSchema,
+    vehicleAreaRelationshipAnalysis: vehicleAreaRelationshipSchema
+  }
+};
+
+const batchedLocalizedInspectionSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['inspections'],
+  properties: {
+    inspections: { type: 'array', maxItems: 3, items: localizedInspectionSchema }
+  }
+};
+
 const wiringDiagramSchema = {
   type: 'object', additionalProperties: false,
   required: ['status','circuitComponent','confidence','structuralEvidence','detectedComponents','connectorsAndPins','circuitPaths','fuses','relays','splices','wireDetails','importantObservations','unreadableFields','safetyWarning','testPlan'],
@@ -224,7 +255,7 @@ export function assertStrictOutputSchema(schema, path = '$') {
   if (Array.isArray(schema.anyOf)) schema.anyOf.forEach((value, index) => assertStrictOutputSchema(value, `${path}.anyOf[${index}]`));
 }
 
-export const STRICT_OUTPUT_SCHEMAS = Object.freeze({ semanticSchema, automotiveGraphSchema, targetedPidRecoverySchema, automotiveComponentSchema, visualConditionInspectionSchema, vehicleAreaRelationshipSchema, wiringDiagramSchema, documentRepairInformationSchema });
+export const STRICT_OUTPUT_SCHEMAS = Object.freeze({ semanticSchema, automotiveGraphSchema, targetedPidRecoverySchema, automotiveComponentSchema, visualConditionInspectionSchema, vehicleAreaRelationshipSchema, comprehensiveVisualAnalysisSchema, automotiveContextAnalysisSchema, batchedLocalizedInspectionSchema, wiringDiagramSchema, documentRepairInformationSchema });
 Object.entries(STRICT_OUTPUT_SCHEMAS).forEach(([name, schema]) => assertStrictOutputSchema(schema, name));
 
 export function normalizeSemanticConfidence(rawConfidence) {
@@ -1439,6 +1470,80 @@ function resolveAuthoritativeConnectionStates(findings) {
   }
   return { findings: resolved, adjudications };
 }
+
+function validateCandidateRegions(raw, observation) {
+  const known = new Map((observation?.objects || []).map(item => [item.id, item]));
+  const candidates = Array.isArray(raw?.candidates) ? raw.candidates : [];
+  return candidates.slice(0, 3).flatMap(candidate => {
+    const object = known.get(candidate?.candidate_id);
+    const region = validateNormalizedRegion(candidate?.region);
+    if (!object || !region) return [];
+    return [{
+      candidate_id: object.id,
+      candidate_class: String(candidate.candidate_class || object.type || 'visual_candidate').slice(0, 160),
+      candidate_description: String(candidate.candidate_description || object.type || 'Visible inspection candidate').slice(0, 500),
+      confidence: Number.isFinite(candidate.confidence) ? candidate.confidence : null,
+      inspection_priority: Number.isInteger(candidate.inspection_priority) ? Math.max(1, Math.min(6, candidate.inspection_priority)) : 6,
+      region_basis: String(candidate.region_basis || 'Visible object bounds in the supplied image.').slice(0, 500),
+      region
+    }];
+  }).sort((a, b) => a.inspection_priority - b.inspection_priority);
+}
+
+function normalizedRegionFromImageLocation(location) {
+  const value = String(location || '').toLowerCase();
+  if (!value || /cannot be determined|unknown|not visible/.test(value)) return null;
+  const centerX = /left/.test(value) ? 0.22 : /right/.test(value) ? 0.78 : 0.5;
+  const centerY = /upper|top/.test(value) ? 0.22 : /lower|bottom/.test(value) ? 0.78 : 0.5;
+  return validateNormalizedRegion({ x: Math.max(0, centerX - 0.2), y: Math.max(0, centerY - 0.2), width: 0.4, height: 0.4 });
+}
+
+function preserveHighValueCandidateCoverage(candidates, observation) {
+  const retained = Array.isArray(candidates) ? candidates.slice(0, 3) : [];
+  const existing = new Set(retained.map(item => item.candidate_id));
+  for (const candidate of selectGlobalVisualCandidates(observation, 3)) {
+    if (retained.length >= 3 || existing.has(candidate.id) || !candidate.abnormalState) continue;
+    const region = normalizedRegionFromImageLocation(candidate.location);
+    if (!region) continue;
+    retained.push({ candidate_id: candidate.id, candidate_class: candidate.type, candidate_description: `${candidate.type} with ${candidate.abnormalState} whole-image evidence`, confidence: null, inspection_priority: Math.max(1, Math.min(6, candidate.wholeImagePriorityRank || 1)), region_basis: 'Deterministic fallback from the validated image-relative location after the comprehensive response omitted candidate bounds.', region });
+    existing.add(candidate.id);
+  }
+  return retained.sort((a, b) => a.inspection_priority - b.inspection_priority).slice(0, 3);
+}
+
+function compactVisualHandoff({ semanticResult, visualObservation, visualConditionInspection }) {
+  return {
+    classification: {
+      category: semanticResult?.category || null,
+      objects: (semanticResult?.objects || []).slice(0, 12),
+      evidence: (semanticResult?.evidence || []).slice(0, 12)
+    },
+    observation: {
+      objects: (visualObservation?.objects || []).slice(0, 24).map(item => ({
+        id: item.id, type: item.type, location: item.location,
+        connectionState: item.connectionState, matingStatus: item.matingStatus,
+        evidence: Array.isArray(item.evidence) ? item.evidence.slice(0, 4) : item.evidence
+      })),
+      relationships: (visualObservation?.relationships || []).slice(0, 16),
+      abnormalFindings: (visualObservation?.abnormalFindings || []).slice(0, 16)
+    },
+    physicalFindings: (visualConditionInspection?.connectionAssessments || []).slice(0, 12).map(item => ({
+      location: item.location, seatingStatus: item.seatingStatus, findingType: item.findingType,
+      visibleEvidence: item.visibleEvidence, matingComponentVisible: item.matingComponentVisible
+    }))
+  };
+}
+
+function optimizedAutomotiveContextPrompt(vehicleContext, compactHandoff) {
+  return `Complete two related but independently evidenced tasks for this current automotive photograph: component identification and vehicle-area/component-relationship analysis. ${vehicleContextPrompt(vehicleContext)} The compact structured handoff below contains only pixel-grounded findings from the comprehensive whole-image pass. Treat it as an orientation index, not proof; inspect the supplied original image and preserve contradictions.
+
+COMPACT WHOLE-IMAGE HANDOFF:
+${JSON.stringify(compactHandoff)}
+
+For componentIdentification, identify the most specific primary component supported by defining visible features, its automotive system, secondary visible components, likely connections, alternatives, and uncertainty. Component confidence is independent from category confidence. Keep visible wiring, cable, terminal, hose, and connector identity separate from a merely likely destination. Never call a starter, solenoid, sensor, module, or other housing visible when only its wiring is visible. Distinguish EGR/vacuum/emissions assemblies using multiple independent cues including actuator/connector placement, body and mounting geometry, flanges/passages, adjacent tubing or plumbing, engine location, and readable markings only when consistent with the hardware. Before selecting transfer case, differential, transmission, or transaxle, complete drivetrainDiscrimination using engine/transmission attachment, longitudinal shafts, lateral axle outputs or axle tubes, centerline/axle position, and power-flow role. Housing shape alone is insufficient; retain the closest alternative and lower confidence when defining discriminators are missing.
+
+For vehicleAreaRelationshipAnalysis, determine a supported broad vehicle-area location and the relationships of every material visible connector, wire/harness, hose/line/pipe, port, bracket, fastener, opening, separated item, and surrounding assembly. Preserve direct observations separately from inference. Proximity is not connection. Never let vehicle context override contradictory pixels or prove a destination. Independently build expectedComponentCheck and topologyInventory. A missingAssemblyCandidate requires at least two independent evidence classes, including vehicle-specific expected location plus visible mounting geometry, cable/connector, hose/line, bracket, or vacant-space evidence. Vehicle context alone is never sufficient. When the gate is not met, return exactly "No visually supported missing component detected." and empty support arrays. Provide a concrete better-photo or hands-on verification step for every uncertainty. Return the strict combined schema.`;
+}
 const functionalDefectKinds = new Set(['DISCONNECTED_CONNECTION','PARTIAL_CONNECTION','PHYSICAL_DAMAGE','LOOSE_OR_IMPROPER_ROUTING','ACTIVE_LEAK']);
 const visualCandidateMetrics = (item, sourceIndex = 0) => {
   const evidence = String(item?.directVisibleEvidence || item?.visibleEvidence || '');
@@ -1738,7 +1843,7 @@ export function selectGlobalVisualCandidates(observation, limit = 3) {
   return objects.filter(item => /connector|plug|terminal|hose|tube|line|clamp|fastener|fitting|port|socket|wire|harness|bracket/i.test(item.type)).map((item, sourceIndex) => ({ item, finding: abnormal.get(item.id), sourceIndex })).sort((left, right) => statePriority(left.finding?.state) - statePriority(right.finding?.state) || (left.finding?.priorityRank ?? 99) - (right.finding?.priorityRank ?? 99) || left.sourceIndex - right.sourceIndex).slice(0, limit).map(({ item, finding }) => ({ id: item.id, type: item.type, location: item.location, abnormalState: finding?.state || null, wholeImagePriorityRank: finding?.priorityRank ?? null }));
 }
 
-export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_API_KEY, fetchImpl = fetch, diagnostic = {}, timeoutMs = OPENAI_TIMEOUT_MS, enableVisualObservation = false } = {}) {
+export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_API_KEY, fetchImpl = fetch, diagnostic = {}, timeoutMs = OPENAI_TIMEOUT_MS, enableVisualObservation = false, optimizeVisualFanout = false } = {}) {
   const pipelineStartedAt = Date.now();
   // Capture provider-reported usage without changing any inspection request or response.
   // The Responses API may omit usage; null is preserved rather than estimated here.
@@ -1746,14 +1851,17 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   try { Object.defineProperty(diagnostic, 'providerUsageTelemetry', { value: usageCalls, enumerable: false, configurable: true }); } catch {}
   const originalFetch = fetchImpl;
   const stageNames = Object.freeze({
+    nitros_comprehensive_visual_analysis: 'COMPREHENSIVE_WHOLE_IMAGE_ANALYSIS',
     nitros_image_semantics: 'IMAGE_SEMANTIC_CLASSIFICATION',
     nitros_visual_condition_inspection: 'WHOLE_IMAGE_VISUAL_CONDITION',
     nitros_visual_condition_retry: 'WHOLE_IMAGE_VISUAL_CONDITION_RETRY',
     nitros_raw_visual_observation: 'REGIONAL_WHOLE_IMAGE_SWEEP',
     nitros_candidate_regions: 'VISUAL_CANDIDATE_LOCALIZATION',
     nitros_localized_inspection: 'LOCALIZED_VISUAL_VERIFICATION',
+    nitros_batched_localized_inspection: 'BATCHED_LOCALIZED_VISUAL_VERIFICATION',
     nitros_local_connector_observation: 'LOCAL_CONNECTOR_OBSERVATION',
     nitros_automotive_component: 'COMPONENT_IDENTIFICATION',
+    nitros_automotive_context_analysis: 'COMPONENT_AND_RELATIONSHIP_REASONING',
     nitros_vehicle_area_relationship: 'COMPONENT_RELATIONSHIP_REASONING',
     nitros_automotive_graph: 'AUTOMOTIVE_GRAPH_INTERPRETATION',
     nitros_targeted_pid_recovery: 'TARGETED_PID_RECOVERY',
@@ -1780,16 +1888,17 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
       source: String(item.image_url || '').startsWith('data:') ? 'INLINE_DATA' : 'REMOTE_REFERENCE',
       resolution: null
     }));
+    const isRetry = schemaName === 'nitros_visual_condition_retry';
     const call = {
       stageName: stageNames[schemaName] || 'OPENAI_RESPONSES_CALL', schemaName,
       requestStartedAt: new Date(startedAt).toISOString(), responseReceivedAt: null,
       providerRequestId: null, model: request.model || null, reasoningEffort: request.reasoning?.effort || null,
-      reasoningMode: request.reasoning?.summary || null, serviceTier: null,
+      reasoningMode: request.reasoning?.mode || request.reasoning?.summary || null, serviceTier: null,
       imageCount: imageInputs.length, imageInputMetadata, imageResolutionStatus: 'NOT_REPORTED',
       durationMs: null, status: 'PENDING', httpSuccess: null, httpStatus: null,
       providerResponseStatus: null, responseBodyParsed: false, schemaAccepted: null,
-      schemaValidationStatus: 'NOT_ATTEMPTED', retryCount: schemaName === 'nitros_visual_condition_retry' ? 1 : 0,
-      retryAttempt: schemaName === 'nitros_visual_condition_retry' ? 1 : 0, timedOut: false,
+      schemaValidationStatus: 'NOT_ATTEMPTED', callType: isRetry ? 'TRUE_RETRY' : 'INTENTIONAL_STAGE', intentionalSubcall: !isRetry,
+      retryCount: isRetry ? 1 : 0, retryAttempt: isRetry ? 1 : 0, timedOut: false,
       inputTokens: null, cachedInputTokens: null, cacheWriteInputTokens: null,
       outputTokens: null, reasoningTokens: null, totalTokens: null,
       actualProviderCostUsd: null, providerUsage: null
@@ -1868,8 +1977,8 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   }
   let bytes;
   try { bytes = Buffer.from(imageBase64, 'base64'); } catch { throw diagnosticFailure(diagnostic, 'Image payload is invalid.', 400, 'D_IMAGE_PAYLOAD_FOUND', 'INVALID_IMAGE_PAYLOAD'); }
-  let sourceDimensions = null;
-  try { const source = await createWholeImageRegions(bytes); sourceDimensions = source.source; }
+  let sourceDimensions = null, wholeImageRegions = null;
+  try { wholeImageRegions = await createWholeImageRegions(bytes); sourceDimensions = wholeImageRegions.source; }
   catch { /* Dimension telemetry is advisory; format validation remains authoritative. */ }
   markDiagnostic(diagnostic, 'D_IMAGE_PAYLOAD_FOUND', { imagePayloadFound: true, imagePayloadNonEmpty: bytes.length > 0, imageByteLength: bytes.length, imageMimeType: mimeType, imageHashShort: imageHash.slice(0, 12), originalImageDimensions: sourceDimensions, transmittedImageDimensions: sourceDimensions, imageRecompressed: false });
   if (!bytes.length || bytes.length > MAX_IMAGE_BYTES) throw diagnosticFailure(diagnostic, 'Image payload size is unsupported.', 413, 'D_IMAGE_PAYLOAD_FOUND', 'REQUEST_TOO_LARGE', { imageByteLength: bytes.length });
@@ -1888,7 +1997,22 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   markDiagnostic(diagnostic, 'F_OPENAI_CONFIGURATION', { openaiCredentialConfigured: true });
 
   const prompt = `Analyze only the pixels of this current image. Do not use filenames, metadata, prior images, or OCR words as proof of automotive content. Return exactly one category. AUTOMOTIVE_GRAPH requires multiple independent visible graph indicators such as axes or gridlines plus plotted traces, repeated scale markings, panels, legends, or time-series structure. AUTOMOTIVE_WIRING_DIAGRAM requires actual electrical schematic structure such as connected circuit paths plus multiple schematic symbols, component/module blocks, connectors or pin/cavity identifiers, fuse/relay/ground/splice symbols, wire colors, circuit numbers, terminals, power references, or signal/reference/return paths. Automotive words or OCR text alone are insufficient. AUTOMOTIVE_COMPONENT_OR_VEHICLE requires positive visible automotive photographic subjects such as a vehicle, brake/engine/suspension component, connector, physical wiring, dashboard, scan tool, or diagnostic equipment. General photos of animals, people, food, furniture, scenery, or buildings without automotive evidence are GENERAL_NON_AUTOMOTIVE_PHOTO. Non-schematic documents, screenshots, invoices, text screens, and data tables are DOCUMENT_OR_TEXT_SCREENSHOT. Use UNKNOWN_OR_ANALYSIS_UNAVAILABLE when visual evidence is inadequate or conflicting. Evidence and object names must describe visible pixel-supported content. Confidence must reflect the genuine visual classification; use null if a defensible value is unavailable.`;
-  markDiagnostic(diagnostic, 'G_OPENAI_REQUEST_CONSTRUCTED', { openaiRequestConstructed: true, openaiModel: MODEL, openaiApiType: 'Responses API /v1/responses', openaiReasoningEffort: DEEP_VISION_REASONING.effort, openaiReasoningMode: DEEP_VISION_REASONING.mode, openaiImageDetail: DEEP_VISION_DETAIL, payloadImageCount: 1 });
+  const optimizedVisualPipeline = enableVisualObservation && optimizeVisualFanout;
+  const comprehensivePrompt = `${prompt}
+
+When and only when semantic.category is AUTOMOTIVE_COMPONENT_OR_VEHICLE, complete the visualObservation and visualConditionInspection sections in this same response and locate up to three high-value candidates in candidateRegions. For every other category return null for both visual sections and an empty candidates array. Do not perform component identity or vehicle-specific relationship reasoning in this pass.
+
+${globalVisualSweepInstruction}
+${rawVisualObservationPrompt}
+${CORE_VISUAL_CONDITION_PROMPT}
+
+IMAGE 1 is the complete original photograph. Any following images are overlapping regions of that exact photograph, ordered top-left through bottom-right. Inspect the original and every supplied region before selecting findings. candidateRegions may contain only IDs already present in visualObservation.objects, prioritizing visible disconnected/partially seated connectors, broken or missing hoses/wires, open ports, loose/missing retention, leakage, or damage that benefits from a crop-backed verification. Normalized region coordinates must tightly bound the visible candidate in IMAGE 1. Return the strict comprehensive schema.`;
+  const initialImages = optimizedVisualPipeline
+    ? [{ type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }, ...(wholeImageRegions?.regions || []).map(item => ({ type: 'input_image', image_url: `data:image/png;base64,${item.image.toString('base64')}`, detail: DEEP_VISION_DETAIL }))]
+    : [{ type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }];
+  const initialSchemaName = optimizedVisualPipeline ? 'nitros_comprehensive_visual_analysis' : 'nitros_image_semantics';
+  const initialSchema = optimizedVisualPipeline ? comprehensiveVisualAnalysisSchema : semanticSchema;
+  markDiagnostic(diagnostic, 'G_OPENAI_REQUEST_CONSTRUCTED', { openaiRequestConstructed: true, openaiModel: MODEL, openaiApiType: 'Responses API /v1/responses', openaiReasoningEffort: DEEP_VISION_REASONING.effort, openaiReasoningMode: DEEP_VISION_REASONING.mode, openaiImageDetail: DEEP_VISION_DETAIL, payloadImageCount: initialImages.length, visualPipelineArchitecture: optimizedVisualPipeline ? 'BOUNDED_HYBRID_THREE_CALL' : 'LEGACY_STAGED' });
   const openAIStartedAt = Date.now();
   const analysisSignal = AbortSignal.timeout(timeoutFor(OPENAI_TIMEOUT_MS));
   let openAIResponse;
@@ -1899,9 +2023,9 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(deepVisionRequest({
         store: false,
-        max_output_tokens: 1400,
-        input: [{ role: 'user', content: [{ type: 'input_text', text: prompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }] }],
-        text: { format: { type: 'json_schema', name: 'nitros_image_semantics', strict: true, schema: semanticSchema } }
+        max_output_tokens: optimizedVisualPipeline ? 6_200 : 1400,
+        input: [{ role: 'user', content: [{ type: 'input_text', text: optimizedVisualPipeline ? comprehensivePrompt : prompt }, ...initialImages] }],
+        text: { format: { type: 'json_schema', name: initialSchemaName, strict: true, schema: initialSchema } }
       })),
       signal: analysisSignal
     });
@@ -1938,20 +2062,35 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   try { parsed = JSON.parse(extractOutputText(responseBody)); }
   catch (error) { markSchemaValidation(responseBody, false); throw diagnosticFailure(diagnostic, `Malformed semantic response: ${error.message}`, 502, 'K_SEMANTIC_OUTPUT_EXTRACTED', 'UNEXPECTED_OPENAI_RESPONSE', { semanticOutputPresent: false, transportStatus }); }
   let semanticResult;
-  try { semanticResult = validateSemanticPayload(parsed); markSchemaValidation(responseBody, true); }
+  let visualConditionInspection = null;
+  let visualObservation = null;
+  let localizedVisualInspections = [];
+  let componentIdentification = null;
+  let vehicleAreaRelationshipAnalysis = null;
+  let optimizedCandidates = [];
+  try {
+    semanticResult = validateSemanticPayload(optimizedVisualPipeline ? parsed?.semantic : parsed);
+    if (optimizedVisualPipeline && semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
+      visualObservation = validateVisualObservation(parsed?.visualObservation);
+      const consistency = normalizeVisualConditionConsistency(retainVisibleConnectionContext(parsed?.visualConditionInspection, null));
+      visualConditionInspection = { ...validateVisualConditionInspection({ ...consistency.normalized, consistencyCorrections: consistency.corrections }), semanticRequestId: transactionId, imageHash };
+      optimizedCandidates = preserveHighValueCandidateCoverage(validateCandidateRegions(parsed?.candidateRegions, visualObservation), visualObservation);
+      markDiagnostic(diagnostic, 'L_RAW_VISUAL_OBSERVATION_COMPLETE', { rawVisualObservationResponse: 'PASS', objectInventory: 'PASS', objectsInventoried: visualObservation.objects.length, relationshipCapableObjects: visualObservation.objects.filter(x => /connector|receptacle|terminal|hose|clamp|plug|wire/i.test(x.type)).length, physicalRelationshipAnalysis: 'PASS', electricalConnectionStateAnalysis: 'PASS', abnormalStateDetection: 'PASS', globalVisualSweep: 'PASS', supplementalImageRegions: wholeImageRegions?.regions?.length || 0, confirmedPhysicalAbnormalities: visualObservation.abnormalFindings.length, structuredVisualEvidenceHandoff: 'PASS', comprehensiveVisualAnalysis: true });
+      markDiagnostic(diagnostic, diagnostic.stage, { visualConditionInspectionAttempted: true, visualConditionResponseReceived: true, visualConditionResponseParsed: true, visualConditionResultPresent: true, visualConditionStatus: visualConditionInspection.status, visualConditionConfidenceNormalized: visualConditionInspection.normalizedConditionConfidence !== null, visualConditionCoreResultSource: 'COMPREHENSIVE_WHOLE_IMAGE_ANALYSIS' });
+    }
+    markSchemaValidation(responseBody, true);
+  }
   catch (error) { markSchemaValidation(responseBody, false); throw diagnosticFailure(diagnostic, `Malformed semantic response: ${error.message}`, 502, 'K_SEMANTIC_OUTPUT_EXTRACTED', 'UNEXPECTED_OPENAI_RESPONSE', { semanticOutputPresent: false, transportStatus }); }
   markDiagnostic(diagnostic, 'K_SEMANTIC_OUTPUT_EXTRACTED', { success: true, semanticOutputPresent: true, semanticObjectsReturned: semanticResult.objects.length, errorCategory: null, errorMessage: null });
 
-  let visualConditionInspection = null;
-  if (enableVisualObservation && semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
+  if (!optimizedVisualPipeline && enableVisualObservation && semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
     visualConditionInspection = await runVisualConditionInspection({ apiKey, fetchImpl, mimeType, imageBase64, componentIdentification: null, transactionId, imageHash, diagnostic, timeoutFor, markSchemaValidation });
   }
-  let visualObservation=null;
-  if(enableVisualObservation&&semanticResult.category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'){
+  if(!optimizedVisualPipeline&&enableVisualObservation&&semanticResult.category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'){
     markDiagnostic(diagnostic,'L_RAW_VISUAL_OBSERVATION_REQUEST',{rawVisualObservationRequest:'PASS',rawVisualObservationResponse:'PENDING',objectInventory:'PENDING',physicalRelationshipAnalysis:'PENDING',electricalConnectionStateAnalysis:'PENDING',abnormalStateDetection:'PENDING',globalVisualSweep:'PENDING'});
     let rawResponseBody = null;
     try{
-      const regionalSweep=await createWholeImageRegions(bytes);
+      const regionalSweep=wholeImageRegions || await createWholeImageRegions(bytes);
       const regionalContent=[{type:'input_text',text:`${globalVisualSweepInstruction}\n${rawVisualObservationPrompt}\nThis is a mandatory whole-image multi-pass inspection. IMAGE 1 is the complete original photograph. IMAGES 2–10 are overlapping regions of that exact photograph, ordered top-left through bottom-right. Sweep all regions before reaching any conclusion; do not let a prompt, finger, central object, or first defect end the search. A directly visible disconnected/free/partially seated connection must appear in abnormalFindings.`},{type:'input_image',image_url:`data:${mimeType};base64,${imageBase64}`,detail:DEEP_VISION_DETAIL},...regionalSweep.regions.map(item=>({type:'input_image',image_url:`data:image/png;base64,${item.image.toString('base64')}`,detail:DEEP_VISION_DETAIL}))];
       const r=await fetchImpl('https://api.openai.com/v1/responses',{method:'POST',headers:{'Authorization':`Bearer ${apiKey}`,'Content-Type':'application/json'},body:JSON.stringify(deepVisionRequest({store:false,max_output_tokens:2200,input:[{role:'user',content:regionalContent}],text:{format:{type:'json_schema',name:'nitros_raw_visual_observation',strict:true,schema:visualObservationSchema}}})),signal:AbortSignal.timeout(Math.min(timeoutMs,OPENAI_TIMEOUT_MS))});
       if(!r.ok)throw Error(`Raw visual observation failed with HTTP ${r.status}.`);
@@ -1970,9 +2109,90 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
       markDiagnostic(diagnostic, diagnostic.stage, { visualConditionResultPresent: true, visualConditionStatus: visualConditionInspection.status, visualConditionCoreResultSource: 'RAW_WHOLE_IMAGE_OBSERVATION', visualConditionPartialEvidencePreserved: true });
     }
   }
-  let localizedVisualInspections = [];
-  let localizedStageHandled = false;
-  if (visualObservation) {
+  let localizedStageHandled = optimizedVisualPipeline;
+  if (optimizedVisualPipeline && visualObservation && semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
+    const compactHandoff = compactVisualHandoff({ semanticResult, visualObservation, visualConditionInspection });
+    const contextTask = (async () => {
+      const startedAt = Date.now();
+      let contextBody = null;
+      markDiagnostic(diagnostic, 'M_COMPONENT_REQUEST_CONSTRUCTED', { componentIdentificationAttempted: true, componentResponseReceived: false, componentResultPresent: false, vehicleAreaRelationshipAttempted: true, optimizedContextStage: true });
+      try {
+        const response = await fetchImpl('https://api.openai.com/v1/responses', {
+          method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(deepVisionRequest({ store: false, max_output_tokens: 2_600, input: [{ role: 'user', content: [{ type: 'input_text', text: optimizedAutomotiveContextPrompt(vehicleContext, compactHandoff) }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }] }], text: { format: { type: 'json_schema', name: 'nitros_automotive_context_analysis', strict: true, schema: automotiveContextAnalysisSchema } } })),
+          signal: AbortSignal.timeout(timeoutFor(COMPONENT_TIMEOUT_MS))
+        });
+        contextBody = await response.json().catch(() => null);
+        markDiagnostic(diagnostic, 'N_COMPONENT_RESPONSE_RECEIVED', { componentResponseReceived: true, componentResponseOk: response.ok, componentHttpStatus: response.status, componentResponseStatus: contextBody?.status || null, componentElapsedMs: Math.max(0, Date.now() - startedAt), vehicleAreaRelationshipResponseReceived: true, vehicleAreaRelationshipResponseOk: response.ok, vehicleAreaRelationshipHttpStatus: response.status, vehicleAreaRelationshipElapsedMs: Math.max(0, Date.now() - startedAt) });
+        if (!response.ok) throw new Error(contextBody?.error?.message || `Automotive context request failed with HTTP ${response.status}.`);
+        if (!contextBody) throw new Error('Automotive context response was not valid JSON.');
+        const raw = JSON.parse(extractOutputText(contextBody));
+        const component = { ...validateAutomotiveComponent(raw?.componentIdentification, { semanticResult, observation: visualObservation }), semanticRequestId: transactionId, imageHash };
+        const relationship = { ...validateVehicleAreaRelationship(raw?.vehicleAreaRelationshipAnalysis, { componentIdentification: component, semanticResult, observation: visualObservation }), semanticRequestId: transactionId, imageHash };
+        markSchemaValidation(contextBody, true);
+        markDiagnostic(diagnostic, 'O_COMPONENT_RESULT_EXTRACTED', { componentResponseParsed: true, componentResultPresent: true, componentConfidenceNormalized: component.confidenceStatus === 'NORMALIZED', componentConfidenceStatus: component.confidenceStatus, componentStatus: component.status, componentResultSource: component.source, componentFallbackApplied: component.source === 'semantic-fallback', rawComponentResult: component.rawComponentResult, normalizedComponentName: component.name, normalizedComponentConfidence: component.confidence, normalizedComponentState: component.state, normalizedVehicleArea: component.area, componentErrorCategory: null, componentErrorMessage: null });
+        markDiagnostic(diagnostic, 'R_VEHICLE_AREA_RELATIONSHIP_RESULT_EXTRACTED', { vehicleAreaRelationshipResultPresent: true, vehicleAreaRelationshipStatus: relationship.status, vehicleAreaRelationshipConfidenceNormalized: relationship.locationConfidence !== null, vehicleAreaSource: relationship.vehicleAreaSource, vehicleAreaReason: relationship.vehicleAreaReason, relationshipSource: relationship.relationshipSource, relationshipReason: relationship.relationshipReason, photoGuidanceSource: relationship.photoGuidanceSource, photoGuidanceReason: relationship.photoGuidanceReason, expectedComponentGapDetection: 'PASS', missingAssemblyReasoning: 'PASS' });
+        return { component, relationship };
+      } catch (error) {
+        markSchemaValidation(contextBody, false);
+        const safeMessage = sanitizeDiagnosticText(error?.message) || 'Combined automotive context analysis failed.';
+        const component = { ...normalizeAutomotiveComponentResult(null, { semanticResult, observation: visualObservation }), uncertaintyReason: safeMessage, semanticRequestId: transactionId, imageHash };
+        const relationship = { ...buildVehicleAreaRelationshipFallback({ componentIdentification: component, semanticResult, observation: visualObservation }), semanticRequestId: transactionId, imageHash };
+        markDiagnostic(diagnostic, 'O_COMPONENT_RESULT_RECOVERED', { componentIdentificationAttempted: true, componentResponseParsed: false, componentResultPresent: true, componentResultSource: component.source, componentFallbackApplied: true, componentErrorCategory: 'COMBINED_CONTEXT_ANALYSIS_ERROR', componentErrorMessage: safeMessage, componentElapsedMs: Math.max(0, Date.now() - startedAt) });
+        markDiagnostic(diagnostic, 'R_VEHICLE_AREA_RELATIONSHIP_RECOVERED', { vehicleAreaRelationshipResultPresent: true, vehicleAreaRelationshipStatus: relationship.status, vehicleAreaRelationshipFallbackApplied: true, vehicleAreaRelationshipErrorMessage: safeMessage, vehicleAreaRelationshipElapsedMs: Math.max(0, Date.now() - startedAt) });
+        return { component, relationship };
+      }
+    })();
+
+    const localizedTask = (async () => {
+      const cropResults = await Promise.all(optimizedCandidates.map(async candidate => {
+        const object = visualObservation.objects.find(item => item.id === candidate.candidate_id);
+        try { return { candidate, object, crops: await createLocalizedCrops(bytes, candidate.region) }; }
+        catch (error) { return { candidate, object, error }; }
+      }));
+      const failures = cropResults.filter(item => item.error || !item.object).map(item => ({ candidateId: item.candidate.candidate_id, localizedVisualVerification: false, failureReason: sanitizeDiagnosticText(item.error?.message) || 'INVALID_OR_UNMATCHED_REGION' }));
+      const valid = cropResults.filter(item => item.crops && item.object);
+      if (!valid.length) {
+        markDiagnostic(diagnostic, 'L_LOCALIZED_VISUAL_INSPECTION_COMPLETE', { localizedVisualVerification: false, localizedVisualInspections: failures, localizedCandidateLimit: 3, localizedBatchSkipped: true });
+        return failures;
+      }
+      const mappings = valid.map((item, index) => ({ candidateId: item.object.id, candidateClass: item.candidate.candidate_class, detailImage: index * 2 + 2, contextImage: index * 2 + 3 }));
+      const content = [{ type: 'input_text', text: `Independently verify all localized candidates in one batch. IMAGE 1 is the complete original supplementary context. Each mapping identifies its DETAIL and CONTEXT images: ${JSON.stringify(mappings)}. Inspect every mapped candidate and return exactly one inspections entry per candidate ID. Determine only what the pixels prove. PROXIMITY IS NOT CONNECTION: connector/socket, battery terminal/post, hose/port, wire/terminal, clamp/joint, and fastener/mount all require visible physical evidence. If mating or retention geometry cannot be established return UNCERTAIN; absence of a detected defect is not proof of a secure connection. Preserve contradictory evidence and visibility limitations.` }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }];
+      for (const item of valid) content.push({ type: 'input_image', image_url: `data:image/png;base64,${item.crops.detail.toString('base64')}`, detail: DEEP_VISION_DETAIL }, { type: 'input_image', image_url: `data:image/png;base64,${item.crops.context.toString('base64')}`, detail: DEEP_VISION_DETAIL });
+      let localizedBody = null;
+      try {
+        const response = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify(deepVisionRequest({ store: false, max_output_tokens: 2_200, input: [{ role: 'user', content }], text: { format: { type: 'json_schema', name: 'nitros_batched_localized_inspection', strict: true, schema: batchedLocalizedInspectionSchema } } })), signal: AbortSignal.timeout(timeoutFor(COMPONENT_TIMEOUT_MS)) });
+        if (!response.ok) throw new Error(`Batched localized inspection failed with HTTP ${response.status}.`);
+        localizedBody = await response.json();
+        const raw = JSON.parse(extractOutputText(localizedBody));
+        const returned = new Map((raw?.inspections || []).map(item => [item?.candidate_id, item]));
+        const inspections = [], validationFailures = [];
+        for (const item of valid) {
+          try {
+            const inspection = validateLocalizedInspection(returned.get(item.object.id), item.object);
+            inspections.push({ ...inspection, location: item.object.location, observedObject: item.object.type, normalizedRegion: item.candidate.region, pixelRegion: { detail: item.crops.detailRegion, context: item.crops.contextRegion }, sourceDimensions: item.crops.source, detailDimensions: item.crops.detailMetadata, contextDimensions: item.crops.contextMetadata, cropStatus: 'SUCCESS', detailSupplied: true, contextSupplied: true, originalSupplied: true });
+          } catch (error) {
+            validationFailures.push({ candidateId: item.object.id, normalizedRegion: item.candidate.region, localizedVisualVerification: false, failureReason: sanitizeDiagnosticText(error?.message) || 'LOCALIZED_SCHEMA_REJECTED' });
+          }
+        }
+        markSchemaValidation(localizedBody, true, validationFailures.length > 0);
+        const combined = [...inspections, ...validationFailures, ...failures];
+        markDiagnostic(diagnostic, 'L_LOCALIZED_VISUAL_INSPECTION_COMPLETE', { localizedVisualVerification: inspections.some(item => item.localizedVisualVerification), localizedVisualInspections: combined, localizedCandidateLimit: 3, localizedBatchCandidateCount: valid.length });
+        return combined;
+      } catch (error) {
+        markSchemaValidation(localizedBody, false);
+        const failed = [...failures, ...valid.map(item => ({ candidateId: item.object.id, normalizedRegion: item.candidate.region, localizedVisualVerification: false, failureReason: sanitizeDiagnosticText(error?.message) }))];
+        markDiagnostic(diagnostic, 'L_LOCALIZED_VISUAL_INSPECTION_FAILED', { localizedVisualVerification: false, localizedVisualInspections: failed, localizedVisualFailureReason: sanitizeDiagnosticText(error?.message) });
+        return failed;
+      }
+    })();
+
+    const [contextResult, localizedResult] = await Promise.all([contextTask, localizedTask]);
+    componentIdentification = contextResult.component;
+    vehicleAreaRelationshipAnalysis = contextResult.relationship;
+    localizedVisualInspections = localizedResult;
+  }
+  if (!optimizedVisualPipeline && visualObservation) {
     const sourceCandidates = selectGlobalVisualCandidates(visualObservation, 3);
     let locatorBody = null;
     try {
@@ -2002,7 +2222,7 @@ const localPrompt = `Independently inspect candidate ${pass1.id}. IMAGE 1 is DET
       markDiagnostic(diagnostic, 'L_LOCALIZED_VISUAL_INSPECTION_COMPLETE', { localizedVisualVerification: localizedVisualInspections.some(item => item.localizedVisualVerification), localizedVisualInspections, localizedCandidateLimit: 3 });
     } catch (error) { markSchemaValidation(locatorBody, false); markDiagnostic(diagnostic, 'L_LOCALIZED_VISUAL_INSPECTION_FAILED', { localizedVisualVerification: false, localizedVisualFailureReason: sanitizeDiagnosticText(error?.message) }); }
   }
-  if (visualObservation && !localizedStageHandled) {
+  if (!optimizedVisualPipeline && visualObservation && !localizedStageHandled) {
     const localStartedAt = Date.now();
     const candidates = visualObservation.objects.filter(item => /connector|plug|terminal/i.test(item.type) && (item.connectionState === 'UNKNOWN' || item.matingStatus === 'UNKNOWN')).slice(0, 2);
     const pass2 = [];
@@ -2027,8 +2247,7 @@ const localPrompt = `Independently inspect candidate ${pass1.id}. IMAGE 1 is DET
     }
     markDiagnostic(diagnostic, 'L_LOCAL_CONNECTOR_OBSERVATION_COMPLETE', { localConnectorCandidates: candidates.map(item => item.id), localConnectorObservations: pass2, localConnectorModelCalls: candidates.length, localConnectorElapsedMs: Math.max(0, Date.now() - localStartedAt) });
   }
-  let componentIdentification = null;
-  if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
+  if (!optimizedVisualPipeline && semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
     const componentStartedAt = Date.now();
     const componentPrompt = `Identify the primary automotive component visible in this current image using only visible pixels. Do not use filenames, metadata, OCR text alone, prior images, prior cases, cached results, or the category confidence. ${vehicleContextPrompt(vehicleContext)} Return the most specific component supported by visible evidence, its automotive system, secondary visible components, and pixel-supported evidence. Component confidence must be independent from category confidence. If vehicle context makes an identity plausible but its defining physical features are not visible, keep status UNCERTAIN and state that it is a likely identification from vehicle context, not a confirmed visual identification. If the exact component is not visually defensible, use status UNCERTAIN, list visually supported alternatives, explain what view or evidence is missing, and never force or invent a component.
 
@@ -2081,11 +2300,10 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
         markDiagnostic(diagnostic, 'O_COMPONENT_RESULT_FAILED', { componentIdentificationAttempted: true, componentResponseReceived: Boolean(diagnostic.componentResponseReceived), componentResponseParsed: false, componentResultPresent: false, componentConfidenceNormalized: false, componentConfidenceStatus: 'UNKNOWN', componentStatus: 'FAILED', componentResultSource: 'technical-failure', componentFallbackApplied: false, rawComponentResult: null, normalizedComponentName: null, normalizedComponentConfidence: null, normalizedComponentState: null, normalizedVehicleArea: null, componentErrorCategory: error?.componentErrorCategory || (timedOut ? 'OPENAI_TIMEOUT' : 'COMPONENT_ANALYSIS_ERROR'), componentErrorMessage: safeMessage, componentHttpStatus: error?.componentHttpStatus ?? diagnostic.componentHttpStatus ?? null, componentElapsedMs: Math.max(0, Date.now() - componentStartedAt) });
       }
     }
-  } else {
+  } else if (semanticResult.category !== 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
     markDiagnostic(diagnostic, 'K_SEMANTIC_OUTPUT_EXTRACTED', { componentIdentificationAttempted: false, componentIdentificationSkipped: true });
   }
-  let vehicleAreaRelationshipAnalysis = null;
-  if (semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE' && (enableVisualObservation || vehicleContext)) {
+  if (!optimizedVisualPipeline && semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE' && (enableVisualObservation || vehicleContext)) {
     const relationshipStartedAt = Date.now();
     const relationshipPrompt = `Determine the visible vehicle-area location and component relationships in this current automotive photo. ${vehicleContextPrompt(vehicleContext)} Then perform an independent EXPECTED COMPONENT / ABSENCE ANALYSIS for this same visible area. Build topologyInventory for every expected major component with expected location and presence status. Rank up to three missingAssemblyCandidates; a candidate needs at least two independent evidence classes, including vehicle-specific expected location plus visible mounting geometry, cable/connector, hose/line, bracket, or vacant-space evidence. Vehicle context alone is never enough. Do not let visual-condition uncertainty cancel topology reasoning. When the area is engine/transmission junction or bellhousing, consider the current vehicle's starter mounting relationship as an expected candidate but never assert it without the evidence gate. If the gate is not met, return exactly "No visually supported missing component detected." and empty candidate support arrays. This is a distinct location-reasoning stage after classification and component identification, before defect conclusions. Use visual geometry, casting shape, mounting position, nearby hoses/wiring/connectors, and surrounding visible components first; use vehicle architecture only to narrow plausible locations and relationships. Never let vehicle context override contradictory pixels.
 
@@ -2110,7 +2328,7 @@ Return a technician-friendly broad vehicleAreaLocation only when supported (for 
         markDiagnostic(diagnostic, 'R_VEHICLE_AREA_RELATIONSHIP_FAILED', { vehicleAreaRelationshipResultPresent: false, vehicleAreaRelationshipFallbackApplied: false, vehicleAreaRelationshipErrorMessage: sanitizeDiagnosticText(fallbackError?.message || error?.message), vehicleAreaRelationshipElapsedMs: Math.max(0, Date.now() - relationshipStartedAt) });
       }
     }
-  } else markDiagnostic(diagnostic, diagnostic.stage, { vehicleAreaRelationshipAttempted: false, vehicleAreaRelationshipSkipped: true, vehicleAreaRelationshipSkipReason: 'NON_AUTOMOTIVE_CATEGORY' });
+  } else if (semanticResult.category !== 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') markDiagnostic(diagnostic, diagnostic.stage, { vehicleAreaRelationshipAttempted: false, vehicleAreaRelationshipSkipped: true, vehicleAreaRelationshipSkipReason: 'NON_AUTOMOTIVE_CATEGORY' });
   if (!enableVisualObservation && semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
     const conditionStartedAt = Date.now();
     const conditionPrompt = `Perform the OBVIOUS VISUAL DEFECT SWEEP for this same current automotive image before using component identity or vehicle knowledge for diagnostic interpretation. Reason in this non-reversible order: SEE → LOCATE → IDENTIFY → VERIFY PHYSICAL STATE → DETECT ABNORMALITY → APPLY VEHICLE CONTEXT → REASON → DIAGNOSE. Do not let successful component identification influence the condition result. ${vehicleContextPrompt(vehicleContext)} Vehicle context may narrow a likely location only after the pixels are evaluated; it must never override contradictory image evidence. A component being near its expected location is not evidence that it is connected, secure, intact, or installed.
@@ -2291,7 +2509,10 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
     sumProviderCallDurationMs: numeric('durationMs'),
     operationStartedAt: new Date(pipelineStartedAt).toISOString(),
     operationCompletedAt: new Date(operationCompletedAt).toISOString(),
-    executionMode: 'SEQUENTIAL', finalOperationStatus: 'SUCCEEDED',
+    executionMode: optimizedVisualPipeline && optimizedCandidates.length ? 'HYBRID_PARALLEL' : 'SEQUENTIAL', finalOperationStatus: 'SUCCEEDED',
+    providerCallCount: usageCalls.length,
+    intentionalSubcallCount: usageCalls.filter(call => call.callType !== 'TRUE_RETRY').length,
+    trueRetryCount: usageCalls.reduce((n, call) => n + (call.retryCount || 0), 0),
     retryCount: usageCalls.reduce((n, call) => n + (call.retryCount || 0), 0),
     timeoutCount: usageCalls.filter(call => call.timedOut === true).length,
     originalImageDimensions: sourceDimensions,
