@@ -134,6 +134,11 @@ test('10.13.138 distinguishes an incomplete HTTP 200 from timeout and uses the r
   assert.equal(result.serverDiagnostic.visualConditionCoreResultSource, 'FAST_RETRY');
   assert.ok(result.serverDiagnostic.visualConditionTrace.includes('VISUAL_CONDITION_PARSE_FAILURE'));
   assert.ok(result.serverDiagnostic.visualConditionTrace.includes('VISUAL_CONDITION_RETRY_SUCCESS'));
+  const conditionTelemetry = result.usageTelemetry.providerUsage.filter(call => call.schemaName === 'nitros_visual_condition_inspection' || call.schemaName === 'nitros_visual_condition_retry');
+  assert.deepEqual(conditionTelemetry.map(call => ({ httpSuccess: call.httpSuccess, providerResponseStatus: call.providerResponseStatus, schemaValidationStatus: call.schemaValidationStatus, retryAttempt: call.retryAttempt })), [
+    { httpSuccess: true, providerResponseStatus: 'incomplete', schemaValidationStatus: 'REJECTED', retryAttempt: 0 },
+    { httpSuccess: true, providerResponseStatus: 'completed', schemaValidationStatus: 'ACCEPTED', retryAttempt: 1 }
+  ]);
   assert.equal(conditionRequests[0].max_output_tokens, 3_000);
   assert.equal(conditionRequests[1].max_output_tokens, 2_400);
   for (const request of conditionRequests) {
@@ -176,6 +181,12 @@ test('10.13.138 F — production orchestration reserves recovery time and return
     assert.equal(result.serverDiagnostic.analyzerBudgetMs, 280_000);
     assert.equal(result.serverDiagnostic.responseReturnReserveMs, 10_000);
     assert.ok(result.serverDiagnostic.analyzerTotalMs < result.serverDiagnostic.analyzerBudgetMs);
+    const conditionTelemetry = result.usageTelemetry.providerUsage.filter(call => call.schemaName === 'nitros_visual_condition_inspection' || call.schemaName === 'nitros_visual_condition_retry');
+    assert.equal(conditionTelemetry.length, 2);
+    assert.ok(conditionTelemetry.every(call => call.timedOut === true && call.httpSuccess === false && call.schemaValidationStatus === 'NOT_ATTEMPTED'));
+    assert.deepEqual(conditionTelemetry.map(call => call.retryAttempt), [0, 1]);
+    assert.equal(result.usageTelemetry.retryCount, 1);
+    assert.equal(result.usageTelemetry.timeoutCount, 2);
     const vercel = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
     const client = readFileSync(new URL('../image-analysis-ad.js', import.meta.url), 'utf8');
     assert.equal(vercel.functions['api/semantic-image-analysis.mjs'].maxDuration, 300);

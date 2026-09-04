@@ -20,6 +20,7 @@ export async function persistProviderUsage({ ledger, body, result = {}, error })
       tokens: {
         inputTokens: call.inputTokens,
         cachedInputTokens: call.cachedInputTokens,
+        cacheWriteInputTokens: call.cacheWriteInputTokens,
         outputTokens: call.outputTokens,
         reasoningTokens: call.reasoningTokens,
         totalTokens: call.totalTokens

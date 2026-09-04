@@ -12,7 +12,7 @@ const localizedRaw = { candidate_id: 'OBJ-101', candidate_class: 'electrical_con
 
 async function fixture() { return sharp({ create: { width: 1000, height: 800, channels: 3, background: { r: 20, g: 40, b: 60 } } }).png().toBuffer(); }
 
-const response = (payload, status = 200) => ({ ok: status >= 200 && status < 300, status, async json() { return { output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(payload) }] }] }; } });
+const response = (payload, status = 200, metadata = {}) => ({ ok: status >= 200 && status < 300, status, async json() { return { ...metadata, output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(payload) }] }] }; } });
 const drivetrain = () => ({ applicable: false, candidateType: 'OTHER', engineConnection: 'UNKNOWN', transmissionConnection: 'UNKNOWN', longitudinalShafts: 'UNKNOWN', lateralAxleOutputs: 'UNKNOWN', axleTubes: 'UNKNOWN', location: 'UNKNOWN', powerFlowRole: 'UNKNOWN', distinguishingFeaturesComplete: false, evidence: [], competingCandidate: null });
 const connector = () => ({ id: 'OBJ-101', type: 'electrical_connector', location: 'center of image', evidence: 'Connector body and mating interface are visible.', confidence: 92, occluded: false, harnessTermination: 'YES', matingStatus: 'MATED', connectionState: 'CONNECTED_CONFIRMED', physicalStateConfidence: 92, ownershipConfidence: 70, candidateReceptacle: 'OBJ-102', exposedMatingInterface: true, matingFaceVisibility: 'VISIBLE', physicalInsertionObserved: 'TRUE', physicalSeparationObserved: 'FALSE', freeTerminationObserved: 'FALSE', exposedMatingInterfaceObserved: 'TRUE', candidateReceptacleObserved: 'TRUE', gapObserved: 'FALSE', visibleGeometricMatingContinuity: 'TRUE', insertionGeometryEvidence: 'The connector mating face enters the visible receptacle boundary along one continuous axis.', separationGeometryEvidence: '', freeTerminationEvidence: '', rawObservationProvenance: 'Visible connector and receptacle geometry.', connectorBodyVisible: 'TRUE', matingFaceVisible: 'TRUE', receivingReceptacleVisible: 'TRUE', continuousInsertionPathVisible: 'TRUE', connectorFreeInSpace: 'FALSE' });
 const receptacle = () => ({ ...connector(), id: 'OBJ-102', type: 'electrical_receptacle', location: 'center of image', evidence: 'Receiving receptacle boundary is visible.', harnessTermination: 'NOT_APPLICABLE', candidateReceptacle: '', exposedMatingInterface: false, matingFaceVisibility: 'NOT_APPLICABLE', physicalInsertionObserved: 'NOT_APPLICABLE', physicalSeparationObserved: 'NOT_APPLICABLE', freeTerminationObserved: 'NOT_APPLICABLE', exposedMatingInterfaceObserved: 'NOT_APPLICABLE', candidateReceptacleObserved: 'NOT_APPLICABLE', gapObserved: 'NOT_APPLICABLE', visibleGeometricMatingContinuity: 'NOT_APPLICABLE', insertionGeometryEvidence: '', separationGeometryEvidence: '', freeTerminationEvidence: '', connectorBodyVisible: 'NOT_APPLICABLE', matingFaceVisible: 'NOT_APPLICABLE', receivingReceptacleVisible: 'NOT_APPLICABLE', continuousInsertionPathVisible: 'NOT_APPLICABLE', connectorFreeInSpace: 'NOT_APPLICABLE' });
@@ -26,7 +26,7 @@ const contracts = {
   nitros_visual_condition_inspection: { status: 'NO_VISIBLE_CONCERN_DETECTED', conditionConfidence: 88, observedCondition: [], possibleConcerns: [], connectionAssessments: [{ location: 'Center of image connector interface', seatingStatus: 'NO_GAP_OR_SEPARATION_VISIBLE', findingType: 'NO_DEFECT_VISIBLE', severity: 'LOW', findingConfidence: 88, visibleEvidence: 'The complete connector-to-receptacle mating edge is visibly seated with no gap and the retention relationship is visible.', matingComponentVisible: true, directDamageVisible: false, missingContext: null, recommendedVerification: 'Physically confirm connector latch retention before repair authorization.', safetyDrivabilityImpact: null }], noVisibleConcernMessage: 'No visible defect can be confirmed from this image. Inspect the component physically before making a repair decision.', unableToInspectReason: null, visibleEvidence: ['The connector mating interface is visibly continuous.'], recommendedVerification: ['Physically confirm connector latch retention before repair authorization.'], safetyDrivabilityImpact: null }
 };
 
-function makeContractRouter({ failLocalized = false } = {}) {
+function makeContractRouter({ failLocalized = false, withProviderTelemetry = false } = {}) {
   const requests = [];
   const fetchImpl = async (_url, options) => {
     const request = JSON.parse(options.body);
@@ -34,7 +34,8 @@ function makeContractRouter({ failLocalized = false } = {}) {
     requests.push({ stage, request });
     if (stage === 'nitros_localized_inspection' && failLocalized) return response({ error: { message: 'Forced localized inspection failure.' } }, 503);
     if (!(stage in contracts)) throw new Error(`Unhandled production stage: ${stage}`);
-    return response(structuredClone(contracts[stage]));
+    const metadata = withProviderTelemetry ? { id: `resp_${requests.length}`, model: 'gpt-5.6-sol', status: 'completed', service_tier: 'default', usage: { input_tokens: 1000 + requests.length, input_tokens_details: { cached_tokens: requests.length, cache_write_tokens: 0 }, output_tokens: 100 + requests.length, output_tokens_details: { reasoning_tokens: 50 + requests.length }, total_tokens: 1100 + requests.length, ...(requests.length === 1 ? { total_cost_usd: 0.0123 } : {}) } } : {};
+    return response(structuredClone(contracts[stage]), 200, metadata);
   };
   return { fetchImpl, requests };
 }
@@ -115,6 +116,54 @@ test('localized vision J safely falls back through the complete production orche
   assert.equal(result.semanticResult.visualObservation.objects.find((item) => item.id === 'OBJ-101').connectionState, 'CONNECTED_CONFIRMED', 'J: global observation survives forced local failure');
   assert.equal(result.semanticResult.visualConditionInspection.localizedVisualEvidence, undefined, 'J: local failure cannot override global evidence');
   assert.equal(result.semanticResult.visualConditionInspection.connectionAssessments[0].connectionState, 'CONNECTED_VERIFIED', 'J: final result remains the safe global condition result');
+});
+
+test('production vision telemetry correlates every existing call without adding or reordering provider traffic', async () => {
+  const body = await productionBody();
+  const { fetchImpl, requests } = makeContractRouter({ withProviderTelemetry: true });
+  const result = await analyzeSemanticImage(body, { apiKey: 'test-only-placeholder', fetchImpl, enableVisualObservation: true });
+  const calls = result.usageTelemetry.providerUsage;
+  assert.deepEqual(requests.map(({ stage }) => stage), ['nitros_image_semantics', 'nitros_visual_condition_inspection', 'nitros_raw_visual_observation', 'nitros_candidate_regions', 'nitros_localized_inspection', 'nitros_automotive_component', 'nitros_vehicle_area_relationship']);
+  assert.equal(calls.length, requests.length, 'instrumentation creates exactly one telemetry record per existing provider request');
+  assert.deepEqual(calls.map(call => call.stageName), ['IMAGE_SEMANTIC_CLASSIFICATION', 'WHOLE_IMAGE_VISUAL_CONDITION', 'REGIONAL_WHOLE_IMAGE_SWEEP', 'VISUAL_CANDIDATE_LOCALIZATION', 'LOCALIZED_VISUAL_VERIFICATION', 'COMPONENT_IDENTIFICATION', 'COMPONENT_RELATIONSHIP_REASONING']);
+  assert.deepEqual(calls.map(call => call.imageCount), [1, 1, 10, 1, 3, 1, 1]);
+  assert.deepEqual(calls.map(call => call.providerRequestId), ['resp_1', 'resp_2', 'resp_3', 'resp_4', 'resp_5', 'resp_6', 'resp_7']);
+  assert.ok(calls.every(call => call.model === 'gpt-5.6-sol' && call.httpSuccess === true && call.httpStatus === 200 && call.providerResponseStatus === 'completed'));
+  assert.ok(calls.every(call => call.responseBodyParsed === true && call.schemaAccepted === true && call.schemaValidationStatus === 'ACCEPTED'));
+  assert.ok(calls.every(call => call.requestStartedAt && call.responseReceivedAt && Number.isFinite(call.durationMs)));
+  assert.equal(calls[0].actualProviderCostUsd, 0.0123);
+  assert.equal(result.usageTelemetry.requestCount, 7);
+  assert.equal(result.usageTelemetry.imageCount, 18);
+  assert.deepEqual(result.usageTelemetry.tokens, { inputTokens: 7028, cachedInputTokens: 28, cacheWriteInputTokens: 0, outputTokens: 728, reasoningTokens: 378, totalTokens: 7728 });
+  assert.equal(result.usageTelemetry.executionMode, 'SEQUENTIAL');
+  assert.equal(result.usageTelemetry.finalOperationStatus, 'SUCCEEDED');
+  assert.equal(result.usageTelemetry.retryCount, 0);
+  assert.equal(result.usageTelemetry.timeoutCount, 0);
+  assert.deepEqual(result.usageTelemetry.originalImageDimensions, { width: 1000, height: 800 });
+  assert.equal(result.semanticResult.visualConditionInspection.localizedVisualEvidence[0].connectionState, 'DISCONNECTED_VERIFIED', 'diagnostic evidence is unchanged while telemetry is collected');
+});
+
+test('HTTP success and local schema rejection are recorded independently', async () => {
+  const body = await productionBody(), diagnostic = {};
+  const fetchImpl = async () => response({ category: 'INVALID_CATEGORY' }, 200, { id: 'resp_invalid_schema', model: 'gpt-5.6-sol', status: 'completed' });
+  await assert.rejects(analyzeSemanticImage(body, { apiKey: 'test-only-placeholder', fetchImpl, diagnostic, enableVisualObservation: true }), /Malformed semantic response/);
+  assert.equal(diagnostic.providerUsageTelemetry.length, 1);
+  assert.equal(diagnostic.providerUsageTelemetry[0].httpSuccess, true);
+  assert.equal(diagnostic.providerUsageTelemetry[0].httpStatus, 200);
+  assert.equal(diagnostic.providerUsageTelemetry[0].status, 'SUCCEEDED');
+  assert.equal(diagnostic.providerUsageTelemetry[0].schemaAccepted, false);
+  assert.equal(diagnostic.providerUsageTelemetry[0].schemaValidationStatus, 'REJECTED');
+});
+
+test('missing provider usage remains unavailable instead of becoming zero telemetry', async () => {
+  const body = await productionBody();
+  const { fetchImpl } = makeContractRouter();
+  const result = await analyzeSemanticImage(body, { apiKey: 'test-only-placeholder', fetchImpl, enableVisualObservation: true });
+  assert.equal(result.usageTelemetry.tokens.inputTokens, null);
+  assert.equal(result.usageTelemetry.tokens.cachedInputTokens, null);
+  assert.equal(result.usageTelemetry.tokens.outputTokens, null);
+  assert.equal(result.usageTelemetry.tokens.reasoningTokens, null);
+  assert.equal(result.usageTelemetry.tokens.totalTokens, null);
 });
 
 test('actual localized Pass-2 production prompt rejects proximity as connection', async () => {

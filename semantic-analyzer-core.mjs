@@ -872,7 +872,7 @@ function parseVisualConditionResponse(responseBody, componentIdentification) {
   }
 }
 
-async function runVisualConditionInspection({ apiKey, fetchImpl, mimeType, imageBase64, componentIdentification, transactionId, imageHash, diagnostic, timeoutFor }) {
+async function runVisualConditionInspection({ apiKey, fetchImpl, mimeType, imageBase64, componentIdentification, transactionId, imageHash, diagnostic, timeoutFor, markSchemaValidation = () => {} }) {
   const startedAt = Date.now();
   const firstTimeoutMs = timeoutFor(VISUAL_CONDITION_TIMEOUT_MS);
   const retryTimeoutMs = timeoutFor(VISUAL_CONDITION_RETRY_TIMEOUT_MS);
@@ -928,10 +928,12 @@ async function runVisualConditionInspection({ apiKey, fetchImpl, mimeType, image
     }
     try {
       const parsed = parseVisualConditionResponse(responseBody, componentIdentification);
+      markSchemaValidation(responseBody, true, parsed.partialOutputPreserved);
       if (parsed.partialOutputPreserved) traceVisualCondition(diagnostic, 'VISUAL_CONDITION_PARSE_FAILURE', { visualConditionParseFailed: true, visualConditionPartialEvidencePreserved: true, visualConditionAttempt: attempt, visualConditionErrorMessage: sanitizeDiagnosticText(parsed.validationError?.message) });
       traceVisualCondition(diagnostic, 'VISUAL_CONDITION_PARSE_SUCCESS', { visualConditionParseSucceeded: true, visualConditionResponseParsed: true, visualConditionResultPresent: true, visualConditionPartialEvidencePreserved: parsed.partialOutputPreserved, visualConditionParseMs: Math.max(0, Date.now() - parseStartedAt), visualConditionAttempt: attempt });
       return parsed;
     } catch (error) {
+      markSchemaValidation(responseBody, false);
       traceVisualCondition(diagnostic, 'VISUAL_CONDITION_PARSE_FAILURE', { visualConditionParseFailed: true, visualConditionMalformedResponse: Boolean(error?.visualConditionMalformedResponse), visualConditionIncompleteResponse: Boolean(error?.visualConditionIncompleteResponse), visualConditionAttempt: attempt, visualConditionParseMs: Math.max(0, Date.now() - parseStartedAt), visualConditionErrorMessage: sanitizeDiagnosticText(error?.message) });
       throw error;
     }
@@ -1743,15 +1745,101 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   const usageCalls = [];
   try { Object.defineProperty(diagnostic, 'providerUsageTelemetry', { value: usageCalls, enumerable: false, configurable: true }); } catch {}
   const originalFetch = fetchImpl;
+  const stageNames = Object.freeze({
+    nitros_image_semantics: 'IMAGE_SEMANTIC_CLASSIFICATION',
+    nitros_visual_condition_inspection: 'WHOLE_IMAGE_VISUAL_CONDITION',
+    nitros_visual_condition_retry: 'WHOLE_IMAGE_VISUAL_CONDITION_RETRY',
+    nitros_raw_visual_observation: 'REGIONAL_WHOLE_IMAGE_SWEEP',
+    nitros_candidate_regions: 'VISUAL_CANDIDATE_LOCALIZATION',
+    nitros_localized_inspection: 'LOCALIZED_VISUAL_VERIFICATION',
+    nitros_local_connector_observation: 'LOCAL_CONNECTOR_OBSERVATION',
+    nitros_automotive_component: 'COMPONENT_IDENTIFICATION',
+    nitros_vehicle_area_relationship: 'COMPONENT_RELATIONSHIP_REASONING',
+    nitros_automotive_graph: 'AUTOMOTIVE_GRAPH_INTERPRETATION',
+    nitros_targeted_pid_recovery: 'TARGETED_PID_RECOVERY',
+    nitros_wiring_diagram: 'WIRING_DIAGRAM_ANALYSIS',
+    nitros_document_repair_information: 'REPAIR_DOCUMENT_EXTRACTION'
+  });
+  const telemetryByResponse = new WeakMap();
+  const telemetryByBody = new WeakMap();
+  const markSchemaValidation = (subject, accepted, partial = false) => {
+    const call = subject && typeof subject === 'object' ? telemetryByResponse.get(subject) || telemetryByBody.get(subject) : null;
+    if (!call) return;
+    if (!accepted && call.httpSuccess !== true) return;
+    call.schemaAccepted = Boolean(accepted);
+    call.schemaValidationStatus = accepted ? (partial ? 'PARTIAL_ACCEPTED' : 'ACCEPTED') : 'REJECTED';
+  };
   fetchImpl = async (url, options = {}) => {
     const startedAt = Date.now(); let request = {};
     try { request = JSON.parse(options.body || '{}'); } catch {}
+    const schemaName = typeof request?.text?.format?.name === 'string' ? request.text.format.name : null;
+    const imageInputs = request.input?.flatMap(item => item.content || []).filter(item => item.type === 'input_image') || [];
+    const imageInputMetadata = imageInputs.map(item => ({
+      detail: typeof item.detail === 'string' ? item.detail : null,
+      mediaType: /^data:([^;,]+)/i.exec(String(item.image_url || ''))?.[1]?.toLowerCase() || null,
+      source: String(item.image_url || '').startsWith('data:') ? 'INLINE_DATA' : 'REMOTE_REFERENCE',
+      resolution: null
+    }));
+    const call = {
+      stageName: stageNames[schemaName] || 'OPENAI_RESPONSES_CALL', schemaName,
+      requestStartedAt: new Date(startedAt).toISOString(), responseReceivedAt: null,
+      providerRequestId: null, model: request.model || null, reasoningEffort: request.reasoning?.effort || null,
+      reasoningMode: request.reasoning?.summary || null, serviceTier: null,
+      imageCount: imageInputs.length, imageInputMetadata, imageResolutionStatus: 'NOT_REPORTED',
+      durationMs: null, status: 'PENDING', httpSuccess: null, httpStatus: null,
+      providerResponseStatus: null, responseBodyParsed: false, schemaAccepted: null,
+      schemaValidationStatus: 'NOT_ATTEMPTED', retryCount: schemaName === 'nitros_visual_condition_retry' ? 1 : 0,
+      retryAttempt: schemaName === 'nitros_visual_condition_retry' ? 1 : 0, timedOut: false,
+      inputTokens: null, cachedInputTokens: null, cacheWriteInputTokens: null,
+      outputTokens: null, reasoningTokens: null, totalTokens: null,
+      actualProviderCostUsd: null, providerUsage: null
+    };
+    usageCalls.push(call);
     try {
       const response = await originalFetch(url, options);
-      const originalJson = response.json.bind(response); let recorded = false;
-      response.json = async (...args) => { const body = await originalJson(...args); if (!recorded) { recorded = true; const u = body?.usage || {}; usageCalls.push({ providerRequestId: body?.id || null, model: body?.model || request.model || null, reasoningEffort: request.reasoning?.effort || null, serviceTier: body?.service_tier || null, imageCount: request.input?.flatMap(item => item.content || []).filter(item => item.type === 'input_image').length || 0, durationMs: Math.max(0, Date.now() - startedAt), status: response.ok ? 'SUCCEEDED' : 'FAILED', inputTokens: Number.isFinite(u.input_tokens) ? u.input_tokens : null, cachedInputTokens: Number.isFinite(u.input_tokens_details?.cached_tokens) ? u.input_tokens_details.cached_tokens : null, outputTokens: Number.isFinite(u.output_tokens) ? u.output_tokens : null, reasoningTokens: Number.isFinite(u.output_tokens_details?.reasoning_tokens) ? u.output_tokens_details.reasoning_tokens : null, totalTokens: Number.isFinite(u.total_tokens) ? u.total_tokens : null, providerUsage: body?.usage ?? null }); } return body; };
+      call.responseReceivedAt = new Date().toISOString();
+      call.durationMs = Math.max(0, Date.now() - startedAt);
+      call.httpSuccess = Boolean(response.ok);
+      call.httpStatus = Number.isInteger(response.status) ? response.status : null;
+      call.status = response.ok ? 'SUCCEEDED' : 'FAILED';
+      telemetryByResponse.set(response, call);
+      const originalJson = response.json.bind(response);
+      response.json = async (...args) => {
+        try {
+          const responseBody = await originalJson(...args);
+          call.responseBodyParsed = true;
+          if (responseBody && typeof responseBody === 'object') telemetryByBody.set(responseBody, call);
+          const u = responseBody?.usage || {};
+          call.providerRequestId = typeof responseBody?.id === 'string' ? responseBody.id : null;
+          call.model = typeof responseBody?.model === 'string' ? responseBody.model : call.model;
+          call.serviceTier = typeof responseBody?.service_tier === 'string' ? responseBody.service_tier : null;
+          call.providerResponseStatus = typeof responseBody?.status === 'string' ? responseBody.status : null;
+          call.inputTokens = Number.isFinite(u.input_tokens) ? u.input_tokens : null;
+          call.cachedInputTokens = Number.isFinite(u.input_tokens_details?.cached_tokens) ? u.input_tokens_details.cached_tokens : null;
+          call.cacheWriteInputTokens = Number.isFinite(u.input_tokens_details?.cache_write_tokens) ? u.input_tokens_details.cache_write_tokens : null;
+          call.outputTokens = Number.isFinite(u.output_tokens) ? u.output_tokens : null;
+          call.reasoningTokens = Number.isFinite(u.output_tokens_details?.reasoning_tokens) ? u.output_tokens_details.reasoning_tokens : null;
+          call.totalTokens = Number.isFinite(u.total_tokens) ? u.total_tokens : null;
+          call.actualProviderCostUsd = Number.isFinite(u.total_cost_usd) ? u.total_cost_usd : Number.isFinite(u.cost) ? u.cost : null;
+          call.providerUsage = responseBody?.usage ?? null;
+          return responseBody;
+        } catch (error) {
+          call.status = 'FAILED';
+          call.timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError' || /timed out|timeout/i.test(String(error?.message || ''));
+          throw error;
+        } finally {
+          call.durationMs = Math.max(0, Date.now() - startedAt);
+        }
+      };
       return response;
-    } catch (error) { usageCalls.push({ model: request.model || null, reasoningEffort: request.reasoning?.effort || null, imageCount: request.input?.flatMap(item => item.content || []).filter(item => item.type === 'input_image').length || 0, durationMs: Math.max(0, Date.now() - startedAt), status: 'FAILED', inputTokens: null, cachedInputTokens: null, outputTokens: null, totalTokens: null, providerUsage: null }); throw error; }
+    } catch (error) {
+      call.responseReceivedAt = new Date().toISOString();
+      call.durationMs = Math.max(0, Date.now() - startedAt);
+      call.status = 'FAILED';
+      call.httpSuccess = false;
+      call.timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError' || /timed out|timeout/i.test(String(error?.message || ''));
+      throw error;
+    }
   };
   const productionDeadlineAt = pipelineStartedAt + PRODUCTION_ANALYSIS_BUDGET_MS;
   const configuredTimeoutMs = Number.isFinite(timeoutMs) && timeoutMs > 0 ? Math.floor(timeoutMs) : OPENAI_TIMEOUT_MS;
@@ -1847,18 +1935,35 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   if (!responseBody) throw diagnosticFailure(diagnostic, 'OpenAI response was not valid JSON.', 502, 'J_OPENAI_RESPONSE_PARSED', 'UNEXPECTED_OPENAI_RESPONSE', { openaiResponseParsed: false, transportStatus });
   markDiagnostic(diagnostic, 'J_OPENAI_RESPONSE_PARSED', { openaiResponseParsed: true });
   let parsed;
-  try { parsed = JSON.parse(extractOutputText(responseBody)); } catch (error) { throw diagnosticFailure(diagnostic, `Malformed semantic response: ${error.message}`, 502, 'K_SEMANTIC_OUTPUT_EXTRACTED', 'UNEXPECTED_OPENAI_RESPONSE', { semanticOutputPresent: false, transportStatus }); }
+  try { parsed = JSON.parse(extractOutputText(responseBody)); }
+  catch (error) { markSchemaValidation(responseBody, false); throw diagnosticFailure(diagnostic, `Malformed semantic response: ${error.message}`, 502, 'K_SEMANTIC_OUTPUT_EXTRACTED', 'UNEXPECTED_OPENAI_RESPONSE', { semanticOutputPresent: false, transportStatus }); }
   let semanticResult;
-  try { semanticResult = validateSemanticPayload(parsed); }
-  catch (error) { throw diagnosticFailure(diagnostic, `Malformed semantic response: ${error.message}`, 502, 'K_SEMANTIC_OUTPUT_EXTRACTED', 'UNEXPECTED_OPENAI_RESPONSE', { semanticOutputPresent: false, transportStatus }); }
+  try { semanticResult = validateSemanticPayload(parsed); markSchemaValidation(responseBody, true); }
+  catch (error) { markSchemaValidation(responseBody, false); throw diagnosticFailure(diagnostic, `Malformed semantic response: ${error.message}`, 502, 'K_SEMANTIC_OUTPUT_EXTRACTED', 'UNEXPECTED_OPENAI_RESPONSE', { semanticOutputPresent: false, transportStatus }); }
   markDiagnostic(diagnostic, 'K_SEMANTIC_OUTPUT_EXTRACTED', { success: true, semanticOutputPresent: true, semanticObjectsReturned: semanticResult.objects.length, errorCategory: null, errorMessage: null });
 
   let visualConditionInspection = null;
   if (enableVisualObservation && semanticResult.category === 'AUTOMOTIVE_COMPONENT_OR_VEHICLE') {
-    visualConditionInspection = await runVisualConditionInspection({ apiKey, fetchImpl, mimeType, imageBase64, componentIdentification: null, transactionId, imageHash, diagnostic, timeoutFor });
+    visualConditionInspection = await runVisualConditionInspection({ apiKey, fetchImpl, mimeType, imageBase64, componentIdentification: null, transactionId, imageHash, diagnostic, timeoutFor, markSchemaValidation });
   }
   let visualObservation=null;
-  if(enableVisualObservation&&semanticResult.category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'){markDiagnostic(diagnostic,'L_RAW_VISUAL_OBSERVATION_REQUEST',{rawVisualObservationRequest:'PASS',rawVisualObservationResponse:'PENDING',objectInventory:'PENDING',physicalRelationshipAnalysis:'PENDING',electricalConnectionStateAnalysis:'PENDING',abnormalStateDetection:'PENDING',globalVisualSweep:'PENDING'});try{const regionalSweep=await createWholeImageRegions(bytes);const regionalContent=[{type:'input_text',text:`${globalVisualSweepInstruction}\n${rawVisualObservationPrompt}\nThis is a mandatory whole-image multi-pass inspection. IMAGE 1 is the complete original photograph. IMAGES 2–10 are overlapping regions of that exact photograph, ordered top-left through bottom-right. Sweep all regions before reaching any conclusion; do not let a prompt, finger, central object, or first defect end the search. A directly visible disconnected/free/partially seated connection must appear in abnormalFindings.`},{type:'input_image',image_url:`data:${mimeType};base64,${imageBase64}`,detail:DEEP_VISION_DETAIL},...regionalSweep.regions.map(item=>({type:'input_image',image_url:`data:image/png;base64,${item.image.toString('base64')}`,detail:DEEP_VISION_DETAIL}))];const r=await fetchImpl('https://api.openai.com/v1/responses',{method:'POST',headers:{'Authorization':`Bearer ${apiKey}`,'Content-Type':'application/json'},body:JSON.stringify(deepVisionRequest({store:false,max_output_tokens:2200,input:[{role:'user',content:regionalContent}],text:{format:{type:'json_schema',name:'nitros_raw_visual_observation',strict:true,schema:visualObservationSchema}}})),signal:AbortSignal.timeout(Math.min(timeoutMs,OPENAI_TIMEOUT_MS))});if(!r.ok)throw Error(`Raw visual observation failed with HTTP ${r.status}.`);visualObservation=validateVisualObservation(JSON.parse(extractOutputText(await r.json())));markDiagnostic(diagnostic,'L_RAW_VISUAL_OBSERVATION_COMPLETE',{rawVisualObservationResponse:'PASS',objectInventory:'PASS',objectsInventoried:visualObservation.objects.length,relationshipCapableObjects:visualObservation.objects.filter(x=>/connector|receptacle|terminal|hose|clamp|plug|wire/i.test(x.type)).length,physicalRelationshipAnalysis:'PASS',electricalConnectionStateAnalysis:'PASS',abnormalStateDetection:'PASS',globalVisualSweep:'PASS',supplementalImageRegions:regionalSweep.regions.length,confirmedPhysicalAbnormalities:visualObservation.abnormalFindings.length,structuredVisualEvidenceHandoff:'PASS'});}catch(e){markDiagnostic(diagnostic,'L_RAW_VISUAL_OBSERVATION_FAILED',{rawVisualObservationResponse:'FAIL',objectInventory:'FAIL',physicalRelationshipAnalysis:'FAIL',electricalConnectionStateAnalysis:'FAIL',abnormalStateDetection:'FAIL',globalVisualSweep:'FAIL',structuredVisualEvidenceHandoff:'FAIL',rawVisualObservationErrorMessage:sanitizeDiagnosticText(e?.message)});}}
+  if(enableVisualObservation&&semanticResult.category==='AUTOMOTIVE_COMPONENT_OR_VEHICLE'){
+    markDiagnostic(diagnostic,'L_RAW_VISUAL_OBSERVATION_REQUEST',{rawVisualObservationRequest:'PASS',rawVisualObservationResponse:'PENDING',objectInventory:'PENDING',physicalRelationshipAnalysis:'PENDING',electricalConnectionStateAnalysis:'PENDING',abnormalStateDetection:'PENDING',globalVisualSweep:'PENDING'});
+    let rawResponseBody = null;
+    try{
+      const regionalSweep=await createWholeImageRegions(bytes);
+      const regionalContent=[{type:'input_text',text:`${globalVisualSweepInstruction}\n${rawVisualObservationPrompt}\nThis is a mandatory whole-image multi-pass inspection. IMAGE 1 is the complete original photograph. IMAGES 2–10 are overlapping regions of that exact photograph, ordered top-left through bottom-right. Sweep all regions before reaching any conclusion; do not let a prompt, finger, central object, or first defect end the search. A directly visible disconnected/free/partially seated connection must appear in abnormalFindings.`},{type:'input_image',image_url:`data:${mimeType};base64,${imageBase64}`,detail:DEEP_VISION_DETAIL},...regionalSweep.regions.map(item=>({type:'input_image',image_url:`data:image/png;base64,${item.image.toString('base64')}`,detail:DEEP_VISION_DETAIL}))];
+      const r=await fetchImpl('https://api.openai.com/v1/responses',{method:'POST',headers:{'Authorization':`Bearer ${apiKey}`,'Content-Type':'application/json'},body:JSON.stringify(deepVisionRequest({store:false,max_output_tokens:2200,input:[{role:'user',content:regionalContent}],text:{format:{type:'json_schema',name:'nitros_raw_visual_observation',strict:true,schema:visualObservationSchema}}})),signal:AbortSignal.timeout(Math.min(timeoutMs,OPENAI_TIMEOUT_MS))});
+      if(!r.ok)throw Error(`Raw visual observation failed with HTTP ${r.status}.`);
+      rawResponseBody=await r.json();
+      visualObservation=validateVisualObservation(JSON.parse(extractOutputText(rawResponseBody)));
+      markSchemaValidation(rawResponseBody,true);
+      markDiagnostic(diagnostic,'L_RAW_VISUAL_OBSERVATION_COMPLETE',{rawVisualObservationResponse:'PASS',objectInventory:'PASS',objectsInventoried:visualObservation.objects.length,relationshipCapableObjects:visualObservation.objects.filter(x=>/connector|receptacle|terminal|hose|clamp|plug|wire/i.test(x.type)).length,physicalRelationshipAnalysis:'PASS',electricalConnectionStateAnalysis:'PASS',abnormalStateDetection:'PASS',globalVisualSweep:'PASS',supplementalImageRegions:regionalSweep.regions.length,confirmedPhysicalAbnormalities:visualObservation.abnormalFindings.length,structuredVisualEvidenceHandoff:'PASS'});
+    }catch(e){
+      markSchemaValidation(rawResponseBody,false);
+      markDiagnostic(diagnostic,'L_RAW_VISUAL_OBSERVATION_FAILED',{rawVisualObservationResponse:'FAIL',objectInventory:'FAIL',physicalRelationshipAnalysis:'FAIL',electricalConnectionStateAnalysis:'FAIL',abnormalStateDetection:'FAIL',globalVisualSweep:'FAIL',structuredVisualEvidenceHandoff:'FAIL',rawVisualObservationErrorMessage:sanitizeDiagnosticText(e?.message)});
+    }
+  }
   if (visualObservation) {
     visualConditionInspection = recoverVisualConditionFromObservation(visualConditionInspection, visualObservation);
     if (visualConditionInspection?.coreConditionEvidenceSource === 'RAW_WHOLE_IMAGE_OBSERVATION') {
@@ -1869,27 +1974,33 @@ export async function analyzeSemanticImage(body, { apiKey = process.env.OPENAI_A
   let localizedStageHandled = false;
   if (visualObservation) {
     const sourceCandidates = selectGlobalVisualCandidates(visualObservation, 3);
+    let locatorBody = null;
     try {
       const locatorPrompt = `Locate only these existing candidate IDs in this original image and return normalized 0-to-1 regions: ${JSON.stringify(sourceCandidates)}. x/y are the left/top edges divided by image width/height; width/height are region size divided by image width/height. Do not create candidates, identify vehicle/component names, or assess condition.`;
       const locatorResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify(deepVisionRequest({ store: false, max_output_tokens: 700, input: [{ role: 'user', content: [{ type: 'input_text', text: locatorPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }] }], text: { format: { type: 'json_schema', name: 'nitros_candidate_regions', strict: true, schema: candidateRegionSchema } } })), signal: AbortSignal.timeout(Math.min(timeoutMs, COMPONENT_TIMEOUT_MS)) });
       if (!locatorResponse.ok) throw new Error(`Candidate localization failed with HTTP ${locatorResponse.status}.`);
-      const located = JSON.parse(extractOutputText(await locatorResponse.json())).candidates || [];
+      locatorBody = await locatorResponse.json();
+      const located = JSON.parse(extractOutputText(locatorBody)).candidates || [];
+      markSchemaValidation(locatorBody, true);
       for (const candidate of located.slice(0, 3)) {
         const pass1 = visualObservation.objects.find(item => item.id === candidate.candidate_id);
         const region = validateNormalizedRegion(candidate.region);
         if (!pass1 || !region) { localizedVisualInspections.push({ candidateId: candidate.candidate_id, localizedVisualVerification: false, failureReason: 'INVALID_OR_UNMATCHED_REGION' }); continue; }
+        let localizedBody = null;
         try {
           const crops = await createLocalizedCrops(bytes, region);
 const localPrompt = `Independently inspect candidate ${pass1.id}. IMAGE 1 is DETAIL crop; IMAGE 2 is CONTEXT crop; IMAGE 3 is ORIGINAL supplementary context. Determine only what these pixels prove. PROXIMITY IS NOT CONNECTION: connector/socket, battery terminal/post, and hose/port all require visible physical mating evidence. If mating geometry cannot be established return UNCERTAIN; absence of a detected defect is not proof of a secure connection. Return the strict localized inspection schema.`;
           const response2 = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify(deepVisionRequest({ store: false, max_output_tokens: 850, input: [{ role: 'user', content: [{ type: 'input_text', text: localPrompt }, { type: 'input_image', image_url: `data:image/png;base64,${crops.detail.toString('base64')}`, detail: DEEP_VISION_DETAIL }, { type: 'input_image', image_url: `data:image/png;base64,${crops.context.toString('base64')}`, detail: DEEP_VISION_DETAIL }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }] }], text: { format: { type: 'json_schema', name: 'nitros_localized_inspection', strict: true, schema: localizedInspectionSchema } } })), signal: AbortSignal.timeout(Math.min(timeoutMs, COMPONENT_TIMEOUT_MS)) });
           if (!response2.ok) throw new Error(`Localized inspection failed with HTTP ${response2.status}.`);
-          const inspection = validateLocalizedInspection(JSON.parse(extractOutputText(await response2.json())), pass1);
+          localizedBody = await response2.json();
+          const inspection = validateLocalizedInspection(JSON.parse(extractOutputText(localizedBody)), pass1);
+          markSchemaValidation(localizedBody, true);
           localizedVisualInspections.push({ ...inspection, location: pass1.location, observedObject: pass1.type, normalizedRegion: region, pixelRegion: { detail: crops.detailRegion, context: crops.contextRegion }, sourceDimensions: crops.source, detailDimensions: crops.detailMetadata, contextDimensions: crops.contextMetadata, cropStatus: 'SUCCESS', detailSupplied: true, contextSupplied: true, originalSupplied: true });
-        } catch (error) { localizedVisualInspections.push({ candidateId: pass1.id, normalizedRegion: region, localizedVisualVerification: false, failureReason: sanitizeDiagnosticText(error?.message) }); }
+        } catch (error) { markSchemaValidation(localizedBody, false); localizedVisualInspections.push({ candidateId: pass1.id, normalizedRegion: region, localizedVisualVerification: false, failureReason: sanitizeDiagnosticText(error?.message) }); }
       }
       localizedStageHandled = true;
       markDiagnostic(diagnostic, 'L_LOCALIZED_VISUAL_INSPECTION_COMPLETE', { localizedVisualVerification: localizedVisualInspections.some(item => item.localizedVisualVerification), localizedVisualInspections, localizedCandidateLimit: 3 });
-    } catch (error) { markDiagnostic(diagnostic, 'L_LOCALIZED_VISUAL_INSPECTION_FAILED', { localizedVisualVerification: false, localizedVisualFailureReason: sanitizeDiagnosticText(error?.message) }); }
+    } catch (error) { markSchemaValidation(locatorBody, false); markDiagnostic(diagnostic, 'L_LOCALIZED_VISUAL_INSPECTION_FAILED', { localizedVisualVerification: false, localizedVisualFailureReason: sanitizeDiagnosticText(error?.message) }); }
   }
   if (visualObservation && !localizedStageHandled) {
     const localStartedAt = Date.now();
@@ -1897,10 +2008,13 @@ const localPrompt = `Independently inspect candidate ${pass1.id}. IMAGE 1 is DET
     const pass2 = [];
     for (const candidate of candidates) {
       const localPrompt = `Independently inspect connector candidate ${candidate.id} in the ${candidate.location} region of this same image. Use the candidate ID exactly. Inspect only direct local geometry: connector body, harness termination, mating face, exposed/open end, open space, nearby receptacle, insertion path, gap/separation, lock area, occlusion, and image quality. Do not identify vehicle or component names, and do not infer a final connection state. Return the standard raw observation schema; set TRUE only for visible geometry and provide concise direct evidence.`;
+      let localBody = null;
       try {
         const localResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 900, input: [{ role: 'user', content: [{ type: 'input_text', text: localPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }], text: { format: { type: 'json_schema', name: 'nitros_local_connector_observation', strict: true, schema: visualObservationSchema } } }), signal: AbortSignal.timeout(Math.min(timeoutMs, COMPONENT_TIMEOUT_MS)) });
         if (!localResponse.ok) throw new Error(`Local connector observation failed with HTTP ${localResponse.status}.`);
-        const local = validateVisualObservation(JSON.parse(extractOutputText(await localResponse.json())));
+        localBody = await localResponse.json();
+        const local = validateVisualObservation(JSON.parse(extractOutputText(localBody)));
+        markSchemaValidation(localBody, true);
         const localCandidate = local.objects.find(item => item.id === candidate.id) || local.objects.find(item => /connector|plug|terminal/i.test(item.type));
         pass2.push({ candidateId: candidate.id, localCandidate: localCandidate || null, abnormalFindings: local.abnormalFindings });
         if (localCandidate) {
@@ -1909,7 +2023,7 @@ const localPrompt = `Independently inspect candidate ${pass1.id}. IMAGE 1 is DET
           const abnormalities = [...visualObservation.abnormalFindings.filter(item => item.objectId !== candidate.id), ...local.abnormalFindings.filter(item => item.objectId === localCandidate.id).map(item => ({ ...item, objectId: candidate.id }))];
           visualObservation = validateVisualObservation({ ...visualObservation, objects, abnormalFindings: abnormalities });
         }
-      } catch (error) { pass2.push({ candidateId: candidate.id, error: sanitizeDiagnosticText(error?.message) }); }
+      } catch (error) { markSchemaValidation(localBody, false); pass2.push({ candidateId: candidate.id, error: sanitizeDiagnosticText(error?.message) }); }
     }
     markDiagnostic(diagnostic, 'L_LOCAL_CONNECTOR_OBSERVATION_COMPLETE', { localConnectorCandidates: candidates.map(item => item.id), localConnectorObservations: pass2, localConnectorModelCalls: candidates.length, localConnectorElapsedMs: Math.max(0, Date.now() - localStartedAt) });
   }
@@ -1928,8 +2042,9 @@ TRANSFER CASE evidence includes a separate gearbox directly attached to or behin
 
 Set distinguishingFeaturesComplete true only when the selected exact drivetrain type has strong visible discriminators. Otherwise lower component confidence, include the closest competing type in possibleAlternatives and drivetrainDiscrimination.competingCandidate, and explain the ambiguity. Supporting evidence must specifically justify the selected primary component. Secondary items such as driveshaft, exhaust, heat shield, crossmember, transmission, differential, CV axle, or suspension must not override the visually dominant intended subject.`;
     markDiagnostic(diagnostic, 'M_COMPONENT_REQUEST_CONSTRUCTED', { componentIdentificationAttempted: true, componentResponseReceived: false, componentResultPresent: false });
+    let componentResponse = null, componentBody = null;
     try {
-      const componentResponse = await fetchImpl('https://api.openai.com/v1/responses', {
+      componentResponse = await fetchImpl('https://api.openai.com/v1/responses', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1941,7 +2056,7 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
         }),
         signal: AbortSignal.timeout(Math.min(timeoutMs, COMPONENT_TIMEOUT_MS))
       });
-      const componentBody = await componentResponse.json().catch(() => null);
+      componentBody = await componentResponse.json().catch(() => null);
       markDiagnostic(diagnostic, 'N_COMPONENT_RESPONSE_RECEIVED', { componentResponseReceived: true, componentResponseOk: componentResponse.ok, componentHttpStatus: componentResponse.status, componentResponseStatus: componentBody?.status || null, componentIncompleteReason: componentBody?.incomplete_details?.reason || null, componentElapsedMs: Math.max(0, Date.now() - componentStartedAt) });
       if (!componentResponse.ok) throw Object.assign(new Error(componentBody?.error?.message || `Component request failed with HTTP ${componentResponse.status}.`), { componentErrorCategory: classifyOpenAIError(componentResponse.status, componentBody), componentHttpStatus: componentResponse.status });
       if (!componentBody) throw new Error('Component response was not valid JSON.');
@@ -1950,9 +2065,11 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
       catch (error) { componentParseError = error; }
       componentIdentification = { ...validateAutomotiveComponent(componentParsed, { semanticResult, observation: visualObservation }), semanticRequestId: transactionId, imageHash };
       const componentFallbackApplied = componentIdentification.source === 'semantic-fallback';
+      markSchemaValidation(componentBody, Boolean(componentParsed));
       const componentErrorMessage = componentFallbackApplied ? sanitizeDiagnosticText(componentParseError?.message || (componentBody?.status === 'incomplete' ? 'The dedicated component response was incomplete; validated semantic evidence was preserved.' : 'The dedicated component result was unavailable; validated semantic evidence was preserved.')) : null;
       markDiagnostic(diagnostic, 'O_COMPONENT_RESULT_EXTRACTED', { componentResponseParsed: Boolean(componentParsed), componentResultPresent: true, componentConfidenceNormalized: componentIdentification.confidenceStatus === 'NORMALIZED', componentConfidenceStatus: componentIdentification.confidenceStatus, componentStatus: componentIdentification.status, componentResultSource: componentIdentification.source, componentFallbackApplied, rawComponentResult: componentIdentification.rawComponentResult, normalizedComponentName: componentIdentification.name, normalizedComponentConfidence: componentIdentification.confidence, normalizedComponentState: componentIdentification.state, normalizedVehicleArea: componentIdentification.area, componentErrorCategory: componentFallbackApplied ? 'COMPONENT_RESPONSE_INCOMPLETE' : null, componentErrorMessage });
     } catch (error) {
+      if (componentResponse?.ok) markSchemaValidation(componentBody, false);
       const timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError' || /timed out|timeout/i.test(String(error?.message || ''));
       const safeMessage = timedOut ? 'Specific component identification timeout.' : sanitizeDiagnosticText(error?.message) || 'Specific component identification failed.';
       const recovered = normalizeAutomotiveComponentResult(null, { semanticResult, observation: visualObservation });
@@ -1974,14 +2091,17 @@ Set distinguishingFeaturesComplete true only when the selected exact drivetrain 
 
 Return a technician-friendly broad vehicleAreaLocation only when supported (for example upper engine, front of engine, rear/firewall side, transmission side, bellhousing area, engine/transmission junction, cylinder-head area, intake side, exhaust side, accessory-drive area, battery/starting/charging area, underbody, suspension/wheel area, or Location uncertain). Do not invent driver/passenger/front/rear vehicle orientation. If an exact component cannot be established, report the supported broader assembly rather than guessing. For every observed connector, hose, pipe, harness, bracket, fastener, opening, or separated item, identify the image-relative location, nearest identifiable assembly, likely relationship/destination, independent relationship confidence, exact visible evidence, any non-visual vehicle-context support, what cannot be confirmed, and one concrete better-photo instruction. A known vehicle never proves a connector's exact destination. When a mating component is outside the image, say it may service a component in that area but its exact destination cannot be confirmed. Preserve direct observations separately from inference; do not claim a defect, removed component, or installation state from context alone. Make photo guidance specific, such as a wider image 12–18 inches farther back or a second angle showing harness routing and mounting points.`;
     markDiagnostic(diagnostic, 'P_VEHICLE_AREA_RELATIONSHIP_REQUEST_CONSTRUCTED', { vehicleAreaRelationshipAttempted: true, vehicleAreaRelationshipResponseReceived: false, vehicleAreaRelationshipResultPresent: false });
+    let relationshipResponse = null, relationshipBody = null;
     try {
-      const relationshipResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify(deepVisionRequest({ store: false, max_output_tokens: 900, input: [{ role: 'user', content: [{ type: 'input_text', text: `${relationshipPrompt}\nCompleted component-identification context: ${componentIdentification?.primaryComponent||'Automotive component identification was unavailable'}. Use it only as a non-authoritative visual-analysis reference.` }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }] }], text: { format: { type: 'json_schema', name: 'nitros_vehicle_area_relationship', strict: true, schema: vehicleAreaRelationshipSchema } } })), signal: AbortSignal.timeout(Math.min(timeoutMs, COMPONENT_TIMEOUT_MS)) });
-      const relationshipBody = await relationshipResponse.json().catch(() => null);
+      relationshipResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify(deepVisionRequest({ store: false, max_output_tokens: 900, input: [{ role: 'user', content: [{ type: 'input_text', text: `${relationshipPrompt}\nCompleted component-identification context: ${componentIdentification?.primaryComponent||'Automotive component identification was unavailable'}. Use it only as a non-authoritative visual-analysis reference.` }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }] }], text: { format: { type: 'json_schema', name: 'nitros_vehicle_area_relationship', strict: true, schema: vehicleAreaRelationshipSchema } } })), signal: AbortSignal.timeout(Math.min(timeoutMs, COMPONENT_TIMEOUT_MS)) });
+      relationshipBody = await relationshipResponse.json().catch(() => null);
       markDiagnostic(diagnostic, 'Q_VEHICLE_AREA_RELATIONSHIP_RESPONSE_RECEIVED', { vehicleAreaRelationshipResponseReceived: true, vehicleAreaRelationshipResponseOk: relationshipResponse.ok, vehicleAreaRelationshipHttpStatus: relationshipResponse.status, vehicleAreaRelationshipElapsedMs: Math.max(0, Date.now() - relationshipStartedAt) });
       if (!relationshipResponse.ok) throw new Error(relationshipBody?.error?.message || `Vehicle-area relationship request failed with HTTP ${relationshipResponse.status}.`);
       vehicleAreaRelationshipAnalysis = { ...validateVehicleAreaRelationship(JSON.parse(extractOutputText(relationshipBody)),{componentIdentification,semanticResult,observation:visualObservation}), semanticRequestId: transactionId, imageHash };
+      markSchemaValidation(relationshipBody, true);
       markDiagnostic(diagnostic, 'R_VEHICLE_AREA_RELATIONSHIP_RESULT_EXTRACTED', { vehicleAreaRelationshipResultPresent: true, vehicleAreaRelationshipStatus: vehicleAreaRelationshipAnalysis.status, vehicleAreaRelationshipConfidenceNormalized: vehicleAreaRelationshipAnalysis.locationConfidence !== null, vehicleAreaSource:vehicleAreaRelationshipAnalysis.vehicleAreaSource,vehicleAreaReason:vehicleAreaRelationshipAnalysis.vehicleAreaReason,relationshipSource:vehicleAreaRelationshipAnalysis.relationshipSource,relationshipReason:vehicleAreaRelationshipAnalysis.relationshipReason,photoGuidanceSource:vehicleAreaRelationshipAnalysis.photoGuidanceSource,photoGuidanceReason:vehicleAreaRelationshipAnalysis.photoGuidanceReason,expectedComponentGapDetection:'PASS', missingAssemblyReasoning:'PASS' });
     } catch (error) {
+      if (relationshipResponse?.ok) markSchemaValidation(relationshipBody, false);
       const relationshipErrorMessage = sanitizeDiagnosticText(error?.message);
       try {
         vehicleAreaRelationshipAnalysis = { ...buildVehicleAreaRelationshipFallback({ componentIdentification, semanticResult, observation: visualObservation }), semanticRequestId: transactionId, imageHash };
@@ -2003,12 +2123,13 @@ Then inspect only visible cracks, breaks, deformation, looseness, leaks/residue,
 
 Use exact terminology only where the pictured feature supports it. Keep one selected primary assembly identity consistent across every condition explanation; observed objects and possible alternatives are not replacements for that identity. If drivetrain housing identity is uncertain, use “Drivetrain housing — exact assembly not confirmed” rather than switching between transmission housing and engine block. For a turbocharger, a visible silver intake-side scroll housing is the compressor housing, not the turbine housing. Refer to the turbine/exhaust side, actuator, oil/coolant lines, charge pipes, clamps, and connections only when each is visibly supported. For a suspected turbocharger or charge-air connection concern, recommend checking pipe seating, clamp position/tightness, coupler damage, retaining-clip engagement, oil residue or air-leak evidence, boost-leak symptoms, and relevant DTCs/scan data. Include safetyDrivabilityImpact only when applicable, with cautious language. Condition confidence must be independent from component-identification confidence: an uncertain assembly identity must not lower confidence in a separate directly visible defect. If no defect is visible, use this exact noVisibleConcernMessage: "${NO_VISIBLE_DEFECT_MESSAGE}".`;
     markDiagnostic(diagnostic, 'O_VISUAL_CONDITION_REQUEST_CONSTRUCTED', { visualConditionInspectionAttempted: true, visualConditionResponseReceived: false, visualConditionResultPresent: false });
+    let conditionResponse = null, conditionBody = null;
     try {
-      const conditionResponse = await fetchImpl('https://api.openai.com/v1/responses', {
+      conditionResponse = await fetchImpl('https://api.openai.com/v1/responses', {
         method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(visualConditionRequest({ store: false, max_output_tokens: VISUAL_CONDITION_MAX_OUTPUT_TOKENS, input: [{ role: 'user', content: [{ type: 'input_text', text: `${conditionPrompt}\nCompleted component-identification context: ${componentIdentification?.primaryComponent||'Automotive component identification was unavailable'}. Use this context only to orient the inspection; all condition claims still require visible pixels.` }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }] }], text: { format: { type: 'json_schema', name: 'nitros_visual_condition_inspection', strict: true, schema: visualConditionInspectionSchema } } })), signal: AbortSignal.timeout(Math.min(timeoutMs, VISUAL_CONDITION_TIMEOUT_MS))
       });
-      const conditionBody = await conditionResponse.json().catch(() => null);
+      conditionBody = await conditionResponse.json().catch(() => null);
       markDiagnostic(diagnostic, 'P_VISUAL_CONDITION_RESPONSE_RECEIVED', { visualConditionResponseReceived: true, visualConditionResponseOk: conditionResponse.ok, visualConditionHttpStatus: conditionResponse.status, visualConditionElapsedMs: Math.max(0, Date.now() - conditionStartedAt) });
       if (!conditionResponse.ok) throw Object.assign(new Error(conditionBody?.error?.message || `Visual condition request failed with HTTP ${conditionResponse.status}.`), { visualConditionErrorCategory: classifyOpenAIError(conditionResponse.status, conditionBody), visualConditionHttpStatus: conditionResponse.status });
       if (!conditionBody) throw Object.assign(new Error('Visual condition response was not valid JSON.'), { visualConditionMalformedResponse: true });
@@ -2017,20 +2138,25 @@ Use exact terminology only where the pictured feature supports it. Keep one sele
       catch (error) { throw Object.assign(error, { visualConditionMalformedResponse: true }); }
       try { const consistency = normalizeVisualConditionConsistency(retainVisibleConnectionContext(conditionParsed, componentIdentification)); visualConditionInspection = { ...validateVisualConditionInspection({ ...consistency.normalized, consistencyCorrections: consistency.corrections }), semanticRequestId: transactionId, imageHash }; if (consistency.corrections.length) markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_CONSISTENCY_REPAIRED', { visualConditionConsistencyCorrections: consistency.corrections }); }
       catch (error) { throw Object.assign(error, { visualConditionMalformedResponse: true }); }
+      markSchemaValidation(conditionBody, true);
       markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_RESULT_EXTRACTED', { visualConditionResponseParsed: true, visualConditionResultPresent: true, visualConditionStatus: visualConditionInspection.status, visualConditionConfidenceNormalized: visualConditionInspection.normalizedConditionConfidence !== null, visualConditionErrorCategory: null, visualConditionErrorMessage: null });
     } catch (error) {
+      if (conditionResponse?.ok) markSchemaValidation(conditionBody, false);
       const timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError' || /timed out|timeout/i.test(String(error?.message || ''));
       markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_FIRST_ATTEMPT_FAILED', { visualConditionFirstRequestTimeout: timedOut, visualConditionMalformedResponse: Boolean(error?.visualConditionMalformedResponse), visualConditionRetryStarted: true, visualConditionErrorMessage: sanitizeDiagnosticText(error?.message) });
       const retryPrompt = `Inspect only the visible physical connections in this same image. Prioritize gaps, separation, incomplete seating, clamp/retainer position, cracks, and disconnected fittings before residue. Return the same structured condition result. Do not invent defects. If a connection cannot be seen, use NOT_RELIABLY_VISIBLE and explain the limitation. Component context: ${componentIdentification?.primaryComponent||'unavailable'}.`;
+      let retryResponse = null, retryBody = null;
       try {
-        const retryResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify(visualConditionRequest({ store: false, max_output_tokens: VISUAL_CONDITION_RETRY_MAX_OUTPUT_TOKENS, input: [{ role: 'user', content: [{ type: 'input_text', text: retryPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }] }], text: { format: { type: 'json_schema', name: 'nitros_visual_condition_retry', strict: true, schema: visualConditionInspectionSchema } } })), signal: AbortSignal.timeout(Math.min(timeoutMs, VISUAL_CONDITION_RETRY_TIMEOUT_MS)) });
-        const retryBody = await retryResponse.json().catch(() => null);
+        retryResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify(visualConditionRequest({ store: false, max_output_tokens: VISUAL_CONDITION_RETRY_MAX_OUTPUT_TOKENS, input: [{ role: 'user', content: [{ type: 'input_text', text: retryPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: DEEP_VISION_DETAIL }] }], text: { format: { type: 'json_schema', name: 'nitros_visual_condition_retry', strict: true, schema: visualConditionInspectionSchema } } })), signal: AbortSignal.timeout(Math.min(timeoutMs, VISUAL_CONDITION_RETRY_TIMEOUT_MS)) });
+        retryBody = await retryResponse.json().catch(() => null);
         if (!retryResponse.ok) throw Object.assign(new Error(retryBody?.error?.message || `Visual condition retry failed with HTTP ${retryResponse.status}.`), { visualConditionHttpStatus: retryResponse.status });
         if (!retryBody) throw Object.assign(new Error('Visual condition retry response was not valid JSON.'), { visualConditionMalformedResponse: true });
         let retryParsed; try { retryParsed = JSON.parse(extractOutputText(retryBody)); } catch (retryError) { throw Object.assign(retryError, { visualConditionMalformedResponse: true }); }
         const consistency = normalizeVisualConditionConsistency(retainVisibleConnectionContext(retryParsed, componentIdentification)); visualConditionInspection = { ...validateVisualConditionInspection({ ...consistency.normalized, consistencyCorrections: consistency.corrections }), semanticRequestId: transactionId, imageHash }; if (consistency.corrections.length) markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_CONSISTENCY_REPAIRED', { visualConditionConsistencyCorrections: consistency.corrections });
+        markSchemaValidation(retryBody, true);
         markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_RETRY_SUCCEEDED', { visualConditionRetrySuccess: true, visualConditionRetryFailure: false, visualConditionResultPresent: true, visualConditionStatus: visualConditionInspection.status, visualConditionConfidenceNormalized: visualConditionInspection.normalizedConditionConfidence !== null });
       } catch (retryError) {
+      if (retryResponse?.ok) markSchemaValidation(retryBody, false);
       const safeMessage = timedOut ? 'Visual condition inspection timeout.' : sanitizeDiagnosticText(error?.message) || 'Visual condition inspection failed.';
       visualConditionInspection = { status: 'UNABLE_TO_INSPECT', conditionConfidence: null, rawConditionConfidence: null, normalizedConditionConfidence: null, observedCondition: [], possibleConcerns: [], connectionAssessments: [], noVisibleConcernMessage: '', unableToInspectReason: `${safeMessage} A shorter condition-only retry also could not complete; no repair decision should be made from this image.`, visibleEvidence: componentIdentification.supportingEvidence?.slice(0, 3) || [], recommendedVerification: ['Obtain a closer, well-lit image of each connection and perform a physical inspection before repair authorization.'], safetyDrivabilityImpact: null, semanticRequestId: transactionId, imageHash };
       markDiagnostic(diagnostic, 'Q_VISUAL_CONDITION_RETRY_FAILED', { visualConditionInspectionAttempted: true, visualConditionRetrySuccess: false, visualConditionRetryFailure: true, visualConditionResponseReceived: Boolean(diagnostic.visualConditionResponseReceived), visualConditionResponseParsed: false, visualConditionResultPresent: false, visualConditionStatus: 'UNABLE_TO_INSPECT', visualConditionConfidenceNormalized: false, visualConditionMalformedResponse: Boolean(retryError?.visualConditionMalformedResponse), visualConditionErrorCategory: error?.visualConditionErrorCategory || (timedOut ? 'OPENAI_TIMEOUT' : 'VISUAL_CONDITION_ANALYSIS_ERROR'), visualConditionErrorMessage: safeMessage, visualConditionHttpStatus: retryError?.visualConditionHttpStatus ?? error?.visualConditionHttpStatus ?? diagnostic.visualConditionHttpStatus ?? null, visualConditionElapsedMs: Math.max(0, Date.now() - conditionStartedAt) });
@@ -2042,27 +2168,32 @@ Use exact terminology only where the pictured feature supports it. Keep one sele
     const graphStartedAt = Date.now();
     const graphPrompt = `Analyze only the visible pixels of this current automotive diagnostic graph or PID screen. This is a dedicated diagnostic interpretation stage after classification. Extract only labels, units, current numeric values, displayed minimum/maximum ranges, time scales, operating conditions, and vehicle identity that are genuinely readable. Never invent PID or sensor labels, voltages, scales, wire details, connector pins, specifications, OEM procedures, or vehicle-specific facts. Analyze every visible trace and panel, including RPM, fuel trim, oxygen/air-fuel sensors, temperature, pressure, frequency, duty cycle, upstream/downstream behavior, switching/cross-count activity, flatline or bias, correlation, and abnormal patterns when actually supported. A plotted trace extending across a horizontal graph axis is time-series evidence even when exact X-axis units are unreadable; in that case describe supported relative trace behavior and mark only the exact time scale uncertain. Evaluate each readable trace for supported stable, rising, falling, switching, oscillating, flat, intermittent, abrupt, delayed, correlated, inverse, or little-response characteristics without inventing frequency, timestamps, or response time. Every temporal claim must be supported by visible plotted geometry or ordered samples for that specific PID and claim; Current/Min/Max statistics never establish increases, decreases, direction, trends, oscillation, switching, cycles, response, stabilization, before/after sequence, or sustained behavior. Prefix supported temporal statements with Trace-derived observation. Keep current values semantically separate from displayed minimum/maximum ranges, and never characterize an entire range from the sign or state of its current value. Validate every extracted range before returning it: MIN must be less than or equal to CURRENT, CURRENT must be less than or equal to MAX, and MIN must be less than or equal to MAX. If OCR violates those relationships, do not swap values; retain only independently supported values and mark the questionable Min/Max values uncertain. Displayed min/max values alone are not temporal evidence and do not establish switching rate, response time, oscillation, correlation, frequency, or trend. Preserve low non-zero voltage precision exactly as readable; never round a value such as 0.055 V to 0 V. Keep directly visible facts in observed and diagnostic inferences in interpretation, separately rate diagnosticSignificance, and put every limitation in unreadableOrUncertain. A single captured PID value is only an instantaneous reading. Never call it activity, stable, unstable, switching, oscillating, responding, stuck, biased, trending, fluctuating, lean, rich, normal, abnormal, good, bad, or failed unless direct temporal evidence or a verified diagnostic criterion supports that conclusion. Static voltage may be described as low, high, midrange, current, captured, or instantaneous, but must not be converted into a mixture or component state. Without temporal evidence or a visibly verified specification, threshold, DTC-specific criterion, or pass/fail rule, use INDETERMINATE and do not label a high/low snapshot abnormal, mildly abnormal, PASS, or FAIL. Do not apply narrowband rules to A/F, AFS, air-fuel ratio, wideband, or lambda sensors. Positive current trims mean the PCM adds fuel; negative current trims mean it removes fuel at that captured instant only. When same-bank current STFT and LTFT are visible under the same condition, add them but do not substitute that arithmetic for trace behavior. Use RPM, coolant, speed, loop state, load, and throttle when visible. For catalyst/P0420 analysis prioritize directly visible upstream/downstream traces and time relationships; never condemn a converter from the graph alone, and never clear or condemn a catalyst from one voltage. When only snapshot values or min/max ranges exist, request simultaneous upstream A/F and downstream O2 live data in closed loop over time. When plotted history is already visible, do not ask to capture the same signals over time; request only missing scale, operating-condition, commanded-response, or companion-PID evidence that would add diagnostic value. Before returning, discard temporal inferences from snapshot-only values, preserve visible trace evidence, and remove any static-snapshot claim that contradicts readable plotted history. In visibleVehicle, report a vehicle only if identifying text is visibly readable in the image.`;
     markDiagnostic(diagnostic, 'P_GRAPH_ANALYSIS_REQUESTED', { graphAnalysisAttempted: true, graphAnalysisResponseReceived: false, graphAnalysisResultPresent: false });
+    let graphBody = null;
     try {
       const graphResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 2200, input: [{ role: 'user', content: [{ type: 'input_text', text: graphPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }], text: { format: { type: 'json_schema', name: 'nitros_automotive_graph', strict: true, schema: automotiveGraphSchema } } }), signal: analysisSignal });
-      const graphBody = await graphResponse.json().catch(() => null);
+      graphBody = await graphResponse.json().catch(() => null);
       markDiagnostic(diagnostic, 'Q_GRAPH_ANALYSIS_RESPONSE', { graphAnalysisResponseReceived: true, graphAnalysisResponseOk: graphResponse.ok, graphAnalysisHttpStatus: graphResponse.status, graphAnalysisElapsedMs: Math.max(0, Date.now() - graphStartedAt) });
       if (!graphResponse.ok) throw new Error(graphBody?.error?.message || `Automotive graph request failed with HTTP ${graphResponse.status}.`);
       if (!graphBody) throw new Error('Automotive graph response was not valid JSON.');
       const validatedGraph=validateAutomotiveGraph(JSON.parse(extractOutputText(graphBody))),classificationTraceEvidence=semanticResult.graphEvidence||[];
+      markSchemaValidation(graphBody, true);
       automotiveGraphAnalysis = { ...correctAutomotiveGraphReasoning({...validatedGraph,classifierGraphEvidence:classificationTraceEvidence}), semanticRequestId: transactionId, imageHash };
       const inconsistentPids=(automotiveGraphAnalysis.numericEvidence||[]).filter(row=>row.evidenceState==='INCONSISTENT').map(row=>row.pidName);
       if(inconsistentPids.length){
         const recoveryPrompt=`Re-read only these inconsistent PIDs from the current supplied image: ${inconsistentPids.join(', ')}. Independently identify the visibly displayed Current, Min, and Max for each named PID. Do not use prior images, cached results, another PID, expected automotive values, arithmetic repair, swapping, sign flipping, copying, clamping, or inference. Return null for any role that is not independently readable. Preserve the visible sign, decimal precision, and unit. Include concise visible evidence for each recovered role.`;
         markDiagnostic(diagnostic,'R_PID_RECOVERY_REQUESTED',{targetedPidRecoveryAttempted:true,targetedPidRecoveryPids:inconsistentPids});
+        let recoveryBody = null;
         try{
           const recoveryResponse=await fetchImpl('https://api.openai.com/v1/responses',{method:'POST',headers:{'Authorization':`Bearer ${apiKey}`,'Content-Type':'application/json'},body:JSON.stringify({model:MODEL,store:false,max_output_tokens:900,input:[{role:'user',content:[{type:'input_text',text:recoveryPrompt},{type:'input_image',image_url:`data:${mimeType};base64,${imageBase64}`,detail:'high'}]}],text:{format:{type:'json_schema',name:'nitros_targeted_pid_recovery',strict:true,schema:targetedPidRecoverySchema}}}),signal:analysisSignal});
-          const recoveryBody=await recoveryResponse.json().catch(()=>null);if(!recoveryResponse.ok||!recoveryBody)throw new Error(recoveryBody?.error?.message||`Targeted PID recovery failed with HTTP ${recoveryResponse.status}.`);const parsedRecovery=JSON.parse(extractOutputText(recoveryBody)),allowed=new Set(inconsistentPids.map(name=>name.toLowerCase()));
+          recoveryBody=await recoveryResponse.json().catch(()=>null);if(!recoveryResponse.ok||!recoveryBody)throw new Error(recoveryBody?.error?.message||`Targeted PID recovery failed with HTTP ${recoveryResponse.status}.`);const parsedRecovery=JSON.parse(extractOutputText(recoveryBody)),allowed=new Set(inconsistentPids.map(name=>name.toLowerCase()));
+          markSchemaValidation(recoveryBody, true);
           const targetedPidRecovery=(Array.isArray(parsedRecovery?.recoveries)?parsedRecovery.recoveries:[]).filter(item=>allowed.has(String(item?.pidName||'').toLowerCase())).map(item=>({pidName:String(item.pidName),current:Number.isFinite(item.current)?item.current:null,minimum:Number.isFinite(item.minimum)?item.minimum:null,maximum:Number.isFinite(item.maximum)?item.maximum:null,unit:String(item.unit||''),visibleEvidence:cleanStringArray(item.visibleEvidence,'visibleEvidence'),status:item.status==='RECOVERED'?'RECOVERED':'UNREADABLE',semanticRequestId:transactionId,imageHash,generationId:transactionId}));
           const completeRecoveries=targetedPidRecovery.filter(item=>item.status==='RECOVERED'&&[item.current,item.minimum,item.maximum].every(Number.isFinite));if(completeRecoveries.length){const names=completeRecoveries.map(item=>item.pidName),targetPattern=new RegExp(names.map(name=>name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'i'),numericRole=/\b(?:current|minimum|min|maximum|max)\b/i,recoveredValues=completeRecoveries.flatMap(item=>[`${item.pidName} Current: ${item.current}${item.unit}`,`${item.pidName} Min: ${item.minimum}${item.unit}`,`${item.pidName} Max: ${item.maximum}${item.unit}`]),recoveredGraph={...validatedGraph,valuesAndScales:[...(validatedGraph.valuesAndScales||[]).filter(item=>!(targetPattern.test(item)&&numericRole.test(item))),...recoveredValues],observed:(validatedGraph.observed||[]).filter(item=>!(targetPattern.test(item)&&numericRole.test(item))),classifierGraphEvidence:classificationTraceEvidence},postRecoveryReasoning=correctAutomotiveGraphReasoning(recoveredGraph);automotiveGraphAnalysis={...automotiveGraphAnalysis,targetedPidRecovery,postRecoveryReasoning};}else automotiveGraphAnalysis={...automotiveGraphAnalysis,targetedPidRecovery};markDiagnostic(diagnostic,'R_PID_RECOVERY_EXTRACTED',{targetedPidRecoveryResultPresent:true,targetedPidRecoveryCount:targetedPidRecovery.length});
-        }catch(error){automotiveGraphAnalysis={...automotiveGraphAnalysis,targetedPidRecovery:inconsistentPids.map(pidName=>({pidName,current:null,minimum:null,maximum:null,unit:'',visibleEvidence:[],status:'UNREADABLE',semanticRequestId:transactionId,imageHash,generationId:transactionId}))};markDiagnostic(diagnostic,'R_PID_RECOVERY_FAILED',{targetedPidRecoveryResultPresent:false,targetedPidRecoveryErrorMessage:sanitizeDiagnosticText(error?.message)});}
+        }catch(error){markSchemaValidation(recoveryBody,false);automotiveGraphAnalysis={...automotiveGraphAnalysis,targetedPidRecovery:inconsistentPids.map(pidName=>({pidName,current:null,minimum:null,maximum:null,unit:'',visibleEvidence:[],status:'UNREADABLE',semanticRequestId:transactionId,imageHash,generationId:transactionId}))};markDiagnostic(diagnostic,'R_PID_RECOVERY_FAILED',{targetedPidRecoveryResultPresent:false,targetedPidRecoveryErrorMessage:sanitizeDiagnosticText(error?.message)});}
       }else automotiveGraphAnalysis={...automotiveGraphAnalysis,targetedPidRecovery:[]};
       markDiagnostic(diagnostic, 'R_GRAPH_ANALYSIS_EXTRACTED', { graphAnalysisResponseParsed: true, graphAnalysisResultPresent: true, graphAnalysisStatus: automotiveGraphAnalysis.status });
     } catch (error) {
+      markSchemaValidation(graphBody, false);
       const safeMessage = sanitizeDiagnosticText(error?.message) || 'Automotive graph analysis failed.';
       automotiveGraphAnalysis = { status: 'FAILED', confidence: null, rawConfidence: null, observed: [], interpretation: [], diagnosticSignificance: 'INCONCLUSIVE', nextTest: [], pidNames: [], sensorNames: [], valuesAndScales: [], traceFindings: [], unreadableOrUncertain: [safeMessage], visibleVehicle: { description: '', evidence: [] }, reasoningEvidence:{sensorTypeDetected:'NOT_CONFIRMED',fuelTrimPolarity:'NOT_AVAILABLE',combinedTrim:null,operatingState:'NOT_CONFIRMED',dynamicTraceEvidenceAvailable:false,catalystComparisonEvidenceAvailable:false,diagnosticCertainty:'UNAVAILABLE'},contradictionGuard:'NOT_RUN', semanticRequestId: transactionId, imageHash };
       markDiagnostic(diagnostic, 'R_GRAPH_ANALYSIS_FAILED', { graphAnalysisAttempted: true, graphAnalysisResponseParsed: false, graphAnalysisResultPresent: false, graphAnalysisErrorMessage: safeMessage });
@@ -2075,15 +2206,18 @@ Use exact terminology only where the pictured feature supports it. Keep one sele
 
 Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLATE → REPAIR → CONFIRM, but do not present them all to the technician at once; the client will reveal one test at a time. Prefer loaded voltage-drop or operational checks over resistance testing where appropriate. Each step must specify meter/tool mode, exact red and black probe locations, connector state, key/engine condition, loading, expected behavior, branch indices, and evidence-based conclusions. Provide exact numeric limits only when visible in the diagram, supplied by the technician, or established electrical principle, and identify that source. A single ambiguous voltage reading must be INCONCLUSIVE and must never verify a fault. Distinguish normal module pull-up from a short to battery voltage. Only use a VERIFIED conclusion after an isolation test proves the named fault; external circuits and components must be ruled out before suggesting a module fault. Never advise blind power jumpers, energized resistance/continuity tests, unsafe SRS probing, or loading communication lines. Every resistance or continuity instruction must explicitly say "Key OFF. Circuit must be de-energized before resistance/continuity testing." Do not condemn a component merely because a DTC or label names it.`;
     markDiagnostic(diagnostic, 'P_WIRING_ANALYSIS_REQUESTED', { wiringDiagramAnalysisAttempted: true, wiringDiagramResponseReceived: false, wiringDiagramResultPresent: false });
+    let diagramBody = null;
     try {
       const diagramResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 2200, input: [{ role: 'user', content: [{ type: 'input_text', text: diagramPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }], text: { format: { type: 'json_schema', name: 'nitros_wiring_diagram', strict: true, schema: wiringDiagramSchema } } }), signal: analysisSignal });
-      const diagramBody = await diagramResponse.json().catch(() => null);
+      diagramBody = await diagramResponse.json().catch(() => null);
       markDiagnostic(diagnostic, 'Q_WIRING_ANALYSIS_RESPONSE', { wiringDiagramResponseReceived: true, wiringDiagramResponseOk: diagramResponse.ok, wiringDiagramHttpStatus: diagramResponse.status, wiringDiagramElapsedMs: Math.max(0, Date.now() - diagramStartedAt) });
       if (!diagramResponse.ok) throw new Error(diagramBody?.error?.message || `Wiring diagram request failed with HTTP ${diagramResponse.status}.`);
       if (!diagramBody) throw new Error('Wiring diagram response was not valid JSON.');
       wiringDiagramAnalysis = { ...validateWiringDiagram(JSON.parse(extractOutputText(diagramBody))), semanticRequestId: transactionId, imageHash };
+      markSchemaValidation(diagramBody, true);
       markDiagnostic(diagnostic, 'R_WIRING_ANALYSIS_EXTRACTED', { wiringDiagramResponseParsed: true, wiringDiagramResultPresent: true, wiringDiagramStatus: wiringDiagramAnalysis.status, wiringDiagramErrorMessage: null });
     } catch (error) {
+      markSchemaValidation(diagramBody, false);
       const safeMessage = sanitizeDiagnosticText(error?.message) || 'Wiring diagram analysis failed.';
       wiringDiagramAnalysis = { status: 'FAILED', circuitComponent: 'Wiring diagram analysis failed', confidence: null, rawConfidence: null, normalizedConfidence: null, structuralEvidence: [], detectedComponents: [], connectorsAndPins: [], circuitPaths: [], fuses: [], relays: [], splices: [], wireDetails: [], importantObservations: [], unreadableFields: [safeMessage], safetyWarning: null, testPlan: [], semanticRequestId: transactionId, imageHash };
       markDiagnostic(diagnostic, 'R_WIRING_ANALYSIS_FAILED', { wiringDiagramAnalysisAttempted: true, wiringDiagramResponseParsed: false, wiringDiagramResultPresent: false, wiringDiagramErrorMessage: safeMessage, wiringDiagramElapsedMs: Math.max(0, Date.now() - diagramStartedAt) });
@@ -2094,15 +2228,18 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
     const documentStartedAt = Date.now();
     const documentPrompt = `Extract repair-information text only from the visible pixels of this current document, text screen, or screenshot. Do not use filenames, metadata, prior images, prior cases, cached results, general automotive knowledge, typical circuit values, expected sensor voltages, or OEM-style procedures not visibly printed in this image. Do not reclassify the image. Transcribe only visibly supported information for one diagnostic circuit-isolation test: applicable DTC codes, test name, component or circuit, test location including connector or terminal only when visibly provided, test method, required specification or pass/fail criterion, and the technician measurement/result requested by the procedure. Never manufacture, infer, complete, substitute, or supplement missing connector names, pins, terminals, wire colors, methods, specifications, voltage ranges, resistance limits, or pass/fail values. For criterionEvidence, provide the exact visible text supporting criterion. If no criterion/specification is visibly printed, return criterion and criterionEvidence as empty strings, comparator as an empty string, minimum and maximum as null, include criterion in missingRequiredFields, and set status INCOMPLETE. Resolve dtcApplicability explicitly as APPLICABLE when a DTC is visibly supplied for the test, NOT APPLICABLE when no DTC is visibly supplied, or UNKNOWN / CANNOT DETERMINE when the visible document does not permit that determination. An explicit NOT APPLICABLE or UNKNOWN / CANNOT DETERMINE is a resolved value and is not a missing field. Use an empty string or null for other unsupported fields and list every genuinely missing required field. Set COMPLETE only when applicability is resolved and component/circuit, location, method, visibly evidenced criterion, and requested result are all visibly supported. Derive comparator and numeric bounds only from criterionEvidence. Include short visibleTextEvidence excerpts supporting the extracted fields.`;
     markDiagnostic(diagnostic, 'S_DOCUMENT_EXTRACTION_REQUESTED', { documentExtractionAttempted: true, documentExtractionResponseReceived: false, documentExtractionResultPresent: false });
+    let documentBody = null;
     try {
       const documentResponse = await fetchImpl('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: MODEL, store: false, max_output_tokens: 1600, input: [{ role: 'user', content: [{ type: 'input_text', text: documentPrompt }, { type: 'input_image', image_url: `data:${mimeType};base64,${imageBase64}`, detail: 'high' }] }], text: { format: { type: 'json_schema', name: 'nitros_document_repair_information', strict: true, schema: documentRepairInformationSchema } } }), signal: analysisSignal });
-      const documentBody = await documentResponse.json().catch(() => null);
+      documentBody = await documentResponse.json().catch(() => null);
       markDiagnostic(diagnostic, 'T_DOCUMENT_EXTRACTION_RESPONSE', { documentExtractionResponseReceived: true, documentExtractionResponseOk: documentResponse.ok, documentExtractionHttpStatus: documentResponse.status, documentExtractionElapsedMs: Math.max(0, Date.now() - documentStartedAt) });
       if (!documentResponse.ok) throw new Error(documentBody?.error?.message || `Document extraction request failed with HTTP ${documentResponse.status}.`);
       if (!documentBody) throw new Error('Document extraction response was not valid JSON.');
       documentRepairInformation = { ...validateDocumentRepairInformation(JSON.parse(extractOutputText(documentBody))), semanticRequestId: transactionId, imageHash };
+      markSchemaValidation(documentBody, true);
       markDiagnostic(diagnostic, 'U_DOCUMENT_EXTRACTION_COMPLETE', { documentExtractionResponseParsed: true, documentExtractionResultPresent: true, documentExtractionStatus: documentRepairInformation.status, documentExtractionMissingFields: documentRepairInformation.missingRequiredFields });
     } catch (error) {
+      markSchemaValidation(documentBody, false);
       const safeMessage = sanitizeDiagnosticText(error?.message) || 'Document extraction failed.';
       documentRepairInformation = {status:'UNREADABLE',dtcApplicability:'',dtcs:[],testName:'',componentOrCircuit:'',testLocation:'',method:'',criterion:'',criterionEvidence:'',requestedResult:'',comparator:'',minimum:null,maximum:null,visibleTextEvidence:[],missingRequiredFields:['DTC applicability','component or circuit','test location','test method','criterion','requested technician result'],error:safeMessage,semanticRequestId:transactionId,imageHash};
       markDiagnostic(diagnostic, 'U_DOCUMENT_EXTRACTION_FAILED', { documentExtractionResponseParsed: false, documentExtractionResultPresent: false, documentExtractionStatus: 'UNREADABLE', documentExtractionErrorMessage: safeMessage });
@@ -2141,7 +2278,33 @@ Build at most eight logical diagnostic tests following VERIFY → TEST → ISOLA
   const has = field => usageCalls.some(call => Number.isFinite(call[field]));
   const primary = usageCalls[0] || {};
   const models = [...new Set(usageCalls.map(call => call.model).filter(Boolean))];
-  const usageTelemetry = { model: models.length === 1 ? models[0] : null, models, reasoningEffort: primary.reasoningEffort || DEEP_VISION_REASONING.effort, serviceTier: primary.serviceTier || null, imageCount: usageCalls.reduce((n, call) => n + (call.imageCount || 0), 0), requestCount: usageCalls.length, durationMs: Math.max(0, Date.now() - pipelineStartedAt), tokens: { inputTokens: has('inputTokens') ? numeric('inputTokens') : null, cachedInputTokens: has('cachedInputTokens') ? numeric('cachedInputTokens') : null, outputTokens: has('outputTokens') ? numeric('outputTokens') : null, reasoningTokens: has('reasoningTokens') ? numeric('reasoningTokens') : null, totalTokens: has('totalTokens') ? numeric('totalTokens') : null }, providerUsage: usageCalls.map(({ providerUsage, ...safe }) => ({ ...safe, providerUsage })) };
+  const operationCompletedAt = Date.now();
+  const usageTelemetry = {
+    model: models.length === 1 ? models[0] : null, models,
+    reasoningEffort: primary.reasoningEffort || DEEP_VISION_REASONING.effort,
+    reasoningMode: primary.reasoningMode || DEEP_VISION_REASONING.mode,
+    serviceTier: primary.serviceTier || null,
+    imageCount: usageCalls.reduce((n, call) => n + (call.imageCount || 0), 0),
+    requestCount: usageCalls.length,
+    durationMs: Math.max(0, operationCompletedAt - pipelineStartedAt),
+    operationDurationMs: Math.max(0, operationCompletedAt - pipelineStartedAt),
+    sumProviderCallDurationMs: numeric('durationMs'),
+    operationStartedAt: new Date(pipelineStartedAt).toISOString(),
+    operationCompletedAt: new Date(operationCompletedAt).toISOString(),
+    executionMode: 'SEQUENTIAL', finalOperationStatus: 'SUCCEEDED',
+    retryCount: usageCalls.reduce((n, call) => n + (call.retryCount || 0), 0),
+    timeoutCount: usageCalls.filter(call => call.timedOut === true).length,
+    originalImageDimensions: sourceDimensions,
+    tokens: {
+      inputTokens: has('inputTokens') ? numeric('inputTokens') : null,
+      cachedInputTokens: has('cachedInputTokens') ? numeric('cachedInputTokens') : null,
+      cacheWriteInputTokens: has('cacheWriteInputTokens') ? numeric('cacheWriteInputTokens') : null,
+      outputTokens: has('outputTokens') ? numeric('outputTokens') : null,
+      reasoningTokens: has('reasoningTokens') ? numeric('reasoningTokens') : null,
+      totalTokens: has('totalTokens') ? numeric('totalTokens') : null
+    },
+    providerUsage: usageCalls.map(({ providerUsage, ...safe }) => ({ ...safe, providerUsage }))
+  };
   return {
     transactionId,
     imageHash,

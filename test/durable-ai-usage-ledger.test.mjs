@@ -172,6 +172,9 @@ test('unknown, actual, and estimated costs remain three distinct accounting stat
   assert.equal(types.unknown, 'UNAVAILABLE');
   assert.equal(types.actual, 'ACTUAL_PROVIDER_COST');
   assert.equal(types.estimated, 'ESTIMATED_CALCULATED_COST');
+  assert.equal(report.recent.find(item => item.logicalOperationId === 'unknown').costProvenance, 'COST_UNAVAILABLE');
+  assert.equal(report.recent.find(item => item.logicalOperationId === 'actual').costProvenance, 'ACTUAL');
+  assert.equal(report.recent.find(item => item.logicalOperationId === 'estimated').costProvenance, 'ESTIMATED');
   assert.equal(report.current.all.unavailableCostCount, 1);
   assert.equal(report.current.all.actualCostCount, 1);
   assert.equal(report.current.all.estimatedCostCount, 1);
@@ -213,15 +216,47 @@ test('network failure and malformed datastore responses become safe degraded fai
 
 test('successful production persistence records each provider call with its response ID', async () => {
   const { ledger } = repository(), body = { transactionId: 'logical-77', vehicleContext: { repairOrderId: 'RO-77', activeCaseId: 'case-77' } };
-  const result = { usageTelemetry: { providerUsage: [
-    { providerRequestId: 'resp_77a', model: 'gpt-5.6-sol', status: 'FAILED', inputTokens: null, outputTokens: null, totalTokens: null, providerUsage: null },
-    { providerRequestId: 'resp_77b', model: 'gpt-5.6-sol', status: 'SUCCEEDED', inputTokens: 30, cachedInputTokens: 5, outputTokens: 8, totalTokens: 38, providerUsage: { input_tokens: 30 } }
+  const result = { usageTelemetry: { operationDurationMs: 90000, operationStartedAt: '2026-09-04T10:00:00.000Z', operationCompletedAt: '2026-09-04T10:01:30.000Z', executionMode: 'SEQUENTIAL', finalOperationStatus: 'SUCCEEDED', providerUsage: [
+    { providerRequestId: 'resp_77a', model: 'gpt-5.6-sol', stageName: 'WHOLE_IMAGE_VISUAL_CONDITION', schemaName: 'nitros_visual_condition_inspection', status: 'FAILED', httpSuccess: false, httpStatus: 503, schemaValidationStatus: 'NOT_ATTEMPTED', retryCount: 0, retryAttempt: 0, timedOut: false, inputTokens: null, outputTokens: null, totalTokens: null, providerUsage: null },
+    { providerRequestId: 'resp_77b', model: 'gpt-5.6-sol', stageName: 'WHOLE_IMAGE_VISUAL_CONDITION_RETRY', schemaName: 'nitros_visual_condition_retry', status: 'SUCCEEDED', httpSuccess: true, httpStatus: 200, schemaAccepted: true, schemaValidationStatus: 'ACCEPTED', retryCount: 1, retryAttempt: 1, timedOut: false, inputTokens: 30, cachedInputTokens: 5, cacheWriteInputTokens: 2, outputTokens: 8, reasoningTokens: 3, totalTokens: 38, providerUsage: { input_tokens: 30 } }
   ] } };
   assert.equal(await persistProviderUsage({ ledger, body, result }), 2);
   const report = await ledger.report();
   assert.equal(report.current.all.requests, 1);
   assert.equal(report.current.all.providerRequests, 2);
   assert.deepEqual(new Set(report.recent.map(item => item.providerRequestId)), new Set(['resp_77a', 'resp_77b']));
+  assert.ok(report.recent.every(item => item.logicalOperationId === 'logical-77' && item.repairOrderId === 'RO-77' && item.caseId === 'case-77'));
+  const retry = report.recent.find(item => item.providerRequestId === 'resp_77b');
+  assert.equal(retry.stageName, 'WHOLE_IMAGE_VISUAL_CONDITION_RETRY');
+  assert.equal(retry.cacheWriteInputTokens, 2);
+  assert.equal(retry.schemaValidationStatus, 'ACCEPTED');
+  assert.equal(retry.operationDurationMs, 90000);
+  assert.equal(retry.executionMode, 'SEQUENTIAL');
+});
+
+test('logical photo report aggregates the durable stage hierarchy and authoritative timing separately', async () => {
+  const { ledger } = repository(), body = { transactionId: 'photo-telemetry-1', vehicleContext: { repairOrderId: 'RO-T', activeCaseId: 'case-t', vehicleId: 'vehicle-t' } };
+  const base = { operationStartedAt: '2026-09-04T10:00:00.000Z', operationCompletedAt: '2026-09-04T10:03:00.000Z', operationDurationMs: 180000, sumProviderCallDurationMs: 170000, executionMode: 'SEQUENTIAL', finalOperationStatus: 'SUCCEEDED', imageResolutionStatus: 'NOT_REPORTED' };
+  const calls = [
+    { ...base, upstreamCallIndex: 0, providerRequestId: 'resp_stage_a', stageName: 'IMAGE_SEMANTIC_CLASSIFICATION', schemaName: 'nitros_image_semantics', requestStartedAt: '2026-09-04T10:00:00.000Z', responseReceivedAt: '2026-09-04T10:00:10.000Z', durationMs: 10000, model: 'gpt-5.6-sol', imageCount: 1, actualProviderCostUsd: 0.01, httpSuccess: true, httpStatus: 200, providerResponseStatus: 'completed', responseBodyParsed: true, schemaAccepted: true, schemaValidationStatus: 'ACCEPTED', retryCount: 0, retryAttempt: 0, timedOut: false, tokens: { inputTokens: 100, cachedInputTokens: 10, outputTokens: 20, reasoningTokens: 5, totalTokens: 120 } },
+    { ...base, upstreamCallIndex: 1, providerRequestId: 'resp_stage_b', stageName: 'REGIONAL_WHOLE_IMAGE_SWEEP', schemaName: 'nitros_raw_visual_observation', requestStartedAt: '2026-09-04T10:00:10.000Z', responseReceivedAt: '2026-09-04T10:02:50.000Z', durationMs: 160000, model: 'gpt-5.6-sol', imageCount: 10, actualProviderCostUsd: 0.5, httpSuccess: true, httpStatus: 200, providerResponseStatus: 'completed', responseBodyParsed: true, schemaAccepted: true, schemaValidationStatus: 'ACCEPTED', retryCount: 1, retryAttempt: 1, timedOut: false, tokens: { inputTokens: 200, cachedInputTokens: 20, outputTokens: 30, reasoningTokens: 10, totalTokens: 230 } }
+  ];
+  for (const telemetry of calls) await ledger.record(buildUsageEvent({ body, result: { usageTelemetry: telemetry }, now: new Date(telemetry.responseReceivedAt) }));
+  const report = await ledger.report(), operation = report.logicalOperations[0];
+  assert.equal(operation.logicalOperationId, 'photo-telemetry-1');
+  assert.equal(operation.providerRequests, 2);
+  assert.equal(operation.totalTokens, 350);
+  assert.equal(operation.totalImageInputs, 11);
+  assert.equal(operation.accountedSpend, 0.51);
+  assert.equal(operation.totalEndToEndDurationMs, 180000);
+  assert.equal(operation.sumProviderCallDurationMs, 170000);
+  assert.equal(operation.executionMode, 'SEQUENTIAL');
+  assert.equal(operation.finalOperationStatus, 'SUCCEEDED');
+  assert.equal(operation.retryCount, 1);
+  assert.equal(operation.timeoutCount, 0);
+  assert.deepEqual(operation.calls.map(item => item.stageName), ['IMAGE_SEMANTIC_CLASSIFICATION', 'REGIONAL_WHOLE_IMAGE_SWEEP']);
+  assert.deepEqual(operation.slowestStage, { stageName: 'REGIONAL_WHOLE_IMAGE_SWEEP', durationMs: 160000, upstreamCallIndex: 1 });
+  assert.deepEqual(operation.mostExpensiveStage, { stageName: 'REGIONAL_WHOLE_IMAGE_SWEEP', costUsd: 0.5, costProvenance: 'ACTUAL', upstreamCallIndex: 1 });
 });
 
 test('ledger-write failure is surfaced separately and does not destroy a diagnostic result', async () => {
@@ -284,6 +319,10 @@ test('production dashboard routes only to the protected API and hides totals whe
   assert.match(dashboard, /DURABLE STORAGE: NOT CONFIGURED/);
   assert.match(dashboard, /DURABLE STORAGE: DEGRADED/);
   assert.match(dashboard, /DURABLE AI USAGE STORAGE NOT CONFIGURED/);
+  assert.match(dashboard, /Photo inspection telemetry/);
+  assert.match(dashboard, /<details class="inspection">/);
+  assert.match(dashboard, /renderPhotoInspections\(data\.logicalOperations\)/);
+  for (const label of ['End-to-end time', 'Stage', 'Latency', 'Tokens', 'Images / detail', 'Cost', 'HTTP', 'Schema', 'Retry / timeout']) assert.match(dashboard, new RegExp(label, 'i'));
   assert.match(dashboard, /\$\('content'\)\.hidden=true/);
   assert.equal(vercel.rewrites.find(item => item.source === '/admin/ai-usage')?.destination, '/ai-usage-dashboard.html');
   assert.doesNotMatch(dashboard, /localStorage|sessionStorage|AI_USAGE_REDIS_REST_TOKEN|OPENAI_API_KEY/);
