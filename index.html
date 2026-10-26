@@ -49,6 +49,7 @@ label{display:block;font-size:14px;font-weight:700;margin:0 0 7px;color:#dce3ee}
 input,textarea,select{width:100%;background:#081321;color:var(--text);border:1px solid var(--line);border-radius:14px;padding:14px;outline:none}
 input:focus,textarea:focus,select:focus{border-color:#ff8a2b}
 .plate-number-row{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:5px;margin-top:8px;padding:7px;border:1px solid var(--line);border-radius:14px;background:#0a1726;box-shadow:0 8px 22px rgba(0,0,0,.24)}.plate-number-row[hidden]{display:none}.plate-number-row button{min-height:38px;padding:6px 0;border:1px solid #38506b;border-radius:9px;background:#14263b;color:#fff;font-weight:800;font-size:16px}.plate-number-row button:active{background:#ff8a2b;color:#07111f}@media(min-width:601px){.plate-number-row{display:none!important}}
+.vin-number-row{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px;margin-top:8px;padding:6px;border:1px solid var(--line);border-radius:14px;background:#0a1726}.vin-number-row button{min-width:0;min-height:42px;padding:6px 0;border:1px solid #38506b;border-radius:9px;background:#14263b;color:#fff;font-weight:800;font-size:16px}.vin-number-row button:active{background:#ff8a2b;color:#07111f}
 .field{margin-bottom:15px}
 .row{display:flex;gap:11px;align-items:center}.row>*{flex:1}
 .status{padding:13px 14px;border-radius:14px;background:#0c1929;border:1px solid var(--line);color:var(--muted);margin-top:13px}
@@ -1057,6 +1058,7 @@ canvas.graph-preview,canvas.ocr-preview{
         <strong>Dashboard VIN Scan:</strong> hold the phone close to the lower windshield and place only the VIN tag inside the orange box. For Toyota-style printed tags, use <strong>Read VIN Tag Close-Up</strong>; it captures multiple frames and compares grayscale, high-contrast, dark-threshold, light-threshold, and inverted versions before accepting the 17 characters.
       </div>
       <input id="vinInput" maxlength="17" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done" placeholder="17-character VIN, or DEMO1–DEMO4">
+      <div id="vinNumberRow" class="vin-number-row" role="group" aria-label="Manual VIN numbers"><button type="button" data-vin-digit="0" aria-label="Insert 0 in VIN">0</button><button type="button" data-vin-digit="1" aria-label="Insert 1 in VIN">1</button><button type="button" data-vin-digit="2" aria-label="Insert 2 in VIN">2</button><button type="button" data-vin-digit="3" aria-label="Insert 3 in VIN">3</button><button type="button" data-vin-digit="4" aria-label="Insert 4 in VIN">4</button><button type="button" data-vin-digit="5" aria-label="Insert 5 in VIN">5</button><button type="button" data-vin-digit="6" aria-label="Insert 6 in VIN">6</button><button type="button" data-vin-digit="7" aria-label="Insert 7 in VIN">7</button><button type="button" data-vin-digit="8" aria-label="Insert 8 in VIN">8</button><button type="button" data-vin-digit="9" aria-label="Insert 9 in VIN">9</button></div>
     </div>
     <button id="identifyVehicle" class="btn primary">Identify Vehicle</button>
     <div id="identifyStatus" class="status">Ready for camera scan or manual VIN entry.</div>
@@ -1915,12 +1917,21 @@ window.NitrosGpsEvidence=(()=>{
   let currentScreenId="home";
   let draftSaveTimer=null;
   let lastSavedRecordId=null;
+  let inspectionSaveInProgress=false;
 
   function normalizeLicensePlateInput(input,{trim=false}={}){if(!input)return"";const original=String(input.value??"");const normalized=(trim?original.trim():original).toUpperCase();if(normalized===original)return normalized;const start=input.selectionStart,end=input.selectionEnd;input.value=normalized;if(document.activeElement===input&&start!==null&&end!==null)input.setSelectionRange(Math.min(start,normalized.length),Math.min(end,normalized.length));return normalized;}
   function normalizeLicensePlateForSave(){return normalizeLicensePlateInput(document.querySelector("[data-license-plate]"),{trim:true});}
   function insertLicensePlateDigit(input,digit){if(!input||!/^[0-9]$/.test(String(digit)))return;const start=input.selectionStart??input.value.length,end=input.selectionEnd??start;if(typeof input.setRangeText==="function")input.setRangeText(String(digit),start,end,"end");else{input.value=`${input.value.slice(0,start)}${digit}${input.value.slice(end)}`;input.setSelectionRange(start+1,start+1);}normalizeLicensePlateInput(input);input.dispatchEvent(new Event("input",{bubbles:true}));input.focus({preventScroll:true});}
   function configureLicensePlateInputs(root=document){root.querySelectorAll("[data-license-plate]").forEach(input=>{const row=document.getElementById(input.getAttribute("aria-controls")),isPhone=()=>window.matchMedia("(max-width:600px)").matches,show=()=>{if(!row||!isPhone())return;row.hidden=false;input.setAttribute("aria-expanded","true");},hide=()=>{if(!row)return;row.hidden=true;input.setAttribute("aria-expanded","false");},keyboardOpen=()=>!window.visualViewport||window.visualViewport.height<window.innerHeight-120;input.addEventListener("input",()=>normalizeLicensePlateInput(input));input.addEventListener("focus",show);input.addEventListener("pointerdown",()=>setTimeout(show,0));input.addEventListener("blur",()=>{normalizeLicensePlateInput(input,{trim:true});hide();});input.addEventListener("change",()=>normalizeLicensePlateInput(input,{trim:true}));row?.addEventListener("pointerdown",event=>event.preventDefault());row?.addEventListener("click",event=>{const button=event.target.closest("[data-plate-digit]");if(button)insertLicensePlateDigit(input,button.dataset.plateDigit);});window.visualViewport?.addEventListener("resize",()=>{if(document.activeElement!==input||!keyboardOpen())hide();else show();});window.addEventListener("resize",()=>{if(!isPhone())hide();});});}
   configureLicensePlateInputs();
+  document.getElementById("vinNumberRow")?.addEventListener("pointerdown",event=>event.preventDefault());
+  document.getElementById("vinNumberRow")?.addEventListener("click",event=>{
+    const button=event.target.closest("[data-vin-digit]");
+    if(!button)return;
+    const start=vinInput.selectionStart??vinInput.value.length,end=vinInput.selectionEnd??start;
+    if(vinInput.value.length-(end-start)>=vinInput.maxLength)return;
+    insertLicensePlateDigit(vinInput,button.dataset.vinDigit);
+  });
 
   function collectDraft(){
     normalizeLicensePlateForSave();
@@ -1995,10 +2006,12 @@ window.NitrosGpsEvidence=(()=>{
     if(!draft) return false;
     selectedVehicle=draft.selectedVehicle||selectedVehicle;
     editingCheckInId=draft.editingCheckInId||null;
+    lastSavedRecordId=null;
     Object.entries(draft.fields||{}).forEach(([id,value])=>{
       const el=document.getElementById(id); if(!el) return;
       if(el.type==="checkbox") el.checked=Boolean(value); else el.value=value??"";
     });
+    applyPortalProfile(portalProfile());
     [...document.querySelectorAll(".check")].forEach((el,index)=>{if(index<(draft.checks||[]).length) el.checked=Boolean(draft.checks[index]);});
     if(Array.isArray(draft.estimateLines) && draft.estimateLines.length){
       document.getElementById("estimateRows").innerHTML="";
@@ -2074,6 +2087,7 @@ window.NitrosGpsEvidence=(()=>{
       certificationSource:"Not Yet Verified"
     };
     Object.entries(defaults).forEach(([id,value])=>{const el=document.getElementById(id);if(el) el.value=value;});
+    applyPortalProfile(portalProfile());
 
     const vehicleSummary=document.getElementById("vehicleSummary");
     if(vehicleSummary) vehicleSummary.innerHTML="";
@@ -2119,6 +2133,10 @@ window.NitrosGpsEvidence=(()=>{
     screens.forEach(s => s.classList.toggle("active", s.id === target));
     window.scrollTo({top:0,behavior:"instant"});
     if(target === "review"){ buildSummary(); requestAnimationFrame(renderValidationCenter); }
+    if(target === "workorder"){
+      const tech=document.getElementById("roadTestTechnician");
+      if(tech&&!tech.value.trim())tech.value=document.getElementById("assignedTechnician")?.value||document.getElementById("technicianName")?.value||portalProfile()?.name||"";
+    }
     if(target === "history") searchHistory();
     if(target === "schedule") requestAnimationFrame(()=>prefillAppointmentFromActiveCustomer(false));
     if(target === "inspection") loadActivePhotoEvidence();
@@ -2208,8 +2226,9 @@ window.NitrosGpsEvidence=(()=>{
     const printButton=document.getElementById("printReport");
     const backButton=document.getElementById("reviewBackButton");
     if(saveButton){
-      saveButton.disabled=missing.length!==0;
-      saveButton.textContent=missing.length?`Complete ${missing.length} Required Item${missing.length===1?"":"s"}`:"Save Inspection Report";
+      const saved=Boolean(lastSavedRecordId&&!editingCheckInId);
+      saveButton.disabled=saved||inspectionSaveInProgress||missing.length!==0;
+      saveButton.textContent=saved?"✓ Inspection Report Saved":inspectionSaveInProgress?"Saving Inspection Report…":missing.length?`Complete ${missing.length} Required Item${missing.length===1?"":"s"}`:"Save Inspection Report";
     }
     if(printButton) printButton.disabled=missing.length!==0;
     if(backButton){
@@ -4497,6 +4516,7 @@ document.getElementById("validationList")?.addEventListener("click",e=>{
   }
 
 document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
+    if(inspectionSaveInProgress||(lastSavedRecordId&&!editingCheckInId))return;
     const s=document.getElementById("submitStatus");
     const missing=renderValidationCenter();
     if(missing.length){
@@ -4506,6 +4526,9 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
       return;
     }
 
+    inspectionSaveInProgress=true;
+    renderValidationCenter();
+    try{
     const recordId=editingCheckInId||`NIT-${new Date().toISOString().replace(/\D/g,"").slice(0,14)}`;
     const persistedPhotos=await persistActivePhotosToRecord(recordId);
     const payload={
@@ -4640,6 +4663,15 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     localStorage.removeItem(DRAFT_KEY);
     refreshDraftPanel();
     setSaveStatus(navigator.onLine?"saved":"offline",navigator.onLine?"Repair order saved on this device":"Offline — repair order saved on this device");
+    }catch(error){
+      console.error("Inspection report save failed:",error);
+      s.className="status bad";
+      s.textContent="Inspection report could not be saved. Review device storage and try again.";
+      setSaveStatus("error","Save failed — review device storage");
+    }finally{
+      inspectionSaveInProgress=false;
+      renderValidationCenter();
+    }
   });
 
   document.addEventListener("input",e=>{if(e.target.matches("input,textarea,select")) scheduleDraftSave();});
@@ -4717,8 +4749,8 @@ document.getElementById("submitCheckin")?.addEventListener("click",async()=>{
     if(profile?.name){
       header?.classList.remove("hidden"); if(text) text.textContent=`Signed in: ${profile.name}`;
       const tech=document.getElementById("technicianName"), assigned=document.getElementById("assignedTechnician");
-      if(tech && !tech.value) tech.value=profile.name;
-      if(assigned && !assigned.value) assigned.value=profile.name;
+      if(tech && !tech.value.trim()) tech.value=assigned?.value.trim()||profile.name;
+      if(assigned && !assigned.value.trim()) assigned.value=tech?.value.trim()||profile.name;
     } else header?.classList.add("hidden");
   }
   function portalEscape(v){return String(v??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]))}
@@ -6938,7 +6970,9 @@ $('smartDiagStart')?.addEventListener('click',e=>{e.preventDefault();e.stopImmed
   });
   $('vinInput')?.addEventListener('input',e=>{
     const start=e.target.selectionStart;
-    const clean=e.target.value.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g,'').slice(0,17);
+    const upper=e.target.value.toUpperCase();
+    // Keep the explicit demo identifiers (and typing prefixes) intact; real VIN filtering is unchanged.
+    const clean=('DEMO'.startsWith(upper)||/^DEMO[1-4]?$/.test(upper))?upper:upper.replace(/[^A-HJ-NPR-Z0-9]/g,'').slice(0,17);
     if(clean!==e.target.value){e.target.value=clean;try{e.target.setSelectionRange(Math.min(start,clean.length),Math.min(start,clean.length));}catch(_){}}
   });
 
