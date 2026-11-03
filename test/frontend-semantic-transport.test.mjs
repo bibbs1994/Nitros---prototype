@@ -42,6 +42,9 @@ test('10.13.144 keeps the proven analyzer and production endpoint', () => {
   assert.match(html, /10\.13\.144/);
   assert.match(html, /src="\.\/image-analysis-ad\.js"/);
   assert.match(html, /nitros-semantic-endpoint" content="https:\/\/nitros-prototype\.vercel\.app\/api\/semantic-image-analysis/);
+  assert.match(analyzer,/const PRODUCTION_SEMANTIC_ORIGINS=new Set\(\['https:\/\/nitros-prototype\.vercel\.app','https:\/\/bibbs1994\.github\.io'\]\)/);
+  assert.match(analyzer,/if\(!PRODUCTION_SEMANTIC_ORIGINS\.has\(location\.origin\)\)return ''/);
+  assert.match(analyzer,/STAGING_SEMANTIC_CONFIG_PATH='\/api\/staging-runtime-config'/);
   assert.match(serviceWorker, /const VERSION = '10\.13\.144'/);
   assert.doesNotMatch(`${analyzer}\n${html}\n${serviceWorker}`, /10\.12\.7A[FGHIJKLMN]/);
 });

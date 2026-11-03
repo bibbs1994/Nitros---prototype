@@ -2,7 +2,7 @@
 
 const VERSION = '10.13.144';
 const CACHE_PREFIX = 'nitros-mobile-technician-portal-';
-const CACHE_NAME = `${CACHE_PREFIX}${VERSION}`;
+const CACHE_NAME = `${CACHE_PREFIX}${VERSION}-encrypted-backup`;
 const OBSOLETE_CLASSIFIER_CACHE_PREFIXES = [CACHE_PREFIX, 'nitros-image-classifier-', 'nitros-classifier-'];
 const APP_SHELL = new URL('./index.html', self.registration.scope).href;
 const STATIC_ASSETS = new Set([new URL('./image-analysis-ad.js', self.registration.scope).href, new URL('./dtc-knowledge.js', self.registration.scope).href]);
@@ -25,7 +25,8 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
   const isNavigation = request.mode === 'navigate';
   const isAppShellHtml = url.origin === self.location.origin && (url.pathname.endsWith('/') || url.pathname.endsWith('/index.html'));
-  const isVersionedStaticAsset = STATIC_ASSETS.has(url.href);
+  const isBackupAsset = url.origin === self.location.origin && url.pathname.startsWith(new URL('./backup/', self.registration.scope).pathname);
+  const isVersionedStaticAsset = STATIC_ASSETS.has(url.href) || isBackupAsset;
   if (!isNavigation && !isAppShellHtml && !isVersionedStaticAsset) return;
 
   event.respondWith((async () => {

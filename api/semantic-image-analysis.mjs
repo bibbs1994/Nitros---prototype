@@ -63,7 +63,7 @@ export default async function handler(request, response) {
   response.setHeader('Vary', 'Origin');
   response.setHeader('X-Content-Type-Options', 'nosniff');
   const origin = request.headers?.origin;
-  if (!allowedOrigin(origin)) return response.status(403).json({ error: 'Origin is not allowed.', code: 'ORIGIN_FORBIDDEN' });
+  if (!allowedOrigin(origin, request.headers?.host)) return response.status(403).json({ error: 'Origin is not allowed.', code: 'ORIGIN_FORBIDDEN' });
   response.setHeader('Access-Control-Allow-Origin', origin);
   if (request.method === 'OPTIONS') {
     response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');

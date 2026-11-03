@@ -17,8 +17,15 @@ export class HttpError extends Error {
   }
 }
 
-export function allowedOrigin(origin) {
-  return typeof origin === 'string' && NITROS_PRODUCTION_ORIGINS.includes(origin);
+export function allowedOrigin(origin, requestHost = '') {
+  if (typeof origin !== 'string') return false;
+  if (NITROS_PRODUCTION_ORIGINS.includes(origin)) return true;
+  const stagingHost = String(process.env.NITROS_STAGING_HOST || '').trim().toLowerCase();
+  const host = String(requestHost || '').trim().toLowerCase().split(':')[0];
+  return process.env.NITROS_STAGING_SEMANTIC_ANALYSIS_ENABLED === 'true'
+    && /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(stagingHost)
+    && host === stagingHost
+    && origin === `https://${stagingHost}`;
 }
 
 export function clientAddress(headers = {}, fallback = 'unknown') {

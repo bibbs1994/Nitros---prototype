@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101b28">
+<title>Nitros Encrypted Backup and Recovery</title>
+<script src="/backup/production-storage.js"></script>
+<style>
+:root{color-scheme:dark;font:17px system-ui;background:#101b28;color:#edf4fa}
+body{max-width:900px;margin:auto;padding:20px}
+section{border:1px solid #789;border-radius:12px;padding:16px;margin:18px 0;background:#132235}
+label{display:block;margin:12px 0}
+input,select,button{font:inherit;max-width:100%;padding:8px}
+button{margin:6px 4px}
+pre{white-space:pre-wrap;overflow-wrap:anywhere}
+a{color:#9df}
+.warn{color:#ffd080}
+.ok{color:#83e5a4}
+#key{width:min(100%,38rem)}
+</style>
+</head>
+<body>
+<h1>Nitros Encrypted Backup and Recovery</h1>
+<p>Backups capture persisted portal records and evidence. Restore is available only into an empty browser profile and keeps previous storage generations intact. Recovery keys stay in this page session; save the key somewhere separate before creating a backup.</p>
+<p><a href="/">Return to the technician portal</a></p>
+<section>
+<h2>Recovery key</h2>
+<button id="newKey">Generate recovery key</button>
+<label>Recovery key <input id="key" type="password" autocomplete="off" spellcheck="false"></label>
+<button id="showKey">Show/hide key</button>
+<label><input id="keySaved" type="checkbox"> I saved this key outside this device.</label>
+<button id="lock">Lock and forget key</button>
+</section>
+<section>
+<h2>Google Drive</h2>
+<p>Drive access uses the signed-in Google account and the least-privilege <code>drive.file</code> scope. Only encrypted backup files are uploaded.</p>
+<button id="connect">Connect Google Drive</button>
+<button id="disconnect">Disconnect Google</button>
+<button id="retryDrive">Retry pending encrypted backup now</button>
+<button id="driveHistory">Refresh Drive history</button>
+<p id="connection" role="status">Checking production OAuth configuration…</p>
+<div id="remoteHistory"></div>
+</section>
+<section>
+<h2>Backups</h2>
+<button id="backup">Back Up Now — encrypted</button>
+<button id="download" disabled>Download encrypted file</button>
+<button id="share" disabled>Share encrypted file</button>
+<label><input id="driveAuto" type="checkbox"> Queue new backups for Google Drive</label>
+<label><input id="enabled" type="checkbox"> Enable open-app scheduling</label>
+<label>Frequency <select id="frequency"><option value="daily">Daily</option><option value="weekly">Weekly</option></select></label>
+<label>Preferred time <input id="time" type="time" value="21:00"></label>
+<label>Weekly day (0 Sunday–6 Saturday) <input id="weekday" type="number" min="0" max="6" value="0"></label>
+<label>Time zone <input id="zone" autocomplete="off"></label>
+<button id="saveSettings">Save schedule</button>
+<p>Scheduling runs only while this page is open, visible, and idle, with no active technician workflow. A missed time can be caught up when reopened. A closed phone or browser cannot run a local scheduled backup.</p>
+<p id="last"></p>
+<div id="history"></div>
+</section>
+<section aria-label="Backup queue diagnostics">
+<h2>Backup queue diagnostics</h2>
+<pre id="queueDiagnostics">Waiting for queue state.</pre>
+</section>
+<section>
+<h2>Restore a backup</h2>
+<label>Encrypted backup file <input id="file" type="file" accept=".json,application/json"></label>
+<button id="preview">Decrypt and preview</button>
+<pre id="previewText"></pre>
+<p>Restore will refuse any destination with existing portal records. It will not merge or replace data.</p>
+<button id="prepare" disabled>Prepare verified restore</button>
+<label><input id="confirm" type="checkbox"> I reviewed the preview and want to activate this isolated restore.</label>
+<button id="activate" disabled>Activate restore</button>
+<button id="auditActive">Audit active restored dataset — read only</button>
+<pre id="auditResult">No read-only audit run in this page session.</pre>
+</section>
+<pre id="status" role="status">Ready.</pre>
+<script type="module" src="/backup/secure-ui.mjs"></script>
+</body>
+</html>

@@ -207,7 +207,23 @@ const BUILD='10.13.144';
     throw diagnosticError('Original image exceeds the deep-vision upload limit; capture a smaller original rather than silently downscaling evidence.','PAYLOAD_ERROR',{unsupportedRequestBody:true});
   }
 
-  function semanticEndpoint(){return document.querySelector('meta[name="nitros-semantic-endpoint"]')?.content?.trim()||'/api/semantic-image-analysis'}
+  const PRODUCTION_SEMANTIC_ORIGINS=new Set(['https://nitros-prototype.vercel.app','https://bibbs1994.github.io']);
+  const STAGING_SEMANTIC_CONFIG_PATH='/api/staging-runtime-config';
+  let stagingSemanticEndpointRequest;
+  function semanticEndpoint(){
+    if(!PRODUCTION_SEMANTIC_ORIGINS.has(location.origin))return '';
+    const configured=document.querySelector('meta[name="nitros-semantic-endpoint"]')?.content?.trim()||'';
+    try{const url=new URL(configured,location.origin);return url.origin==='https://nitros-prototype.vercel.app'&&url.pathname==='/api/semantic-image-analysis'&&!url.search?url.href:''}catch(_){return ''}
+  }
+  async function resolveSemanticEndpoint(){
+    if(PRODUCTION_SEMANTIC_ORIGINS.has(location.origin))return semanticEndpoint();
+    if(!stagingSemanticEndpointRequest){
+      stagingSemanticEndpointRequest=fetch(STAGING_SEMANTIC_CONFIG_PATH,{method:'GET',cache:'no-store',credentials:'same-origin',redirect:'error'})
+        .then(async response=>{if(!response.ok)return '';const config=await response.json();if(config?.semanticEndpoint!=='/api/semantic-image-analysis')return '';const endpoint=new URL(config.semanticEndpoint,location.origin);return endpoint.origin===location.origin&&!endpoint.search?endpoint.href:''})
+        .catch(()=> '');
+    }
+    return stagingSemanticEndpointRequest;
+  }
   function activeVehicleAnalysisContext(){
     const uiContext=window.NitrosAskOliverContext?.get?.()||{},diagnostic=window.NitrosDiagnosticV10120?.getState?.()||{},diagnosticVehicle=diagnostic.vehicle&&diagnostic.vehicle.year&&diagnostic.vehicle.make&&diagnostic.vehicle.model?diagnostic.vehicle:null,context=diagnosticVehicle?{...uiContext,...diagnosticVehicle,activeCaseId:diagnostic.id||uiContext.activeCaseId||uiContext.caseId,repairOrderId:diagnostic.repairOrderId||uiContext.ro||uiContext.repairOrderId,vin:diagnostic.vin||uiContext.vin,contextVersion:diagnostic.id?`${diagnostic.id}:${diagnosticVehicle.year}:${diagnosticVehicle.make}:${diagnosticVehicle.model}:${diagnosticVehicle.engine||''}`:uiContext.contextVersion}:uiContext,clean=(value,max)=>String(value||'').trim().replace(/\s+/g,' ').slice(0,max),year=clean(context.year,4),vin=clean(context.vin,17).toUpperCase();
     const activeCaseId=clean(localStorage.getItem('activeRepairOrderId')||context.activeCaseId||context.caseId,128),repairOrderId=clean(context.ro||context.repairOrderId,128),vehicle={year:/^\d{4}$/.test(year)?year:'',make:clean(context.make,80),model:clean(context.model,100),engine:clean(context.engine,100),fuelType:clean(context.fuelType||context.fuel,60),drivetrain:clean(context.drivetrain||context.transmission,100),configuration:clean(context.configuration||context.vehicleConfiguration,180),vin:/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)?vin:'',activeCaseId,repairOrderId,vehicleId:clean(context.vehicleId||context.id||context.vin||`${year}:${context.make||''}:${context.model||''}`,160),contextVersion:clean(context.contextVersion||context.updatedAt||`${activeCaseId}:${repairOrderId}:${year}:${context.make||''}:${context.model||''}:${context.vin||''}`,240),source:activeCaseId?'ACTIVE_REPAIR_ORDER':'ACTIVE_PORTAL_CASE'};
@@ -387,8 +403,8 @@ const BUILD='10.13.144';
     endpoint:semanticEndpoint(),
     async analyzeCurrentImage({bytes,mimeType,runId,imageHash,vehicleContextSnapshot,signal,diagnostic,onDiagnostic,analysisAttempt=1}){
       const attemptStarted=performance.now(),mark=changes=>{Object.assign(diagnostic,changes);onDiagnostic?.()};
-      const endpoint=semanticEndpoint();mark({stage:'ENDPOINT_CONFIGURATION',endpoint:safeEndpoint(endpoint),endpointConfigured:Boolean(endpoint)});
-      if(!endpoint){mark({outcome:'FAILED',errorCategory:'CONFIGURATION_ERROR',errorName:'ConfigurationError',errorMessage:'Semantic endpoint is not configured.',missingEndpoint:true,likelyLayer:'Endpoint configuration',totalMs:elapsed(attemptStarted),completedAt:new Date().toISOString()});throw diagnosticError('Semantic endpoint is not configured.','CONFIGURATION_ERROR')}
+      const endpoint=await resolveSemanticEndpoint();mark({stage:'ENDPOINT_CONFIGURATION',endpoint:safeEndpoint(endpoint),endpointConfigured:Boolean(endpoint)});
+      if(!endpoint){const stagingDisabled=!PRODUCTION_SEMANTIC_ORIGINS.has(location.origin),message=stagingDisabled?'Semantic image analysis is disabled on this staging host until its isolated endpoint is configured.':'Semantic endpoint is not configured.';mark({outcome:'FAILED',errorCategory:'CONFIGURATION_ERROR',errorName:'ConfigurationError',errorMessage:message,missingEndpoint:true,likelyLayer:'Endpoint configuration',totalMs:elapsed(attemptStarted),completedAt:new Date().toISOString()});throw diagnosticError(message,'CONFIGURATION_ERROR')}
       let requestUrl;
       try{requestUrl=new URL(endpoint,document.baseURI);if(!/^https?:$/.test(requestUrl.protocol))throw new TypeError('Semantic endpoint must use HTTP or HTTPS.')}
       catch(error){mark({outcome:'FAILED',errorCategory:'CONFIGURATION_ERROR',errorName:error.name,errorMessage:sanitizeDiagnosticText(error.message),malformedUrl:true,likelyLayer:'Endpoint URL validation',totalMs:elapsed(attemptStarted),completedAt:new Date().toISOString()});throw tagDiagnosticError(error,'CONFIGURATION_ERROR')}

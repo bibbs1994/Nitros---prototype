@@ -57,7 +57,8 @@ test('ticket service validates the description, persists category and attachment
 test('support-ticket delivery is local-first, retryable, bounded, and idempotent at the API boundary',()=>{
   assert.match(html,/name="nitros-support-ticket-endpoint"/);
   assert.match(html,/content="http:\/\/192\.168\.4\.24:8787\/api\/support-tickets"/);
-  assert.match(ticket,/127\\\.0\\\.0\\\.1/);
+  assert.match(ticket,/!\['https:\/\/nitros-prototype\.vercel\.app','https:\/\/bibbs1994\.github\.io'\]\.includes\(location\.origin\)\)return ''/);
+  assert.doesNotMatch(ticket,/new URL\('\/api\/support-tickets'/);
   assert.match(ticket,/function syncTicket\(localId\)/);
   assert.match(ticket,/function syncPendingTickets\(\)/);
   assert.match(ticket,/sourceLocalId:ticket\.id/);
