@@ -71,3 +71,21 @@ test('browser config fails closed by origin and exposes safe configuration diagn
   assert.match(auth,/driveConfig\.error\|\|'Google OAuth Client ID is unavailable/);
   assert.match(ui,/message\?` \$\{message\}`:''/);
 });
+
+test('browser config distinguishes redirects, timeouts, and network/CORS failures without echoing error details',async()=>{
+  const origin='https://nitros-mobile-staging.vercel.app';
+  const redirect=await loadPublicConfig({origin,fetcher:async(_url,options)=>{
+    assert.equal(options.redirect,'manual');
+    return{type:'opaqueredirect',status:0,json:async()=>{throw new Error('must not parse redirect body')}};
+  }});
+  assert.match(redirect.error,/endpoint redirected/i);
+  assert.equal(redirect.clientId,null);
+
+  const timeout=await loadPublicConfig({origin,fetcher:async()=>{throw Object.assign(new Error('private detail'),{name:'AbortError'});}});
+  assert.match(timeout.error,/request timed out/i);
+  assert.doesNotMatch(timeout.error,/private detail/i);
+
+  const network=await loadPublicConfig({origin,fetcher:async()=>{throw new TypeError('https://private.example/path?token=synthetic');}});
+  assert.match(network.error,/network\/CORS failure/i);
+  assert.doesNotMatch(network.error,/private\.example|token=synthetic/i);
+});

@@ -16,8 +16,11 @@ export async function loadPublicConfig({ origin = globalThis.location?.origin, f
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3500);
     let response;
-    try { response = await fetcher('/api/backup-config', { cache: 'no-store', credentials: 'omit', redirect: 'error', signal: controller.signal }); }
+    try { response = await fetcher('/api/backup-config', { cache: 'no-store', credentials: 'omit', redirect: 'manual', signal: controller.signal }); }
     finally { clearTimeout(timeout); }
+    if (response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) {
+      return unavailable('Google Drive configuration endpoint redirected. Check the staging project’s deployment protection and canonical HTTPS origin.');
+    }
     const value = await response.json().catch(() => null);
     if (!response.ok) {
       const message = value?.code === 'STAGING_OAUTH_CLIENT_ID_UNAVAILABLE'
@@ -37,8 +40,13 @@ export async function loadPublicConfig({ origin = globalThis.location?.origin, f
       return unavailable(`${expectedNamespace === 'staging' ? 'Staging' : 'Production'} Google OAuth configuration is invalid for this exact origin.`);
     }
     return Object.freeze({ clientId: value.clientId, approvedOrigins: [origin], backupNamespace: expectedNamespace, error: '' });
-  } catch {
-    return unavailable('Google Drive configuration could not be loaded. Check the connection and staging server, then reload.');
+  } catch (error) {
+    const category = error?.name === 'AbortError'
+      ? 'request timed out'
+      : error instanceof TypeError
+        ? 'browser network/CORS failure'
+        : 'request failed';
+    return unavailable(`Google Drive configuration request failed (${category}). Check the staging endpoint and browser network access, then reload.`);
   }
 }
 
