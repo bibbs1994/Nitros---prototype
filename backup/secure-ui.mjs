@@ -81,7 +81,7 @@ $('driveHistory').onclick=()=>run(async()=>{
   try{
     const files=await drive.list();$('remoteHistory').replaceChildren();
     for(const v of files){const b=document.createElement('button');b.textContent=`Restore ${v.createdTime} · ${v.size} bytes`;b.onclick=()=>run(async()=>{try{encryptedInput=await drive.download(v.id);clearInput=null;prepared=null;$('prepare').disabled=$('activate').disabled=true;show('Encrypted Drive version loaded. Decrypt and preview before restoring.');}catch(e){queueDiagnostics.lastFailure=drive.lastFailure;throw e;}});$('remoteHistory').append(b);}
-    show(`Google Drive history refreshed: ${files.length} encrypted backup(s). Listing alone does not verify a backup or destination folder.`);
+    show(`Google Drive history refreshed: ${files.length} encrypted backup file(s) found for this verified account and namespace. Listing does not verify backup contents; download and validate a file before recovery.`);
   }catch(e){queueDiagnostics.lastFailure=drive.lastFailure||{operation:'file listing',classification:'invalid response'};throw e;}
 });
 $('saveSettings').onclick=()=>run(async()=>{const s={...validateSettings({enabled:$('enabled').checked,frequency:$('frequency').value,time:$('time').value,weekday:Number($('weekday').value),timeZone:$('zone').value}),enabledAt:new Date().toISOString(),drive:$('driveAuto').checked};storage.setItem(settingsKey,JSON.stringify(s));show('Schedule saved. Open-app only; key must be unlocked. Google authorization is required for uploads.');});
