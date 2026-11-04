@@ -1,3 +1,4 @@
+import { inspectPortalActivity } from './portal-activity-state.mjs';
 const isBackupPage = location.pathname.startsWith('/backup/');
 const backupPresence = typeof BroadcastChannel === 'function' ? new BroadcastChannel('nitros-backup-presence') : null;
 const activity = typeof BroadcastChannel === 'function' ? new BroadcastChannel('nitros-portal-activity') : null;
@@ -18,11 +19,15 @@ function publishPortalState() {
 
 if (backupPresence) backupPresence.onmessage = event => {
   if (event.data?.type === 'probe' && event.data.id) {
-    backupPresence.postMessage({ type: 'present', probe: event.data.id, pageId: window.NitrosBackupStorage?.pageId, role: isBackupPage ? 'backup' : 'portal' });
+    const response = { type: 'present', probe: event.data.id, pageId: window.NitrosBackupStorage?.pageId, role: isBackupPage ? 'backup' : 'portal' };
+    if (!isBackupPage) { response.busy = portalBusyNow(); response.at = clock(); }
+    backupPresence.postMessage(response);
     return;
   }
   if (!isBackupPage || event.data?.type !== 'present' || event.data.role !== 'portal') return;
-  portalPages.set(event.data.pageId, clock());
+  const at = Number(event.data.at) || clock();
+  portalPages.set(event.data.pageId, at);
+  if (typeof event.data.busy === 'boolean') portalStates.set(event.data.pageId, { busy: event.data.busy, at });
 };
 
 if (activity) activity.onmessage = event => {
@@ -64,15 +69,18 @@ if (isBackupPage) {
   }
 }
 
-export function portalWorkflowBusy() {
-  if (!isBackupPage) return portalBusyNow();
-  if (!backupPresence || !activity) return true;
-  if (timerState !== false) return true;
+export function portalWorkflowStatus() {
+  if (!isBackupPage) { const busy = portalBusyNow(); return { busy, reason: busy ? 'technician workflow active in this tab' : 'idle' }; }
   const now = clock();
   for (const [pageId, seenAt] of portalPages) {
-    if (now - seenAt > 6000) { portalPages.delete(pageId); continue; }
-    const state = portalStates.get(pageId);
-    if (!state || now - state.at > 6000 || state.busy) return true;
+    if (now - seenAt > 6000) { portalPages.delete(pageId); portalStates.delete(pageId); }
   }
-  return false;
+  return inspectPortalActivity({
+    channelsAvailable: !!backupPresence && !!activity,
+    timerState,
+    now,
+    portals: [...portalPages].map(([pageId, presenceAt]) => ({ presenceAt, state: portalStates.get(pageId) })),
+  });
 }
+
+export function portalWorkflowBusy() { return portalWorkflowStatus().busy; }
