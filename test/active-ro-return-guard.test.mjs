@@ -12,16 +12,17 @@ test('secondary tools persist an active RO return context before opening',()=>{
   assert.match(guard,/control\.closest\?\.\('#mobileToolsMenu'\)/);
 });
 
-test('Back restores the exact active RO through persistence with a safe screen fallback',()=>{
-  assert.match(guard,/NitrosActiveRepairPersistence\?\.restore==='function'\)restored=await window\.NitrosActiveRepairPersistence\.restore\(saved\.id\)/);
-  assert.match(guard,/localStorage\.setItem\(POINTER,saved\.id\)/);
-  assert.match(guard,/core\.showScreen\(saved\.screen\|\|'workorder',false\)/);
+test('Back and return navigation leave unfinished work saved and route Home',()=>{
+  assert.match(guard,/core\.showScreen\('home',false\)/);
+  assert.match(guard,/clear\(\);\s*if\(typeof core\?\.showScreen==='function'\)core\.showScreen\('home',false\)/);
+  assert.doesNotMatch(guard,/NitrosActiveRepairPersistence\?\.restore==='function'/);
+  assert.doesNotMatch(guard,/localStorage\.setItem\(POINTER,saved\.id\)/);
   assert.match(guard,/control\.classList\.contains\('back'\).*?void restore\('Back'\)/s);
 });
 
-test('blank-screen recovery is guarded and always exposes Active Jobs recovery',()=>{
+test('blank-screen recovery routes Home and directs the technician to explicitly select from Active Jobs',()=>{
   assert.match(guard,/new MutationObserver\(recoverBlank\)\.observe\(document\.body/);
-  assert.match(guard,/void restore\('blank-screen recovery'\)/);
+  assert.match(guard,/activateFallback\('home'\).*?clear\(\);showRecovery\('Your unfinished repair order remains saved\. Open Active Jobs and select it to continue\.'\)/s);
   assert.match(html,/id="nitrosRoRecoveryJobs"[^>]*>Return to Active Jobs/);
   assert.match(guard,/closeSecondaryUi\(\);releaseLocks\(\)/);
 });

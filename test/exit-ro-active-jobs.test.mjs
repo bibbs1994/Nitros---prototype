@@ -12,10 +12,11 @@ test('Exit RO is persistent during RO workflow and has nested workflow controls'
   assert.match(html,/id="exitRoDiagnostic"[^>]*>Exit RO/);
 });
 
-test('Exit RO saves and returns directly to the Active Jobs switcher without discard or archive',()=>{
+test('Exit RO saves and returns Home without discarding or opening another repair order',()=>{
   const exitSource=html.slice(html.indexOf('async function exitCurrentRepairOrder'),html.indexOf('function updateExitRoControl'));
   assert.match(html,/async function exitCurrentRepairOrder\(\)\{await persist\('exit repair order to active jobs',true\);/);
-  assert.match(html,/core\.showScreen\('home'\);await renderActiveJobs\(\);\$\('activeJobsModal'\)\?\.classList\.remove\('hidden'\)/);
+  assert.match(html,/\$\('activeJobsModal'\)\?\.classList\.add\('hidden'\);core\.showScreen\('home'\);await renderActiveRepairOrders\(\)/);
+  assert.match(exitSource,/NitrosActiveRoReturnGuard\?\.clear\?\.\(\)/);
   assert.doesNotMatch(exitSource,/(?:abandon\(|archiveSavedWork\(|remove\(activeId\))/);
   assert.match(html,/\['exitRoControl','exitRoEvidence','exitRoGuide','exitRoDiagnostic'\]/);
 });
