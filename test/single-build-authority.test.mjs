@@ -31,9 +31,12 @@ test('service worker uses 10.13.144 version and preserves safe navigation cachin
   assert.match(sw,/self\.skipWaiting\(\)/);
   assert.match(sw,/self\.clients\.claim\(\)/);
   assert.match(sw,/fetch\(request, \{ cache: 'no-store' \}\)/);
-  assert.match(sw,/STATIC_ASSETS = new Set\(\[new URL\('\.\/image-analysis-ad\.js'/);
+  assert.match(sw,/STATIC_ASSETS = new Set\(\[[\s\S]*'\.\/image-analysis-ad\.js'[\s\S]*'\.\/support-center\.html'[\s\S]*\]\.map\(path=>new URL\(path,self\.registration\.scope\)\.href\)\)/);
   assert.match(sw,/cache\.put\(isVersionedStaticAsset \? request : APP_SHELL/);
-  assert.match(sw,/caches\.match\(isVersionedStaticAsset \? request : APP_SHELL, \{ cacheName: CACHE_NAME \}\)/);
+  assert.match(sw,/if \(response\.ok && \(isVersionedStaticAsset \|\| isAppShellHtml\)\)/);
+  assert.match(sw,/isVersionedStaticAsset \? await caches\.match\(request, \{ cacheName: CACHE_NAME \}\) : isAppShellHtml \? await caches\.match\(APP_SHELL, \{ cacheName: CACHE_NAME \}\) : null/);
+  assert.match(sw,/self\.addEventListener\('push'/);
+  assert.match(sw,/self\.addEventListener\('notificationclick'/);
   assert.doesNotMatch(sw,/caches\.clear|localStorage|indexedDB/i);
 });
 

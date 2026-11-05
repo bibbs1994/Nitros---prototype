@@ -27,6 +27,7 @@ html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-sys
 body{min-height:100vh}
 button,input,textarea,select{font:inherit}
 button{cursor:pointer}
+.support-unread-badge{display:inline-block;min-width:24px;margin-left:7px;padding:2px 7px;border-radius:99px;background:#ad2d38;color:#fff;font-size:12px;text-align:center;vertical-align:middle}
 .app{max-width:980px;margin:0 auto;padding-bottom:42px}
 header{padding:calc(18px + env(safe-area-inset-top)) 20px 18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#07111f,#091523);position:sticky;top:0;z-index:30}
 .brand{font-size:32px;font-weight:800}
@@ -597,6 +598,7 @@ canvas.graph-preview,canvas.ocr-preview{
       <button class="btn primary" data-go="jobs">Assigned Jobs</button>
       <button id="newRepairOrder" class="btn secondary" type="button">New Walk-In / Check-In</button>
       <button class="btn secondary" data-go="history">Customer History</button>
+      <a id="supportCenterHomeButton" class="btn secondary" href="/support-center.html" hidden>Support Center <span id="supportCenterHomeUnread" class="support-unread-badge" hidden>0</span></a>
       <button class="btn secondary" data-go="assistant">AI Repair Assistant</button>
       <button id="guidedWalkthroughLaunch" class="btn secondary" type="button">Guided Walkthrough</button>
       <a class="btn secondary" href="/backup/secure.html" target="_blank" rel="noopener">Encrypted Backup &amp; Recovery</a>
@@ -8962,5 +8964,6 @@ document.addEventListener("DOMContentLoaded",()=>{
  window.NitrosActiveRoReturnGuard=Object.freeze({begin,restore,getContext:context,clear});
 })();
 </script>
+<script type="module" src="/support-portal.mjs"></script>
 </body>
 </html>

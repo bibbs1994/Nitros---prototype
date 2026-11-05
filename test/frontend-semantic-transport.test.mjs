@@ -477,9 +477,11 @@ test('developer panel and preview remain contained on mobile', () => {
   assert.match(html, /\.oliver-import-preview img\{height:auto;object-fit:contain\}/);
 });
 
-test('service worker keeps navigation network-first and refreshes only the graph-analysis static asset', () => {
+test('service worker keeps navigation network-first and refreshes explicit static assets', () => {
   assert.match(serviceWorker, /if \(request\.method !== 'GET'\) return/);
   assert.match(serviceWorker, /if \(!isNavigation && !isAppShellHtml && !isVersionedStaticAsset\) return/);
   assert.match(serviceWorker, /fetch\(request, \{ cache: 'no-store' \}\)/);
-  assert.match(serviceWorker, /caches\.match\(isVersionedStaticAsset \? request : APP_SHELL/);
+  assert.match(serviceWorker, /if \(response\.ok && \(isVersionedStaticAsset \|\| isAppShellHtml\)\)/);
+  assert.match(serviceWorker, /isVersionedStaticAsset \? await caches\.match\(request, \{ cacheName: CACHE_NAME \}\) : isAppShellHtml \? await caches\.match\(APP_SHELL, \{ cacheName: CACHE_NAME \}\) : null/);
+  assert.match(serviceWorker, /'\.\/support-center\.html'.*'\.\/support-center\.mjs'/);
 });
